@@ -17,6 +17,7 @@ import {
   BarChart3,
   Settings,
   TabletSmartphone,
+  History,
   X,
 } from 'lucide-react';
 
@@ -38,6 +39,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { href: '/dashboard/orders', label: t('orders'), icon: ShoppingCart },
     { href: '/dashboard/payments', label: t('payments'), icon: CreditCard },
     { href: '/dashboard/team', label: t('team'), icon: Users },
+    { href: '/dashboard/logs', label: t('logs'), icon: History, badge: 'Admin' },
     { href: '/dashboard/analytics', label: t('analytics'), icon: BarChart3 },
     { href: '/dashboard/settings', label: t('settings'), icon: Settings },
   ];
@@ -114,7 +116,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                       isActive ? 'text-[#315C4C]' : 'text-[#737373]'
                     )}
                   />
-                  <span className="truncate">{item.label}</span>
+                  <span className="truncate flex-1">{item.label}</span>
+                  {item.badge && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#B7791F]/15 text-[#8C5D17] border border-[#B7791F]/30 uppercase tracking-wider shrink-0">
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}

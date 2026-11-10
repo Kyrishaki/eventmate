@@ -48,6 +48,7 @@ import {
   Globe,
 } from 'lucide-react';
 import { calculateVariantStock } from '@/lib/stock-status';
+import { logActivity } from '@/stores/audit-store';
 
 function CollabPartnerPortalContent() {
   const tCommon = useTranslations('common');
@@ -215,6 +216,24 @@ function CollabPartnerPortalContent() {
       imageUrl: productImageUrl,
     });
 
+    // Record Audit Log for Admin tracing
+    logActivity({
+      actor_name: `Đối tác: ${partnerName}`,
+      actor_role: 'collab_partner',
+      action_type: 'collab_contribute',
+      entity_type: 'product',
+      entity_name: productName,
+      booth_name: currentBooth.name,
+      event_name: eventName,
+      description: `Đối tác "${partnerName}" đã thêm sản phẩm mới "${productName}" (${productQty} món) vào gian hàng "${currentBooth.name}". Tự giữ chỗ: ${productReservedQty}, Đã đặt online: ${productOnlineQty}.`,
+      changes: [
+        { field: 'price', field_label: 'Giá niêm yết', new_value: `${productPrice.toLocaleString('vi-VN')} VND` },
+        { field: 'quantity', field_label: 'Số lượng mang đến', new_value: productQty },
+        { field: 'reserved_quantity', field_label: 'Tự giữ chỗ VIP', new_value: productReservedQty },
+        { field: 'online_preorder_quantity', field_label: 'Đơn đặt mua online', new_value: productOnlineQty },
+      ],
+    });
+
     setIsAddProductModalOpen(false);
     setProductName('');
     setProductPrice(150000);
@@ -229,6 +248,21 @@ function CollabPartnerPortalContent() {
   function handleQuickRestock(variantId: string, amount: number) {
     if (!currentBooth) return;
     restockCollabVariant(currentBooth.id, variantId, amount);
+
+    const targetVariant = variants.find((v) => v.id === variantId);
+    logActivity({
+      actor_name: `Đối tác: ${partnerName}`,
+      actor_role: 'collab_partner',
+      action_type: 'stock_adjust',
+      entity_type: 'inventory',
+      entity_name: targetVariant?.name || 'Sản phẩm Collab',
+      booth_name: currentBooth.name,
+      event_name: eventName,
+      description: `Đối tác "${partnerName}" đã bổ sung thêm +${amount} sản phẩm "${targetVariant?.name || 'Sản phẩm'}" vào quầy bán chung.`,
+      changes: [
+        { field: 'restock_amount', field_label: 'Số lượng bổ sung', new_value: `+${amount}` },
+      ],
+    });
   }
 
   // Handler: Copy Share Link
@@ -281,6 +315,16 @@ ${url}`;
       if (parsed.orders && Array.isArray(parsed.orders)) {
         mergeCollabOrders(parsed.orders);
       }
+      logActivity({
+        actor_name: `Đối tác: ${partnerName}`,
+        actor_role: 'collab_partner',
+        action_type: 'collab_sync',
+        entity_type: 'sync_package',
+        entity_name: 'Gói đồng bộ dữ liệu Collab',
+        booth_name: currentBooth?.name,
+        event_name: eventName,
+        description: `Đối tác "${partnerName}" đã nạp và hợp nhất gói đồng bộ dữ liệu vào gian hàng "${currentBooth?.name}".`,
+      });
       setImportStatus('✅ Đã nạp và đồng bộ dữ liệu thành công!');
       setImportJson('');
       setTimeout(() => setImportStatus(null), 3500);
@@ -309,6 +353,21 @@ ${url}`;
       });
       setOrderSuccess(order);
       clearCart();
+
+      logActivity({
+        actor_name: `Thu ngân Collab (${partnerName})`,
+        actor_role: 'cashier',
+        action_type: 'order_create',
+        entity_type: 'order',
+        entity_name: `Đơn hàng #${order.order_number}`,
+        booth_name: currentBooth?.name,
+        event_name: eventName,
+        description: `Thu ngân quầy Collab hoàn tất đơn hàng #${order.order_number} trị giá ${order.final_amount.toLocaleString('vi-VN')} VND (Hình thức: ${order.payment_method}).`,
+        changes: [
+          { field: 'final_amount', field_label: 'Tổng tiền đơn', new_value: `${order.final_amount.toLocaleString('vi-VN')} VND` },
+          { field: 'payment_method', field_label: 'Phương thức', new_value: order.payment_method },
+        ],
+      });
     } catch (err: any) {
       alert(`Lỗi khi tạo đơn: ${err?.message || 'Vui lòng kiểm tra lại tồn kho'}`);
     } finally {

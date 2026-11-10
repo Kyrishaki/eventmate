@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useDataStore } from '@/stores/data-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useAuthStore, canManageTeam, isViewerOnly, UserAccount } from '@/stores/auth-store';
+import { logActivity } from '@/stores/audit-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -71,6 +72,19 @@ export default function TeamPage() {
       setModalError(res.message || 'Lỗi tạo tài khoản');
       return;
     }
+
+    logActivity({
+      actor_name: user?.fullName || 'Admin',
+      actor_role: (user?.role as any) || 'owner',
+      action_type: 'user_create',
+      entity_type: 'team_member',
+      entity_name: `Tài khoản: ${username}`,
+      description: `Admin cấp tài khoản mới "${username}" (${fullName.trim() || username}) với vai trò "${getRoleLabel(role)}".`,
+      changes: [
+        { field: 'username', field_label: 'Tên đăng nhập', new_value: username },
+        { field: 'role', field_label: 'Vai trò', new_value: role },
+      ],
+    });
 
     setFullName('');
     setUsername('');
@@ -272,6 +286,14 @@ export default function TeamPage() {
                       onClick={() => {
                         if (confirm(`Bạn có chắc muốn xóa tài khoản "${acc.username}"?`)) {
                           deleteStaffAccount(acc.id);
+                          logActivity({
+                            actor_name: user?.fullName || 'Admin',
+                            actor_role: (user?.role as any) || 'owner',
+                            action_type: 'user_delete',
+                            entity_type: 'team_member',
+                            entity_name: `Tài khoản: ${acc.username}`,
+                            description: `Admin đã xóa tài khoản nhân viên "${acc.username}" (${acc.fullName}).`,
+                          });
                         }
                       }}
                       title="Xóa tài khoản nhân viên"

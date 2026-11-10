@@ -201,3 +201,66 @@ export interface Payment {
   provider_data: Record<string, unknown> | null;
   created_at: string;
 }
+
+// ============================================================================
+// AUDIT LOG / ACTIVITY HISTORY TYPES
+// ============================================================================
+
+export type AuditActorRole =
+  | 'owner'
+  | 'admin'
+  | 'manager'
+  | 'staff'
+  | 'inventory_staff'
+  | 'cashier'
+  | 'collab_partner'
+  | 'viewer'
+  | 'system';
+
+export type AuditActionType =
+  | 'create'
+  | 'update'
+  | 'delete'
+  | 'stock_adjust'
+  | 'preorder_adjust'
+  | 'order_create'
+  | 'order_cancel'
+  | 'collab_contribute'
+  | 'collab_sync'
+  | 'user_create'
+  | 'user_delete'
+  | 'login'
+  | 'export_data';
+
+export interface AuditLogChange {
+  field: string;
+  field_label?: string;
+  old_value?: any;
+  new_value?: any;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string;
+  actor_id?: string;
+  actor_name: string;
+  actor_role: AuditActorRole;
+  actor_username?: string;
+  action_type: AuditActionType;
+  entity_type:
+    | 'product'
+    | 'variant'
+    | 'inventory'
+    | 'order'
+    | 'booth'
+    | 'event'
+    | 'team_member'
+    | 'sync_package'
+    | 'system';
+  entity_id?: string;
+  entity_name: string;
+  description: string;
+  booth_name?: string;
+  event_name?: string;
+  changes?: AuditLogChange[];
+}

@@ -68,6 +68,7 @@
     "orders": "Orders",
     "payments": "Payments",
     "team": "Team & Access",
+    "logs": "Audit & Activity Logs",
     "analytics": "Revenue Analytics",
     "settings": "Workspace Settings",
     "posTerminal": "Open POS Terminal"

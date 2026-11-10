@@ -14,6 +14,7 @@ import { Modal } from '@/components/ui/modal';
 import { formatCurrency } from '@/lib/utils';
 import { Product, ProductVariant } from '@/types/database';
 import { calculateVariantStock } from '@/lib/stock-status';
+import { logActivity } from '@/stores/audit-store';
 import {
   Package,
   Plus,
@@ -57,7 +58,7 @@ export default function ProductsPage() {
     toggleProductActive,
     updateVariantPreorders,
   } = useDataStore();
-  const { canEditData } = useAuthStore();
+  const { canEditData, user } = useAuthStore();
   const editable = canEditData();
 
   const [selectedCategory, setSelectedCategory] = React.useState<string>('all');
@@ -101,6 +102,23 @@ export default function ProductsPage() {
         onlinePreorderQuantity: qv.online,
       });
     });
+
+    if (quickAdjustProduct) {
+      logActivity({
+        actor_name: user?.fullName || 'Nhân viên / Admin',
+        actor_role: (user?.role as any) || 'staff',
+        action_type: 'preorder_adjust',
+        entity_type: 'variant',
+        entity_name: quickAdjustProduct.name,
+        description: `Điều chỉnh số lượng đặt trước / online cho "${quickAdjustProduct.name}": ${quickVariants.map((v) => `${v.name} (Tự giữ: ${v.reserved}, Onl: ${v.online})`).join('; ')}.`,
+        changes: quickVariants.map((v) => ({
+          field: v.name,
+          field_label: v.name,
+          new_value: `Tổng: ${v.total} | Tự giữ: ${v.reserved} | Onl: ${v.online}`,
+        })),
+      });
+    }
+
     setQuickAdjustProduct(null);
   }
 
@@ -185,6 +203,19 @@ export default function ProductsPage() {
         image_url: imageUrl.trim() || null,
         collab_partner: collabPartner.trim() || null,
       });
+
+      logActivity({
+        actor_name: user?.fullName || 'Người dùng',
+        actor_role: (user?.role as any) || 'staff',
+        action_type: 'update',
+        entity_type: 'product',
+        entity_name: name,
+        description: `Cập nhật thông tin sản phẩm "${name}" (${collabPartner ? `Collab: ${collabPartner}` : 'Hàng Host'}).`,
+        changes: [
+          { field: 'name', field_label: 'Tên sản phẩm', new_value: name },
+          { field: 'collab_partner', field_label: 'Đối tác', new_value: collabPartner || 'Không' },
+        ],
+      });
     } else {
       createProduct(
         {
@@ -206,6 +237,15 @@ export default function ProductsPage() {
           barcode: fv.barcode.trim() || null,
         }))
       );
+
+      logActivity({
+        actor_name: user?.fullName || 'Người dùng',
+        actor_role: (user?.role as any) || 'staff',
+        action_type: 'create',
+        entity_type: 'product',
+        entity_name: name,
+        description: `Tạo mới sản phẩm "${name}" (${collabPartner ? `Collab: ${collabPartner}` : 'Hàng Host'}) với ${formVariants.length} phân loại.`,
+      });
     }
     setIsModalOpen(false);
   }
@@ -385,8 +425,16 @@ export default function ProductsPage() {
                           size="sm"
                           className="h-8 px-2 text-xs text-[#C44536] hover:bg-[#FDF1F0]"
                           onClick={() => {
-                            if (confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
+                            if (confirm(`Bạn có chắc muốn xóa sản phẩm "${prod.name}"?`)) {
                               deleteProduct(prod.id);
+                              logActivity({
+                                actor_name: user?.fullName || 'Người dùng',
+                                actor_role: (user?.role as any) || 'staff',
+                                action_type: 'delete',
+                                entity_type: 'product',
+                                entity_name: prod.name,
+                                description: `Đã xóa sản phẩm "${prod.name}" (${prod.collab_partner ? `Hàng Collab: ${prod.collab_partner}` : 'Hàng Host'}) khỏi danh mục hệ thống.`,
+                              });
                             }
                           }}
                         >

@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { Order, OrderItem, PaymentMethod, PaymentStatus, SyncStatus } from '@/types/database';
 import { localDb, LocalOrder, SyncQueueItem } from '@/lib/db';
 import { useDataStore } from './data-store';
+import { logActivity } from './audit-store';
 
 export interface CartItem {
   variantId: string;
@@ -303,6 +304,20 @@ export const useOrdersStore = create<OrdersStoreState>()(
           orders: [newOrder, ...orders],
           cart: [],
           discountAmount: 0,
+        });
+
+        // 4. Record Audit Log for Admin tracing
+        logActivity({
+          actor_name: `Thu ngân (${cashierId || 'POS'})`,
+          actor_role: 'cashier',
+          action_type: 'order_create',
+          entity_type: 'order',
+          entity_name: `Đơn #${orderNumber}`,
+          description: `Thu ngân tạo đơn hàng #${orderNumber} thành công (${cart.map((c) => `${c.quantity}x ${c.productName}`).join(', ')}). Tổng tiền: ${finalAmount.toLocaleString('vi-VN')} VND qua ${paymentMethod}.`,
+          changes: [
+            { field: 'final_amount', field_label: 'Doanh thu', new_value: `${finalAmount.toLocaleString('vi-VN')} VND` },
+            { field: 'payment_method', field_label: 'Hình thức', new_value: paymentMethod },
+          ],
         });
 
         return newOrder;

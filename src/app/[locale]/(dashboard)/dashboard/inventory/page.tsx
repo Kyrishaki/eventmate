@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { formatCurrency } from '@/lib/utils';
 import { calculateVariantStock } from '@/lib/stock-status';
+import { logActivity } from '@/stores/audit-store';
 import {
   Boxes,
   Store,
@@ -32,8 +33,26 @@ export default function InventoryPage() {
   const { activeWorkspace } = useWorkspaceStore();
   const { events, booths, products, variants, allocations, setAllocation, quickTransferStock } =
     useDataStore();
-  const { canManageInventory } = useAuthStore();
+  const { canManageInventory, user } = useAuthStore();
   const canManage = canManageInventory();
+
+  function handleStockTransfer(variantId: string, variantName: string, amount: number) {
+    if (!selectedBooth) return;
+    quickTransferStock(selectedBooth.id, variantId, amount);
+    logActivity({
+      actor_name: user?.fullName || 'Nhân viên kho',
+      actor_role: (user?.role as any) || 'inventory_staff',
+      action_type: 'stock_adjust',
+      entity_type: 'inventory',
+      entity_name: variantName,
+      booth_name: selectedBooth.name,
+      event_name: selectedEvent?.name,
+      description: `Điều chỉnh phân bổ quầy "${selectedBooth.name}": ${amount > 0 ? `+${amount}` : amount} món "${variantName}".`,
+      changes: [
+        { field: 'allocation_delta', field_label: 'Số lượng chuyển', new_value: amount > 0 ? `+${amount}` : String(amount) },
+      ],
+    });
+  }
 
   const workspaceEvents = events.filter(
     (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
@@ -293,7 +312,7 @@ export default function InventoryPage() {
                               className="h-6 w-6 p-0 text-xs bg-white hover:bg-[#E8E8E5] text-[#202124]"
                               title="Giảm 10 món về kho tổng"
                               disabled={currentAllocQty <= currentSoldQty}
-                              onClick={() => quickTransferStock(selectedBooth.id, v.id, -10)}
+                              onClick={() => handleStockTransfer(v.id, v.name, -10)}
                             >
                               <Minus className="w-3 h-3" />
                             </Button>
@@ -309,7 +328,7 @@ export default function InventoryPage() {
                               className="h-6 w-6 p-0 text-xs bg-white hover:bg-[#E8E8E5] text-[#202124]"
                               title="Cấp thêm 10 món từ kho tổng"
                               disabled={centralStorageRemaining < 10}
-                              onClick={() => quickTransferStock(selectedBooth.id, v.id, 10)}
+                              onClick={() => handleStockTransfer(v.id, v.name, 10)}
                             >
                               <Plus className="w-3 h-3" />
                             </Button>
@@ -405,7 +424,7 @@ export default function InventoryPage() {
                           size="sm"
                           className="h-8 px-2 text-xs font-bold bg-white hover:bg-[#E8E8E5] text-[#202124] shadow-2xs"
                           disabled={currentAllocQty <= currentSoldQty}
-                          onClick={() => quickTransferStock(selectedBooth.id, v.id, -10)}
+                          onClick={() => handleStockTransfer(v.id, v.name, -10)}
                         >
                           -10
                         </Button>
@@ -415,7 +434,7 @@ export default function InventoryPage() {
                           size="sm"
                           className="h-8 px-2 text-xs font-bold bg-white hover:bg-[#E8E8E5] text-[#202124] shadow-2xs"
                           disabled={currentAllocQty <= currentSoldQty}
-                          onClick={() => quickTransferStock(selectedBooth.id, v.id, -1)}
+                          onClick={() => handleStockTransfer(v.id, v.name, -1)}
                         >
                           -1
                         </Button>
@@ -428,7 +447,7 @@ export default function InventoryPage() {
                           size="sm"
                           className="h-8 px-2 text-xs font-bold bg-white hover:bg-[#E8E8E5] text-[#202124] shadow-2xs"
                           disabled={centralStorageRemaining < 1}
-                          onClick={() => quickTransferStock(selectedBooth.id, v.id, 1)}
+                          onClick={() => handleStockTransfer(v.id, v.name, 1)}
                         >
                           +1
                         </Button>
@@ -438,7 +457,7 @@ export default function InventoryPage() {
                           size="sm"
                           className="h-8 px-2 text-xs font-bold bg-white hover:bg-[#E8E8E5] text-[#202124] shadow-2xs"
                           disabled={centralStorageRemaining < 10}
-                          onClick={() => quickTransferStock(selectedBooth.id, v.id, 10)}
+                          onClick={() => handleStockTransfer(v.id, v.name, 10)}
                         >
                           +10
                         </Button>

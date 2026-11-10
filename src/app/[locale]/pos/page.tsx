@@ -43,6 +43,8 @@ import {
   LogIn,
   Eye,
   EyeOff,
+  Coins,
+  AlertCircle,
 } from 'lucide-react';
 
 export default function PosTerminalPage() {
@@ -150,8 +152,10 @@ export default function PosTerminalPage() {
   const cartTotal = Math.max(0, cartSubtotal - discountAmount);
   const totalCartUnits = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Cash Change
+  // Cash Change & Shortage Calculations
   const cashChange = Math.max(0, (tenderedCash || 0) - cartTotal);
+  const cashShortage = Math.max(0, cartTotal - (tenderedCash || 0));
+  const isCashUnderpaid = paymentMethod === 'cash' && cartTotal > 0 && (tenderedCash || 0) < cartTotal;
 
   // Toggle to hide sold-out products on POS terminal (defaults to true as requested)
   const [hideSoldOut, setHideSoldOut] = React.useState(true);
@@ -253,6 +257,10 @@ export default function PosTerminalPage() {
       return;
     }
     if (!selectedBooth || !selectedEvent || cart.length === 0) return;
+    if (paymentMethod === 'cash' && cartTotal > 0 && (tenderedCash || 0) < cartTotal) {
+      alert(`Số tiền khách đưa chưa đủ! Còn thiếu ${cashShortage.toLocaleString('vi-VN')} VND.`);
+      return;
+    }
     setIsSubmitting(true);
 
     try {
@@ -262,6 +270,8 @@ export default function PosTerminalPage() {
         boothId: selectedBooth.id,
         cashierId: user?.id || 'cashier-pos-demo',
         paymentMethod,
+        tenderedAmount: paymentMethod === 'cash' ? (tenderedCash || cartTotal) : undefined,
+        changeAmount: paymentMethod === 'cash' ? cashChange : undefined,
         notes: orderNotes.trim() || undefined,
         isOnline,
       });
@@ -1048,47 +1058,137 @@ export default function PosTerminalPage() {
 
           {/* Mode 2: Cash Drawer & Change Calculator */}
           {paymentMethod === 'cash' && (
-            <div className="p-4 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[6px] space-y-3 text-xs">
-              <div className="flex items-center justify-between text-sm font-bold">
-                <span>Cần thu của khách:</span>
-                <span className="text-[#315C4C]">
+            <div className="p-4 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[8px] space-y-3 text-xs">
+              {/* Total required */}
+              <div className="p-3 bg-white border border-[#E8E8E5] rounded-[6px] flex items-center justify-between">
+                <span className="font-semibold text-[#737373]">Tổng tiền cần thu:</span>
+                <span className="text-base font-extrabold text-[#315C4C]">
                   {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}
                 </span>
               </div>
 
+              {/* Manual input */}
               <div className="space-y-1.5">
-                <Label htmlFor="tendered-cash">Tiền khách đưa (VND)</Label>
-                <Input
-                  id="tendered-cash"
-                  type="number"
-                  value={tenderedCash || ''}
-                  onChange={(e) => setTenderedCash(Number(e.target.value))}
-                  placeholder="Nhập số tiền..."
-                  className="h-10 text-base font-bold bg-white"
-                />
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="tendered-cash" className="font-bold text-[#202124] flex items-center gap-1.5">
+                    <Coins className="w-3.5 h-3.5 text-[#315C4C]" />
+                    <span>Tiền khách đưa (Nhập thủ công):</span>
+                  </Label>
+                  {tenderedCash > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setTenderedCash(0)}
+                      className="text-[11px] font-semibold text-[#C5221F] hover:underline"
+                    >
+                      Xóa
+                    </button>
+                  )}
+                </div>
+
+                <div className="relative">
+                  <Input
+                    id="tendered-cash"
+                    type="text"
+                    inputMode="numeric"
+                    value={tenderedCash ? tenderedCash.toLocaleString('vi-VN') : ''}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\D/g, '');
+                      setTenderedCash(raw ? parseInt(raw, 10) : 0);
+                    }}
+                    placeholder="Nhập số tiền khách đưa (VD: 500.000)..."
+                    className="h-11 text-lg font-bold bg-white text-[#202124] pr-8 focus:border-[#315C4C]"
+                    autoFocus
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#737373] pointer-events-none">
+                    ₫
+                  </span>
+                </div>
               </div>
 
-              {/* Quick Cash Tender Presets */}
-              <div className="flex flex-wrap gap-1.5">
-                {[cartTotal, 100000, 200000, 500000, 1000000].map((preset, idx) => (
+              {/* Quick suggestions: Exact & Denominations */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[11px] text-[#737373]">
+                  <span>Gợi ý mệnh giá nhanh:</span>
                   <button
-                    key={idx}
                     type="button"
-                    onClick={() => setTenderedCash(preset)}
-                    className="px-2 py-1 rounded bg-white border border-[#E8E8E5] text-[11px] font-semibold text-[#202124] hover:bg-[#F0F0ED]"
+                    onClick={() => setTenderedCash(cartTotal)}
+                    className={`font-bold hover:underline ${tenderedCash === cartTotal ? 'text-[#315C4C]' : 'text-[#202124]'}`}
                   >
-                    {preset === cartTotal ? 'Vừa đủ' : `${(preset / 1000).toLocaleString()}k`}
+                    ⚡ Khách trả vừa đủ
                   </button>
-                ))}
+                </div>
+
+                {/* Banknotes presets */}
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[cartTotal, 100000, 200000, 500000].map((preset, idx) => {
+                    const isSelected = tenderedCash === preset;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setTenderedCash(preset)}
+                        className={`py-1.5 px-1 rounded text-center font-bold text-xs transition-colors border ${
+                          isSelected
+                            ? 'bg-[#315C4C] text-white border-[#315C4C]'
+                            : 'bg-white text-[#202124] border-[#E8E8E5] hover:bg-[#F0F0ED]'
+                        }`}
+                      >
+                        {preset === cartTotal ? 'Vừa đủ' : `${(preset / 1000).toLocaleString('vi-VN')}k`}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Additive quick buttons (+10k, +20k, +50k, +100k, +200k, +500k) */}
+                <div className="flex items-center gap-1 overflow-x-auto pb-0.5 pt-1">
+                  <span className="text-[10px] text-[#737373] shrink-0 font-medium mr-0.5">Cộng thêm:</span>
+                  {[10000, 20000, 50000, 100000, 200000, 500000].map((addAmount) => (
+                    <button
+                      key={addAmount}
+                      type="button"
+                      onClick={() => setTenderedCash((prev) => (prev || 0) + addAmount)}
+                      className="px-1.5 py-0.5 rounded bg-white border border-[#E8E8E5] text-[10px] font-semibold text-[#315C4C] hover:bg-[#EBF1EE] shrink-0"
+                    >
+                      +{(addAmount / 1000).toLocaleString('vi-VN')}k
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {/* Change to return */}
-              <div className="p-3 bg-white border border-[#E8E8E5] rounded-[6px] flex items-center justify-between text-xs">
-                <span className="text-[#737373]">Tiền thừa trả khách:</span>
-                <span className="text-base font-bold text-[#2F7D55]">
-                  {formatCurrency(cashChange, activeWorkspace?.currency || 'VND')}
-                </span>
-              </div>
+              {/* Change / Shortage Status Display */}
+              {tenderedCash === 0 ? (
+                <div className="p-2.5 rounded-[6px] bg-white border border-dashed border-[#D2D2CE] text-center text-[#737373] text-[11px]">
+                  💡 Nhập số tiền khách đưa hoặc chọn mệnh giá để tính tiền thối tự động
+                </div>
+              ) : isCashUnderpaid ? (
+                <div className="p-3 bg-[#FDF2E9] border border-[#C5221F]/30 rounded-[6px] space-y-0.5 text-xs text-[#C5221F]">
+                  <div className="flex items-center justify-between font-bold">
+                    <span className="flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      <span>Chưa đủ tiền khách đưa!</span>
+                    </span>
+                    <span className="text-sm font-extrabold">
+                      Thiếu {formatCurrency(cashShortage, activeWorkspace?.currency || 'VND')}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-[#C5221F]/80">
+                    Khách đưa {formatCurrency(tenderedCash, activeWorkspace?.currency || 'VND')} / Cần thu {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-3 bg-[#EAF4EE] border border-[#2F7D55]/30 rounded-[6px] space-y-1 text-xs text-[#2F7D55]">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-[#202124]">Tiền cần thối lại khách:</span>
+                    <span className="text-lg font-extrabold text-[#2F7D55]">
+                      {cashChange === 0 ? '0 ₫ (Khách đưa vừa đủ)' : formatCurrency(cashChange, activeWorkspace?.currency || 'VND')}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-[#737373] pt-0.5 border-t border-[#2F7D55]/20">
+                    <span>Đã nhận: {formatCurrency(tenderedCash, activeWorkspace?.currency || 'VND')}</span>
+                    <span>Đơn: {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -1130,13 +1230,17 @@ export default function PosTerminalPage() {
               type="button"
               variant="primary"
               size="sm"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isCashUnderpaid}
               isLoading={isSubmitting}
               onClick={handleCompleteOrder}
               className="gap-1.5"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>Xác nhận & Hoàn tất đơn</span>
+              <span>
+                {isCashUnderpaid
+                  ? `Chưa đủ tiền (Thiếu ${formatCurrency(cashShortage, activeWorkspace?.currency || 'VND')})`
+                  : 'Xác nhận & Hoàn tất đơn'}
+              </span>
             </Button>
           </div>
         </div>
@@ -1168,6 +1272,23 @@ export default function PosTerminalPage() {
                 )}
               </p>
             </div>
+
+            {confirmedOrder.payment_method === 'cash' && confirmedOrder.tendered_amount != null && (
+              <div className="p-3 bg-[#EAF4EE] border border-[#2F7D55]/30 rounded-[6px] text-xs space-y-1">
+                <div className="flex justify-between text-[#737373]">
+                  <span>Tiền khách đưa:</span>
+                  <span className="font-semibold text-[#202124]">
+                    {formatCurrency(confirmedOrder.tendered_amount, activeWorkspace?.currency || 'VND')}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm font-bold text-[#2F7D55]">
+                  <span>Tiền thối lại:</span>
+                  <span>
+                    {formatCurrency(confirmedOrder.change_amount || 0, activeWorkspace?.currency || 'VND')}
+                  </span>
+                </div>
+              </div>
+            )}
 
             <div className="p-3 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5] text-left text-xs space-y-1.5 max-h-40 overflow-y-auto">
               {confirmedOrder.items?.map((item) => (

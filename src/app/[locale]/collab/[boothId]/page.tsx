@@ -48,6 +48,8 @@ import {
   Globe,
   Eye,
   EyeOff,
+  Coins,
+  AlertCircle,
 } from 'lucide-react';
 import { calculateVariantStock } from '@/lib/stock-status';
 import { logActivity } from '@/stores/audit-store';
@@ -110,6 +112,7 @@ function CollabPartnerPortalContent() {
   const [hideSoldOut, setHideSoldOut] = React.useState(true);
   const [isPreorderPickupOpen, setIsPreorderPickupOpen] = React.useState(false);
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>('qr_manual');
+  const [tenderedCash, setTenderedCash] = React.useState<number>(0);
   const [isSubmittingOrder, setIsSubmittingOrder] = React.useState(false);
   const [orderSuccess, setOrderSuccess] = React.useState<Order | null>(null);
 
@@ -341,10 +344,17 @@ ${url}`;
   // POS Cart Total Calculation
   const cartSubtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const cartTotal = Math.max(0, cartSubtotal - discountAmount);
+  const cashChange = Math.max(0, (tenderedCash || 0) - cartTotal);
+  const cashShortage = Math.max(0, cartTotal - (tenderedCash || 0));
+  const isCashUnderpaid = paymentMethod === 'cash' && cartTotal > 0 && (tenderedCash || 0) < cartTotal;
 
   // POS Checkout Handler
   async function handlePosCheckout() {
     if (cart.length === 0 || !currentBooth) return;
+    if (paymentMethod === 'cash' && cartTotal > 0 && (tenderedCash || 0) < cartTotal) {
+      alert(`Số tiền khách đưa chưa đủ! Còn thiếu ${cashShortage.toLocaleString('vi-VN')} VND.`);
+      return;
+    }
     setIsSubmittingOrder(true);
     try {
       const order = await submitOrder({
@@ -353,10 +363,13 @@ ${url}`;
         boothId: currentBooth.id,
         cashierId: `cashier-collab-${partnerName}`,
         paymentMethod: paymentMethod,
+        tenderedAmount: paymentMethod === 'cash' ? (tenderedCash || cartTotal) : undefined,
+        changeAmount: paymentMethod === 'cash' ? cashChange : undefined,
         notes: `Đơn hàng bán tại Quầy Collab: ${partnerName}`,
         isOnline: navigator.onLine,
       });
       setOrderSuccess(order);
+      setTenderedCash(0);
       clearCart();
 
       logActivity({
@@ -1139,21 +1152,130 @@ ${url}`;
                         </div>
                       )}
 
+                      {/* Cash Drawer & Change Calculator for Collab */}
+                      {paymentMethod === 'cash' && (
+                        <div className="p-3 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[6px] space-y-2.5 text-xs">
+                          <div className="p-2.5 bg-white border border-[#E8E8E5] rounded-[4px] flex items-center justify-between">
+                            <span className="text-[#737373] font-medium">Tổng cần thu:</span>
+                            <span className="font-bold text-[#315C4C] text-sm">
+                              {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}
+                            </span>
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                              <Label htmlFor="collab-tendered-cash" className="font-semibold text-[#202124] flex items-center gap-1 text-[11px]">
+                                <Coins className="w-3 h-3 text-[#315C4C]" />
+                                <span>Tiền khách đưa (Nhập thủ công):</span>
+                              </Label>
+                              {tenderedCash > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => setTenderedCash(0)}
+                                  className="text-[10px] text-[#C5221F] hover:underline"
+                                >
+                                  Xóa
+                                </button>
+                              )}
+                            </div>
+                            <div className="relative">
+                              <Input
+                                id="collab-tendered-cash"
+                                type="text"
+                                inputMode="numeric"
+                                value={tenderedCash ? tenderedCash.toLocaleString('vi-VN') : ''}
+                                onChange={(e) => {
+                                  const raw = e.target.value.replace(/\D/g, '');
+                                  setTenderedCash(raw ? parseInt(raw, 10) : 0);
+                                }}
+                                placeholder="Nhập số tiền khách đưa..."
+                                className="h-9 text-base font-bold bg-white text-[#202124] pr-7"
+                              />
+                              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#737373] pointer-events-none">
+                                ₫
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Quick Denomination Presets */}
+                          <div className="space-y-1">
+                            <div className="grid grid-cols-4 gap-1">
+                              {[cartTotal, 100000, 200000, 500000].map((preset, idx) => {
+                                const isSelected = tenderedCash === preset;
+                                return (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => setTenderedCash(preset)}
+                                    className={`py-1 px-1 rounded text-center font-bold text-[10px] transition-colors border ${
+                                      isSelected
+                                        ? 'bg-[#315C4C] text-white border-[#315C4C]'
+                                        : 'bg-white text-[#202124] border-[#E8E8E5] hover:bg-[#F0F0ED]'
+                                    }`}
+                                  >
+                                    {preset === cartTotal ? 'Vừa đủ' : `${(preset / 1000).toLocaleString('vi-VN')}k`}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <div className="flex items-center gap-1 overflow-x-auto pb-0.5">
+                              <span className="text-[9px] text-[#737373] shrink-0">Thêm:</span>
+                              {[10000, 20000, 50000, 100000, 200000].map((amt) => (
+                                <button
+                                  key={amt}
+                                  type="button"
+                                  onClick={() => setTenderedCash((prev) => (prev || 0) + amt)}
+                                  className="px-1 py-0.5 rounded bg-white border border-[#E8E8E5] text-[9px] font-semibold text-[#315C4C] hover:bg-[#EBF1EE] shrink-0"
+                                >
+                                  +{(amt / 1000).toLocaleString('vi-VN')}k
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Result status */}
+                          {tenderedCash === 0 ? (
+                            <p className="text-[10px] text-center text-[#737373] italic">
+                              Bấm [Vừa đủ] hoặc nhập số tiền khách đưa
+                            </p>
+                          ) : isCashUnderpaid ? (
+                            <div className="p-2 bg-[#FDF2E9] border border-[#C5221F]/30 rounded text-[11px] text-[#C5221F] font-bold flex items-center justify-between">
+                              <span className="flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3" />
+                                <span>Còn thiếu:</span>
+                              </span>
+                              <span>{formatCurrency(cashShortage, activeWorkspace?.currency || 'VND')}</span>
+                            </div>
+                          ) : (
+                            <div className="p-2 bg-[#EAF4EE] border border-[#2F7D55]/30 rounded text-[11px] text-[#2F7D55] font-bold flex items-center justify-between">
+                              <span>Tiền cần thối lại:</span>
+                              <span className="text-sm">
+                                {cashChange === 0 ? '0 ₫ (Vừa đủ)' : formatCurrency(cashChange, activeWorkspace?.currency || 'VND')}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       <Button
                         variant="primary"
                         size="md"
                         className="w-full text-xs font-bold"
-                        disabled={isSubmittingOrder}
+                        disabled={isSubmittingOrder || isCashUnderpaid}
                         onClick={handlePosCheckout}
                       >
-                        {isSubmittingOrder ? 'Đang hoàn tất đơn...' : 'Xác nhận Đã Thu Tiền & Bán Hàng'}
+                        {isSubmittingOrder
+                          ? 'Đang hoàn tất đơn...'
+                          : isCashUnderpaid
+                          ? `Chưa đủ tiền (Thiếu ${formatCurrency(cashShortage, activeWorkspace?.currency || 'VND')})`
+                          : 'Xác nhận Đã Thu Tiền & Bán Hàng'}
                       </Button>
                     </div>
                   )}
 
                   {/* Order success notification */}
                   {orderSuccess && (
-                    <div className="p-3 rounded-[6px] bg-[#EBF1EE] border border-[#2F7D55]/30 text-xs space-y-1 text-[#2F7D55]">
+                    <div className="p-3 rounded-[6px] bg-[#EBF1EE] border border-[#2F7D55]/30 text-xs space-y-1.5 text-[#2F7D55]">
                       <div className="flex items-center gap-1.5 font-bold">
                         <CheckCircle2 className="w-4 h-4" />
                         <span>Đã ghi nhận đơn {orderSuccess.order_number}!</span>
@@ -1166,6 +1288,22 @@ ${url}`;
                           activeWorkspace?.currency || 'VND'
                         )}
                       </p>
+                      {orderSuccess.payment_method === 'cash' && orderSuccess.tendered_amount != null && (
+                        <div className="p-2 bg-white rounded border border-[#2F7D55]/20 text-[11px] space-y-0.5">
+                          <div className="flex justify-between text-[#737373]">
+                            <span>Tiền khách đưa:</span>
+                            <span className="font-semibold text-[#202124]">
+                              {formatCurrency(orderSuccess.tendered_amount, activeWorkspace?.currency || 'VND')}
+                            </span>
+                          </div>
+                          <div className="flex justify-between font-bold text-[#2F7D55]">
+                            <span>Tiền thối lại:</span>
+                            <span>
+                              {formatCurrency(orderSuccess.change_amount || 0, activeWorkspace?.currency || 'VND')}
+                            </span>
+                          </div>
+                        </div>
+                      )}
                       <button
                         type="button"
                         onClick={() => setOrderSuccess(null)}

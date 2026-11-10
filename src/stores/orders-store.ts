@@ -45,6 +45,8 @@ interface OrdersStoreState {
     boothId: string;
     cashierId: string;
     paymentMethod: PaymentMethod;
+    tenderedAmount?: number;
+    changeAmount?: number;
     notes?: string;
     isOnline: boolean;
   }) => Promise<Order>;
@@ -204,6 +206,8 @@ export const useOrdersStore = create<OrdersStoreState>()(
         boothId,
         cashierId,
         paymentMethod,
+        tenderedAmount,
+        changeAmount,
         notes,
         isOnline,
       }) => {
@@ -246,6 +250,8 @@ export const useOrdersStore = create<OrdersStoreState>()(
           sync_status: syncStatus,
           idempotency_key: idempotencyKey,
           notes: notes || null,
+          tendered_amount: tenderedAmount !== undefined ? tenderedAmount : (paymentMethod === 'cash' ? finalAmount : null),
+          change_amount: changeAmount !== undefined ? changeAmount : (paymentMethod === 'cash' ? 0 : null),
           offline_created_at: nowIso,
           created_at: nowIso,
           updated_at: nowIso,
@@ -313,7 +319,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
           action_type: 'order_create',
           entity_type: 'order',
           entity_name: `Đơn #${orderNumber}`,
-          description: `Thu ngân tạo đơn hàng #${orderNumber} thành công (${cart.map((c) => `${c.quantity}x ${c.productName}`).join(', ')}). Tổng tiền: ${finalAmount.toLocaleString('vi-VN')} VND qua ${paymentMethod}.`,
+          description: `Thu ngân tạo đơn hàng #${orderNumber} thành công (${cart.map((c) => `${c.quantity}x ${c.productName}`).join(', ')}). Tổng tiền: ${finalAmount.toLocaleString('vi-VN')} VND qua ${paymentMethod === 'cash' ? `Tiền mặt (Khách đưa: ${(newOrder.tendered_amount || finalAmount).toLocaleString('vi-VN')} đ, Thối lại: ${(newOrder.change_amount || 0).toLocaleString('vi-VN')} đ)` : 'VietQR'}.`,
           changes: [
             { field: 'final_amount', field_label: 'Doanh thu', new_value: `${finalAmount.toLocaleString('vi-VN')} VND` },
             { field: 'payment_method', field_label: 'Hình thức', new_value: paymentMethod },

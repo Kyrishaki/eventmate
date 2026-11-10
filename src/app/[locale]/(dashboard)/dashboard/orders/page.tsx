@@ -322,11 +322,29 @@ export default function DashboardOrdersPage() {
               </div>
             </div>
 
-            <div className="pt-2 border-t border-[#E8E8E5] flex justify-between text-sm font-bold">
-              <span>Tổng thanh toán:</span>
-              <span className="text-[#315C4C]">
-                {formatCurrency(selectedOrder.final_amount, activeWorkspace?.currency || 'VND')}
-              </span>
+            <div className="pt-2 border-t border-[#E8E8E5] space-y-1.5">
+              <div className="flex justify-between text-sm font-bold">
+                <span>Tổng thanh toán:</span>
+                <span className="text-[#315C4C]">
+                  {formatCurrency(selectedOrder.final_amount, activeWorkspace?.currency || 'VND')}
+                </span>
+              </div>
+              {selectedOrder.payment_method === 'cash' && selectedOrder.tendered_amount != null && (
+                <div className="p-2.5 bg-[#F7F7F5] rounded border border-[#E8E8E5] space-y-1 text-xs">
+                  <div className="flex justify-between text-[#737373]">
+                    <span>Tiền mặt khách đưa:</span>
+                    <span className="font-semibold text-[#202124]">
+                      {formatCurrency(selectedOrder.tendered_amount, activeWorkspace?.currency || 'VND')}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-[#2F7D55] font-bold">
+                    <span>Tiền đã thối lại:</span>
+                    <span>
+                      {formatCurrency(selectedOrder.change_amount || 0, activeWorkspace?.currency || 'VND')}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {selectedOrder.proof_image_url && (

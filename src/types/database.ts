@@ -178,6 +178,8 @@ export interface Order {
   proof_image_url?: string | null;
   customer_name?: string | null;
   customer_phone?: string | null;
+  tendered_amount?: number | null;
+  change_amount?: number | null;
   offline_created_at: string;
   created_at: string;
   updated_at: string;

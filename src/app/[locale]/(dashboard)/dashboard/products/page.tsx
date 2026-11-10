@@ -15,6 +15,7 @@ import { formatCurrency, cn } from '@/lib/utils';
 import { Product, ProductVariant } from '@/types/database';
 import { calculateVariantStock } from '@/lib/stock-status';
 import { logActivity } from '@/stores/audit-store';
+import { ProductImageUploader } from '@/components/ui/product-image-uploader';
 import {
   Package,
   Plus,
@@ -34,6 +35,7 @@ import {
   RotateCcw,
   Eye,
   EyeOff,
+  Camera,
 } from 'lucide-react';
 
 interface VariantInput {
@@ -203,6 +205,35 @@ export default function ProductsPage() {
       { name: 'Size M', sku: 'TOUR-M', price: 300000, total_inventory: 100, reserved_quantity: 10, online_preorder_quantity: 20, barcode: '' },
       { name: 'Size L', sku: 'TOUR-L', price: 300000, total_inventory: 100, reserved_quantity: 10, online_preorder_quantity: 20, barcode: '' },
     ]);
+    setIsModalOpen(true);
+  }
+
+  function openEditModal(prod: Product) {
+    setEditingProduct(prod);
+    setName(prod.name);
+    setCategoryId(prod.category_id || categories[0]?.id || '');
+    setDescription(prod.description || '');
+    setImageUrl(prod.image_url || '');
+    setCollabPartner(prod.collab_partner || '');
+
+    const prodVariants = variants.filter((v) => v.product_id === prod.id);
+    if (prodVariants.length > 0) {
+      setFormVariants(
+        prodVariants.map((v) => ({
+          name: v.name,
+          sku: v.sku,
+          price: v.price,
+          total_inventory: v.total_inventory,
+          reserved_quantity: v.reserved_quantity || 0,
+          online_preorder_quantity: v.online_preorder_quantity || 0,
+          barcode: v.barcode || '',
+        }))
+      );
+    } else {
+      setFormVariants([
+        { name: 'Tiêu chuẩn', sku: '', price: 200000, total_inventory: 50, reserved_quantity: 0, online_preorder_quantity: 0, barcode: '' },
+      ]);
+    }
     setIsModalOpen(true);
   }
 
@@ -441,7 +472,13 @@ export default function ProductsPage() {
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   {/* Left: Product Info */}
                   <div className="flex items-start gap-3.5 min-w-0">
-                    <div className="w-16 h-16 rounded-[6px] bg-[#F7F7F5] border border-[#E8E8E5] overflow-hidden shrink-0 flex items-center justify-center">
+                    <div
+                      onClick={() => editable && openEditModal(prod)}
+                      className={`w-16 h-16 rounded-[6px] bg-[#F7F7F5] dark:bg-[#252525] border border-[#E8E8E5] dark:border-[#333333] overflow-hidden shrink-0 flex items-center justify-center relative group ${
+                        editable ? 'cursor-pointer hover:border-[#315C4C]' : ''
+                      }`}
+                      title={editable ? 'Bấm để đổi ảnh hoặc sửa thông tin sản phẩm' : undefined}
+                    >
                       {prod.image_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -451,6 +488,12 @@ export default function ProductsPage() {
                         />
                       ) : (
                         <Package className="w-6 h-6 text-[#9E9E9C]" />
+                      )}
+                      {editable && (
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[9px] font-semibold">
+                          <Camera className="w-3.5 h-3.5 mb-0.5" />
+                          <span>Đổi ảnh</span>
+                        </div>
                       )}
                     </div>
 
@@ -508,6 +551,17 @@ export default function ProductsPage() {
                   <div className="flex flex-wrap items-center gap-2 shrink-0 border-t lg:border-t-0 pt-2 lg:pt-0">
                     {editable ? (
                       <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs gap-1 border-[#315C4C]/40 text-[#315C4C] hover:bg-[#315C4C]/5 font-semibold"
+                          onClick={() => openEditModal(prod)}
+                          title="Sửa thông tin, chụp ảnh hoặc tải ảnh mới từ điện thoại"
+                        >
+                          <Camera className="w-3.5 h-3.5 text-[#315C4C]" />
+                          <span>Sửa & Đổi ảnh</span>
+                        </Button>
+
                         <Button
                           variant="outline"
                           size="sm"
@@ -668,15 +722,26 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {/* Create Product Modal with Variants Builder */}
+      {/* Create / Edit Product Modal with Image Uploader & Variants Builder */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={t('createButton')}
+        title={editingProduct ? 'Chỉnh Sửa Thông Tin & Đổi Ảnh Sản Phẩm' : t('createButton')}
         maxWidth="lg"
-        description="Nhập thông tin sản phẩm merchandise và danh sách các biến thể kích thước/màu sắc."
+        description={
+          editingProduct
+            ? 'Cập nhật ảnh chụp sản phẩm, tên, phân loại và số lượng mở bán.'
+            : 'Nhập thông tin sản phẩm merchandise và danh sách các biến thể kích thước/màu sắc.'
+        }
       >
         <form onSubmit={handleSave} className="space-y-4">
+          {/* Product Image Uploader - Camera capture & Phone Gallery */}
+          <ProductImageUploader
+            value={imageUrl}
+            onChange={(val) => setImageUrl(val || '')}
+            label="Ảnh chụp sản phẩm / Tải ảnh từ điện thoại"
+          />
+
           <div className="space-y-1.5">
             <Label htmlFor="prod-name" required>
               {t('productName')}
@@ -690,7 +755,7 @@ export default function ProductsPage() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="prod-cat">{t('categoryLabel')}</Label>
               <select
@@ -714,16 +779,6 @@ export default function ProductsPage() {
                 placeholder="VD: The Cassette, Cá Hồi Hoang..."
                 value={collabPartner}
                 onChange={(e) => setCollabPartner(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="prod-img">{t('imageUrlLabel')}</Label>
-              <Input
-                id="prod-img"
-                placeholder="https://..."
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
               />
             </div>
           </div>
@@ -879,7 +934,7 @@ export default function ProductsPage() {
               {tCommon('cancel')}
             </Button>
             <Button type="submit" variant="primary" size="sm">
-              {tCommon('save')}
+              {editingProduct ? 'Lưu cập nhật & Đổi ảnh' : tCommon('save')}
             </Button>
           </div>
         </form>

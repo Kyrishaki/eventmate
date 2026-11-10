@@ -56,6 +56,7 @@ import { logActivity } from '@/stores/audit-store';
 import { PreorderPickupModal } from '@/components/pos/preorder-pickup-modal';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useRealtimeCartSync } from '@/stores/realtime-cart-sync';
+import { ProductImageUploader } from '@/components/ui/product-image-uploader';
 
 function CollabPartnerPortalContent() {
   const tCommon = useTranslations('common');
@@ -1647,13 +1648,11 @@ ${url}`;
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="collab-prod-img">Link ảnh sản phẩm (tùy chọn)</Label>
-            <Input
-              id="collab-prod-img"
-              placeholder="https://..."
+          <div>
+            <ProductImageUploader
               value={productImageUrl}
-              onChange={(e) => setProductImageUrl(e.target.value)}
+              onChange={(val) => setProductImageUrl(val || '')}
+              label="Ảnh chụp sản phẩm (Chụp trực tiếp tại quầy hoặc chọn từ điện thoại)"
             />
           </div>
 

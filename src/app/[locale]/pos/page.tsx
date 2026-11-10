@@ -652,20 +652,39 @@ export default function PosTerminalPage() {
           {filteredProducts.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white border border-[#E8E8E5] rounded-[8px] my-auto">
               <Package className="w-12 h-12 text-[#9E9E9C] mb-3" />
-              <h3 className="text-sm font-bold text-[#202124]">Chưa có sản phẩm nào tại quầy</h3>
-              <p className="text-xs text-[#737373] mt-1 max-w-xs">
-                {workspaceEvents.length === 0
-                  ? 'Hãy tạo Sự kiện và Gian hàng trong Dashboard trước để bắt đầu bán.'
-                  : 'Hãy thêm sản phẩm và phân bổ số lượng tồn kho cho gian hàng này trong mục Quản lý Kho.'}
-              </p>
-              <Link
-                href={workspaceEvents.length === 0 ? '/dashboard/events' : '/dashboard/inventory'}
-                className="mt-4"
-              >
-                <Button variant="primary" size="sm" className="text-xs">
-                  {workspaceEvents.length === 0 ? 'Tạo Sự Kiện Ngay' : 'Phân Bổ Tồn Kho'}
-                </Button>
-              </Link>
+              {soldOutPosCount > 0 && hideSoldOut ? (
+                <>
+                  <h3 className="text-sm font-bold text-[#202124]">Tất cả sản phẩm đã hết hàng</h3>
+                  <p className="text-xs text-[#737373] mt-1 max-w-xs">
+                    Có {soldOutPosCount} sản phẩm tại quầy này đã bán hết hoặc đang được giữ trong giỏ hàng.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setHideSoldOut(false)}
+                    className="mt-3 text-xs"
+                  >
+                    Hiển thị sản phẩm hết hàng
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-sm font-bold text-[#202124]">Chưa có sản phẩm nào tại quầy</h3>
+                  <p className="text-xs text-[#737373] mt-1 max-w-xs">
+                    {workspaceEvents.length === 0
+                      ? 'Hãy tạo Sự kiện và Gian hàng trong Dashboard trước để bắt đầu bán.'
+                      : 'Hãy thêm sản phẩm và phân bổ số lượng tồn kho cho gian hàng này trong mục Quản lý Kho.'}
+                  </p>
+                  <Link
+                    href={workspaceEvents.length === 0 ? '/dashboard/events' : '/dashboard/inventory'}
+                    className="mt-4"
+                  >
+                    <Button variant="primary" size="sm" className="text-xs">
+                      {workspaceEvents.length === 0 ? 'Tạo Sự Kiện Ngay' : 'Phân Bổ Tồn Kho'}
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           ) : (
             /* Product Cards Touch Grid */

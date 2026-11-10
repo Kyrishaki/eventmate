@@ -73,6 +73,33 @@
 | 25 | `src/app/[locale]/(dashboard)/dashboard/team/page.tsx` | Chuẩn hóa `AuditActorRole`, escape ký tự HTML `&ldquo;` |
 | 26 | `src/app/[locale]/(dashboard)/layout.tsx` | Thay thế useEffect setState bằng useSyncExternalStore |
 | 27 | `src/app/[locale]/collab/[boothId]/page.tsx` | Xử lý `err instanceof Error`, escape ký tự HTML |
+| 28 | `src/lib/test-data-filter.ts` | Module trung tâm phân lập và lọc 100% dữ liệu test (isTestEvent, isTestOrder, isTestBooth, isTestAllocation) |
+| 29 | `src/app/globals.css` | Cấu hình `@custom-variant dark (&:where(.dark, .dark *))` và chuẩn hóa toàn bộ tokens cho Tailwind CSS v4 |
+| 30 | `docs/USER_MANUAL.md` | Sổ tay Hướng dẫn sử dụng hệ thống chi tiết (18.000 ký tự) |
+| 31 | `Google Docs Document` | Xuất bản trực tiếp tài liệu hướng dẫn lên Google Docs qua tài khoản liên kết kyrishaki@gmail.com |
+
+---
+
+### 1.6. Phân lập Tuyệt đối Dữ liệu Test khỏi Số liệu Doanh thu Thực tế
+- **DAT-02**:
+  - **Vấn đề**: Trước đây khi xem chế độ *"Tất cả sự kiện"*, 2 đơn hàng thử nghiệm máy POS (`EM-4748` trị giá 10.500.000 đ và `EM-9089` trị giá 350.000 đ) bị cộng gộp vào tổng doanh thu khiến số liệu hiển thị 10.850.000 đ mặc dù sự kiện thật chưa diễn ra.
+  - **Giải pháp**:
+    1. Tạo module kiểm soát dữ liệu trung tâm `src/lib/test-data-filter.ts`.
+    2. Tại **Dashboard Tổng quan (`dashboard/page.tsx`)**: Khi chọn "Tất cả sự kiện", hệ thống tự động loại trừ 100% đơn test. Tổng doanh thu thực tế về đúng `0 đ`, đơn hàng `0 đơn`, quầy hoạt động `2 quầy` (chỉ tính 2 quầy thật, loại bỏ quầy test).
+    3. Phân nhóm rõ ràng dropdown sự kiện thành `Dữ liệu thực tế` và `Thử nghiệm / Sandbox (Tách biệt)`.
+    4. Khi chuyển sang sự kiện test, hiển thị banner cảnh báo Sandbox màu hổ phách kèm nút **`[Xóa đơn test]`** để dọn sạch dữ liệu test chỉ với 1 click.
+    5. Đồng bộ cơ chế lọc cách ly này sang toàn bộ các phân hệ liên quan: **Báo cáo Doanh thu (`dashboard/analytics`)**, **Két Tiền mặt (`dashboard/payments`)**, **Danh sách Đơn hàng (`dashboard/orders`)** và **Tồn kho Trung tâm (`dashboard/inventory`)**.
+
+### 1.7. Hoàn thiện Chế độ Sáng / Tối (Dark & Light Theme)
+- **THEME-01**:
+  - Khắc phục cơ chế selector của Tailwind CSS v4 bằng cách định nghĩa `@custom-variant dark (&:where(.dark, .dark *));`.
+  - Chuẩn hóa hệ thống biến CSS CSS-variables (`--background`, `--surface`, `--foreground`, `--border`, `--muted`...) và loại bỏ hơn 120 class `dark:*` bị xung đột ghi đè.
+  - Toàn bộ các trang từ Dashboard, Báo cáo, Quản lý kho, Quản lý sản phẩm, Hộp thư góp ý đến POS đều đạt độ tương phản chuẩn Accessibility cả trong giao diện sáng lẫn tối.
+
+### 1.8. Biên soạn Sổ tay Hướng dẫn Sử dụng Chi tiết (Google Docs & Repo)
+- **DOCS-01**:
+  - Soạn thảo tài liệu vận hành hoàn chỉnh tại `docs/USER_MANUAL.md` gồm 7 phần: Tổng quan RBAC, Hướng dẫn Chủ shop/Admin, Quản trị kho 2 lớp và chống bán âm, Thao tác máy bán hàng POS & Offline-first, Đối soát tài chính & Xuất CSV, Nhật ký kiểm toán & Báo lỗi, Bảng hỏi đáp FAQ xử lý sự cố.
+  - Đồng bộ xuất bản trực tiếp lên Google Docs: [**EventMate - Hướng dẫn sử dụng hệ thống chi tiết**](https://docs.google.com/document/d/1yi0F0jm-dtM5FyPM9CM2BHBk0qZ77v5mDpgjgwelEV8/edit) (ID: `1yi0F0jm-dtM5FyPM9CM2BHBk0qZ77v5mDpgjgwelEV8`).
 
 ---
 

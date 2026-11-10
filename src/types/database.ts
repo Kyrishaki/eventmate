@@ -13,7 +13,11 @@ export type EventStatus =
   | 'completed'
   | 'cancelled';
 
+export type EventType = 'own_tour' | 'collab_event' | 'festival_booth' | 'pop_up';
+
 export type BoothStatus = 'active' | 'paused' | 'closed';
+
+export type BoothType = 'solo' | 'collab';
 
 export type PaymentMethod = 'cash' | 'qr_manual' | 'gateway';
 
@@ -38,6 +42,8 @@ export interface Workspace {
   slug: string;
   owner_id: string;
   currency: string;
+  description?: string;
+  is_collab?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -73,6 +79,7 @@ export interface EventItem {
   start_date: string;
   end_date: string;
   status: EventStatus;
+  event_type?: EventType;
   created_at: string;
   updated_at: string;
 }
@@ -84,6 +91,9 @@ export interface Booth {
   name: string;
   code: string;
   status: BoothStatus;
+  booth_type?: BoothType;
+  collab_partner?: string | null;
+  revenue_share_ratio?: number; // e.g. 50% collab
   created_at: string;
   updated_at: string;
 }
@@ -104,6 +114,7 @@ export interface Product {
   description: string | null;
   image_url: string | null;
   is_active: boolean;
+  collab_partner?: string | null;
   created_at: string;
   updated_at: string;
   category?: ProductCategory;

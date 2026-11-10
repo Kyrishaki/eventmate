@@ -16,11 +16,9 @@ import {
   Package,
   Plus,
   Trash2,
-  Edit2,
   Tag,
   Boxes,
-  Barcode,
-  Layers,
+  Users2,
   CheckCircle,
   Archive,
 } from 'lucide-react';
@@ -57,6 +55,7 @@ export default function ProductsPage() {
   const [categoryId, setCategoryId] = React.useState('');
   const [description, setDescription] = React.useState('');
   const [imageUrl, setImageUrl] = React.useState('');
+  const [collabPartner, setCollabPartner] = React.useState('');
   const [formVariants, setFormVariants] = React.useState<VariantInput[]>([
     { name: 'Tiêu chuẩn (Standard)', sku: '', price: 250000, total_inventory: 100, barcode: '' },
   ]);
@@ -81,6 +80,7 @@ export default function ProductsPage() {
     setCategoryId(categories[0]?.id || '');
     setDescription('');
     setImageUrl('');
+    setCollabPartner('');
     setFormVariants([
       { name: 'Size S', sku: 'TOUR-S', price: 300000, total_inventory: 80, barcode: '' },
       { name: 'Size M', sku: 'TOUR-M', price: 300000, total_inventory: 100, barcode: '' },
@@ -117,6 +117,7 @@ export default function ProductsPage() {
         category_id: categoryId || null,
         description: description.trim() || null,
         image_url: imageUrl.trim() || null,
+        collab_partner: collabPartner.trim() || null,
       });
     } else {
       createProduct(
@@ -126,6 +127,7 @@ export default function ProductsPage() {
           name,
           description: description.trim() || null,
           image_url: imageUrl.trim() || null,
+          collab_partner: collabPartner.trim() || null,
           is_active: true,
         },
         formVariants.map((fv) => ({
@@ -230,13 +232,19 @@ export default function ProductsPage() {
                     </div>
 
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <h3 className="text-sm font-bold text-[#202124] tracking-tight truncate">
                           {prod.name}
                         </h3>
                         {category && (
                           <Badge variant="neutral" className="text-[10px]">
                             {category.name}
+                          </Badge>
+                        )}
+                        {prod.collab_partner && (
+                          <Badge variant="warning" className="text-[10px] gap-1">
+                            <Users2 className="w-2.5 h-2.5" />
+                            <span>Collab: {prod.collab_partner}</span>
                           </Badge>
                         )}
                         {!prod.is_active && (
@@ -347,7 +355,7 @@ export default function ProductsPage() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="prod-cat">{t('categoryLabel')}</Label>
               <select
@@ -362,6 +370,16 @@ export default function ProductsPage() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="prod-collab">Đối tác Collab (nếu có)</Label>
+              <Input
+                id="prod-collab"
+                placeholder="VD: The Cassette, Cá Hồi Hoang..."
+                value={collabPartner}
+                onChange={(e) => setCollabPartner(e.target.value)}
+              />
             </div>
 
             <div className="space-y-1.5">

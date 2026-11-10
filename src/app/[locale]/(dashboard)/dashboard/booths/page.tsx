@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Modal } from '@/components/ui/modal';
-import { Booth, BoothStatus } from '@/types/database';
+import { Booth, BoothStatus, BoothType } from '@/types/database';
 import {
   Store,
   Plus,
@@ -19,7 +19,8 @@ import {
   Trash2,
   Boxes,
   TabletSmartphone,
-  CheckCircle2,
+  Users2,
+  Percent,
 } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 
@@ -30,6 +31,7 @@ export default function BoothsPage() {
   const { booths, events, allocations, createBooth, updateBooth, deleteBooth } = useDataStore();
 
   const [selectedEventFilter, setSelectedEventFilter] = React.useState<string>('all');
+  const [selectedTypeFilter, setSelectedTypeFilter] = React.useState<string>('all');
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [editingBooth, setEditingBooth] = React.useState<Booth | null>(null);
 
@@ -38,6 +40,9 @@ export default function BoothsPage() {
   const [code, setCode] = React.useState('');
   const [eventId, setEventId] = React.useState('');
   const [status, setStatus] = React.useState<BoothStatus>('active');
+  const [boothType, setBoothType] = React.useState<BoothType>('solo');
+  const [collabPartner, setCollabPartner] = React.useState('');
+  const [revenueShareRatio, setRevenueShareRatio] = React.useState<number>(50);
 
   const workspaceEvents = events.filter(
     (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
@@ -47,9 +52,14 @@ export default function BoothsPage() {
     (b) => !activeWorkspace || b.workspace_id === activeWorkspace.id
   );
 
-  const filteredBooths = workspaceBooths.filter(
-    (b) => selectedEventFilter === 'all' || b.event_id === selectedEventFilter
-  );
+  const filteredBooths = workspaceBooths.filter((b) => {
+    const matchesEvent = selectedEventFilter === 'all' || b.event_id === selectedEventFilter;
+    const matchesType =
+      selectedTypeFilter === 'all' ||
+      (selectedTypeFilter === 'collab' && (b.booth_type === 'collab' || !!b.collab_partner)) ||
+      (selectedTypeFilter === 'solo' && b.booth_type !== 'collab' && !b.collab_partner);
+    return matchesEvent && matchesType;
+  });
 
   function openCreateModal() {
     setEditingBooth(null);
@@ -57,6 +67,9 @@ export default function BoothsPage() {
     setCode('');
     setEventId(workspaceEvents[0]?.id || '');
     setStatus('active');
+    setBoothType('solo');
+    setCollabPartner('');
+    setRevenueShareRatio(50);
     setIsModalOpen(true);
   }
 
@@ -66,6 +79,9 @@ export default function BoothsPage() {
     setCode(booth.code);
     setEventId(booth.event_id);
     setStatus(booth.status);
+    setBoothType(booth.booth_type || (booth.collab_partner ? 'collab' : 'solo'));
+    setCollabPartner(booth.collab_partner || '');
+    setRevenueShareRatio(booth.revenue_share_ratio || 50);
     setIsModalOpen(true);
   }
 
@@ -79,6 +95,9 @@ export default function BoothsPage() {
         code: code.toUpperCase(),
         event_id: eventId,
         status,
+        booth_type: boothType,
+        collab_partner: boothType === 'collab' ? collabPartner.trim() || null : null,
+        revenue_share_ratio: boothType === 'collab' ? Number(revenueShareRatio) || 50 : undefined,
       });
     } else {
       createBooth({
@@ -87,6 +106,9 @@ export default function BoothsPage() {
         name,
         code: code.toUpperCase(),
         status,
+        booth_type: boothType,
+        collab_partner: boothType === 'collab' ? collabPartner.trim() || null : null,
+        revenue_share_ratio: boothType === 'collab' ? Number(revenueShareRatio) || 50 : undefined,
       });
     }
     setIsModalOpen(false);
@@ -113,10 +135,12 @@ export default function BoothsPage() {
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-[#202124]">{t('title')}</h1>
             <Badge variant="outline" className="text-[11px] font-mono">
-              {workspaceBooths.length} {t('title').toLowerCase()}
+              {workspaceBooths.length} quầy bán
             </Badge>
           </div>
-          <p className="text-xs text-[#737373] mt-0.5">{t('description')}</p>
+          <p className="text-xs text-[#737373] mt-0.5">
+            Quản lý các gian hàng riêng hoặc gian hàng hợp tác liên danh (Collab) cho từng sự kiện.
+          </p>
         </div>
 
         <Button
@@ -131,8 +155,8 @@ export default function BoothsPage() {
         </Button>
       </div>
 
-      {/* Filter by Event */}
-      <div className="flex items-center gap-3">
+      {/* Filters Bar: Event and Collab Type */}
+      <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2 text-xs text-[#737373]">
           <Calendar className="w-3.5 h-3.5" />
           <span>{t('selectEvent')}:</span>
@@ -148,6 +172,21 @@ export default function BoothsPage() {
               {e.name}
             </option>
           ))}
+        </select>
+
+        {/* Filter by Solo vs Collab */}
+        <div className="flex items-center gap-2 text-xs text-[#737373] border-l border-[#E8E8E5] pl-3">
+          <Users2 className="w-3.5 h-3.5" />
+          <span>Mô hình quầy:</span>
+        </div>
+        <select
+          className="h-8 rounded-[6px] border border-[#E8E8E5] bg-white px-2.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+          value={selectedTypeFilter}
+          onChange={(e) => setSelectedTypeFilter(e.target.value)}
+        >
+          <option value="all">Tất cả mô hình</option>
+          <option value="solo">Gian hàng Độc lập</option>
+          <option value="collab">Gian hàng Collab (Hợp tác)</option>
         </select>
       </div>
 
@@ -173,6 +212,7 @@ export default function BoothsPage() {
             const boothAllocations = allocations.filter((a) => a.booth_id === booth.id);
             const totalAllocatedItems = boothAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
             const totalSoldItems = boothAllocations.reduce((sum, a) => sum + a.sold_quantity, 0);
+            const isCollab = booth.booth_type === 'collab' || !!booth.collab_partner;
 
             return (
               <Card
@@ -182,13 +222,28 @@ export default function BoothsPage() {
                 <div className="p-5">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div>
-                      <h3 className="text-sm font-bold text-[#202124] tracking-tight">
-                        {booth.name}
-                      </h3>
-                      <span className="font-mono text-[10px] text-[#737373] bg-[#F0F0ED] px-1.5 py-0.5 rounded">
-                        {booth.code}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <h3 className="text-sm font-bold text-[#202124] tracking-tight">
+                          {booth.name}
+                        </h3>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="font-mono text-[10px] text-[#737373] bg-[#F0F0ED] px-1.5 py-0.5 rounded">
+                          {booth.code}
+                        </span>
+                        {isCollab ? (
+                          <Badge variant="warning" className="text-[10px] gap-1">
+                            <Users2 className="w-2.5 h-2.5" />
+                            <span>Collab: {booth.collab_partner || 'Đối tác'}</span>
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px]">
+                            Độc lập
+                          </Badge>
+                        )}
+                      </div>
                     </div>
+
                     <Badge variant={statusBadgeVariant(booth.status)} className="capitalize text-[10px]">
                       {t(`statusList.${booth.status}` as any)}
                     </Badge>
@@ -198,6 +253,13 @@ export default function BoothsPage() {
                     <Calendar className="w-3 h-3 text-[#9E9E9C] shrink-0" />
                     <span className="truncate">{event?.name || 'Sự kiện'}</span>
                   </p>
+
+                  {isCollab && booth.revenue_share_ratio && (
+                    <div className="mt-2 text-[11px] text-[#B7791F] flex items-center gap-1 bg-[#FEF7EC] px-2 py-1 rounded">
+                      <Percent className="w-3 h-3" />
+                      <span>Chia sẻ doanh thu đối tác: {booth.revenue_share_ratio}%</span>
+                    </div>
+                  )}
 
                   <div className="mt-4 p-3 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5] space-y-1.5 text-xs">
                     <div className="flex items-center justify-between">
@@ -330,6 +392,69 @@ export default function BoothsPage() {
                 <option value="closed">{t('statusList.closed')}</option>
               </select>
             </div>
+          </div>
+
+          {/* Collab Booth Options */}
+          <div className="p-3 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5] space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-[#202124]">Mô hình quầy bán</p>
+                <p className="text-[11px] text-[#737373]">
+                  Chọn nếu đây là gian hàng hợp tác / liên danh với nghệ sĩ hoặc đối tác khác
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBoothType('solo')}
+                  className={`px-2 py-1 text-xs rounded font-medium ${
+                    boothType === 'solo'
+                      ? 'bg-[#315C4C] text-white'
+                      : 'bg-white border text-[#737373]'
+                  }`}
+                >
+                  Độc lập
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBoothType('collab')}
+                  className={`px-2 py-1 text-xs rounded font-medium ${
+                    boothType === 'collab'
+                      ? 'bg-[#B7791F] text-white'
+                      : 'bg-white border text-[#737373]'
+                  }`}
+                >
+                  Collab
+                </button>
+              </div>
+            </div>
+
+            {boothType === 'collab' && (
+              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#E8E8E5]">
+                <div className="space-y-1">
+                  <Label htmlFor="collab-name">Tên Đối tác Collab</Label>
+                  <Input
+                    id="collab-name"
+                    placeholder="VD: The Cassette, Cá Hồi Hoang..."
+                    value={collabPartner}
+                    onChange={(e) => setCollabPartner(e.target.value)}
+                    className="bg-white text-xs h-8"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="collab-ratio">Chia sẻ doanh thu (%)</Label>
+                  <Input
+                    id="collab-ratio"
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={revenueShareRatio}
+                    onChange={(e) => setRevenueShareRatio(Number(e.target.value))}
+                    className="bg-white text-xs h-8"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F0ED]">

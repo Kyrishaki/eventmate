@@ -126,6 +126,20 @@
     4. **Số lượng hàng đã bán offline**: Lượng hàng đã bán thực tế tại các quầy POS (`offlineSold`).
     5. **Tồn kho để bán offline (không tính online và preord vào)**: Lượng tồn khả dụng an toàn tuyệt đối dành riêng cho khách mua trực tiếp tại quầy = `Math.max(0, Số lượng - Online - Preord - Đã bán offline)`.
 
+### 1.12. Layout Gian hàng Trưng bày Dành riêng cho Session Khách xem (Guest Showcase & Keep Đồ)
+- **GST-01**:
+  - **Mục tiêu**: Khách xem (session guest / khách chưa đăng nhập) chỉ được xem danh mục hàng hóa ("những hàng gì trong trang"), giá bán, hình ảnh và tồn kho khả dụng; **tuyệt đối không được xem các hoạt động vận hành nội bộ** (Doanh thu, Két tiền mặt, Báo cáo tài chính, Nhật ký kiểm toán, Danh sách nhân sự, Cài đặt).
+  - **Kiến trúc Layout mới (`src/components/guest/guest-showcase.tsx`)**:
+    1. **Bảo mật & Phân vùng**: Khi người dùng vào vai trò Khách (`viewer` hoặc không có session đăng nhập), `DashboardLayout` chuyển ngay sang giao diện **Gian Hàng Trưng Bày (Guest Showcase)** thân thiện, thanh lịch theo chuẩn Swiss Minimalism.
+    2. **Xem hàng hóa công khai**: Hiển thị ảnh sắc nét, danh mục, kích thước (S/M/L/XL), giá niêm yết, và trạng thái tồn quầy thực tế (`Còn X món tại sự kiện` / `Đặt trước nhận tại quầy`).
+    3. **Liên hệ Mua Online**: Tích hợp modal mua online với Hotline bấm gọi trực tiếp (`0988.776.655`), chat Zalo chốt đơn, thông tin chuyển khoản VietQR thụ hưởng chính thức và chính sách ship COD toàn quốc.
+    4. **Keep đồ nhận tại sự kiện (0 đồng)**:
+       - Modal đăng ký giữ chỗ: Khách chọn Biến thể, Số lượng, Họ tên, Số điện thoại và Quầy nhận hàng tại concert.
+       - Tự động sinh **Phiếu Giữ Đồ** kèm mã vé (VD: `KEEP-7821`) và mã QR nhận hàng.
+       - Tự động đồng bộ tăng `online_preorder_quantity` trong kho để bảo vệ số lượng, đảm bảo quầy offline không bán lấn sang hàng khách đã giữ.
+       - Tự động ghi nhận vào `preorder-store` để khi khách đến quầy, thu ngân trên máy bán hàng POS chỉ cần nhập số điện thoại hoặc mã vé là đối soát trả hàng ngay lập tức!
+    5. **Chuyển đổi vai trò linh hoạt**: Tích hợp nút `[🔒 Đăng nhập Quản lý]` ở đầu trang và nút `[👁️ Gian hàng Khách]` trên Topbar của Admin để quản trị viên dễ dàng kiểm tra trải nghiệm khách hàng.
+
 ---
 
 ## 3. KẾT QUẢ KIỂM THỬ THỰC TẾ (TEST EXECUTION & RESULTS)

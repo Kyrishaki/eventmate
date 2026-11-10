@@ -7,7 +7,7 @@ import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { SyncStatusBadge } from '@/components/ui/sync-status-badge';
 import { Badge } from '@/components/ui/badge';
-import { Menu, LogOut, User as UserIcon } from 'lucide-react';
+import { Menu, LogOut, User as UserIcon, Eye } from 'lucide-react';
 import { useRouter } from '@/i18n/routing';
 
 interface TopbarProps {
@@ -52,6 +52,19 @@ export function Topbar({ onToggleSidebar, title }: TopbarProps) {
         <LanguageSwitcher />
 
         <ThemeToggle />
+
+        {/* View as Guest Button */}
+        <button
+          type="button"
+          onClick={() => {
+            useAuthStore.getState().loginAsGuest();
+          }}
+          className="hidden md:inline-flex items-center gap-1.5 h-8 px-2.5 rounded-[6px] text-xs font-semibold border border-[#315C4C]/30 text-[#315C4C] hover:bg-[#EBF1EE] transition-colors"
+          title="Xem thử giao diện Gian hàng Khách xem (Chỉ xem sản phẩm & Keep đồ)"
+        >
+          <Eye className="w-3.5 h-3.5" />
+          <span>Gian hàng Khách</span>
+        </button>
 
         {/* User Account & Logout */}
         <div className="flex items-center gap-2 pl-2 border-l border-[#E8E8E5]">

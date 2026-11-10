@@ -160,10 +160,10 @@ export default function LoginPage() {
               variant="outline"
               size="md"
               onClick={handleGuestLogin}
-              className="w-full text-xs text-[#737373] hover:text-[#202124] gap-1.5"
+              className="w-full text-xs text-[#315C4C] hover:text-[#254639] border-[#315C4C]/30 hover:bg-[#EBF1EE] font-semibold gap-1.5"
             >
               <UserCheck className="w-3.5 h-3.5" />
-              <span>Truy cập với tư cách Khách xem (Chế độ Chỉ đọc)</span>
+              <span>Xem Gian Hàng Merchandise (Khách xem & Keep đồ)</span>
             </Button>
           </div>
         </CardContent>

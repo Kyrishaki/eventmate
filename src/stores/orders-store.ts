@@ -24,6 +24,12 @@ export interface BankConfig {
   accountName: string;
 }
 
+export const DEFAULT_BANK_CONFIG: BankConfig = {
+  bankId: 'MB',
+  accountNo: '0988776655',
+  accountName: 'NGUYEN VAN A - EVENTMATE',
+};
+
 interface OrdersStoreState {
   orders: Order[];
   cart: CartItem[];
@@ -133,11 +139,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
       orders: sampleInitialOrders,
       cart: [],
       discountAmount: 0,
-      activeBankConfig: {
-        bankId: 'MB',
-        accountNo: '',
-        accountName: '',
-      },
+      activeBankConfig: DEFAULT_BANK_CONFIG,
 
       clearOrders: () => set({ orders: [], cart: [] }),
 
@@ -192,6 +194,16 @@ export const useOrdersStore = create<OrdersStoreState>()(
 
       setBankConfig: (activeBankConfig) => {
         set({ activeBankConfig });
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('eventmate_shared_bank_config', JSON.stringify(activeBankConfig));
+            const bc = new BroadcastChannel('eventmate_bank_sync');
+            bc.postMessage({ type: 'BANK_CONFIG_UPDATED', config: activeBankConfig });
+            bc.close();
+          } catch (e) {
+            console.warn('Bank config broadcast error:', e);
+          }
+        }
       },
 
       submitOrder: async ({
@@ -413,7 +425,44 @@ export const useOrdersStore = create<OrdersStoreState>()(
           );
           state.orders = [...missing, ...state.orders];
         }
+        // Ensure activeBankConfig has valid values
+        try {
+          if (typeof window !== 'undefined') {
+            const savedBank = localStorage.getItem('eventmate_shared_bank_config');
+            if (savedBank) {
+              const parsed = JSON.parse(savedBank);
+              if (parsed?.bankId && parsed?.accountNo) {
+                state.activeBankConfig = parsed;
+              }
+            } else if (!state.activeBankConfig || !state.activeBankConfig.accountNo) {
+              state.activeBankConfig = DEFAULT_BANK_CONFIG;
+            }
+          }
+        } catch (e) {}
       },
     }
   )
 );
+
+// Listen to cross-window, cross-tab bank config updates so all roles (Cashier, Staff, Admin) sync immediately
+if (typeof window !== 'undefined') {
+  try {
+    const bankChannel = new BroadcastChannel('eventmate_bank_sync');
+    bankChannel.onmessage = (event) => {
+      if (event.data?.type === 'BANK_CONFIG_UPDATED' && event.data.config) {
+        useOrdersStore.setState({ activeBankConfig: event.data.config });
+      }
+    };
+  } catch (e) {}
+
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'eventmate_shared_bank_config' && e.newValue) {
+      try {
+        const parsed = JSON.parse(e.newValue);
+        if (parsed?.bankId && parsed?.accountNo) {
+          useOrdersStore.setState({ activeBankConfig: parsed });
+        }
+      } catch (err) {}
+    }
+  });
+}

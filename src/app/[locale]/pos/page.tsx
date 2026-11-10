@@ -16,6 +16,7 @@ import { Modal } from '@/components/ui/modal';
 import { SyncStatusBadge, SyncState } from '@/components/ui/sync-status-badge';
 import { formatCurrency } from '@/lib/utils';
 import { PaymentMethod, Product, ProductVariant, Order } from '@/types/database';
+import { calculateVariantStock } from '@/lib/stock-status';
 import { PreorderPickupModal } from '@/components/pos/preorder-pickup-modal';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { usePreorderStore } from '@/stores/preorder-store';
@@ -232,8 +233,12 @@ export default function PosTerminalPage() {
   // Checkout Modal State
   const [isCheckoutOpen, setIsCheckoutOpen] = React.useState(false);
   const [qrSessionRef, setQrSessionRef] = React.useState('8899');
+  const [autoConfirmQr, setAutoConfirmQr] = React.useState(false);
+  const [qrCountdown, setQrCountdown] = React.useState<number | null>(null);
+
   const openCheckoutModal = React.useCallback(() => {
     setQrSessionRef(Math.floor(1000 + Math.random() * 9000).toString());
+    setQrCountdown(null);
     setIsCheckoutOpen(true);
   }, []);
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>('qr_manual');
@@ -405,6 +410,7 @@ export default function PosTerminalPage() {
       setConfirmedOrder(order);
       setIsCheckoutOpen(false);
       setIsMobileCartOpen(false);
+      setQrCountdown(null);
       setTenderedCash(0);
       setOrderNotes('');
     } catch (err: unknown) {
@@ -413,6 +419,29 @@ export default function PosTerminalPage() {
       setIsSubmitting(false);
     }
   }
+
+  // Simulation / Webhook Auto-Detection Countdown Timer
+  React.useEffect(() => {
+    if (!isCheckoutOpen || paymentMethod !== 'qr_manual' || !autoConfirmQr) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setQrCountdown((prev) => {
+        if (prev === null) return 4;
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleCompleteOrder();
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      clearInterval(timer);
+    };
+  }, [isCheckoutOpen, paymentMethod, autoConfirmQr]);
 
   if (!isAuthenticated || !user) {
     return (
@@ -705,6 +734,16 @@ export default function PosTerminalPage() {
 
                 const qtyInCart = activeVariant ? getVariantInCartQty(activeVariant.id) : 0;
 
+                // Calculate exact 5-state stock breakdown for active variant
+                const variantAllocs = activeVariant
+                  ? allocations.filter((a) => a.variant_id === activeVariant.id && !a.is_test)
+                  : [];
+                const varSoldOffline = variantAllocs.reduce((sum, a) => sum + (a.sold_quantity || 0), 0);
+                const varAllocated = variantAllocs.reduce((sum, a) => sum + (a.allocated_quantity || 0), 0);
+                const stockBreakdown = activeVariant
+                  ? calculateVariantStock(activeVariant, varSoldOffline, varAllocated)
+                  : null;
+
                 return (
                   <div
                     key={prod.id}
@@ -782,6 +821,29 @@ export default function PosTerminalPage() {
                                 </button>
                               );
                             })}
+                          </div>
+                        )}
+
+                        {/* 5-State Stock Status Breakdown */}
+                        {stockBreakdown && (
+                          <div className="mt-2 p-1.5 bg-[#F7F7F5] rounded-[4px] border border-[#E8E8E5] text-[10px] space-y-0.5">
+                            <div className="flex items-center justify-between font-semibold">
+                              <span className="text-[#315C4C]">
+                                Tồn quầy: <strong>{availableStock}</strong>
+                              </span>
+                              <span className="text-[#737373]">
+                                Số lượng: <strong>{stockBreakdown.total}</strong>
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-[9px] text-[#737373]">
+                              <span>Onl: <strong className="text-[#202124]">{stockBreakdown.online}</strong></span>
+                              <span>Preord: <strong className="text-[#B7791F]">{stockBreakdown.preord}</strong></span>
+                              <span>Đã bán: <strong className="text-[#2F7D55]">{stockBreakdown.offlineSold}</strong></span>
+                            </div>
+                            <div className="text-[9px] text-[#2F7D55] font-semibold pt-0.5 border-t border-[#E8E8E5]/60 flex justify-between">
+                              <span>Tồn bán offline:</span>
+                              <span>{stockBreakdown.offlineAvailable}</span>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1180,9 +1242,15 @@ export default function PosTerminalPage() {
           {/* Mode 1: VietQR Dynamic Code Generator */}
           {paymentMethod === 'qr_manual' && (
             <div className="p-4 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[6px] text-center space-y-3">
-              <p className="text-xs font-semibold text-[#202124]">
-                Quét mã để thanh toán:
-              </p>
+              {/* Pulsating status badge */}
+              <div className="flex items-center justify-center gap-2 text-xs font-semibold text-[#2F7D55] bg-[#EAF4EE] py-1.5 px-3 rounded-full mx-auto w-fit border border-[#2F7D55]/30">
+                <span className="w-2 h-2 rounded-full bg-[#2F7D55] animate-ping" />
+                <span>
+                  {qrCountdown !== null && qrCountdown > 0
+                    ? `Đang chờ ngân hàng báo có... Tự động khớp lệnh sau ${qrCountdown}s`
+                    : 'Đang chờ khách quét mã VietQR & chuyển tiền...'}
+                </span>
+              </div>
 
               {/* Real dynamic VietQR image with instant amount embedding */}
               <div className="w-48 h-48 mx-auto bg-white p-2 rounded-[8px] border border-[#E8E8E5] shadow-xs flex items-center justify-center">
@@ -1209,6 +1277,38 @@ export default function PosTerminalPage() {
                 <p className="font-bold text-[#315C4C] text-sm pt-1">
                   Số tiền: {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}
                 </p>
+                <p className="font-mono text-[10px] text-[#8C5D17] bg-[#FEF7EC] px-2 py-0.5 rounded w-fit mx-auto border border-[#B7791F]/20">
+                  Nội dung CK: EM{qrSessionRef}
+                </p>
+              </div>
+
+              {/* Cashier direct confirmation action */}
+              <div className="pt-2 space-y-2">
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="md"
+                  disabled={isSubmitting}
+                  isLoading={isSubmitting}
+                  onClick={handleCompleteOrder}
+                  className="w-full gap-2 bg-[#2F7D55] hover:bg-[#256343] text-white font-bold text-xs py-2.5 shadow-sm"
+                >
+                  <CheckCircle2 className="w-4 h-4 text-white" />
+                  <span>
+                    ✓ Khách đã chuyển tiền ({formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}) - Xác nhận & Trừ kho
+                  </span>
+                </Button>
+
+                {/* Auto webhook simulator toggle */}
+                <label className="flex items-center justify-center gap-2 text-[11px] text-[#737373] cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={autoConfirmQr}
+                    onChange={(e) => setAutoConfirmQr(e.target.checked)}
+                    className="rounded border-[#D5D5D0] text-[#315C4C] focus:ring-[#315C4C]"
+                  />
+                  <span>⚡ Tự động khớp lệnh sau 4s (Demo/Tự động)</span>
+                </label>
               </div>
             </div>
           )}
@@ -1404,12 +1504,12 @@ export default function PosTerminalPage() {
       <Modal
         isOpen={!!confirmedOrder}
         onClose={() => setConfirmedOrder(null)}
-        title="Đơn hàng thành công!"
-        description="Giao dịch đã được ghi nhận và trừ hạn mức tồn kho tại quầy."
+        title="Thanh toán thành công!"
+        description="Giao dịch đã được ghi nhận hoàn tất. Hệ thống đã tự động trừ số lượng sản phẩm khỏi tồn kho quầy."
       >
         {confirmedOrder && (
           <div className="text-center space-y-4">
-            <div className="w-14 h-14 rounded-full bg-[#EAF4EE] text-[#2F7D55] flex items-center justify-center mx-auto">
+            <div className="w-14 h-14 rounded-full bg-[#EAF4EE] text-[#2F7D55] flex items-center justify-center mx-auto border border-[#2F7D55]/30">
               <CheckCircle2 className="w-8 h-8" />
             </div>
 
@@ -1419,12 +1519,18 @@ export default function PosTerminalPage() {
                 {confirmedOrder.order_number}
               </h3>
               <p className="text-xs text-[#315C4C] font-semibold mt-0.5">
-                {confirmedOrder.payment_method === 'cash' ? 'Tiền mặt' : 'Chuyển khoản QR'} •{' '}
+                {confirmedOrder.payment_method === 'cash' ? 'Tiền mặt tại quầy' : 'Chuyển khoản VietQR'} •{' '}
                 {formatCurrency(
                   confirmedOrder.final_amount,
                   activeWorkspace?.currency || 'VND'
                 )}
               </p>
+              <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded bg-[#EAF4EE] text-[#2F7D55] text-xs font-semibold border border-[#2F7D55]/30">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>
+                  Đã tự động trừ {confirmedOrder.items?.reduce((s, i) => s + i.quantity, 0)} sản phẩm ra khỏi tồn quầy!
+                </span>
+              </div>
             </div>
 
             {confirmedOrder.payment_method === 'cash' && confirmedOrder.tendered_amount != null && (

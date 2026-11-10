@@ -101,6 +101,31 @@
   - Soạn thảo tài liệu vận hành hoàn chỉnh tại `docs/USER_MANUAL.md` gồm 7 phần: Tổng quan RBAC, Hướng dẫn Chủ shop/Admin, Quản trị kho 2 lớp và chống bán âm, Thao tác máy bán hàng POS & Offline-first, Đối soát tài chính & Xuất CSV, Nhật ký kiểm toán & Báo lỗi, Bảng hỏi đáp FAQ xử lý sự cố.
   - Đồng bộ xuất bản trực tiếp lên Google Docs: [**EventMate - Hướng dẫn sử dụng hệ thống chi tiết**](https://docs.google.com/document/d/1yi0F0jm-dtM5FyPM9CM2BHBk0qZ77v5mDpgjgwelEV8/edit) (ID: `1yi0F0jm-dtM5FyPM9CM2BHBk0qZ77v5mDpgjgwelEV8`).
 
+### 1.9. Đồng bộ Cấu hình VietQR Thời gian thực Đa vai trò (Cross-Role Bank QR Sync)
+- **PAY-01**:
+  - **Cơ chế**: Khi Chủ shop/Admin cập nhật tài khoản ngân hàng thụ hưởng (Mã BIN ngân hàng, Số tài khoản, Tên chủ tài khoản) tại trang **Phương thức Thanh toán (`/dashboard/payments`)**, cấu hình sẽ ngay lập tức được:
+    1. Ghi nhận vào Zustand Store `orders-store.ts`.
+    2. Lưu trữ bền vững vào `localStorage['eventmate_shared_bank_config']`.
+    3. Phát sóng tức thời (Real-time broadcast) qua API `BroadcastChannel('eventmate_bank_sync')` và sự kiện `window.storage`.
+  - **Kết quả**: Tất cả các vai trò khác (Thu ngân máy POS trên các tab/thiết bị khác, Nhân viên kiểm kê) đều nhận được và tự động cập nhật mã VietQR động mà không cần tải lại trang hay cấu hình thủ công.
+
+### 1.10. Luồng Xác nhận Thanh toán VietQR & Tự động Trừ kho Quầy
+- **POS-02**:
+  - Tại modal thanh toán POS khi chọn hình thức **VietQR**:
+    - Hiển thị trạng thái động kèm đèn xung nhịp: `● Đang chờ khách quét mã VietQR & chuyển tiền...`.
+    - Tích hợp nút thao tác trực diện cho thu ngân: **`[✓ Khách đã chuyển tiền (Số tiền) - Xác nhận & Trừ kho]`**.
+    - Tích hợp tính năng **⚡ Tự động khớp lệnh sau 4s (Demo/Tự động)** phục vụ chạy thử nghiệm webhook ngân hàng tự động.
+    - Khi giao dịch thành công: Hệ thống hiển thị modal **"Thanh toán thành công!"** nêu rõ số tiền nhận, mã đơn hàng `EM-xxxx` và xác nhận trừ tự động số lượng sản phẩm ra khỏi tồn kho quầy.
+
+### 1.11. Chuẩn hóa 5 Trạng thái Kho Chi tiết cho Toàn bộ Sản phẩm & Biến thể
+- **STK-01**:
+  - Tách bạch và hiển thị đồng bộ 5 chỉ số kho cốt lõi trên toàn hệ thống (Sản phẩm `/dashboard/products`, Kho hàng `/dashboard/inventory`, Máy bán hàng `/pos`):
+    1. **Số lượng (Tổng nhập)**: Tổng lượng hàng ban đầu nhập vào kho (`v.total_inventory`).
+    2. **Online**: Lượng hàng khách đặt trước qua kênh online nhận tại sự kiện (`v.online_preorder_quantity`).
+    3. **Preord / Giữ chỗ**: Lượng hàng giữ chỗ nội bộ / VIP (`v.reserved_quantity`).
+    4. **Số lượng hàng đã bán offline**: Lượng hàng đã bán thực tế tại các quầy POS (`offlineSold`).
+    5. **Tồn kho để bán offline (không tính online và preord vào)**: Lượng tồn khả dụng an toàn tuyệt đối dành riêng cho khách mua trực tiếp tại quầy = `Math.max(0, Số lượng - Online - Preord - Đã bán offline)`.
+
 ---
 
 ## 3. KẾT QUẢ KIỂM THỬ THỰC TẾ (TEST EXECUTION & RESULTS)

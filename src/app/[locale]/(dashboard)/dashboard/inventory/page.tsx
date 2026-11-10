@@ -259,14 +259,13 @@ export default function InventoryPage() {
                 <tr>
                   <th className="py-3 px-4 font-semibold">Sản phẩm & Biến thể</th>
                   <th className="py-3 px-4 font-semibold font-mono">SKU</th>
-                  <th className="py-3 px-4 font-semibold text-right">Tổng tồn kho</th>
-                  <th className="py-3 px-4 font-semibold text-center text-[#B7791F]">
-                    Đang Giữ (Đặt trước / Online)
-                  </th>
-                  <th className="py-3 px-4 font-semibold text-right">Kho tổng (Còn)</th>
-                  <th className="py-3 px-4 font-semibold text-right">Đã bán tại quầy</th>
+                  <th className="py-3 px-4 font-semibold text-right">Số lượng (Tổng)</th>
+                  <th className="py-3 px-4 font-semibold text-center text-[#1D4ED8]">Online</th>
+                  <th className="py-3 px-4 font-semibold text-center text-[#8C5D17]">Preord</th>
+                  <th className="py-3 px-4 font-semibold text-right">Đã bán offline</th>
+                  <th className="py-3 px-4 font-semibold text-right text-[#2F7D55]">Tồn bán offline</th>
                   <th className="py-3 px-4 font-semibold text-right text-[#315C4C]">
-                    Hạn mức quầy ({selectedBooth.code})
+                    Cấp quầy ({selectedBooth.code})
                   </th>
                   <th className="py-3 px-4 font-semibold text-center">Trạng thái</th>
                   <th className="py-3 px-4 font-semibold text-center">Điều chỉnh nhanh</th>
@@ -276,8 +275,13 @@ export default function InventoryPage() {
                 {activeVariants.map((v) => {
                   const product = products.find((p) => p.id === v.product_id);
                   const allAllocations = allocations.filter((a) => a.variant_id === v.id);
+                  const realAllocationsForVar = allAllocations.filter((a) => !a.is_test);
                   const totalAllocated = allAllocations.reduce(
                     (sum, a) => sum + a.allocated_quantity,
+                    0
+                  );
+                  const totalSoldOffline = realAllocationsForVar.reduce(
+                    (sum, a) => sum + (a.sold_quantity || 0),
                     0
                   );
                   const centralStorageRemaining = Math.max(0, v.total_inventory - totalAllocated);
@@ -286,7 +290,7 @@ export default function InventoryPage() {
                   const currentAllocQty = boothAlloc?.allocated_quantity || 0;
                   const currentSoldQty = boothAlloc?.sold_quantity || 0;
                   const availableToSell = Math.max(0, currentAllocQty - currentSoldQty);
-                  const stock = calculateVariantStock(v, currentSoldQty, currentAllocQty);
+                  const stock = calculateVariantStock(v, totalSoldOffline, totalAllocated);
 
                   return (
                     <tr key={v.id} className="hover:bg-[#FBFBFA] transition-colors">
@@ -308,33 +312,31 @@ export default function InventoryPage() {
                         {v.total_inventory}
                       </td>
 
-                      <td className="py-3 px-4 text-center">
-                        {stock.totalHeld > 0 ? (
-                          <div className="inline-flex flex-col items-center">
-                            <span className="font-bold text-[#B7791F] text-xs">
-                              {stock.totalHeld} món
-                            </span>
-                            <span className="text-[10px] text-[#737373]">
-                              ({stock.reserved} VIP, {stock.onlinePreorder} Onl)
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-[#9E9E9C] text-[11px]">—</span>
-                        )}
+                      <td className="py-3 px-4 text-center font-bold text-[#1D4ED8]">
+                        {stock.online > 0 ? stock.online : '—'}
                       </td>
 
-                      <td className="py-3 px-4 text-right font-semibold text-[#B7791F]">
-                        {centralStorageRemaining}
+                      <td className="py-3 px-4 text-center font-bold text-[#8C5D17]">
+                        {stock.preord > 0 ? stock.preord : '—'}
                       </td>
 
                       <td className="py-3 px-4 text-right font-medium text-[#737373]">
-                        {currentSoldQty}
+                        {stock.offlineSold}
+                        {currentSoldQty > 0 && (
+                          <span className="text-[10px] text-[#315C4C] block font-semibold">
+                            (Quầy: {currentSoldQty})
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="py-3 px-4 text-right font-bold text-[#2F7D55] text-sm bg-[#EAF4EE]/40">
+                        {stock.offlineAvailable}
                       </td>
 
                       <td className="py-3 px-4 text-right font-bold text-[#315C4C] text-sm">
                         {currentAllocQty}
                         <span className="text-[10px] font-normal text-[#737373] block">
-                          (Bán được: {availableToSell})
+                          (Còn bán: {availableToSell})
                         </span>
                       </td>
 
@@ -428,29 +430,34 @@ export default function InventoryPage() {
                     </div>
                   </div>
 
-                  {/* 4 Stats Grid */}
-                  <div className="grid grid-cols-2 gap-2 bg-[#F7F7F5] p-2.5 rounded-[6px] text-xs">
+                  {/* 5 Stats Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-[#F7F7F5] p-2.5 rounded-[6px] text-xs">
                     <div>
-                      <span className="text-[#737373] text-[10px] block">Hạn mức quầy:</span>
+                      <span className="text-[#737373] text-[10px] block">Số lượng (Tổng nhập):</span>
+                      <span className="font-bold text-sm text-[#202124]">{v.total_inventory}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#1D4ED8] text-[10px] block">Online:</span>
+                      <span className="font-bold text-sm text-[#1D4ED8]">{stock.online}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#8C5D17] text-[10px] block">Preord / Giữ chỗ:</span>
+                      <span className="font-bold text-sm text-[#8C5D17]">{stock.preord}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#737373] text-[10px] block">Đã bán offline:</span>
+                      <span className="font-semibold text-xs text-[#2F7D55]">
+                        {stock.offlineSold} {currentSoldQty > 0 && `(Quầy: ${currentSoldQty})`}
+                      </span>
+                    </div>
+                    <div className="bg-[#EAF4EE] p-1 rounded border border-[#2F7D55]/20">
+                      <span className="text-[#2F7D55] text-[10px] font-bold block">Tồn bán offline:</span>
+                      <span className="font-black text-sm text-[#2F7D55]">{stock.offlineAvailable}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#315C4C] text-[10px] block">Hạn mức quầy:</span>
                       <span className="font-bold text-sm text-[#315C4C]">{currentAllocQty}</span>
-                      <span className="text-[10px] text-[#737373] ml-1">(Còn bán: {availableToSell})</span>
-                    </div>
-                    <div>
-                      <span className="text-[#737373] text-[10px] block">Đang giữ (VIP/Online):</span>
-                      <span className="font-bold text-sm text-[#B7791F]">{stock.totalHeld} món</span>
-                      {stock.totalHeld > 0 && (
-                        <span className="text-[9px] text-[#8C5D17] block">
-                          ({stock.reserved} VIP, {stock.onlinePreorder} Onl)
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <span className="text-[#737373] text-[10px] block">Kho tổng còn:</span>
-                      <span className="font-bold text-sm text-[#202124]">{centralStorageRemaining}</span>
-                    </div>
-                    <div>
-                      <span className="text-[#737373] text-[10px] block">Đã bán tại quầy:</span>
-                      <span className="font-semibold text-xs text-[#2F7D55]">{currentSoldQty}</span>
+                      <span className="text-[10px] text-[#737373] ml-1">(Còn: {availableToSell})</span>
                     </div>
                   </div>
 

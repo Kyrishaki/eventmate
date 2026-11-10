@@ -27,10 +27,19 @@ export default function PaymentsPage() {
   const { activeWorkspace } = useWorkspaceStore();
   const { activeBankConfig, setBankConfig, orders } = useOrdersStore();
 
-  const [bankId, setBankId] = React.useState(activeBankConfig.bankId);
-  const [accountNo, setAccountNo] = React.useState(activeBankConfig.accountNo);
-  const [accountName, setAccountName] = React.useState(activeBankConfig.accountName);
+  const [bankId, setBankId] = React.useState(activeBankConfig.bankId || 'MB');
+  const [accountNo, setAccountNo] = React.useState(activeBankConfig.accountNo || '');
+  const [accountName, setAccountName] = React.useState(activeBankConfig.accountName || '');
   const [isSaved, setIsSaved] = React.useState(false);
+
+  // Sync state if activeBankConfig is updated via cross-tab broadcast
+  React.useEffect(() => {
+    if (activeBankConfig) {
+      setBankId(activeBankConfig.bankId || 'MB');
+      setAccountNo(activeBankConfig.accountNo || '');
+      setAccountName(activeBankConfig.accountName || '');
+    }
+  }, [activeBankConfig]);
 
   // Revenue breakdown by method (REAL PRODUCTION ONLY - test transactions quarantined)
   const realOrders = filterRealOrders(orders);
@@ -53,13 +62,14 @@ export default function PaymentsPage() {
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    setBankConfig({
+    const updated = {
       bankId: bankId.toUpperCase(),
       accountNo: accountNo.trim(),
       accountName: accountName.trim().toUpperCase(),
-    });
+    };
+    setBankConfig(updated);
     setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2500);
+    setTimeout(() => setIsSaved(false), 3500);
   }
 
   return (
@@ -130,9 +140,11 @@ export default function PaymentsPage() {
       )}
 
       {isSaved && (
-        <div className="flex items-center gap-2 p-3 text-xs text-[#2F7D55] bg-[#EAF4EE] border border-[#CEE6D7] rounded-[6px]">
-          <CheckCircle2 className="w-4 h-4 shrink-0" />
-          <span>Đã lưu thành công cấu hình ngân hàng VietQR! Các máy POS sẽ áp dụng tức thì.</span>
+        <div className="flex items-center gap-2 p-3 text-xs text-[#2F7D55] bg-[#EAF4EE] border border-[#CEE6D7] rounded-[6px] shadow-xs">
+          <CheckCircle2 className="w-4 h-4 shrink-0 text-[#2F7D55]" />
+          <span>
+            <strong>Đã cập nhật mã VietQR thành công!</strong> Toàn bộ các vai trò (Thu ngân máy POS, Nhân viên, Quản trị) và thiết bị khác đều đã đồng bộ tức thì.
+          </span>
         </div>
       )}
 

@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Modal } from '@/components/ui/modal';
 import { formatCurrency, cn } from '@/lib/utils';
 import { Product, ProductVariant, AuditActorRole } from '@/types/database';
-import { calculateVariantStock } from '@/lib/stock-status';
+import { calculateVariantStock, calculateProductStock } from '@/lib/stock-status';
 import { logActivity } from '@/stores/audit-store';
 import { ProductImageUploader } from '@/components/ui/product-image-uploader';
 import {
@@ -56,6 +56,7 @@ export default function ProductsPage() {
   const {
     products,
     variants,
+    allocations,
     categories,
     createProduct,
     updateProduct,
@@ -83,6 +84,7 @@ export default function ProductsPage() {
       total: number;
       reserved: number;
       online: number;
+      offlineSold: number;
     }>
   >([]);
 
@@ -90,14 +92,19 @@ export default function ProductsPage() {
     const prodVariants = variants.filter((v) => v.product_id === prod.id);
     setQuickAdjustProduct(prod);
     setQuickVariants(
-      prodVariants.map((v) => ({
-        id: v.id,
-        name: v.name,
-        sku: v.sku,
-        total: v.total_inventory,
-        reserved: v.reserved_quantity || 0,
-        online: v.online_preorder_quantity || 0,
-      }))
+      prodVariants.map((v) => {
+        const vAllocs = allocations.filter((a) => a.variant_id === v.id && !a.is_test);
+        const soldOff = vAllocs.reduce((sum, a) => sum + (a.sold_quantity || 0), 0);
+        return {
+          id: v.id,
+          name: v.name,
+          sku: v.sku,
+          total: v.total_inventory,
+          reserved: v.reserved_quantity || 0,
+          online: v.online_preorder_quantity || 0,
+          offlineSold: soldOff,
+        };
+      })
     );
   }
 
@@ -151,15 +158,12 @@ export default function ProductsPage() {
     (p) => !activeWorkspace || p.workspace_id === activeWorkspace.id
   );
 
-  // Check if a product is completely sold out across all variants
+  // Check if a product is completely sold out across all variants (offline available <= 0)
   function isProductSoldOut(prodId: string): boolean {
     const prodVariants = variants.filter((v) => v.product_id === prodId);
     if (prodVariants.length === 0) return true;
-    const totalAvail = prodVariants.reduce(
-      (sum, v) => sum + calculateVariantStock(v).availableForSale,
-      0
-    );
-    return totalAvail <= 0;
+    const summary = calculateProductStock(prodVariants, allocations);
+    return summary.offlineAvailable <= 0;
   }
 
   // Counts for Status Tabs
@@ -463,6 +467,7 @@ export default function ProductsPage() {
             const productVariants = variants.filter((v) => v.product_id === prod.id);
             const category = categories.find((c) => c.id === prod.category_id);
             const totalStock = productVariants.reduce((sum, v) => sum + v.total_inventory, 0);
+            const prodSummary = calculateProductStock(productVariants, allocations);
 
             return (
               <Card
@@ -536,13 +541,27 @@ export default function ProductsPage() {
                         </p>
                       )}
 
-                      <div className="flex items-center gap-3 text-xs text-[#737373] mt-2">
-                        <span className="flex items-center gap-1 font-medium text-[#202124]">
-                          <Boxes className="w-3.5 h-3.5 text-[#315C4C]" />
-                          Tổng kho: {totalStock} cái
+                      {/* Product 5-State Stock Breakdown */}
+                      <div className="flex flex-wrap items-center gap-1.5 text-xs mt-2.5">
+                        <span className="inline-flex items-center gap-1 font-semibold text-[#202124] bg-[#F7F7F5] px-2 py-0.5 rounded border border-[#E8E8E5] text-[11px]">
+                          <Boxes className="w-3 h-3 text-[#315C4C]" />
+                          Số lượng: {prodSummary.total}
                         </span>
-                        <span>•</span>
-                        <span>{productVariants.length} biến thể</span>
+                        <span className="inline-flex items-center gap-1 text-[#1D4ED8] bg-[#EFF6FF] px-2 py-0.5 rounded border border-[#3B82F6]/20 font-medium text-[11px]">
+                          Online: {prodSummary.online}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-[#8C5D17] bg-[#FEF7EC] px-2 py-0.5 rounded border border-[#B7791F]/20 font-medium text-[11px]">
+                          Preord: {prodSummary.preord}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-[#2F7D55] bg-[#EAF4EE] px-2 py-0.5 rounded border border-[#2F7D55]/20 font-medium text-[11px]">
+                          Đã bán offline: {prodSummary.offlineSold}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-white bg-[#315C4C] px-2.5 py-0.5 rounded font-bold text-[11px] shadow-2xs">
+                          Tồn bán offline: {prodSummary.offlineAvailable}
+                        </span>
+                        <span className="text-[10px] text-[#737373]">
+                          ({productVariants.length} biến thể)
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -661,7 +680,10 @@ export default function ProductsPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     {productVariants.map((v) => {
-                      const stock = calculateVariantStock(v);
+                      const vAllocs = allocations.filter((a) => a.variant_id === v.id && !a.is_test);
+                      const vSoldOffline = vAllocs.reduce((sum, a) => sum + (a.sold_quantity || 0), 0);
+                      const vAllocated = vAllocs.reduce((sum, a) => sum + (a.allocated_quantity || 0), 0);
+                      const stock = calculateVariantStock(v, vSoldOffline, vAllocated);
                       return (
                         <div
                           key={v.id}
@@ -682,33 +704,32 @@ export default function ProductsPage() {
                             <Badge variant={stock.badgeVariant} className="text-[10px]">
                               {stock.statusLabel}
                             </Badge>
-                            {stock.reserved > 0 && (
-                              <span className="inline-flex items-center gap-0.5 text-[10px] text-[#8C5D17] bg-[#FEF7EC] px-1.5 py-0.5 rounded border border-[#B7791F]/20 font-medium">
-                                <Bookmark className="w-2.5 h-2.5 text-[#B7791F]" />
-                                Tự giữ: {stock.reserved}
-                              </span>
-                            )}
-                            {stock.onlinePreorder > 0 && (
-                              <span className="inline-flex items-center gap-0.5 text-[10px] text-[#1D4ED8] bg-[#EFF6FF] px-1.5 py-0.5 rounded border border-[#3B82F6]/20 font-medium">
-                                <Globe className="w-2.5 h-2.5 text-[#3B82F6]" />
-                                Đơn online: {stock.onlinePreorder}
-                              </span>
-                            )}
+                            <span className="text-[10px] font-bold text-[#2F7D55] bg-[#EAF4EE] px-1.5 py-0.5 rounded border border-[#2F7D55]/30">
+                              Còn {stock.offlineAvailable} bán quầy
+                            </span>
                           </div>
 
-                          {/* Detailed Stock Numbers Grid */}
-                          <div className="grid grid-cols-3 gap-1 bg-white p-2 rounded border border-[#F0F0ED] text-center text-[11px]">
+                          {/* 5 Distinct Stock States Grid */}
+                          <div className="grid grid-cols-5 gap-1 bg-white p-2 rounded border border-[#F0F0ED] text-center text-[10px]">
                             <div>
-                              <span className="text-[#9E9E9C] text-[9px] block">Tổng kho</span>
+                              <span className="text-[#737373] text-[9px] block">Số lượng</span>
                               <span className="font-bold text-[#202124]">{stock.total}</span>
                             </div>
                             <div>
-                              <span className="text-[#9E9E9C] text-[9px] block">Đang giữ</span>
-                              <span className="font-bold text-[#B7791F]">{stock.totalHeld}</span>
+                              <span className="text-[#1D4ED8] text-[9px] block">Online</span>
+                              <span className="font-bold text-[#1D4ED8]">{stock.online}</span>
                             </div>
                             <div>
-                              <span className="text-[#9E9E9C] text-[9px] block">Bán tại quầy</span>
-                              <span className="font-bold text-[#2F7D55]">{stock.availableForSale}</span>
+                              <span className="text-[#8C5D17] text-[9px] block">Preord</span>
+                              <span className="font-bold text-[#8C5D17]">{stock.preord}</span>
+                            </div>
+                            <div>
+                              <span className="text-[#737373] text-[9px] block">Đã bán off</span>
+                              <span className="font-bold text-[#555555]">{stock.offlineSold}</span>
+                            </div>
+                            <div className="bg-[#EAF4EE] rounded py-0.5">
+                              <span className="text-[#2F7D55] text-[9px] font-bold block">Tồn bán off</span>
+                              <span className="font-black text-[#2F7D55]">{stock.offlineAvailable}</span>
                             </div>
                           </div>
                         </div>
@@ -953,18 +974,18 @@ export default function ProductsPage() {
             <div className="p-3 bg-[#FEF7EC] border border-[#B7791F]/30 rounded-[6px] text-xs text-[#8C5D17] space-y-1">
               <p className="font-bold flex items-center gap-1">
                 <Info className="w-3.5 h-3.5 text-[#B7791F]" />
-                <span>Quy tắc trừ kho tự động:</span>
+                <span>Quy tắc 5 trạng thái kho EventMate:</span>
               </p>
               <p>
-                Khả dụng bán tự do tại quầy = Tổng số lượng kho - (Số lượng tự giữ + Số lượng đơn online).
-                Hệ thống POS sẽ bảo vệ số lượng này, không cho phép bán lố vào phần hàng khách đã đặt trước!
+                <strong>Tồn kho để bán offline</strong> = Số lượng (Tổng nhập) - Online - Preord - Đã bán offline.
+                Hệ thống POS bảo vệ nghiêm ngặt số lượng này, tuyệt đối không cho phép bán lấn sang hàng online hoặc giữ chỗ!
               </p>
             </div>
 
             <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
               {quickVariants.map((qv, idx) => {
                 const totalHeld = qv.reserved + qv.online;
-                const available = Math.max(0, qv.total - totalHeld);
+                const offlineAvailable = Math.max(0, qv.total - totalHeld - (qv.offlineSold || 0));
 
                 return (
                   <div
@@ -974,12 +995,14 @@ export default function ProductsPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <h4 className="font-bold text-xs text-[#202124]">{qv.name}</h4>
-                        <span className="font-mono text-[10px] text-[#737373]">{qv.sku}</span>
+                        <span className="font-mono text-[10px] text-[#737373]">
+                          {qv.sku} • Đã bán offline: {qv.offlineSold || 0}
+                        </span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[10px] text-[#737373] block">Khả dụng bán tại quầy:</span>
-                        <span className={`text-xs font-bold ${available <= 0 ? 'text-[#C44536]' : 'text-[#2F7D55]'}`}>
-                          {available} món
+                        <span className="text-[10px] text-[#737373] block">Tồn bán offline:</span>
+                        <span className={`text-xs font-bold ${offlineAvailable <= 0 ? 'text-[#C44536]' : 'text-[#2F7D55]'}`}>
+                          {offlineAvailable} món
                         </span>
                       </div>
                     </div>

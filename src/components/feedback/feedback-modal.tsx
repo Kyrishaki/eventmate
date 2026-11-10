@@ -112,11 +112,11 @@ export function FeedbackModal({ isOpen, onClose, defaultType = 'bug' }: Feedback
     <Modal
       isOpen={isOpen}
       onClose={handleResetAndClose}
-      title={isSuccess ? 'Gửi Thành Công!' : 'Hộp Thư Góp Ý & Báo Cáo Lỗi Trang Web'}
+      title={isSuccess ? 'Gửi thành công!' : 'Góp ý & Báo lỗi'}
       description={
         isSuccess
           ? 'Ý kiến của bạn đã được ghi nhận vào hệ thống.'
-          : 'Chúng tôi luôn lắng nghe phản hồi của bạn để nâng cấp và hoàn thiện EventMate ngày một tốt hơn.'
+          : 'Gửi phản hồi hoặc báo lỗi để chúng tôi cải thiện hệ thống.'
       }
       maxWidth="lg"
     >
@@ -131,13 +131,13 @@ export function FeedbackModal({ isOpen, onClose, defaultType = 'bug' }: Feedback
               Cảm ơn bạn đã đóng góp!
             </h3>
             <p className="text-xs text-[#737373] dark:text-[#9E9E9C]">
-              Báo cáo của bạn đã được chuyển tới Admin và lưu trữ trong bảng tổng hợp để lên kế hoạch update trong phiên bản tiếp theo.
+              Báo cáo của bạn đã được chuyển tới Admin để tổng hợp và xử lý.
             </p>
           </div>
 
           <div className="pt-3">
             <Button variant="primary" size="md" onClick={handleResetAndClose} className="px-6">
-              Đóng hộp thoại
+              Đóng
             </Button>
           </div>
         </div>
@@ -155,7 +155,7 @@ export function FeedbackModal({ isOpen, onClose, defaultType = 'bug' }: Feedback
               }`}
             >
               <Bug className="w-3.5 h-3.5" />
-              <span>Báo lỗi (Bug)</span>
+              <span>Báo lỗi</span>
             </button>
 
             <button
@@ -168,7 +168,7 @@ export function FeedbackModal({ isOpen, onClose, defaultType = 'bug' }: Feedback
               }`}
             >
               <Lightbulb className="w-3.5 h-3.5" />
-              <span>Góp ý tính năng</span>
+              <span>Tính năng</span>
             </button>
 
             <button
@@ -181,7 +181,7 @@ export function FeedbackModal({ isOpen, onClose, defaultType = 'bug' }: Feedback
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Trải nghiệm (UX)</span>
+              <span>Trải nghiệm</span>
             </button>
 
             <button
@@ -194,7 +194,7 @@ export function FeedbackModal({ isOpen, onClose, defaultType = 'bug' }: Feedback
               }`}
             >
               <MessageSquare className="w-3.5 h-3.5" />
-              <span>Ý kiến khác</span>
+              <span>Khác</span>
             </button>
           </div>
 

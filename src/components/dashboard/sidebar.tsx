@@ -143,7 +143,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   {t('posTerminal')}
                 </p>
                 <p className="text-[10px] text-[#A6C4B8] leading-tight">
-                  Chế độ bán hàng sự kiện
+                  Chế độ POS
                 </p>
               </div>
             </div>

@@ -93,28 +93,28 @@ export default function DashboardOverviewPage() {
     {
       title: t('metrics.totalRevenue'),
       value: formatCurrency(totalRevenue, activeWorkspace?.currency || 'VND'),
-      change: `${filteredOrders.length} giao dịch thành công`,
+      change: `${filteredOrders.length} đơn thành công`,
       icon: DollarSign,
     },
     {
       title: t('metrics.ordersCount'),
       value: `${filteredOrders.length} đơn`,
-      change: selectedEventId === 'all' ? 'Đã xuất tại quầy POS' : `Tại ${filteredBooths.length} quầy bán`,
+      change: selectedEventId === 'all' ? 'Quầy POS' : `${filteredBooths.length} quầy`,
       icon: ShoppingCart,
     },
     {
       title: t('metrics.unitsSold'),
       value: `${totalSold} / ${totalAllocated}`,
-      change: selectedEventId === 'all' ? `${totalStock} trong tổng kho` : 'Hàng cấp cho sự kiện',
+      change: selectedEventId === 'all' ? `${totalStock} trong kho` : 'Hàng sự kiện',
       icon: Boxes,
     },
     {
-      title: 'Quầy bán kích hoạt',
+      title: 'Quầy hoạt động',
       value: `${activeBoothsCount} quầy`,
       change:
         selectedEventId === 'all'
-          ? `Thuộc ${workspaceEvents.length} sự kiện`
-          : `Thuộc sự kiện đang chọn`,
+          ? `${workspaceEvents.length} sự kiện`
+          : 'Sự kiện hiện tại',
       icon: Store,
     },
   ];
@@ -133,7 +133,7 @@ export default function DashboardOverviewPage() {
             </Badge>
           </div>
           <p className="text-xs text-[#737373] dark:text-[#9E9E9C] mt-0.5">
-            Theo dõi phân bổ hàng hóa, tiến độ bán tại từng gian hàng và doanh thu thời gian thực.
+            Theo dõi doanh thu, kho hàng và quầy bán.
           </p>
         </div>
 
@@ -158,7 +158,7 @@ export default function DashboardOverviewPage() {
         <div className="flex items-center gap-2.5 flex-wrap">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-[#555555] dark:text-[#CCCCCC]">
             <Filter className="w-4 h-4 text-[#315C4C]" />
-            <span>Lọc theo sự kiện:</span>
+            <span>Sự kiện:</span>
           </div>
 
           <div className="relative">
@@ -167,7 +167,7 @@ export default function DashboardOverviewPage() {
               onChange={(e) => handleEventChange(e.target.value)}
               className="h-8.5 pl-8 pr-8 text-xs font-semibold text-[#202124] dark:text-[#F0F0F0] bg-[#F7F7F5] dark:bg-[#2A2A2A] border border-[#D5D5D0] dark:border-[#444444] rounded-[6px] focus:outline-none focus:ring-1 focus:ring-[#315C4C] cursor-pointer appearance-none"
             >
-              <option value="all">🌐 Tất cả sự kiện (Toàn bộ)</option>
+              <option value="all">Tất cả sự kiện</option>
               {workspaceEvents.map((evt) => (
                 <option key={evt.id} value={evt.id}>
                   {evt.name}
@@ -193,15 +193,15 @@ export default function DashboardOverviewPage() {
         {selectedEventId === 'evt-test-pos' ? (
           <div className="flex items-center gap-1.5 text-xs text-[#B7791F] bg-[#B7791F]/10 px-2.5 py-1 rounded-[6px] font-medium border border-[#B7791F]/20">
             <FlaskConical className="w-3.5 h-3.5 shrink-0" />
-            <span>Chế độ thử nghiệm: Đơn hàng & tiền test được lưu tại đây</span>
+            <span>Sự kiện thử nghiệm</span>
           </div>
         ) : selectedEventId !== 'all' ? (
           <Badge variant="outline" className="text-xs border-[#315C4C] text-[#315C4C] bg-[#315C4C]/5">
-            Đang xem: {selectedEvent?.name}
+            {selectedEvent?.name}
           </Badge>
         ) : (
           <span className="text-[11px] text-[#737373]">
-            Hiển thị tổng hợp {workspaceEvents.length} sự kiện
+            {workspaceEvents.length} sự kiện
           </span>
         )}
       </div>
@@ -234,11 +234,11 @@ export default function DashboardOverviewPage() {
           <CardHeader className="flex flex-row items-center justify-between py-4 border-b border-[#F0F0ED] dark:border-[#2D2D2D]">
             <div>
               <CardTitle className="text-sm font-semibold text-[#202124] dark:text-[#F0F0F0]">
-                {selectedEventId === 'all' ? t('upcomingEvents') : 'Gian hàng thuộc sự kiện'}
+                {selectedEventId === 'all' ? t('upcomingEvents') : 'Gian hàng sự kiện'}
               </CardTitle>
               <CardDescription className="text-xs text-[#737373] dark:text-[#9E9E9C]">
                 {selectedEventId === 'all'
-                  ? 'Lịch diễn và danh sách gian hàng chuẩn bị mở bán'
+                  ? 'Danh sách sự kiện và quầy bán'
                   : selectedEvent?.name}
               </CardDescription>
             </div>
@@ -256,7 +256,7 @@ export default function DashboardOverviewPage() {
                 onClick={() => handleEventChange('all')}
                 className="text-xs gap-1 h-7 text-[#315C4C]"
               >
-                <span>Xem tất cả sự kiện</span>
+                <span>Tất cả sự kiện</span>
                 <ArrowRight className="w-3 h-3" />
               </Button>
             )}
@@ -378,8 +378,8 @@ export default function DashboardOverviewPage() {
               <CardTitle className="text-sm font-semibold text-[#202124] dark:text-[#F0F0F0]">{t('inventoryWarnings')}</CardTitle>
               <CardDescription className="text-xs text-[#737373] dark:text-[#9E9E9C]">
                 {selectedEventId === 'all'
-                  ? 'Tỷ lệ phân bổ và tình trạng tồn kho toàn tour'
-                  : `Tình trạng kho hàng sự kiện: ${selectedEvent?.name}`}
+                  ? 'Tình trạng tồn kho và phân bổ'
+                  : `Kho hàng: ${selectedEvent?.name}`}
               </CardDescription>
             </div>
             <Link href="/dashboard/inventory">
@@ -395,15 +395,15 @@ export default function DashboardOverviewPage() {
                 {selectedEventId === 'all' ? (
                   <>
                     <div className="flex items-center justify-between">
-                      <span className="text-[#737373] dark:text-[#9E9E9C]">Tổng hàng hóa đã nhập (Kho tổng):</span>
+                      <span className="text-[#737373] dark:text-[#9E9E9C]">Kho tổng:</span>
                       <span className="font-bold text-[#202124] dark:text-[#F0F0F0]">{totalStock} món</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[#737373] dark:text-[#9E9E9C]">Đã cấp cho các quầy bán:</span>
+                      <span className="text-[#737373] dark:text-[#9E9E9C]">Đã cấp cho quầy:</span>
                       <span className="font-semibold text-[#315C4C]">{totalAllocated} món</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[#737373] dark:text-[#9E9E9C]">Trữ lượng kho tổng chưa cấp:</span>
+                      <span className="text-[#737373] dark:text-[#9E9E9C]">Chưa phân bổ:</span>
                       <span className="font-semibold text-[#B7791F]">
                         {Math.max(0, totalStock - totalAllocated)} món
                       </span>
@@ -412,21 +412,21 @@ export default function DashboardOverviewPage() {
                 ) : (
                   <>
                     <div className="flex items-center justify-between">
-                      <span className="text-[#737373] dark:text-[#9E9E9C]">Hàng hóa cấp cho sự kiện này:</span>
+                      <span className="text-[#737373] dark:text-[#9E9E9C]">Hàng sự kiện:</span>
                       <span className="font-bold text-[#202124] dark:text-[#F0F0F0]">{totalAllocated} món</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[#737373] dark:text-[#9E9E9C]">Đã bán thành công tại sự kiện:</span>
+                      <span className="text-[#737373] dark:text-[#9E9E9C]">Đã bán:</span>
                       <span className="font-semibold text-[#315C4C]">{totalSold} món</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[#737373] dark:text-[#9E9E9C]">Tồn khả dụng tại các quầy:</span>
+                      <span className="text-[#737373] dark:text-[#9E9E9C]">Tồn tại quầy:</span>
                       <span className="font-semibold text-[#202124] dark:text-[#F0F0F0]">
                         {Math.max(0, totalAllocated - totalSold)} món
                       </span>
                     </div>
                     <div className="flex items-center justify-between pt-1 border-t border-[#E8E8E5] dark:border-[#333333]">
-                      <span className="text-[#737373] dark:text-[#9E9E9C]">Trữ lượng kho tổng còn lại:</span>
+                      <span className="text-[#737373] dark:text-[#9E9E9C]">Kho tổng còn:</span>
                       <span className="font-semibold text-[#B7791F]">
                         {Math.max(0, totalStock - allAllocatedTotal)} món
                       </span>
@@ -438,11 +438,11 @@ export default function DashboardOverviewPage() {
               <div className="flex items-center justify-between pt-2">
                 <div className="flex items-center gap-1.5 text-xs text-[#2F7D55]">
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>Các quầy bán sẵn sàng hoạt động</span>
+                  <span>Quầy sẵn sàng hoạt động</span>
                 </div>
                 <Link href="/dashboard/inventory">
                   <Button variant="outline" size="sm" className="text-xs gap-1">
-                    <span>Điều phối kho</span>
+                    <span>Điều phối</span>
                   </Button>
                 </Link>
               </div>
@@ -458,13 +458,13 @@ export default function DashboardOverviewPage() {
             <CardTitle className="text-sm font-semibold text-[#202124] dark:text-[#F0F0F0]">{t('recentOrders')}</CardTitle>
             <CardDescription className="text-xs text-[#737373] dark:text-[#9E9E9C]">
               {selectedEventId === 'all'
-                ? 'Các giao dịch được ghi nhận qua POS hoặc đồng bộ từ máy bán hàng'
-                : `Giao dịch thuộc: ${selectedEvent?.name}`}
+                ? 'Giao dịch gần nhất qua POS'
+                : `Giao dịch: ${selectedEvent?.name}`}
             </CardDescription>
           </div>
           <Link href="/dashboard/orders">
             <Button variant="ghost" size="sm" className="text-xs gap-1 h-7 text-[#315C4C]">
-              <span>Xem đơn hàng</span>
+              <span>Xem tất cả</span>
               <ArrowRight className="w-3 h-3" />
             </Button>
           </Link>

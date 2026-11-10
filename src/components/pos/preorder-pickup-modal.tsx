@@ -147,8 +147,8 @@ export function PreorderPickupModal({
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        title="Quản Lý & Trả Hàng Đặt Trước (Pre-order Pickup)"
-        description="Hàng đặt trước không được bán tự do. Khi khách đến nhận, bắt buộc phải chụp lại minh chứng để xác nhận."
+        title="Trả hàng đặt trước"
+        description="Kiểm tra thông tin và chụp ảnh minh chứng nhận hàng."
       >
         <div className="space-y-4">
           {/* Top Search & Filter Tabs */}
@@ -156,7 +156,7 @@ export function PreorderPickupModal({
             <div className="relative">
               <Search className="w-4 h-4 text-[#9E9E9C] absolute left-3 top-1/2 -translate-y-1/2" />
               <Input
-                placeholder="Tìm theo Mã đơn (PRE-...), Tên khách hàng hoặc Số điện thoại..."
+                placeholder="Tìm mã đơn, tên, số điện thoại..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9 h-9 text-xs"
@@ -173,7 +173,7 @@ export function PreorderPickupModal({
                     : 'text-[#737373] hover:text-[#202124]'
                 }`}
               >
-                <span>Chờ nhận hàng</span>
+                <span>Chờ nhận</span>
                 <span className="text-[10px] bg-[#FEF7EC] px-1.5 py-0.2 rounded font-mono text-[#B7791F]">
                   {pendingCount}
                 </span>
@@ -188,7 +188,7 @@ export function PreorderPickupModal({
                     : 'text-[#737373] hover:text-[#202124]'
                 }`}
               >
-                <span>Đã nhận thành công</span>
+                <span>Đã nhận</span>
                 <span className="text-[10px] bg-[#EBF1EE] px-1.5 py-0.2 rounded font-mono text-[#2F7D55]">
                   {pickedUpCount}
                 </span>

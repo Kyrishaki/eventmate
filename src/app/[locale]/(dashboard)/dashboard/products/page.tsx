@@ -357,7 +357,7 @@ export default function ProductsPage() {
           )}
         >
           <span className="w-2 h-2 rounded-full bg-[#2F7D55]" />
-          <span>Đang mở bán</span>
+          <span>Đang bán</span>
           <span className="text-[10px] bg-[#EBF1EE] px-1.5 py-0.2 rounded font-mono text-[#315C4C]">
             {activeCount}
           </span>
@@ -374,7 +374,7 @@ export default function ProductsPage() {
           )}
         >
           <EyeOff className="w-3.5 h-3.5 text-[#B7791F]" />
-          <span>Đã bán hết (Ẩn)</span>
+          <span>Hết hàng</span>
           <span className="text-[10px] bg-[#FEF7EC] px-1.5 py-0.2 rounded font-mono text-[#B7791F]">
             {soldOutCount}
           </span>
@@ -391,7 +391,7 @@ export default function ProductsPage() {
           )}
         >
           <Archive className="w-3.5 h-3.5 text-[#C44536]" />
-          <span>Đã ẩn / Đã xóa</span>
+          <span>Đã ẩn</span>
           <span className="text-[10px] bg-[#FDF1F0] px-1.5 py-0.2 rounded font-mono text-[#C44536]">
             {archivedCount}
           </span>

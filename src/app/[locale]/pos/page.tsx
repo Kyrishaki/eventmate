@@ -513,11 +513,10 @@ export default function PosTerminalPage() {
               size="sm"
               className="h-8 px-2.5 text-xs gap-1.5 border-[#B7791F]/40 text-[#8C5D17] hover:bg-[#FEF7EC] font-bold shadow-2xs"
               onClick={() => setIsPreorderPickupOpen(true)}
-              title="Trả hàng cho khách đã đặt trước / online (Bắt buộc chụp ảnh minh chứng)"
+              title="Trả hàng cho khách đặt trước (Cần chụp ảnh minh chứng)"
             >
               <Package className="w-3.5 h-3.5 text-[#B7791F]" />
-              <span className="hidden sm:inline">Trả Hàng Đặt Trước</span>
-              <span className="sm:hidden">Trả hàng</span>
+              <span>Trả hàng</span>
               {pendingPreordersCount > 0 && (
                 <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#B7791F] text-white font-mono">
                   {pendingPreordersCount}
@@ -537,10 +536,10 @@ export default function PosTerminalPage() {
               size="sm"
               className="h-8 px-2 text-xs gap-1 text-[#C44536] border-[#C44536]/30 hover:bg-[#FDF1F0] dark:hover:bg-[#3E1F1D]"
               onClick={() => setIsFeedbackOpen(true)}
-              title="Báo cáo lỗi hoặc góp ý cải thiện POS"
+              title="Góp ý hoặc báo lỗi hệ thống"
             >
               <Bug className="w-3.5 h-3.5 text-[#C44536]" />
-              <span className="hidden sm:inline">Báo lỗi</span>
+              <span className="hidden sm:inline">Góp ý</span>
             </Button>
 
             <ThemeToggle />
@@ -610,7 +609,7 @@ export default function PosTerminalPage() {
             <div className="relative flex-1 max-w-md min-w-[200px]">
               <Search className="w-4 h-4 text-[#9E9E9C] absolute left-3 top-2.5" />
               <Input
-                placeholder="Tìm sản phẩm theo tên hoặc SKU..."
+                placeholder="Tìm sản phẩm, SKU..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9 h-9 text-xs bg-white"
@@ -627,24 +626,24 @@ export default function PosTerminalPage() {
                     ? 'bg-[#EBF1EE] border-[#315C4C]/40 text-[#315C4C] font-semibold'
                     : 'bg-white border-[#E8E8E5] text-[#737373] hover:text-[#202124]'
                 }`}
-                title="Tự động ẩn các sản phẩm đã bán hết khỏi màn hình thu ngân"
+                title="Tự động ẩn sản phẩm hết hàng"
               >
                 {hideSoldOut ? (
                   <>
                     <EyeOff className="w-3.5 h-3.5 text-[#315C4C]" />
-                    <span>Đang ẩn hàng hết ({soldOutPosCount})</span>
+                    <span>Ẩn hết hàng ({soldOutPosCount})</span>
                   </>
                 ) : (
                   <>
                     <Eye className="w-3.5 h-3.5 text-[#737373]" />
-                    <span>Hiện tất cả ({soldOutPosCount} hết hàng)</span>
+                    <span>Hiện tất cả</span>
                   </>
                 )}
               </button>
 
               {selectedBooth?.collab_partner && (
                 <Badge variant="warning" className="text-xs shrink-0">
-                  Quầy Collab: {selectedBooth.collab_partner}
+                  Collab: {selectedBooth.collab_partner}
                 </Badge>
               )}
             </div>
@@ -709,20 +708,15 @@ export default function PosTerminalPage() {
                         {/* Stock Badge */}
                         <div className="absolute top-2 right-2">
                           {availableStock > 0 ? (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-black/70 text-white backdrop-blur-[2px] flex items-center gap-1">
-                              <span>Còn {availableStock}</span>
-                              {remoteHeldStock > 0 && (
-                                <span className="text-[#F3B05C] font-normal" title="Đang được chọn tại quầy/thu ngân khác">
-                                  ({remoteHeldStock} giỏ khác)
-                                </span>
-                              )}
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-black/70 text-white backdrop-blur-[2px]">
+                              Còn {availableStock}
                             </span>
                           ) : qtyInCart > 0 ? (
                             <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#315C4C] text-white">
-                              Đã lấy ({qtyInCart})
+                              {qtyInCart} trong giỏ
                             </span>
                           ) : remoteHeldStock > 0 ? (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#B7791F] text-white" title="Sản phẩm đang nằm trong giỏ hàng của thu ngân khác">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#B7791F] text-white" title="Đang trong giỏ của quầy khác">
                               Quầy khác giữ {remoteHeldStock}
                             </span>
                           ) : (
@@ -743,24 +737,6 @@ export default function PosTerminalPage() {
                             activeWorkspace?.currency || 'VND'
                           )}
                         </p>
-
-                        {/* Pre-order / Online reservation indicator */}
-                        {activeVariant &&
-                          ((activeVariant.reserved_quantity || 0) +
-                            (activeVariant.online_preorder_quantity || 0)) > 0 && (
-                            <div className="flex flex-wrap items-center gap-1 mt-1 text-[9px]">
-                              {(activeVariant.reserved_quantity || 0) > 0 && (
-                                <span className="text-[#8C5D17] bg-[#FEF7EC] px-1.5 py-0.5 rounded border border-[#B7791F]/20 font-medium">
-                                  Giữ chỗ: {activeVariant.reserved_quantity}
-                                </span>
-                              )}
-                              {(activeVariant.online_preorder_quantity || 0) > 0 && (
-                                <span className="text-[#1D4ED8] bg-[#EFF6FF] px-1.5 py-0.5 rounded border border-[#3B82F6]/20 font-medium">
-                                  Đơn onl: {activeVariant.online_preorder_quantity}
-                                </span>
-                              )}
-                            </div>
-                          )}
 
                         {/* Variant Selector Pills */}
                         {prodVariants.length > 1 && (
@@ -814,7 +790,7 @@ export default function PosTerminalPage() {
                             disabled={availableStock <= 0}
                             onClick={() => handleIncrease(activeVariant.id)}
                             className="w-8 h-8 rounded bg-[#315C4C] text-white flex items-center justify-center font-bold text-sm shadow-2xs hover:bg-[#284a3d] disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
-                            title={availableStock <= 0 ? 'Đã đạt giới hạn tồn khả dụng (không thể thêm quá số lượng)' : 'Thêm 1'}
+                            title={availableStock <= 0 ? 'Đã đạt giới hạn tồn khả dụng' : 'Thêm 1'}
                           >
                             <Plus className="w-3.5 h-3.5" />
                           </button>
@@ -830,11 +806,7 @@ export default function PosTerminalPage() {
                         >
                           <Plus className="w-3.5 h-3.5" />
                           <span>
-                            {availableStock > 0
-                              ? 'Thêm vào giỏ'
-                              : remoteHeldStock > 0
-                              ? 'Quầy khác đang giữ'
-                              : 'Hết hàng khả dụng'}
+                            {availableStock > 0 ? 'Thêm vào giỏ' : 'Hết hàng'}
                           </span>
                         </Button>
                       )}
@@ -852,7 +824,7 @@ export default function PosTerminalPage() {
           <div className="p-4 border-b border-[#E8E8E5] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ShoppingCart className="w-4 h-4 text-[#315C4C]" />
-              <h3 className="text-sm font-bold text-[#202124]">Giỏ hàng hiện tại</h3>
+              <h3 className="text-sm font-bold text-[#202124]">Giỏ hàng</h3>
               <Badge variant="neutral" className="text-[10px]">
                 {totalCartUnits} món
               </Badge>
@@ -863,7 +835,7 @@ export default function PosTerminalPage() {
                 onClick={clearCart}
                 className="text-[11px] text-[#C44536] hover:underline"
               >
-                Xóa tất cả
+                Xóa giỏ
               </button>
             )}
           </div>
@@ -873,9 +845,9 @@ export default function PosTerminalPage() {
             {cart.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center text-[#737373] py-12">
                 <ShoppingCart className="w-10 h-10 text-[#9E9E9C] mb-2 stroke-[1.5]" />
-                <p className="text-xs font-medium text-[#202124]">Giỏ hàng đang trống</p>
+                <p className="text-xs font-medium text-[#202124]">Giỏ hàng trống</p>
                 <p className="text-[11px] text-[#737373] mt-0.5">
-                  Chạm vào sản phẩm bên trái để thêm vào đơn
+                  Chọn sản phẩm để thêm vào đơn
                 </p>
               </div>
             ) : (
@@ -939,7 +911,7 @@ export default function PosTerminalPage() {
                 </span>
               </div>
               <div className="flex items-center justify-between text-[#737373]">
-                <span>Giảm giá / Ưu đãi:</span>
+                <span>Giảm giá:</span>
                 <input
                   type="number"
                   min={0}
@@ -950,7 +922,7 @@ export default function PosTerminalPage() {
                 />
               </div>
               <div className="flex items-center justify-between text-sm font-bold text-[#202124] pt-2 border-t border-[#E8E8E5]">
-                <span>Tổng thanh toán:</span>
+                <span>Tổng cộng:</span>
                 <span className="text-base text-[#315C4C]">
                   {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}
                 </span>
@@ -965,7 +937,7 @@ export default function PosTerminalPage() {
                 setTenderedCash(cartTotal);
                 openCheckoutModal();
               }}
-              className="w-full h-11 text-sm font-bold uppercase tracking-wider gap-2 shadow-xs"
+              className="w-full h-11 text-sm font-semibold tracking-wide gap-2 shadow-xs"
             >
               <CreditCard className="w-4 h-4" />
               <span>Thanh toán ({formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')})</span>
@@ -1139,9 +1111,9 @@ export default function PosTerminalPage() {
       <Modal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
-        title="Thanh toán Đơn hàng"
+        title="Thanh toán"
         maxWidth="lg"
-        description="Chọn hình thức thanh toán của khách hàng tại quầy."
+        description="Chọn phương thức thanh toán"
       >
         <div className="space-y-4">
           {/* Payment Method Selector Tabs */}
@@ -1149,40 +1121,40 @@ export default function PosTerminalPage() {
             <button
               type="button"
               onClick={() => setPaymentMethod('qr_manual')}
-              className={`p-3 rounded-[6px] border text-xs font-bold flex flex-col items-center gap-1.5 transition-colors ${
+              className={`p-2.5 rounded-[6px] border text-xs font-bold flex flex-col items-center gap-1.5 transition-colors ${
                 paymentMethod === 'qr_manual'
                   ? 'border-[#315C4C] bg-[#EBF1EE] text-[#315C4C]'
                   : 'border-[#E8E8E5] bg-white text-[#737373] hover:bg-[#F7F7F5]'
               }`}
             >
               <QrCode className="w-5 h-5" />
-              <span>Quét mã VietQR</span>
+              <span>VietQR</span>
             </button>
 
             <button
               type="button"
               onClick={() => setPaymentMethod('cash')}
-              className={`p-3 rounded-[6px] border text-xs font-bold flex flex-col items-center gap-1.5 transition-colors ${
+              className={`p-2.5 rounded-[6px] border text-xs font-bold flex flex-col items-center gap-1.5 transition-colors ${
                 paymentMethod === 'cash'
                   ? 'border-[#315C4C] bg-[#EBF1EE] text-[#315C4C]'
                   : 'border-[#E8E8E5] bg-white text-[#737373] hover:bg-[#F7F7F5]'
               }`}
             >
               <Banknote className="w-5 h-5" />
-              <span>Tiền mặt (Cash)</span>
+              <span>Tiền mặt</span>
             </button>
 
             <button
               type="button"
               onClick={() => setPaymentMethod('gateway')}
-              className={`p-3 rounded-[6px] border text-xs font-bold flex flex-col items-center gap-1.5 transition-colors ${
+              className={`p-2.5 rounded-[6px] border text-xs font-bold flex flex-col items-center gap-1.5 transition-colors ${
                 paymentMethod === 'gateway'
                   ? 'border-[#315C4C] bg-[#EBF1EE] text-[#315C4C]'
                   : 'border-[#E8E8E5] bg-white text-[#737373] hover:bg-[#F7F7F5]'
               }`}
             >
               <CreditCard className="w-5 h-5" />
-              <span>Cổng / Thẻ POS</span>
+              <span>Thẻ POS</span>
             </button>
           </div>
 
@@ -1190,7 +1162,7 @@ export default function PosTerminalPage() {
           {paymentMethod === 'qr_manual' && (
             <div className="p-4 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[6px] text-center space-y-3">
               <p className="text-xs font-semibold text-[#202124]">
-                Khách mở App ngân hàng quét mã chuyển khoản nhanh Napas247:
+                Quét mã để thanh toán:
               </p>
 
               {/* Real dynamic VietQR image with instant amount embedding */}
@@ -1227,7 +1199,7 @@ export default function PosTerminalPage() {
             <div className="p-4 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[8px] space-y-3 text-xs">
               {/* Total required */}
               <div className="p-3 bg-white border border-[#E8E8E5] rounded-[6px] flex items-center justify-between">
-                <span className="font-semibold text-[#737373]">Tổng tiền cần thu:</span>
+                <span className="font-semibold text-[#737373]">Cần thu:</span>
                 <span className="text-base font-extrabold text-[#315C4C]">
                   {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}
                 </span>
@@ -1238,7 +1210,7 @@ export default function PosTerminalPage() {
                 <div className="flex items-center justify-between">
                   <Label htmlFor="tendered-cash" className="font-bold text-[#202124] flex items-center gap-1.5">
                     <Coins className="w-3.5 h-3.5 text-[#315C4C]" />
-                    <span>Tiền khách đưa (Nhập thủ công):</span>
+                    <span>Tiền khách đưa:</span>
                   </Label>
                   {tenderedCash > 0 && (
                     <button
@@ -1261,7 +1233,7 @@ export default function PosTerminalPage() {
                       const raw = e.target.value.replace(/\D/g, '');
                       setTenderedCash(raw ? parseInt(raw, 10) : 0);
                     }}
-                    placeholder="Nhập số tiền khách đưa (VD: 500.000)..."
+                    placeholder="Nhập số tiền..."
                     className="h-11 text-lg font-bold bg-white text-[#202124] pr-8 focus:border-[#315C4C]"
                     autoFocus
                   />
@@ -1274,13 +1246,13 @@ export default function PosTerminalPage() {
               {/* Quick suggestions: Exact & Denominations */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-[11px] text-[#737373]">
-                  <span>Gợi ý mệnh giá nhanh:</span>
+                  <span>Gợi ý:</span>
                   <button
                     type="button"
                     onClick={() => setTenderedCash(cartTotal)}
                     className={`font-bold hover:underline ${tenderedCash === cartTotal ? 'text-[#315C4C]' : 'text-[#202124]'}`}
                   >
-                    ⚡ Khách trả vừa đủ
+                    Đưa vừa đủ
                   </button>
                 </div>
 
@@ -1307,7 +1279,7 @@ export default function PosTerminalPage() {
 
                 {/* Additive quick buttons (+10k, +20k, +50k, +100k, +200k, +500k) */}
                 <div className="flex items-center gap-1 overflow-x-auto pb-0.5 pt-1">
-                  <span className="text-[10px] text-[#737373] shrink-0 font-medium mr-0.5">Cộng thêm:</span>
+                  <span className="text-[10px] text-[#737373] shrink-0 font-medium mr-0.5">Thêm:</span>
                   {[10000, 20000, 50000, 100000, 200000, 500000].map((addAmount) => (
                     <button
                       key={addAmount}
@@ -1323,30 +1295,27 @@ export default function PosTerminalPage() {
 
               {/* Change / Shortage Status Display */}
               {tenderedCash === 0 ? (
-                <div className="p-2.5 rounded-[6px] bg-white border border-dashed border-[#D2D2CE] text-center text-[#737373] text-[11px]">
-                  💡 Nhập số tiền khách đưa hoặc chọn mệnh giá để tính tiền thối tự động
+                <div className="p-2 rounded-[6px] bg-white border border-dashed border-[#D2D2CE] text-center text-[#737373] text-[11px]">
+                  Nhập tiền khách đưa để tính tiền thối
                 </div>
               ) : isCashUnderpaid ? (
                 <div className="p-3 bg-[#FDF2E9] border border-[#C5221F]/30 rounded-[6px] space-y-0.5 text-xs text-[#C5221F]">
                   <div className="flex items-center justify-between font-bold">
                     <span className="flex items-center gap-1">
                       <AlertCircle className="w-3.5 h-3.5" />
-                      <span>Chưa đủ tiền khách đưa!</span>
+                      <span>Khách đưa chưa đủ tiền</span>
                     </span>
                     <span className="text-sm font-extrabold">
                       Thiếu {formatCurrency(cashShortage, activeWorkspace?.currency || 'VND')}
                     </span>
                   </div>
-                  <p className="text-[10px] text-[#C5221F]/80">
-                    Khách đưa {formatCurrency(tenderedCash, activeWorkspace?.currency || 'VND')} / Cần thu {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}.
-                  </p>
                 </div>
               ) : (
                 <div className="p-3 bg-[#EAF4EE] border border-[#2F7D55]/30 rounded-[6px] space-y-1 text-xs text-[#2F7D55]">
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-[#202124]">Tiền cần thối lại khách:</span>
+                    <span className="font-semibold text-[#202124]">Tiền thối lại:</span>
                     <span className="text-lg font-extrabold text-[#2F7D55]">
-                      {cashChange === 0 ? '0 ₫ (Khách đưa vừa đủ)' : formatCurrency(cashChange, activeWorkspace?.currency || 'VND')}
+                      {cashChange === 0 ? '0 ₫ (Vừa đủ)' : formatCurrency(cashChange, activeWorkspace?.currency || 'VND')}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-[11px] text-[#737373] pt-0.5 border-t border-[#2F7D55]/20">
@@ -1362,9 +1331,9 @@ export default function PosTerminalPage() {
           {paymentMethod === 'gateway' && (
             <div className="p-4 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[6px] text-center text-xs space-y-2">
               <CreditCard className="w-8 h-8 text-[#315C4C] mx-auto" />
-              <p className="font-semibold text-[#202124]">Thanh toán qua POS / Cổng đối tác</p>
+              <p className="font-semibold text-[#202124]">Thanh toán thẻ POS</p>
               <p className="text-[11px] text-[#737373]">
-                Yêu cầu khách quẹt thẻ hoặc chạm thiết bị NFC vào máy thanh toán.
+                Quẹt thẻ hoặc chạm thiết bị vào máy POS.
               </p>
             </div>
           )}
@@ -1372,11 +1341,11 @@ export default function PosTerminalPage() {
           {/* Notes */}
           <div className="space-y-1">
             <Label htmlFor="order-note" className="text-xs">
-              Ghi chú đơn hàng (tùy chọn)
+              Ghi chú (tùy chọn)
             </Label>
             <Input
               id="order-note"
-              placeholder="VD: Khách lấy thêm túi giấy, đổi size sau..."
+              placeholder="Ghi chú đơn hàng..."
               value={orderNotes}
               onChange={(e) => setOrderNotes(e.target.value)}
               className="h-8 text-xs bg-white"
@@ -1404,8 +1373,8 @@ export default function PosTerminalPage() {
               <CheckCircle2 className="w-4 h-4" />
               <span>
                 {isCashUnderpaid
-                  ? `Chưa đủ tiền (Thiếu ${formatCurrency(cashShortage, activeWorkspace?.currency || 'VND')})`
-                  : 'Xác nhận & Hoàn tất đơn'}
+                  ? `Thiếu ${formatCurrency(cashShortage, activeWorkspace?.currency || 'VND')}`
+                  : 'Hoàn tất đơn hàng'}
               </span>
             </Button>
           </div>

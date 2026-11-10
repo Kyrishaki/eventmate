@@ -115,25 +115,25 @@ export default function InventoryPage() {
         <Card className="p-4 bg-white border-[#E8E8E5] shadow-2xs">
           <span className="text-xs text-[#737373] font-medium">{t('totalStock')}</span>
           <div className="text-xl font-bold text-[#202124] mt-1">{totalStockAll} món</div>
-          <p className="text-[10px] text-[#737373] mt-0.5">Toàn bộ hàng đã nhập</p>
+          <p className="text-[10px] text-[#737373] mt-0.5">Tổng nhập</p>
         </Card>
 
         <Card className="p-4 bg-white border-[#E8E8E5] shadow-2xs">
           <span className="text-xs text-[#737373] font-medium">{t('allocatedStock')}</span>
           <div className="text-xl font-bold text-[#315C4C] mt-1">{totalAllocatedAll} món</div>
-          <p className="text-[10px] text-[#737373] mt-0.5">Đã bàn giao cho các quầy</p>
+          <p className="text-[10px] text-[#737373] mt-0.5">Đã cấp cho quầy</p>
         </Card>
 
         <Card className="p-4 bg-white border-[#E8E8E5] shadow-2xs">
           <span className="text-xs text-[#737373] font-medium">{t('storageStock')}</span>
           <div className="text-xl font-bold text-[#B7791F] mt-1">{storageStockAll} món</div>
-          <p className="text-[10px] text-[#737373] mt-0.5">Còn trữ tại kho tổng lưu diễn</p>
+          <p className="text-[10px] text-[#737373] mt-0.5">Còn tại kho tổng</p>
         </Card>
 
         <Card className="p-4 bg-white border-[#E8E8E5] shadow-2xs">
           <span className="text-xs text-[#737373] font-medium">{t('soldStock')}</span>
           <div className="text-xl font-bold text-[#2F7D55] mt-1">{totalSoldAll} món</div>
-          <p className="text-[10px] text-[#737373] mt-0.5">Ghi nhận qua hóa đơn POS</p>
+          <p className="text-[10px] text-[#737373] mt-0.5">Đã bán qua POS</p>
         </Card>
       </div>
 

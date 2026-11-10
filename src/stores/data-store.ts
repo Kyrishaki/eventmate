@@ -42,6 +42,14 @@ export interface DataStoreState {
   updateProduct: (id: string, updates: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
   toggleProductActive: (id: string) => void;
+  updateVariantPreorders: (
+    variantId: string,
+    params: {
+      reservedQuantity?: number;
+      onlinePreorderQuantity?: number;
+      totalInventory?: number;
+    }
+  ) => void;
 
   // Inventory & Allocation Actions
   setAllocation: (
@@ -72,6 +80,8 @@ export interface DataStoreState {
     variantName?: string;
     imageUrl?: string;
     barcode?: string;
+    reservedQuantity?: number;
+    onlinePreorderQuantity?: number;
   }) => { product: Product; variant: ProductVariant; allocation: InventoryAllocation };
   restockCollabVariant: (boothId: string, variantId: string, addedQty: number) => boolean;
   mergeCollabSyncPackage: (pkg: {
@@ -199,6 +209,8 @@ const defaultVariants: ProductVariant[] = [
     price: 350000,
     barcode: '893601001001',
     total_inventory: 100,
+    reserved_quantity: 15, // Chủ shop tự giữ chỗ 15 cái cho VIP/Nội bộ
+    online_preorder_quantity: 20, // Khách đặt mua online nhận tại quầy 20 cái
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -211,6 +223,8 @@ const defaultVariants: ProductVariant[] = [
     price: 350000,
     barcode: '893601001002',
     total_inventory: 150,
+    reserved_quantity: 10,
+    online_preorder_quantity: 35,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -223,6 +237,8 @@ const defaultVariants: ProductVariant[] = [
     price: 350000,
     barcode: '893601001003',
     total_inventory: 150,
+    reserved_quantity: 10,
+    online_preorder_quantity: 25,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -235,6 +251,8 @@ const defaultVariants: ProductVariant[] = [
     price: 220000,
     barcode: '893601002001',
     total_inventory: 120,
+    reserved_quantity: 5,
+    online_preorder_quantity: 15,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -247,6 +265,8 @@ const defaultVariants: ProductVariant[] = [
     price: 280000,
     barcode: '893601003001',
     total_inventory: 200,
+    reserved_quantity: 20,
+    online_preorder_quantity: 60,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -259,6 +279,8 @@ const defaultVariants: ProductVariant[] = [
     price: 850000,
     barcode: '893601004001',
     total_inventory: 50,
+    reserved_quantity: 15,
+    online_preorder_quantity: 30, // Chỉ còn 5 cái khả dụng bán tự do!
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -467,6 +489,8 @@ export const useDataStore = create<DataStoreState>()(
           id: `var-${Date.now()}-${idx}`,
           workspace_id: productData.workspace_id,
           product_id: productId,
+          reserved_quantity: Number(v.reserved_quantity) || 0,
+          online_preorder_quantity: Number(v.online_preorder_quantity) || 0,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }));
@@ -497,6 +521,28 @@ export const useDataStore = create<DataStoreState>()(
         set({
           products: get().products.map((p) =>
             p.id === id ? { ...p, is_active: !p.is_active, updated_at: new Date().toISOString() } : p
+          ),
+        });
+      },
+
+      updateVariantPreorders: (variantId, params) => {
+        set({
+          variants: get().variants.map((v) =>
+            v.id === variantId
+              ? {
+                  ...v,
+                  ...(params.reservedQuantity !== undefined
+                    ? { reserved_quantity: Math.max(0, params.reservedQuantity) }
+                    : {}),
+                  ...(params.onlinePreorderQuantity !== undefined
+                    ? { online_preorder_quantity: Math.max(0, params.onlinePreorderQuantity) }
+                    : {}),
+                  ...(params.totalInventory !== undefined
+                    ? { total_inventory: Math.max(0, params.totalInventory) }
+                    : {}),
+                  updated_at: new Date().toISOString(),
+                }
+              : v
           ),
         });
       },
@@ -628,6 +674,8 @@ export const useDataStore = create<DataStoreState>()(
         variantName,
         imageUrl,
         barcode,
+        reservedQuantity,
+        onlinePreorderQuantity,
       }) => {
         const prodId = `prod-collab-${Date.now()}`;
         const varId = `var-collab-${Date.now()}`;
@@ -655,6 +703,8 @@ export const useDataStore = create<DataStoreState>()(
           price: Number(price) || 0,
           barcode: barcode?.trim() || null,
           total_inventory: Number(quantity) || 0,
+          reserved_quantity: Number(reservedQuantity) || 0,
+          online_preorder_quantity: Number(onlinePreorderQuantity) || 0,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };

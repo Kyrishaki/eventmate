@@ -508,6 +508,24 @@ export default function PosTerminalPage() {
                           )}
                         </p>
 
+                        {/* Pre-order / Online reservation indicator */}
+                        {activeVariant &&
+                          ((activeVariant.reserved_quantity || 0) +
+                            (activeVariant.online_preorder_quantity || 0)) > 0 && (
+                            <div className="flex flex-wrap items-center gap-1 mt-1 text-[9px]">
+                              {(activeVariant.reserved_quantity || 0) > 0 && (
+                                <span className="text-[#8C5D17] bg-[#FEF7EC] px-1.5 py-0.5 rounded border border-[#B7791F]/20 font-medium">
+                                  Giữ chỗ: {activeVariant.reserved_quantity}
+                                </span>
+                              )}
+                              {(activeVariant.online_preorder_quantity || 0) > 0 && (
+                                <span className="text-[#1D4ED8] bg-[#EFF6FF] px-1.5 py-0.5 rounded border border-[#3B82F6]/20 font-medium">
+                                  Đơn onl: {activeVariant.online_preorder_quantity}
+                                </span>
+                              )}
+                            </div>
+                          )}
+
                         {/* Variant Selector Pills */}
                         {prodVariants.length > 1 && (
                           <div className="flex flex-wrap gap-1 mt-2">

@@ -121,6 +121,13 @@ export interface Product {
   variants?: ProductVariant[];
 }
 
+export type ProductSaleStatus =
+  | 'in_stock' // Sẵn sàng bán
+  | 'pre_order' // Có đơn đặt trước / Giữ chỗ
+  | 'low_stock' // Sắp hết hàng
+  | 'reserved_full' // Đã giữ/đặt trước toàn bộ
+  | 'sold_out'; // Hết hàng
+
 export interface ProductVariant {
   id: string;
   workspace_id: string;
@@ -130,6 +137,9 @@ export interface ProductVariant {
   price: number;
   barcode: string | null;
   total_inventory: number;
+  reserved_quantity?: number; // Đặt trước thủ công / giữ chỗ cho khách quen, VIP
+  online_preorder_quantity?: number; // Khách đặt mua online / đăng ký trước
+  status?: ProductSaleStatus;
   created_at: string;
   updated_at: string;
 }

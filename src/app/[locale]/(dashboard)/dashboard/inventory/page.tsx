@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { formatCurrency } from '@/lib/utils';
+import { calculateVariantStock } from '@/lib/stock-status';
 import {
   Boxes,
   Store,
@@ -21,6 +22,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   Package,
+  Bookmark,
+  Globe,
 } from 'lucide-react';
 
 export default function InventoryPage() {
@@ -195,11 +198,15 @@ export default function InventoryPage() {
                   <th className="py-3 px-4 font-semibold">Sản phẩm & Biến thể</th>
                   <th className="py-3 px-4 font-semibold font-mono">SKU</th>
                   <th className="py-3 px-4 font-semibold text-right">Tổng tồn kho</th>
+                  <th className="py-3 px-4 font-semibold text-center text-[#B7791F]">
+                    Đang Giữ (Đặt trước / Online)
+                  </th>
                   <th className="py-3 px-4 font-semibold text-right">Kho tổng (Còn)</th>
                   <th className="py-3 px-4 font-semibold text-right">Đã bán tại quầy</th>
                   <th className="py-3 px-4 font-semibold text-right text-[#315C4C]">
                     Hạn mức quầy ({selectedBooth.code})
                   </th>
+                  <th className="py-3 px-4 font-semibold text-center">Trạng thái</th>
                   <th className="py-3 px-4 font-semibold text-center">Điều chỉnh nhanh</th>
                 </tr>
               </thead>
@@ -217,6 +224,7 @@ export default function InventoryPage() {
                   const currentAllocQty = boothAlloc?.allocated_quantity || 0;
                   const currentSoldQty = boothAlloc?.sold_quantity || 0;
                   const availableToSell = Math.max(0, currentAllocQty - currentSoldQty);
+                  const stock = calculateVariantStock(v, currentSoldQty, currentAllocQty);
 
                   return (
                     <tr key={v.id} className="hover:bg-[#FBFBFA] transition-colors">
@@ -238,6 +246,21 @@ export default function InventoryPage() {
                         {v.total_inventory}
                       </td>
 
+                      <td className="py-3 px-4 text-center">
+                        {stock.totalHeld > 0 ? (
+                          <div className="inline-flex flex-col items-center">
+                            <span className="font-bold text-[#B7791F] text-xs">
+                              {stock.totalHeld} món
+                            </span>
+                            <span className="text-[10px] text-[#737373]">
+                              ({stock.reserved} VIP, {stock.onlinePreorder} Onl)
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-[#9E9E9C] text-[11px]">—</span>
+                        )}
+                      </td>
+
                       <td className="py-3 px-4 text-right font-semibold text-[#B7791F]">
                         {centralStorageRemaining}
                       </td>
@@ -251,6 +274,12 @@ export default function InventoryPage() {
                         <span className="text-[10px] font-normal text-[#737373] block">
                           (Bán được: {availableToSell})
                         </span>
+                      </td>
+
+                      <td className="py-3 px-4 text-center">
+                        <Badge variant={stock.badgeVariant} className="text-[10px]">
+                          {stock.statusLabel}
+                        </Badge>
                       </td>
 
                       {/* Quick Adjustment Controls */}
@@ -313,6 +342,7 @@ export default function InventoryPage() {
               const currentAllocQty = boothAlloc?.allocated_quantity || 0;
               const currentSoldQty = boothAlloc?.sold_quantity || 0;
               const availableToSell = Math.max(0, currentAllocQty - currentSoldQty);
+              const stock = calculateVariantStock(v, currentSoldQty, currentAllocQty);
 
               return (
                 <div key={v.id} className="p-3.5 space-y-3">
@@ -326,9 +356,14 @@ export default function InventoryPage() {
                         <span className="text-[11px] font-mono text-[#737373]">{v.sku}</span>
                       </div>
                     </div>
-                    <Badge variant={currentAllocQty > 0 ? 'success' : 'neutral'} className="text-[10px] shrink-0">
-                      {currentAllocQty > 0 ? 'Đang cấp' : 'Chưa cấp'}
-                    </Badge>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <Badge variant={stock.badgeVariant} className="text-[10px]">
+                        {stock.statusLabel}
+                      </Badge>
+                      <Badge variant={currentAllocQty > 0 ? 'outline' : 'neutral'} className="text-[9px]">
+                        {currentAllocQty > 0 ? 'Đang cấp quầy' : 'Chưa cấp'}
+                      </Badge>
+                    </div>
                   </div>
 
                   {/* 4 Stats Grid */}
@@ -339,16 +374,21 @@ export default function InventoryPage() {
                       <span className="text-[10px] text-[#737373] ml-1">(Còn bán: {availableToSell})</span>
                     </div>
                     <div>
+                      <span className="text-[#737373] text-[10px] block">Đang giữ (VIP/Online):</span>
+                      <span className="font-bold text-sm text-[#B7791F]">{stock.totalHeld} món</span>
+                      {stock.totalHeld > 0 && (
+                        <span className="text-[9px] text-[#8C5D17] block">
+                          ({stock.reserved} VIP, {stock.onlinePreorder} Onl)
+                        </span>
+                      )}
+                    </div>
+                    <div>
                       <span className="text-[#737373] text-[10px] block">Kho tổng còn:</span>
-                      <span className="font-bold text-sm text-[#B7791F]">{centralStorageRemaining}</span>
+                      <span className="font-bold text-sm text-[#202124]">{centralStorageRemaining}</span>
                     </div>
                     <div>
                       <span className="text-[#737373] text-[10px] block">Đã bán tại quầy:</span>
                       <span className="font-semibold text-xs text-[#2F7D55]">{currentSoldQty}</span>
-                    </div>
-                    <div>
-                      <span className="text-[#737373] text-[10px] block">Tổng toàn hệ thống:</span>
-                      <span className="font-semibold text-xs text-[#202124]">{v.total_inventory}</span>
                     </div>
                   </div>
 

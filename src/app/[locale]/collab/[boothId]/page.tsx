@@ -44,7 +44,10 @@ import {
   Layers,
   Trash2,
   Info,
+  Bookmark,
+  Globe,
 } from 'lucide-react';
+import { calculateVariantStock } from '@/lib/stock-status';
 
 function CollabPartnerPortalContent() {
   const tCommon = useTranslations('common');
@@ -92,6 +95,8 @@ function CollabPartnerPortalContent() {
   const [productName, setProductName] = React.useState('');
   const [productPrice, setProductPrice] = React.useState<number>(150000);
   const [productQty, setProductQty] = React.useState<number>(50);
+  const [productReservedQty, setProductReservedQty] = React.useState<number>(5);
+  const [productOnlineQty, setProductOnlineQty] = React.useState<number>(10);
   const [productVariantName, setProductVariantName] = React.useState('Tiêu chuẩn (Free size)');
   const [productSku, setProductSku] = React.useState('');
   const [productImageUrl, setProductImageUrl] = React.useState('');
@@ -203,6 +208,8 @@ function CollabPartnerPortalContent() {
       name: productName,
       price: productPrice,
       quantity: productQty,
+      reservedQuantity: productReservedQty,
+      onlinePreorderQuantity: productOnlineQty,
       variantName: productVariantName,
       sku: productSku,
       imageUrl: productImageUrl,
@@ -212,6 +219,8 @@ function CollabPartnerPortalContent() {
     setProductName('');
     setProductPrice(150000);
     setProductQty(50);
+    setProductReservedQty(5);
+    setProductOnlineQty(10);
     setProductSku('');
     setProductImageUrl('');
   }
@@ -578,7 +587,8 @@ ${url}`;
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {partnerItems.map(({ allocation, variant, product }) => {
-                    const available = Math.max(0, allocation.allocated_quantity - allocation.sold_quantity);
+                    const stock = calculateVariantStock(variant!, allocation.sold_quantity, allocation.allocated_quantity);
+                    const available = stock.availableForSale;
                     return (
                       <Card
                         key={allocation.id}
@@ -598,23 +608,48 @@ ${url}`;
                             </span>
                           </div>
 
+                          {/* Status Badge & Pre-order Indicators */}
+                          <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                            <Badge variant={stock.badgeVariant} className="text-[10px]">
+                              {stock.statusLabel}
+                            </Badge>
+                            {stock.reserved > 0 && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] text-[#8C5D17] bg-[#FEF7EC] px-1.5 py-0.5 rounded border border-[#B7791F]/20 font-medium">
+                                <Bookmark className="w-2.5 h-2.5 text-[#B7791F]" />
+                                Giữ chỗ: {stock.reserved}
+                              </span>
+                            )}
+                            {stock.onlinePreorder > 0 && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] text-[#1D4ED8] bg-[#EFF6FF] px-1.5 py-0.5 rounded border border-[#3B82F6]/20 font-medium">
+                                <Globe className="w-2.5 h-2.5 text-[#3B82F6]" />
+                                Đơn onl: {stock.onlinePreorder}
+                              </span>
+                            )}
+                          </div>
+
                           {/* Inventory breakdown */}
-                          <div className="grid grid-cols-3 gap-2 bg-[#F7F7F5] p-2.5 rounded-[6px] mt-3 text-xs text-center">
+                          <div className="grid grid-cols-4 gap-1.5 bg-[#F7F7F5] p-2.5 rounded-[6px] mt-2.5 text-xs text-center">
                             <div>
-                              <span className="text-[#737373] text-[10px] block">Mang đến:</span>
+                              <span className="text-[#737373] text-[9px] block">Mang đến</span>
                               <span className="font-bold text-[#202124]">
                                 {allocation.allocated_quantity}
                               </span>
                             </div>
                             <div>
-                              <span className="text-[#737373] text-[10px] block">Đã bán:</span>
+                              <span className="text-[#737373] text-[9px] block">Đang giữ</span>
+                              <span className="font-bold text-[#B7791F]">
+                                {stock.totalHeld}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[#737373] text-[9px] block">Đã bán</span>
                               <span className="font-semibold text-[#2F7D55]">
                                 {allocation.sold_quantity}
                               </span>
                             </div>
                             <div>
-                              <span className="text-[#737373] text-[10px] block">Tồn tại quầy:</span>
-                              <span className="font-bold text-[#B7791F]">{available}</span>
+                              <span className="text-[#737373] text-[9px] block">Bán tại quầy</span>
+                              <span className="font-bold text-[#315C4C]">{available}</span>
                             </div>
                           </div>
                         </div>
@@ -680,7 +715,8 @@ ${url}`;
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {hostItems.map(({ allocation, variant, product }) => {
-                    const available = Math.max(0, allocation.allocated_quantity - allocation.sold_quantity);
+                    const stock = calculateVariantStock(variant!, allocation.sold_quantity, allocation.allocated_quantity);
+                    const available = stock.availableForSale;
                     return (
                       <Card
                         key={allocation.id}
@@ -700,21 +736,46 @@ ${url}`;
                             </span>
                           </div>
 
-                          <div className="grid grid-cols-3 gap-2 bg-[#F7F7F5] p-2.5 rounded-[6px] mt-3 text-xs text-center">
+                          {/* Status Badge & Pre-order Indicators */}
+                          <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                            <Badge variant={stock.badgeVariant} className="text-[10px]">
+                              {stock.statusLabel}
+                            </Badge>
+                            {stock.reserved > 0 && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] text-[#8C5D17] bg-[#FEF7EC] px-1.5 py-0.5 rounded border border-[#B7791F]/20 font-medium">
+                                <Bookmark className="w-2.5 h-2.5 text-[#B7791F]" />
+                                Giữ chỗ: {stock.reserved}
+                              </span>
+                            )}
+                            {stock.onlinePreorder > 0 && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] text-[#1D4ED8] bg-[#EFF6FF] px-1.5 py-0.5 rounded border border-[#3B82F6]/20 font-medium">
+                                <Globe className="w-2.5 h-2.5 text-[#3B82F6]" />
+                                Đơn onl: {stock.onlinePreorder}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-4 gap-1.5 bg-[#F7F7F5] p-2.5 rounded-[6px] mt-2.5 text-xs text-center">
                             <div>
-                              <span className="text-[#737373] text-[10px] block">Hạn mức quầy:</span>
+                              <span className="text-[#737373] text-[9px] block">Hạn mức</span>
                               <span className="font-bold text-[#202124]">
                                 {allocation.allocated_quantity}
                               </span>
                             </div>
                             <div>
-                              <span className="text-[#737373] text-[10px] block">Đã bán:</span>
+                              <span className="text-[#737373] text-[9px] block">Đang giữ</span>
+                              <span className="font-bold text-[#B7791F]">
+                                {stock.totalHeld}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[#737373] text-[9px] block">Đã bán</span>
                               <span className="font-semibold text-[#2F7D55]">
                                 {allocation.sold_quantity}
                               </span>
                             </div>
                             <div>
-                              <span className="text-[#737373] text-[10px] block">Còn lại:</span>
+                              <span className="text-[#737373] text-[9px] block">Bán tại quầy</span>
                               <span className="font-bold text-[#315C4C]">{available}</span>
                             </div>
                           </div>
@@ -755,7 +816,8 @@ ${url}`;
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                   {posAvailableVariants.map(({ allocation, variant, product, isPartnerItem }) => {
-                    const available = Math.max(0, allocation.allocated_quantity - allocation.sold_quantity);
+                    const stock = calculateVariantStock(variant!, allocation.sold_quantity, allocation.allocated_quantity);
+                    const available = stock.availableForSale;
                     const isOutOfStock = available <= 0;
 
                     return (
@@ -786,12 +848,24 @@ ${url}`;
                             <h4 className="font-bold text-xs text-[#202124] line-clamp-1">
                               {product!.name}
                             </h4>
-                            <Badge
-                              variant={isPartnerItem ? 'warning' : 'outline'}
-                              className="text-[9px] shrink-0 px-1 py-0"
-                            >
-                              {isPartnerItem ? 'Collab' : 'Host'}
-                            </Badge>
+                            <div className="flex items-center gap-1 shrink-0">
+                              {stock.reserved > 0 && (
+                                <span className="text-[9px] font-medium text-[#8C5D17] bg-[#FEF7EC] px-1 py-0.2 rounded border border-[#B7791F]/20">
+                                  Giữ: {stock.reserved}
+                                </span>
+                              )}
+                              {stock.onlinePreorder > 0 && (
+                                <span className="text-[9px] font-medium text-[#1D4ED8] bg-[#EFF6FF] px-1 py-0.2 rounded border border-[#3B82F6]/20">
+                                  Onl: {stock.onlinePreorder}
+                                </span>
+                              )}
+                              <Badge
+                                variant={isPartnerItem ? 'warning' : 'outline'}
+                                className="text-[9px] shrink-0 px-1 py-0"
+                              >
+                                {isPartnerItem ? 'Collab' : 'Host'}
+                              </Badge>
+                            </div>
                           </div>
                           <p className="text-[11px] text-[#737373] mt-0.5">{variant!.name}</p>
                         </div>
@@ -801,7 +875,7 @@ ${url}`;
                             {formatCurrency(variant!.price, activeWorkspace?.currency || 'VND')}
                           </span>
                           <span className={`text-[10px] font-semibold ${isOutOfStock ? 'text-[#C44536]' : 'text-[#737373]'}`}>
-                            {isOutOfStock ? 'Hết hàng' : `Còn: ${available}`}
+                            {isOutOfStock ? 'Hết hàng bán quầy' : `Bán quầy: ${available}`}
                           </span>
                         </div>
                       </button>
@@ -1228,7 +1302,7 @@ ${url}`;
 
             <div className="space-y-1.5">
               <Label htmlFor="collab-prod-qty" required>
-                Số lượng mang đến sự kiện
+                Tổng số lượng mang đến
               </Label>
               <Input
                 id="collab-prod-qty"
@@ -1238,6 +1312,49 @@ ${url}`;
                 value={productQty}
                 onChange={(e) => setProductQty(Number(e.target.value))}
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 p-3 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5]">
+            <div className="space-y-1.5">
+              <Label htmlFor="collab-prod-reserved" className="text-xs flex items-center gap-1">
+                <Bookmark className="w-3 h-3 text-[#B7791F]" />
+                <span>Tự giữ trước (VIP / Cọc)</span>
+              </Label>
+              <Input
+                id="collab-prod-reserved"
+                type="number"
+                min="0"
+                value={productReservedQty}
+                onChange={(e) => setProductReservedQty(Math.max(0, Number(e.target.value)))}
+                placeholder="0"
+                className="h-8 text-xs bg-white"
+              />
+              <p className="text-[10px] text-[#737373]">Chủ động giữ riêng, không bán lẻ tại quầy</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="collab-prod-online" className="text-xs flex items-center gap-1">
+                <Globe className="w-3 h-3 text-[#3B82F6]" />
+                <span>Đã đặt mua Online / App</span>
+              </Label>
+              <Input
+                id="collab-prod-online"
+                type="number"
+                min="0"
+                value={productOnlineQty}
+                onChange={(e) => setProductOnlineQty(Math.max(0, Number(e.target.value)))}
+                placeholder="0"
+                className="h-8 text-xs bg-white"
+              />
+              <p className="text-[10px] text-[#737373]">Khách đã đặt trước nhận tại sự kiện</p>
+            </div>
+
+            <div className="col-span-2 pt-2 border-t border-[#E8E8E5] flex items-center justify-between text-xs font-medium">
+              <span className="text-[#737373]">Khả dụng mở bán tự do tại quầy POS:</span>
+              <span className="font-bold text-[#315C4C] text-sm">
+                {Math.max(0, productQty - (productReservedQty + productOnlineQty))} món
+              </span>
             </div>
           </div>
 

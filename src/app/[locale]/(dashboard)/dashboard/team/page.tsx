@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { useDataStore } from '@/stores/data-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuthStore, canManageTeam, isViewerOnly, UserAccount } from '@/stores/auth-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,64 +15,94 @@ import { WorkspaceRole } from '@/types/database';
 import {
   Users,
   UserPlus,
-  Mail,
+  KeyRound,
   Shield,
+  ShieldAlert,
   Trash2,
   Copy,
   Check,
-  Clock,
+  Eye,
+  EyeOff,
   UserCheck,
+  Lock,
+  Share2,
 } from 'lucide-react';
 
 export default function TeamPage() {
   const t = useTranslations('team');
   const tCommon = useTranslations('common');
   const { activeWorkspace } = useWorkspaceStore();
-  const { user } = useAuthStore();
-  const {
-    members,
-    invitations,
-    inviteMember,
-    updateMemberRole,
-    removeMember,
-    revokeInvitation,
-  } = useDataStore();
+  const { user, accounts, createStaffAccount, deleteStaffAccount } = useAuthStore();
 
-  const [isInviteModalOpen, setIsInviteModalOpen] = React.useState(false);
-  const [inviteEmail, setInviteEmail] = React.useState('');
-  const [inviteRole, setInviteRole] = React.useState<WorkspaceRole>('cashier');
-  const [copiedToken, setCopiedToken] = React.useState<string | null>(null);
+  const isAdmin = canManageTeam(user?.role);
+  const isReadOnly = isViewerOnly(user?.role);
 
-  const workspaceMembers = members.filter(
-    (m) => !activeWorkspace || m.workspace_id === activeWorkspace.id
-  );
+  // Create Staff Account Modal State
+  const [isAccountModalOpen, setIsAccountModalOpen] = React.useState(false);
+  const [fullName, setFullName] = React.useState('');
+  const [username, setUsername] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [role, setRole] = React.useState<WorkspaceRole>('cashier');
+  const [modalError, setModalError] = React.useState<string | null>(null);
 
-  const workspaceInvitations = invitations.filter(
-    (i) => !activeWorkspace || i.workspace_id === activeWorkspace.id
-  );
+  // UI state for showing/hiding passwords & copied indicators
+  const [visiblePasswords, setVisiblePasswords] = React.useState<Record<string, boolean>>({});
+  const [copiedId, setCopiedId] = React.useState<string | null>(null);
 
-  function handleSendInvite(e: React.FormEvent) {
-    e.preventDefault();
-    if (!inviteEmail.trim() || !activeWorkspace) return;
-
-    inviteMember(
-      activeWorkspace.id,
-      inviteEmail.trim(),
-      inviteRole,
-      user?.id || 'user-artist-demo'
-    );
-
-    setInviteEmail('');
-    setIsInviteModalOpen(false);
+  function toggleShowPassword(id: string) {
+    setVisiblePasswords((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
   }
 
-  function copyInviteLink(token: string, role: string) {
-    const url = `${window.location.origin}/accept-invitation?token=${token}&role=${role}&workspace=${encodeURIComponent(
-      activeWorkspace?.name || 'EventMate'
-    )}`;
-    navigator.clipboard.writeText(url);
-    setCopiedToken(token);
-    setTimeout(() => setCopiedToken(null), 2500);
+  function handleCreateAccount(e: React.FormEvent) {
+    e.preventDefault();
+    setModalError(null);
+
+    const res = createStaffAccount({
+      username,
+      password,
+      fullName: fullName.trim() || username,
+      role,
+    });
+
+    if (!res.success) {
+      setModalError(res.message || 'Lỗi tạo tài khoản');
+      return;
+    }
+
+    setFullName('');
+    setUsername('');
+    setPassword('');
+    setRole('cashier');
+    setIsAccountModalOpen(false);
+  }
+
+  function copyAccountCredentials(account: UserAccount) {
+    const text = `EventMate - Thông tin đăng nhập:\n- Đường dẫn: ${window.location.origin}/login\n- Tên đăng nhập: ${account.username}\n- Mật khẩu: ${account.password}\n- Vai trò: ${getRoleLabel(account.role)}`;
+    navigator.clipboard.writeText(text);
+    setCopiedId(account.id);
+    setTimeout(() => setCopiedId(null), 2500);
+  }
+
+  function getRoleLabel(r: WorkspaceRole): string {
+    switch (r) {
+      case 'owner':
+        return 'Chủ sở hữu (Owner)';
+      case 'admin':
+        return 'Quản trị viên (Admin)';
+      case 'manager':
+        return 'Quản lý quầy (Manager)';
+      case 'cashier':
+        return 'Thu ngân POS (Cashier)';
+      case 'inventory_staff':
+        return 'Nhân viên kho (Inventory)';
+      case 'viewer':
+        return 'Khách xem (Viewer)';
+      default:
+        return r;
+    }
   }
 
   const roleColors: Record<WorkspaceRole, 'default' | 'success' | 'warning' | 'neutral' | 'outline'> = {
@@ -90,112 +120,164 @@ export default function TeamPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#E8E8E5]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-[#202124]">{t('title')}</h1>
+            <h1 className="text-xl font-bold tracking-tight text-[#202124]">
+              Đội ngũ & Cấp tài khoản Nhân sự
+            </h1>
             <Badge variant="outline" className="text-[11px] font-mono">
-              {workspaceMembers.length} {t('membersCount').toLowerCase()}
+              {accounts.length} tài khoản
             </Badge>
           </div>
-          <p className="text-xs text-[#737373] mt-0.5">{t('description')}</p>
+          <p className="text-xs text-[#737373] mt-0.5">
+            Quản trị viên trực tiếp tạo tài khoản & mật khẩu để phát cho nhân viên, trợ lý và thu ngân.
+          </p>
         </div>
 
-        <Button
-          variant="primary"
-          size="sm"
-          className="gap-1.5"
-          onClick={() => setIsInviteModalOpen(true)}
-        >
-          <UserPlus className="w-3.5 h-3.5" />
-          <span>{t('inviteButton')}</span>
-        </Button>
+        {isAdmin ? (
+          <Button
+            variant="primary"
+            size="sm"
+            className="gap-1.5 shadow-xs"
+            onClick={() => {
+              setModalError(null);
+              setIsAccountModalOpen(true);
+            }}
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            <span>Tạo tài khoản & Mật khẩu</span>
+          </Button>
+        ) : (
+          <Badge variant="warning" className="text-xs gap-1 py-1">
+            <ShieldAlert className="w-3.5 h-3.5" />
+            <span>Chế độ Chỉ xem (Không có quyền tạo tài khoản)</span>
+          </Badge>
+        )}
       </div>
 
       {/* Role Descriptions Banner */}
       <Card className="p-4 border-[#E8E8E5] bg-white shadow-2xs">
         <h3 className="text-xs font-bold text-[#202124] uppercase tracking-wider mb-2 flex items-center gap-1.5">
           <Shield className="w-3.5 h-3.5 text-[#315C4C]" />
-          Phân cấp quyền hạn trong Tour
+          Phân cấp quyền hạn trong hệ thống
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 text-xs text-[#737373]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs text-[#737373]">
           <div>
-            <span className="font-semibold text-[#202124]">Owner / Admin:</span>{' '}
-            {t('roleDescriptions.owner')}
+            <span className="font-semibold text-[#202124]">Admin / Owner:</span>{' '}
+            Toàn quyền quản lý, tạo account + mật khẩu phát cho nhân viên, xem & xuất doanh thu.
           </div>
           <div>
-            <span className="font-semibold text-[#202124]">Tour Manager:</span>{' '}
-            {t('roleDescriptions.manager')}
+            <span className="font-semibold text-[#202124]">Thu ngân (Cashier):</span>{' '}
+            Chỉ được mở màn hình POS (`/pos`) để bán hàng và quét mã VietQR. Không được sửa giá hay kho.
           </div>
           <div>
-            <span className="font-semibold text-[#202124]">Cashier:</span>{' '}
-            {t('roleDescriptions.cashier')}
+            <span className="font-semibold text-[#202124]">Khách xem (Viewer / Guest):</span>{' '}
+            Chỉ được phép xem báo cáo đối soát. Bị chặn mọi quyền thêm, sửa, xóa dữ liệu.
           </div>
         </div>
       </Card>
 
-      {/* Members Table */}
+      {/* Accounts List */}
       <Card className="border-[#E8E8E5] bg-white shadow-xs overflow-hidden">
-        <CardHeader className="py-3.5 px-5 bg-[#FAFAF8] border-b border-[#E8E8E5]">
-          <CardTitle className="text-sm font-semibold text-[#202124]">
-            {t('membersCount')} hiện tại
-          </CardTitle>
+        <CardHeader className="py-3.5 px-5 bg-[#FAFAF8] border-b border-[#E8E8E5] flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-sm font-semibold text-[#202124] flex items-center gap-2">
+              <KeyRound className="w-4 h-4 text-[#315C4C]" />
+              Danh sách Tài khoản & Mật khẩu Đã Cấp
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Các tài khoản có thể đăng nhập trực tiếp tại trang `/login`
+            </CardDescription>
+          </div>
         </CardHeader>
 
         <div className="divide-y divide-[#F0F0ED]">
-          {workspaceMembers.map((member) => {
-            const isOwner = member.role === 'owner';
+          {accounts.map((acc) => {
+            const isMaster = acc.id === 'admin-tuan' || acc.id === 'admin-hkt';
+            const isPasswordVisible = !!visiblePasswords[acc.id];
+            const isCopied = copiedId === acc.id;
+
             return (
               <div
-                key={member.id}
-                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[#FBFBFA] transition-colors"
+                key={acc.id}
+                className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-[#FBFBFA] transition-colors"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-[#EBF1EE] text-[#315C4C] flex items-center justify-center font-bold text-xs shrink-0">
-                    {member.profile?.full_name?.charAt(0) || 'U'}
+                {/* Account info */}
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-full bg-[#EBF1EE] text-[#315C4C] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                    {acc.fullName.charAt(0)}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-[#202124]">
-                        {member.profile?.full_name || 'Crew Member'}
-                      </p>
-                      <Badge variant={roleColors[member.role]} className="text-[10px] capitalize">
-                        {t(`roles.${member.role}` as any)}
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-bold text-[#202124]">{acc.fullName}</p>
+                      <Badge variant={roleColors[acc.role]} className="text-[10px]">
+                        {getRoleLabel(acc.role)}
                       </Badge>
+                      {isMaster && (
+                        <span className="text-[10px] bg-[#315C4C] text-white px-1.5 py-0.2 rounded font-semibold">
+                          Admin Chính
+                        </span>
+                      )}
                     </div>
-                    <p className="text-xs text-[#737373] flex items-center gap-1.5 mt-0.5">
-                      <span>{member.profile?.phone || 'Chưa cập nhật SĐT'}</span>
-                    </p>
+
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-[#737373]">
+                      <span>
+                        Tài khoản: <strong className="text-[#202124] font-mono">{acc.username}</strong>
+                      </span>
+
+                      {/* Password field with show/hide */}
+                      <span className="flex items-center gap-1">
+                        Mật khẩu:{' '}
+                        <span className="font-mono font-bold text-[#202124] bg-[#F7F7F5] px-1.5 py-0.5 rounded border border-[#E8E8E5]">
+                          {isPasswordVisible ? acc.password : '••••••••••••'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => toggleShowPassword(acc.id)}
+                          className="p-1 text-[#9E9E9C] hover:text-[#202124] rounded"
+                          title={isPasswordVisible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                        >
+                          {isPasswordVisible ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        </button>
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Role Switcher or Delete */}
-                <div className="flex items-center gap-2 self-end sm:self-auto">
-                  {!isOwner ? (
-                    <>
-                      <select
-                        className="h-8 rounded-[4px] border border-[#E8E8E5] bg-white px-2 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
-                        value={member.role}
-                        onChange={(e) =>
-                          updateMemberRole(member.id, e.target.value as WorkspaceRole)
-                        }
-                      >
-                        <option value="admin">{t('roles.admin')}</option>
-                        <option value="manager">{t('roles.manager')}</option>
-                        <option value="cashier">{t('roles.cashier')}</option>
-                        <option value="inventory_staff">{t('roles.inventory_staff')}</option>
-                        <option value="viewer">{t('roles.viewer')}</option>
-                      </select>
+                {/* Actions */}
+                <div className="flex items-center gap-2 shrink-0 self-end md:self-auto pt-2 md:pt-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-2.5 text-xs gap-1"
+                    onClick={() => copyAccountCredentials(acc)}
+                    title="Sao chép tên đăng nhập và mật khẩu để gửi nhân sự"
+                  >
+                    {isCopied ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-[#2F7D55]" />
+                        <span className="text-[#2F7D55] font-semibold">Đã sao chép</span>
+                      </>
+                    ) : (
+                      <>
+                        <Share2 className="w-3.5 h-3.5" />
+                        <span>Gửi thông tin</span>
+                      </>
+                    )}
+                  </Button>
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 px-2 text-[#C44536] hover:bg-[#FDF1F0]"
-                        onClick={() => removeMember(member.id)}
-                        title="Xóa thành viên"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    </>
-                  ) : (
-                    <span className="text-[11px] text-[#737373] italic">Chủ tài khoản</span>
+                  {isAdmin && !isMaster && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 text-[#C44536] hover:bg-[#FDF1F0]"
+                      onClick={() => {
+                        if (confirm(`Bạn có chắc muốn xóa tài khoản "${acc.username}"?`)) {
+                          deleteStaffAccount(acc.id);
+                        }
+                      }}
+                      title="Xóa tài khoản nhân viên"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
                   )}
                 </div>
               </div>
@@ -204,105 +286,88 @@ export default function TeamPage() {
         </div>
       </Card>
 
-      {/* Pending Invitations */}
-      {workspaceInvitations.length > 0 && (
-        <Card className="border-[#E8E8E5] bg-white shadow-xs overflow-hidden">
-          <CardHeader className="py-3 px-5 bg-[#FAFAF8] border-b border-[#E8E8E5]">
-            <CardTitle className="text-xs font-semibold text-[#737373] uppercase tracking-wider flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-[#B7791F]" />
-              {t('pendingInvitations')} ({workspaceInvitations.length})
-            </CardTitle>
-          </CardHeader>
-
-          <div className="divide-y divide-[#F0F0ED]">
-            {workspaceInvitations.map((inv) => (
-              <div
-                key={inv.id}
-                className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
-              >
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-[#202124]">{inv.email}</span>
-                    <Badge variant="outline" className="text-[10px]">
-                      {t(`roles.${inv.role}` as any)}
-                    </Badge>
-                  </div>
-                  <p className="text-[11px] text-[#737373] mt-0.5 font-mono">
-                    Mã token: {inv.token}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2 text-xs gap-1"
-                    onClick={() => copyInviteLink(inv.token, inv.role)}
-                  >
-                    {copiedToken === inv.token ? (
-                      <>
-                        <Check className="w-3 h-3 text-[#2F7D55]" />
-                        <span className="text-[#2F7D55]">{tCommon('copied')}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3 h-3" />
-                        <span>{t('copyInviteLink')}</span>
-                      </>
-                    )}
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 px-2 text-xs text-[#C44536] hover:bg-[#FDF1F0]"
-                    onClick={() => revokeInvitation(inv.id)}
-                  >
-                    {t('revokeInvite')}
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* Invite Member Modal */}
+      {/* Modal: Create Staff Account & Password */}
       <Modal
-        isOpen={isInviteModalOpen}
-        onClose={() => setIsInviteModalOpen(false)}
-        title={t('inviteButton')}
-        description="Gửi lời mời tham gia ekip vào Không gian làm việc hiện tại."
+        isOpen={isAccountModalOpen}
+        onClose={() => setIsAccountModalOpen(false)}
+        title="Tạo Tài Khoản & Mật Khẩu Cho Nhân Sự"
+        description="Admin trực tiếp đặt tên đăng nhập và mật khẩu để phát cho trợ lý hoặc thu ngân."
       >
-        <form onSubmit={handleSendInvite} className="space-y-4">
+        <form onSubmit={handleCreateAccount} className="space-y-4">
+          {modalError && (
+            <div className="p-2.5 bg-[#FDF1F0] border border-[#FADBD8] text-[#C44536] rounded text-xs">
+              {modalError}
+            </div>
+          )}
+
           <div className="space-y-1.5">
-            <Label htmlFor="inv-email" required>
-              {t('emailLabel')}
+            <Label htmlFor="staff-name" required>
+              Tên nhân viên / Trợ lý
             </Label>
             <Input
-              id="inv-email"
-              type="email"
+              id="staff-name"
               required
-              placeholder={t('emailPlaceholder')}
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
+              placeholder="VD: Nguyễn Văn Thu Ngân, Trợ Lý Minh..."
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="h-9 text-xs"
             />
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="staff-username" required>
+                Tên đăng nhập (Username)
+              </Label>
+              <Input
+                id="staff-username"
+                required
+                placeholder="VD: thungan01, trolytour..."
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="h-9 text-xs font-mono"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="staff-pass" required>
+                Mật khẩu đăng nhập
+              </Label>
+              <Input
+                id="staff-pass"
+                type="text"
+                required
+                placeholder="Tối thiểu 6 ký tự..."
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-9 text-xs font-mono"
+              />
+            </div>
+          </div>
+
           <div className="space-y-1.5">
-            <Label htmlFor="inv-role">{t('roleLabel')}</Label>
+            <Label htmlFor="staff-role" required>
+              Phân quyền nhiệm vụ
+            </Label>
             <select
-              id="inv-role"
-              className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-sm text-[#202124] focus:outline-none focus:border-[#315C4C]"
-              value={inviteRole}
-              onChange={(e) => setInviteRole(e.target.value as WorkspaceRole)}
+              id="staff-role"
+              className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+              value={role}
+              onChange={(e) => setRole(e.target.value as WorkspaceRole)}
             >
-              <option value="admin">{t('roles.admin')}</option>
-              <option value="manager">{t('roles.manager')}</option>
-              <option value="cashier">{t('roles.cashier')}</option>
-              <option value="inventory_staff">{t('roles.inventory_staff')}</option>
-              <option value="viewer">{t('roles.viewer')}</option>
+              <option value="cashier">Thu ngân (Cashier) — Chỉ bán hàng tại màn hình POS</option>
+              <option value="manager">Quản lý (Manager) — Quản lý sự kiện, quầy và theo dõi kho</option>
+              <option value="inventory_staff">Nhân viên kho (Inventory) — Chỉ quản lý và điều chuyển tồn kho</option>
+              <option value="viewer">Khách xem (Viewer) — Chỉ xem báo cáo, không được chỉnh sửa</option>
+              <option value="admin">Quản trị viên (Admin) — Toàn quyền như Owner</option>
             </select>
+          </div>
+
+          <div className="p-3 bg-[#F7F7F5] rounded text-xs text-[#737373] space-y-1">
+            <p className="font-semibold text-[#202124]">💡 Lưu ý bảo mật:</p>
+            <p>
+              Sau khi tạo, bạn có thể bấm nút <strong>"Gửi thông tin"</strong> để sao chép tin nhắn định dạng sẵn và gửi qua Zalo/Messenger cho nhân viên.
+            </p>
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F0ED]">
@@ -310,12 +375,12 @@ export default function TeamPage() {
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setIsInviteModalOpen(false)}
+              onClick={() => setIsAccountModalOpen(false)}
             >
-              {tCommon('cancel')}
+              Hủy
             </Button>
-            <Button type="submit" variant="primary" size="sm">
-              {t('sendInvite')}
+            <Button type="submit" variant="primary" size="sm" className="font-bold">
+              Tạo & Lưu tài khoản
             </Button>
           </div>
         </form>

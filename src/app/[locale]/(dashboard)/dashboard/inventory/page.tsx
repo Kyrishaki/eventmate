@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { useDataStore } from '@/stores/data-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
+import { useAuthStore } from '@/stores/auth-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +29,8 @@ export default function InventoryPage() {
   const { activeWorkspace } = useWorkspaceStore();
   const { events, booths, products, variants, allocations, setAllocation, quickTransferStock } =
     useDataStore();
+  const { canManageInventory } = useAuthStore();
+  const canManage = canManageInventory();
 
   const workspaceEvents = events.filter(
     (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
@@ -252,35 +255,41 @@ export default function InventoryPage() {
 
                       {/* Quick Adjustment Controls */}
                       <td className="py-3 px-4 text-center">
-                        <div className="inline-flex items-center gap-1 bg-[#F0F0ED] p-1 rounded-[6px]">
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            className="h-6 w-6 p-0 text-xs bg-white hover:bg-[#E8E8E5] text-[#202124]"
-                            title="Giảm 10 món về kho tổng"
-                            disabled={currentAllocQty <= currentSoldQty}
-                            onClick={() => quickTransferStock(selectedBooth.id, v.id, -10)}
-                          >
-                            <Minus className="w-3 h-3" />
-                          </Button>
+                        {canManage ? (
+                          <div className="inline-flex items-center gap-1 bg-[#F0F0ED] p-1 rounded-[6px]">
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              className="h-6 w-6 p-0 text-xs bg-white hover:bg-[#E8E8E5] text-[#202124]"
+                              title="Giảm 10 món về kho tổng"
+                              disabled={currentAllocQty <= currentSoldQty}
+                              onClick={() => quickTransferStock(selectedBooth.id, v.id, -10)}
+                            >
+                              <Minus className="w-3 h-3" />
+                            </Button>
 
-                          <span className="px-2 text-xs font-semibold text-[#202124]">
-                            {currentAllocQty}
+                            <span className="px-2 text-xs font-semibold text-[#202124]">
+                              {currentAllocQty}
+                            </span>
+
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              className="h-6 w-6 p-0 text-xs bg-white hover:bg-[#E8E8E5] text-[#202124]"
+                              title="Cấp thêm 10 món từ kho tổng"
+                              disabled={centralStorageRemaining < 10}
+                              onClick={() => quickTransferStock(selectedBooth.id, v.id, 10)}
+                            >
+                              <Plus className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="px-2.5 py-1 text-xs font-semibold text-[#737373] bg-[#F0F0ED] rounded">
+                            {currentAllocQty} (Chỉ xem)
                           </span>
-
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            className="h-6 w-6 p-0 text-xs bg-white hover:bg-[#E8E8E5] text-[#202124]"
-                            title="Cấp thêm 10 món từ kho tổng"
-                            disabled={centralStorageRemaining < 10}
-                            onClick={() => quickTransferStock(selectedBooth.id, v.id, 10)}
-                          >
-                            <Plus className="w-3 h-3" />
-                          </Button>
-                        </div>
+                        )}
                       </td>
                     </tr>
                   );
@@ -345,52 +354,60 @@ export default function InventoryPage() {
 
                   {/* Quick Stepper Action */}
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-xs font-semibold text-[#737373]">Điều chuyển số lượng:</span>
-                    <div className="flex items-center gap-1 bg-[#F0F0ED] p-1 rounded-[6px]">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        className="h-8 px-2 text-xs font-bold bg-white hover:bg-[#E8E8E5] text-[#202124] shadow-2xs"
-                        disabled={currentAllocQty <= currentSoldQty}
-                        onClick={() => quickTransferStock(selectedBooth.id, v.id, -10)}
-                      >
-                        -10
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        className="h-8 px-2 text-xs font-bold bg-white hover:bg-[#E8E8E5] text-[#202124] shadow-2xs"
-                        disabled={currentAllocQty <= currentSoldQty}
-                        onClick={() => quickTransferStock(selectedBooth.id, v.id, -1)}
-                      >
-                        -1
-                      </Button>
-                      <span className="px-2 text-xs font-bold text-[#315C4C]">
-                        {currentAllocQty}
+                    <span className="text-xs font-semibold text-[#737373]">
+                      {canManage ? 'Điều chuyển số lượng:' : 'Hạn mức kho:'}
+                    </span>
+                    {canManage ? (
+                      <div className="flex items-center gap-1 bg-[#F0F0ED] p-1 rounded-[6px]">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="h-8 px-2 text-xs font-bold bg-white hover:bg-[#E8E8E5] text-[#202124] shadow-2xs"
+                          disabled={currentAllocQty <= currentSoldQty}
+                          onClick={() => quickTransferStock(selectedBooth.id, v.id, -10)}
+                        >
+                          -10
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="h-8 px-2 text-xs font-bold bg-white hover:bg-[#E8E8E5] text-[#202124] shadow-2xs"
+                          disabled={currentAllocQty <= currentSoldQty}
+                          onClick={() => quickTransferStock(selectedBooth.id, v.id, -1)}
+                        >
+                          -1
+                        </Button>
+                        <span className="px-2 text-xs font-bold text-[#315C4C]">
+                          {currentAllocQty}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="h-8 px-2 text-xs font-bold bg-white hover:bg-[#E8E8E5] text-[#202124] shadow-2xs"
+                          disabled={centralStorageRemaining < 1}
+                          onClick={() => quickTransferStock(selectedBooth.id, v.id, 1)}
+                        >
+                          +1
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="h-8 px-2 text-xs font-bold bg-white hover:bg-[#E8E8E5] text-[#202124] shadow-2xs"
+                          disabled={centralStorageRemaining < 10}
+                          onClick={() => quickTransferStock(selectedBooth.id, v.id, 10)}
+                        >
+                          +10
+                        </Button>
+                      </div>
+                    ) : (
+                      <span className="text-xs font-bold text-[#315C4C] bg-[#F0F0ED] px-2.5 py-1 rounded">
+                        {currentAllocQty} (Chỉ xem)
                       </span>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        className="h-8 px-2 text-xs font-bold bg-white hover:bg-[#E8E8E5] text-[#202124] shadow-2xs"
-                        disabled={centralStorageRemaining < 1}
-                        onClick={() => quickTransferStock(selectedBooth.id, v.id, 1)}
-                      >
-                        +1
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        className="h-8 px-2 text-xs font-bold bg-white hover:bg-[#E8E8E5] text-[#202124] shadow-2xs"
-                        disabled={centralStorageRemaining < 10}
-                        onClick={() => quickTransferStock(selectedBooth.id, v.id, 10)}
-                      >
-                        +10
-                      </Button>
-                    </div>
+                    )}
                   </div>
                 </div>
               );

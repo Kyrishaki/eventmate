@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { useDataStore } from '@/stores/data-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
+import { useAuthStore } from '@/stores/auth-store';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +45,8 @@ export default function ProductsPage() {
     deleteProduct,
     toggleProductActive,
   } = useDataStore();
+  const { canEditData } = useAuthStore();
+  const editable = canEditData();
 
   const [selectedCategory, setSelectedCategory] = React.useState<string>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -109,6 +112,10 @@ export default function ProductsPage() {
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault();
+    if (!editable) {
+      alert('Tài khoản của bạn chỉ có quyền xem, không được phép thêm hoặc sửa sản phẩm.');
+      return;
+    }
     if (!name.trim() || !activeWorkspace) return;
 
     if (editingProduct) {
@@ -156,10 +163,16 @@ export default function ProductsPage() {
           <p className="text-xs text-[#737373] mt-0.5">{t('description')}</p>
         </div>
 
-        <Button variant="primary" size="sm" className="gap-1.5" onClick={openCreateModal}>
-          <Plus className="w-3.5 h-3.5" />
-          <span>{t('createButton')}</span>
-        </Button>
+        {editable ? (
+          <Button variant="primary" size="sm" className="gap-1.5" onClick={openCreateModal}>
+            <Plus className="w-3.5 h-3.5" />
+            <span>{t('createButton')}</span>
+          </Button>
+        ) : (
+          <Badge variant="outline" className="text-xs text-[#737373]">
+            Chế độ Chỉ Xem
+          </Badge>
+        )}
       </div>
 
       {/* Filter and Search Bar */}
@@ -197,10 +210,12 @@ export default function ProductsPage() {
             <Package className="w-10 h-10 text-[#9E9E9C] mx-auto mb-3" />
             <h3 className="text-sm font-semibold text-[#202124]">{t('noProducts')}</h3>
             <p className="text-xs text-[#737373] mt-1 max-w-sm mx-auto">{t('noProductsDesc')}</p>
-            <Button variant="outline" size="sm" className="mt-4 gap-1" onClick={openCreateModal}>
-              <Plus className="w-3.5 h-3.5" />
-              <span>{t('createButton')}</span>
-            </Button>
+            {editable && (
+              <Button variant="outline" size="sm" className="mt-4 gap-1" onClick={openCreateModal}>
+                <Plus className="w-3.5 h-3.5" />
+                <span>{t('createButton')}</span>
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -273,32 +288,42 @@ export default function ProductsPage() {
 
                   {/* Right: Actions */}
                   <div className="flex items-center gap-2 shrink-0 border-t lg:border-t-0 pt-2 lg:pt-0">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 text-xs gap-1"
-                      onClick={() => toggleProductActive(prod.id)}
-                    >
-                      {prod.is_active ? (
-                        <>
-                          <Archive className="w-3 h-3 text-[#737373]" />
-                          <span>Lưu trữ</span>
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle className="w-3 h-3 text-[#2F7D55]" />
-                          <span>Kích hoạt</span>
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-2 text-xs text-[#C44536] hover:bg-[#FDF1F0]"
-                      onClick={() => deleteProduct(prod.id)}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
+                    {editable ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs gap-1"
+                          onClick={() => toggleProductActive(prod.id)}
+                        >
+                          {prod.is_active ? (
+                            <>
+                              <Archive className="w-3 h-3 text-[#737373]" />
+                              <span>Lưu trữ</span>
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="w-3 h-3 text-[#2F7D55]" />
+                              <span>Kích hoạt</span>
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2 text-xs text-[#C44536] hover:bg-[#FDF1F0]"
+                          onClick={() => {
+                            if (confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
+                              deleteProduct(prod.id);
+                            }
+                          }}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </>
+                    ) : (
+                      <span className="text-[11px] text-[#9E9E9C] italic">Chỉ xem</span>
+                    )}
                   </div>
                 </div>
 

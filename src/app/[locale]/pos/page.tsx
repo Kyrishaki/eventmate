@@ -38,12 +38,14 @@ import {
   X,
   Printer,
   Sparkles,
+  LogIn,
+  Eye,
 } from 'lucide-react';
 
 export default function PosTerminalPage() {
   const tCommon = useTranslations('common');
   const { activeWorkspace } = useWorkspaceStore();
-  const { user } = useAuthStore();
+  const { user, isAuthenticated, loginAsGuest } = useAuthStore();
   const { events, booths, products, variants, allocations } = useDataStore();
   const {
     cart,
@@ -151,6 +153,10 @@ export default function PosTerminalPage() {
   }
 
   function handleAddToCart(product: Product) {
+    if (user?.role === 'viewer') {
+      alert('Tài khoản của bạn là Khách xem (Chỉ đọc). Vui lòng đăng nhập tài khoản Thu ngân hoặc Quản trị để bán hàng.');
+      return;
+    }
     const prodVariants = variants.filter((v) => v.product_id === product.id);
     if (prodVariants.length === 0) return;
 
@@ -199,6 +205,10 @@ export default function PosTerminalPage() {
   }
 
   async function handleCompleteOrder() {
+    if (user?.role === 'viewer') {
+      alert('Tài khoản của bạn là Khách xem (Chỉ đọc), không thể xác nhận thanh toán đơn hàng.');
+      return;
+    }
     if (!selectedBooth || !selectedEvent || cart.length === 0) return;
     setIsSubmitting(true);
 
@@ -223,6 +233,41 @@ export default function PosTerminalPage() {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen bg-[#F7F7F5] flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-sm bg-white border border-[#E8E8E5] rounded-[8px] p-6 text-center space-y-4 shadow-xs">
+          <div className="w-12 h-12 rounded-full bg-[#EBF1EE] text-[#315C4C] flex items-center justify-center mx-auto">
+            <Store className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-[#202124]">Màn hình Bán hàng (POS)</h3>
+            <p className="text-xs text-[#737373] mt-1 leading-relaxed">
+              Vui lòng đăng nhập bằng tài khoản Thu ngân hoặc Quản trị viên để bán hàng tại quầy.
+            </p>
+          </div>
+          <div className="space-y-2 pt-2">
+            <Link href="/login" className="block">
+              <Button variant="primary" size="md" className="w-full text-xs font-semibold gap-1.5">
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Đến trang Đăng nhập</span>
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              size="md"
+              onClick={loginAsGuest}
+              className="w-full text-xs text-[#737373] gap-1.5"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>Xem giao diện với tư cách Khách</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

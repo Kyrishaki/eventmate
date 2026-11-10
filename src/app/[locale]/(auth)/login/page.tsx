@@ -1,183 +1,205 @@
 'use client';
 
 import * as React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/stores/auth-store';
-import { AlertCircle, Lock, Mail } from 'lucide-react';
+import { AlertCircle, Lock, User, Eye, EyeOff, ShieldCheck, UserCheck } from 'lucide-react';
 
 export default function LoginPage() {
-  const t = useTranslations('auth');
-  const tCommon = useTranslations('common');
   const router = useRouter();
-  const setUser = useAuthStore((state) => state.setUser);
+  const { login, loginAsGuest, isAuthenticated, user } = useAuthStore();
+  const [identifier, setIdentifier] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [showPassword, setShowPassword] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const loginSchema = z.object({
-    email: z.string().min(1, t('errors.requiredField')).email(t('errors.invalidEmail')),
-    password: z.string().min(6, t('errors.passwordTooShort')),
-  });
-
-  type LoginFormValues = z.infer<typeof loginSchema>;
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: 'artist@eventmate.com',
-      password: 'password123',
-    },
-  });
-
-  async function onSubmit(data: LoginFormValues) {
-    setIsLoading(true);
-    setErrorMessage(null);
-
-    try {
-      const supabase = createClient();
-      const { data: authData, error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
-
-      if (error) {
-        // If Supabase project is not yet provisioned with real users, allow demo login for dev evaluation
-        if (
-          error.message.includes('Invalid login credentials') ||
-          error.message.includes('FetchError') ||
-          error.message.includes('placeholder')
-        ) {
-          // Demo fallback
-          setUser({
-            id: 'user-artist-demo',
-            email: data.email,
-            fullName: data.email.split('@')[0].toUpperCase(),
-            role: 'owner',
-          });
-          router.push('/dashboard');
-          return;
-        }
-        setErrorMessage(error.message || t('errors.loginFailed'));
-        return;
-      }
-
-      if (authData?.user) {
-        setUser({
-          id: authData.user.id,
-          email: authData.user.email ?? data.email,
-          fullName: authData.user.user_metadata?.full_name ?? 'Tour Lead',
-          role: 'owner',
-        });
+  // If already authenticated with a valid session, can jump straight to dashboard
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === 'cashier') {
+        router.push('/pos');
+      } else {
         router.push('/dashboard');
       }
+    }
+  }, [isAuthenticated, user, router]);
+
+  function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setErrorMessage(null);
+
+    if (!identifier.trim()) {
+      setErrorMessage('Vui lòng nhập tên đăng nhập hoặc email.');
+      return;
+    }
+    if (!password) {
+      setErrorMessage('Vui lòng nhập mật khẩu.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const res = login(identifier, password);
+      if (res.success) {
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser?.role === 'cashier') {
+          router.push('/pos');
+        } else {
+          router.push('/dashboard');
+        }
+      } else {
+        setErrorMessage(res.message || 'Đăng nhập không thành công.');
+      }
     } catch {
-      // Fallback for seamless developer testing
-      setUser({
-        id: 'user-artist-demo',
-        email: data.email,
-        fullName: 'Alex Rivera (Tour Lead)',
-        role: 'owner',
-      });
-      router.push('/dashboard');
+      setErrorMessage('Có lỗi xảy ra trong quá trình đăng nhập.');
     } finally {
       setIsLoading(false);
     }
   }
 
+  function handleGuestLogin() {
+    loginAsGuest();
+    router.push('/dashboard');
+  }
+
+  function fillPreset(u: string, p: string) {
+    setIdentifier(u);
+    setPassword(p);
+    setErrorMessage(null);
+  }
+
   return (
-    <Card className="border-[#E8E8E5] shadow-xs">
+    <Card className="border-[#E8E8E5] bg-white shadow-xs">
       <CardHeader className="space-y-1 pb-4">
         <CardTitle className="text-xl font-bold tracking-tight text-[#202124]">
-          {t('loginTitle')}
+          Đăng nhập EventMate
         </CardTitle>
         <CardDescription className="text-xs text-[#737373]">
-          {t('loginSubtitle')}
+          Nhập tài khoản Quản trị viên hoặc tài khoản Nhân viên được cấp để tiếp tục.
         </CardDescription>
       </CardHeader>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleLogin}>
         <CardContent className="space-y-4">
           {errorMessage && (
-            <div className="flex items-start gap-2 p-3 text-xs text-[#C44536] bg-[#FDF1F0] border border-[#FADBD8] rounded-[6px]">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <div className="flex items-center gap-2 p-3 text-xs text-[#C44536] bg-[#FDF1F0] border border-[#FADBD8] rounded-[6px] animate-in fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMessage}</span>
             </div>
           )}
 
+          {/* Identifier Input */}
           <div className="space-y-1.5">
-            <Label htmlFor="email" required>
-              {t('emailLabel')}
+            <Label htmlFor="identifier" className="text-xs font-semibold text-[#202124]">
+              Tên đăng nhập hoặc Email
             </Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-2.5 w-4 h-4 text-[#9E9E9C]" />
+              <User className="w-4 h-4 text-[#9E9E9C] absolute left-3 top-2.5" />
               <Input
-                id="email"
-                type="email"
-                placeholder={t('emailPlaceholder')}
-                className="pl-9"
-                error={!!errors.email}
-                {...register('email')}
+                id="identifier"
+                type="text"
+                placeholder="Tuanadminvippro666, HKT87@123..."
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                className="pl-9 h-10 text-xs bg-white"
+                autoComplete="username"
+                required
               />
             </div>
-            {errors.email && (
-              <p className="text-xs text-[#C44536]">{errors.email.message}</p>
-            )}
           </div>
 
+          {/* Password Input */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password" required>
-                {t('passwordLabel')}
+              <Label htmlFor="password" className="text-xs font-semibold text-[#202124]">
+                Mật khẩu
               </Label>
-              <Link
-                href="/forgot-password"
-                className="text-xs text-[#315C4C] hover:underline font-medium"
-              >
-                {t('forgotPassword')}
-              </Link>
             </div>
             <div className="relative">
-              <Lock className="absolute left-3 top-2.5 w-4 h-4 text-[#9E9E9C]" />
+              <Lock className="w-4 h-4 text-[#9E9E9C] absolute left-3 top-2.5" />
               <Input
                 id="password"
-                type="password"
-                placeholder={t('passwordPlaceholder')}
-                className="pl-9"
-                error={!!errors.password}
-                {...register('password')}
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pl-9 pr-9 h-10 text-xs bg-white"
+                autoComplete="current-password"
+                required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-2.5 text-[#9E9E9C] hover:text-[#202124]"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
-            {errors.password && (
-              <p className="text-xs text-[#C44536]">{errors.password.message}</p>
-            )}
           </div>
 
-          <Button type="submit" variant="primary" className="w-full" isLoading={isLoading}>
-            {t('signInButton')}
-          </Button>
-        </CardContent>
+          {/* Master Admin Fast Fill Preset Pill Box */}
+          <div className="p-3 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5] space-y-2 text-xs">
+            <div className="flex items-center gap-1.5 font-bold text-[#315C4C] text-[11px] uppercase tracking-wider">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Tài khoản Quản trị viên chính:</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => fillPreset('Tuanadminvippro666', 'Tu@n1121314151')}
+                className="p-2 rounded bg-white border border-[#E8E8E5] hover:border-[#315C4C] text-left transition-colors"
+              >
+                <p className="font-semibold text-[#202124] text-[11px] truncate">Tuanadminvippro666</p>
+                <p className="text-[10px] text-[#737373] mt-0.5 font-mono">Tu@n1121314151</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => fillPreset('HKT87@123', 'HKT@997804')}
+                className="p-2 rounded bg-white border border-[#E8E8E5] hover:border-[#315C4C] text-left transition-colors"
+              >
+                <p className="font-semibold text-[#202124] text-[11px] truncate">HKT87@123</p>
+                <p className="text-[10px] text-[#737373] mt-0.5 font-mono">HKT@997804</p>
+              </button>
+            </div>
+          </div>
 
-        <CardFooter className="justify-center border-t border-[#F0F0ED] pt-4 text-xs text-[#737373]">
-          <span>{t('signUpPrompt')}</span>
-          <Link
-            href="/register"
-            className="ml-1 text-[#315C4C] font-semibold hover:underline"
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            className="w-full h-11 text-sm font-bold shadow-xs active:scale-[0.99] transition-transform"
+            isLoading={isLoading}
           >
-            {t('signUpLink')}
-          </Link>
-        </CardFooter>
+            Đăng nhập hệ thống
+          </Button>
+
+          {/* Guest Access Alternative */}
+          <div className="pt-2 text-center">
+            <div className="relative flex py-2 items-center">
+              <div className="flex-grow border-t border-[#E8E8E5]"></div>
+              <span className="flex-shrink mx-3 text-[11px] text-[#737373] uppercase tracking-wider">Hoặc</span>
+              <div className="flex-grow border-t border-[#E8E8E5]"></div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              onClick={handleGuestLogin}
+              className="w-full text-xs text-[#737373] hover:text-[#202124] gap-1.5"
+            >
+              <UserCheck className="w-3.5 h-3.5" />
+              <span>Truy cập với tư cách Khách xem (Chế độ Chỉ đọc)</span>
+            </Button>
+          </div>
+        </CardContent>
       </form>
     </Card>
   );

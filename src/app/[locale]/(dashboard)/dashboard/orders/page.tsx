@@ -124,7 +124,8 @@ export default function DashboardOrdersPage() {
         </Card>
       ) : (
         <Card className="border-[#E8E8E5] bg-white shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-xs text-left">
               <thead className="bg-[#F7F7F5] border-b border-[#E8E8E5] text-[#737373] uppercase text-[10px] tracking-wider">
                 <tr>
@@ -193,6 +194,61 @@ export default function DashboardOrdersPage() {
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Orders Card View */}
+          <div className="md:hidden divide-y divide-[#F0F0ED]">
+            {filteredOrders.map((ord) => {
+              const event = events.find((e) => e.id === ord.event_id);
+              const booth = booths.find((b) => b.id === ord.booth_id);
+
+              return (
+                <div key={ord.id} className="p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold text-sm text-[#202124]">
+                      {ord.order_number}
+                    </span>
+                    <Badge
+                      variant={ord.sync_status === 'synced' ? 'success' : 'warning'}
+                      className="text-[10px]"
+                    >
+                      {ord.sync_status === 'synced' ? 'Đã đồng bộ' : 'Chờ đồng bộ'}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-[#737373]">
+                    <div className="truncate pr-2">
+                      <p className="font-medium text-[#202124] truncate">{event?.name}</p>
+                      <p className="text-[11px] text-[#737373]">
+                        {booth?.name} ({booth?.code})
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-[11px]">{formatDate(ord.created_at)}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-[#F0F0ED]">
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant="outline" className="text-[10px]">
+                        {ord.payment_method === 'cash' ? 'Tiền mặt' : 'VietQR'}
+                      </Badge>
+                      <span className="text-base font-bold text-[#315C4C]">
+                        {formatCurrency(ord.final_amount, activeWorkspace?.currency || 'VND')}
+                      </span>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-3 text-xs gap-1 font-semibold"
+                      onClick={() => setSelectedOrder(ord)}
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Chi tiết</span>
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </Card>
       )}

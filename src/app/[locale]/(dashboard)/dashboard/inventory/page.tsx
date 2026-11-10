@@ -184,7 +184,8 @@ export default function InventoryPage() {
             </Badge>
           </CardHeader>
 
-          <div className="overflow-x-auto">
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-xs text-left">
               <thead className="bg-[#F7F7F5] border-b border-[#E8E8E5] text-[#737373] uppercase text-[10px] tracking-wider">
                 <tr>
@@ -286,6 +287,114 @@ export default function InventoryPage() {
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Responsive Cards View */}
+          <div className="md:hidden divide-y divide-[#F0F0ED]">
+            {variants.map((v) => {
+              const product = products.find((p) => p.id === v.product_id);
+              const allAllocations = allocations.filter((a) => a.variant_id === v.id);
+              const totalAllocated = allAllocations.reduce(
+                (sum, a) => sum + a.allocated_quantity,
+                0
+              );
+              const centralStorageRemaining = Math.max(0, v.total_inventory - totalAllocated);
+
+              const boothAlloc = allAllocations.find((a) => a.booth_id === selectedBooth.id);
+              const currentAllocQty = boothAlloc?.allocated_quantity || 0;
+              const currentSoldQty = boothAlloc?.sold_quantity || 0;
+              const availableToSell = Math.max(0, currentAllocQty - currentSoldQty);
+
+              return (
+                <div key={v.id} className="p-3.5 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-sm text-[#202124] truncate">{product?.name}</h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs font-semibold text-[#315C4C] bg-[#EBF1EE] px-1.5 py-0.5 rounded">
+                          {v.name}
+                        </span>
+                        <span className="text-[11px] font-mono text-[#737373]">{v.sku}</span>
+                      </div>
+                    </div>
+                    <Badge variant={currentAllocQty > 0 ? 'success' : 'neutral'} className="text-[10px] shrink-0">
+                      {currentAllocQty > 0 ? 'Đang cấp' : 'Chưa cấp'}
+                    </Badge>
+                  </div>
+
+                  {/* 4 Stats Grid */}
+                  <div className="grid grid-cols-2 gap-2 bg-[#F7F7F5] p-2.5 rounded-[6px] text-xs">
+                    <div>
+                      <span className="text-[#737373] text-[10px] block">Hạn mức quầy:</span>
+                      <span className="font-bold text-sm text-[#315C4C]">{currentAllocQty}</span>
+                      <span className="text-[10px] text-[#737373] ml-1">(Còn bán: {availableToSell})</span>
+                    </div>
+                    <div>
+                      <span className="text-[#737373] text-[10px] block">Kho tổng còn:</span>
+                      <span className="font-bold text-sm text-[#B7791F]">{centralStorageRemaining}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#737373] text-[10px] block">Đã bán tại quầy:</span>
+                      <span className="font-semibold text-xs text-[#2F7D55]">{currentSoldQty}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#737373] text-[10px] block">Tổng toàn hệ thống:</span>
+                      <span className="font-semibold text-xs text-[#202124]">{v.total_inventory}</span>
+                    </div>
+                  </div>
+
+                  {/* Quick Stepper Action */}
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs font-semibold text-[#737373]">Điều chuyển số lượng:</span>
+                    <div className="flex items-center gap-1 bg-[#F0F0ED] p-1 rounded-[6px]">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="h-8 px-2 text-xs font-bold bg-white hover:bg-[#E8E8E5] text-[#202124] shadow-2xs"
+                        disabled={currentAllocQty <= currentSoldQty}
+                        onClick={() => quickTransferStock(selectedBooth.id, v.id, -10)}
+                      >
+                        -10
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="h-8 px-2 text-xs font-bold bg-white hover:bg-[#E8E8E5] text-[#202124] shadow-2xs"
+                        disabled={currentAllocQty <= currentSoldQty}
+                        onClick={() => quickTransferStock(selectedBooth.id, v.id, -1)}
+                      >
+                        -1
+                      </Button>
+                      <span className="px-2 text-xs font-bold text-[#315C4C]">
+                        {currentAllocQty}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="h-8 px-2 text-xs font-bold bg-white hover:bg-[#E8E8E5] text-[#202124] shadow-2xs"
+                        disabled={centralStorageRemaining < 1}
+                        onClick={() => quickTransferStock(selectedBooth.id, v.id, 1)}
+                      >
+                        +1
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="h-8 px-2 text-xs font-bold bg-white hover:bg-[#E8E8E5] text-[#202124] shadow-2xs"
+                        disabled={centralStorageRemaining < 10}
+                        onClick={() => quickTransferStock(selectedBooth.id, v.id, 10)}
+                      >
+                        +10
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </Card>
       )}

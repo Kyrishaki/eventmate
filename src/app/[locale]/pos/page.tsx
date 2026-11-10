@@ -173,6 +173,31 @@ export default function PosTerminalPage() {
     });
   }
 
+  function handleIncrease(variantId: string) {
+    const existing = cart.find((item) => item.variantId === variantId);
+    if (!existing) return;
+    const available = getVariantAvailableStock(variantId);
+    if (available <= 0) {
+      alert('Đã đạt giới hạn hạn mức phân bổ cho quầy này.');
+      return;
+    }
+    updateQuantity(variantId, existing.quantity + 1);
+  }
+
+  function handleDecrease(variantId: string) {
+    const existing = cart.find((item) => item.variantId === variantId);
+    if (!existing) return;
+    if (existing.quantity - 1 <= 0) {
+      removeFromCart(variantId);
+    } else {
+      updateQuantity(variantId, existing.quantity - 1);
+    }
+  }
+
+  function getVariantInCartQty(variantId: string) {
+    return cart.find((item) => item.variantId === variantId)?.quantity || 0;
+  }
+
   async function handleCompleteOrder() {
     if (!selectedBooth || !selectedEvent || cart.length === 0) return;
     setIsSubmitting(true);
@@ -203,19 +228,90 @@ export default function PosTerminalPage() {
   return (
     <div className="min-h-screen bg-[#F7F7F5] flex flex-col select-none">
       {/* POS Top Navigation Bar */}
-      <header className="h-14 bg-white border-b border-[#E8E8E5] px-3 sm:px-5 flex items-center justify-between sticky top-0 z-30 shadow-2xs">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="sm" className="h-8 px-2 text-xs text-[#737373]">
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              <span className="hidden md:inline">Dashboard</span>
-            </Button>
-          </Link>
+      <header className="bg-white border-b border-[#E8E8E5] sticky top-0 z-30 shadow-2xs">
+        {/* Main Bar */}
+        <div className="h-13 sm:h-14 px-3 sm:px-5 flex items-center justify-between">
+          <div className="flex items-center gap-2 min-w-0">
+            <Link href="/dashboard">
+              <Button variant="ghost" size="sm" className="h-8 px-2 text-xs text-[#737373] hover:text-[#202124]">
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                <span className="font-semibold hidden xs:inline">Quản lý</span>
+              </Button>
+            </Link>
 
-          {/* Event & Booth Selectors */}
-          <div className="flex items-center gap-2 border-l border-[#E8E8E5] pl-2.5 min-w-0">
+            {/* Desktop selectors */}
+            <div className="hidden sm:flex items-center gap-2 border-l border-[#E8E8E5] pl-2.5 min-w-0">
+              <select
+                className="h-8 rounded-[4px] border border-[#E8E8E5] bg-[#F7F7F5] px-2 text-xs font-semibold text-[#202124] focus:outline-none focus:border-[#315C4C] max-w-[170px] truncate"
+                value={selectedEventId}
+                onChange={(e) => setSelectedEventId(e.target.value)}
+              >
+                {workspaceEvents.map((evt) => (
+                  <option key={evt.id} value={evt.id}>
+                    {evt.name}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                className="h-8 rounded-[4px] border border-[#315C4C]/40 bg-[#F7F7F5] px-2 text-xs font-bold text-[#315C4C] focus:outline-none focus:border-[#315C4C] max-w-[150px] truncate"
+                value={selectedBoothId}
+                onChange={(e) => setSelectedBoothId(e.target.value)}
+              >
+                {eventBooths.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name} ({b.code})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Right Status Actions */}
+          <div className="flex items-center gap-2">
+            {/* Real-time Connection Indicator */}
+            <div
+              className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium border ${
+                isOnline
+                  ? 'bg-[#EAF4EE] text-[#2F7D55] border-[#CEE6D7]'
+                  : 'bg-[#FEF7EC] text-[#B7791F] border-[#F8E3C3]'
+              }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-[#2F7D55]' : 'bg-[#B7791F]'}`} />
+              <span className="text-[11px] font-semibold">{isOnline ? 'Online' : 'Offline'}</span>
+            </div>
+
+            <Link href="/pos/orders">
+              <Button variant="outline" size="sm" className="h-8 px-2 text-xs gap-1">
+                <History className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Lịch sử</span>
+              </Button>
+            </Link>
+
+            {/* Mobile Cart Button Toggle */}
+            <button
+              type="button"
+              onClick={() => setIsMobileCartOpen(true)}
+              className="lg:hidden relative p-2 rounded-[6px] bg-[#315C4C] text-white active:scale-95 transition-transform"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              {totalCartUnits > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#C44536] text-white text-[10px] font-bold flex items-center justify-center">
+                  {totalCartUnits}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Sub-bar: Event & Booth Pickers (large touch targets) */}
+        <div className="sm:hidden px-3 py-2 bg-[#FAFAF8] border-t border-[#E8E8E5] grid grid-cols-2 gap-2">
+          <div>
+            <span className="text-[9px] font-bold text-[#737373] uppercase tracking-wider block mb-0.5">
+              Sự kiện
+            </span>
             <select
-              className="h-8 rounded-[4px] border border-[#E8E8E5] bg-[#F7F7F5] px-2 text-xs font-semibold text-[#202124] focus:outline-none focus:border-[#315C4C] max-w-[140px] sm:max-w-[180px] truncate"
+              className="w-full h-8 rounded-[4px] border border-[#E8E8E5] bg-white px-2 text-xs font-semibold text-[#202124] focus:outline-none focus:border-[#315C4C] truncate"
               value={selectedEventId}
               onChange={(e) => setSelectedEventId(e.target.value)}
             >
@@ -225,9 +321,14 @@ export default function PosTerminalPage() {
                 </option>
               ))}
             </select>
+          </div>
 
+          <div>
+            <span className="text-[9px] font-bold text-[#737373] uppercase tracking-wider block mb-0.5">
+              Gian hàng
+            </span>
             <select
-              className="h-8 rounded-[4px] border border-[#E8E8E5] bg-[#F7F7F5] px-2 text-xs font-semibold text-[#315C4C] focus:outline-none focus:border-[#315C4C] max-w-[130px] sm:max-w-[160px] truncate"
+              className="w-full h-8 rounded-[4px] border border-[#315C4C]/40 bg-white px-2 text-xs font-bold text-[#315C4C] focus:outline-none focus:border-[#315C4C] truncate"
               value={selectedBoothId}
               onChange={(e) => setSelectedBoothId(e.target.value)}
             >
@@ -239,57 +340,12 @@ export default function PosTerminalPage() {
             </select>
           </div>
         </div>
-
-        {/* Right Status Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Real-time Connection Indicator */}
-          <div
-            className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium border ${
-              isOnline
-                ? 'bg-[#EAF4EE] text-[#2F7D55] border-[#CEE6D7]'
-                : 'bg-[#FEF7EC] text-[#B7791F] border-[#F8E3C3]'
-            }`}
-          >
-            {isOnline ? (
-              <>
-                <Wifi className="w-3 h-3 text-[#2F7D55]" />
-                <span className="hidden sm:inline">Trực tuyến</span>
-              </>
-            ) : (
-              <>
-                <WifiOff className="w-3 h-3 text-[#B7791F]" />
-                <span>Ngoại tuyến (Offline)</span>
-              </>
-            )}
-          </div>
-
-          <Link href="/pos/orders">
-            <Button variant="outline" size="sm" className="h-8 px-2 text-xs gap-1">
-              <History className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Lịch sử</span>
-            </Button>
-          </Link>
-
-          {/* Mobile Cart Button Toggle */}
-          <button
-            type="button"
-            onClick={() => setIsMobileCartOpen(true)}
-            className="lg:hidden relative p-2 rounded-[6px] bg-[#315C4C] text-white"
-          >
-            <ShoppingCart className="w-4 h-4" />
-            {totalCartUnits > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#C44536] text-white text-[10px] font-bold flex items-center justify-center">
-                {totalCartUnits}
-              </span>
-            )}
-          </button>
-        </div>
       </header>
 
       {/* Main Split Layout: Left Products Grid (65%), Right Cart (35%) */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Product Catalog */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-5 flex flex-col">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-5 flex flex-col pb-28 lg:pb-5">
           {/* Search bar */}
           <div className="flex items-center gap-3 mb-4">
             <div className="relative flex-1 max-w-md">
@@ -302,7 +358,7 @@ export default function PosTerminalPage() {
               />
             </div>
             {selectedBooth?.collab_partner && (
-              <Badge variant="warning" className="text-xs">
+              <Badge variant="warning" className="text-xs shrink-0">
                 Quầy Collab: {selectedBooth.collab_partner}
               </Badge>
             )}
@@ -320,6 +376,8 @@ export default function PosTerminalPage() {
                 ? getVariantAvailableStock(activeVariant.id)
                 : 0;
 
+              const qtyInCart = activeVariant ? getVariantInCartQty(activeVariant.id) : 0;
+
               return (
                 <div
                   key={prod.id}
@@ -327,7 +385,7 @@ export default function PosTerminalPage() {
                 >
                   <div>
                     {/* Product Image */}
-                    <div className="relative h-32 sm:h-36 bg-[#F7F7F5] overflow-hidden flex items-center justify-center">
+                    <div className="relative h-28 sm:h-36 bg-[#F7F7F5] overflow-hidden flex items-center justify-center">
                       {prod.image_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -347,13 +405,13 @@ export default function PosTerminalPage() {
                           </span>
                         ) : (
                           <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#C44536] text-white">
-                            Hết hàng tại quầy
+                            Hết hàng
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <div className="p-3">
+                    <div className="p-2.5 sm:p-3">
                       <h4 className="text-xs font-bold text-[#202124] line-clamp-2 leading-tight">
                         {prod.name}
                       </h4>
@@ -394,19 +452,45 @@ export default function PosTerminalPage() {
                     </div>
                   </div>
 
-                  {/* Add to Cart Touch Action */}
-                  <div className="p-3 pt-0">
-                    <Button
-                      type="button"
-                      variant="primary"
-                      size="sm"
-                      disabled={availableStock <= 0}
-                      onClick={() => handleAddToCart(prod)}
-                      className="w-full h-8 text-xs font-semibold gap-1"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>{availableStock > 0 ? 'Thêm vào giỏ' : 'Hết hàng'}</span>
-                    </Button>
+                  {/* Add to Cart / Inline Stepper Touch Action */}
+                  <div className="p-2.5 sm:p-3 pt-0">
+                    {qtyInCart > 0 ? (
+                      <div className="flex items-center justify-between bg-[#EBF1EE] border border-[#315C4C]/40 rounded-[6px] p-1">
+                        <button
+                          type="button"
+                          onClick={() => handleDecrease(activeVariant.id)}
+                          className="w-8 h-8 rounded bg-white text-[#202124] flex items-center justify-center font-bold text-sm shadow-2xs hover:bg-[#F0F0ED] active:scale-95 transition-transform"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <div className="text-center">
+                          <span className="font-bold text-xs text-[#315C4C] leading-none block">
+                            {qtyInCart}
+                          </span>
+                          <span className="text-[9px] text-[#737373] leading-none">trong giỏ</span>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={availableStock <= 0}
+                          onClick={() => handleIncrease(activeVariant.id)}
+                          className="w-8 h-8 rounded bg-[#315C4C] text-white flex items-center justify-center font-bold text-sm shadow-2xs hover:bg-[#284a3d] disabled:opacity-40 active:scale-95 transition-transform"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        disabled={availableStock <= 0}
+                        onClick={() => handleAddToCart(prod)}
+                        className="w-full h-9 text-xs font-semibold gap-1 active:scale-95 transition-transform"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>{availableStock > 0 ? 'Thêm vào giỏ' : 'Hết hàng'}</span>
+                      </Button>
+                    )}
                   </div>
                 </div>
               );
@@ -540,6 +624,165 @@ export default function PosTerminalPage() {
           </div>
         </aside>
       </div>
+
+      {/* Sticky Bottom Cart Bar on Mobile & Tablet */}
+      {totalCartUnits > 0 && (
+        <div className="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-[#E8E8E5] p-3 shadow-lg z-30 flex items-center justify-between gap-3 animate-in slide-in-from-bottom-3 duration-200">
+          <div
+            onClick={() => setIsMobileCartOpen(true)}
+            className="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0"
+          >
+            <div className="relative shrink-0">
+              <div className="w-10 h-10 rounded-[6px] bg-[#315C4C] text-white flex items-center justify-center font-bold">
+                <ShoppingCart className="w-5 h-5" />
+              </div>
+              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[#C44536] text-white text-[11px] font-bold flex items-center justify-center shadow-xs">
+                {totalCartUnits}
+              </span>
+            </div>
+            <div className="truncate">
+              <p className="text-[11px] text-[#737373] leading-none">Giỏ hàng • {totalCartUnits} món</p>
+              <p className="text-base font-bold text-[#315C4C] leading-tight mt-1">
+                {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsMobileCartOpen(true)}
+              className="h-10 px-3 text-xs font-semibold"
+            >
+              Xem giỏ
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                setTenderedCash(cartTotal);
+                setIsCheckoutOpen(true);
+              }}
+              className="h-10 px-4 text-xs font-bold bg-[#315C4C] text-white shadow-xs active:scale-95 transition-transform"
+            >
+              Thanh toán
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Cart Sheet / Modal */}
+      <Modal
+        isOpen={isMobileCartOpen}
+        onClose={() => setIsMobileCartOpen(false)}
+        title={`Chi tiết giỏ hàng (${totalCartUnits} món)`}
+        description="Kiểm tra các sản phẩm đã chọn tại quầy."
+        maxWidth="md"
+      >
+        <div className="space-y-4">
+          {cart.length === 0 ? (
+            <div className="text-center py-8 text-[#737373]">
+              <ShoppingCart className="w-8 h-8 mx-auto mb-2 text-[#9E9E9C]" />
+              <p className="text-xs">Chưa có sản phẩm nào trong giỏ hàng</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-[#F0F0ED] max-h-[45vh] overflow-y-auto -mx-2 px-2">
+              {cart.map((item) => (
+                <div key={item.variantId} className="py-2.5 flex items-center justify-between gap-3 text-xs">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-[#202124] truncate">{item.productName}</p>
+                    <p className="text-[11px] text-[#737373]">
+                      {item.variantName} • {formatCurrency(item.price, activeWorkspace?.currency || 'VND')}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center border border-[#E8E8E5] rounded-[4px] bg-white">
+                      <button
+                        type="button"
+                        onClick={() => handleDecrease(item.variantId)}
+                        className="w-7 h-7 flex items-center justify-center text-[#737373] hover:text-[#202124] active:bg-[#F0F0ED]"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </button>
+                      <span className="w-7 text-center font-bold text-xs">{item.quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleIncrease(item.variantId)}
+                        className="w-7 h-7 flex items-center justify-center text-[#737373] hover:text-[#202124] active:bg-[#F0F0ED]"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => removeFromCart(item.variantId)}
+                      className="p-1.5 text-[#C44536] hover:bg-[#FDF1F0] rounded"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Pricing summary */}
+          {cart.length > 0 && (
+            <div className="space-y-2 pt-3 border-t border-[#E8E8E5] text-xs">
+              <div className="flex items-center justify-between text-[#737373]">
+                <span>Tạm tính:</span>
+                <span className="font-medium text-[#202124]">
+                  {formatCurrency(cartSubtotal, activeWorkspace?.currency || 'VND')}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-[#737373]">
+                <span>Giảm giá:</span>
+                <input
+                  type="number"
+                  min={0}
+                  value={discountAmount || ''}
+                  onChange={(e) => setDiscountAmount(Number(e.target.value))}
+                  placeholder="0"
+                  className="w-24 text-right px-1.5 py-0.5 text-xs border rounded bg-white font-mono"
+                />
+              </div>
+              <div className="flex items-center justify-between text-sm font-bold text-[#202124] pt-2 border-t border-[#E8E8E5]">
+                <span>Tổng cộng:</span>
+                <span className="text-base text-[#315C4C]">
+                  {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}
+                </span>
+              </div>
+
+              <div className="pt-2 flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearCart}
+                  className="h-10 text-xs text-[#C44536]"
+                >
+                  Xóa giỏ
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => {
+                    setIsMobileCartOpen(false);
+                    setTenderedCash(cartTotal);
+                    setIsCheckoutOpen(true);
+                  }}
+                  className="flex-1 h-10 text-xs font-bold gap-1.5 active:scale-95 transition-transform"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span>Thanh toán ({formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')})</span>
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
 
       {/* Checkout Modal with Cash & Real VietQR Engine */}
       <Modal

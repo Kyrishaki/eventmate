@@ -67,9 +67,12 @@ export function SyncStatusBadge({ status, pendingCount = 0, className }: SyncSta
       )}
       title={`Connection status: ${current.label}`}
     >
-      <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', current.dotClass)} />
+      <span className={cn('w-2 h-2 rounded-full shrink-0', current.dotClass)} />
       <Icon className={cn('w-3 h-3 shrink-0', status === 'syncing' && 'animate-spin')} />
-      <span>{current.label}</span>
+      <span className="hidden sm:inline">{current.label}</span>
+      {pendingCount > 0 && (
+        <span className="sm:hidden font-mono font-bold text-[10px]">({pendingCount})</span>
+      )}
     </div>
   );
 }

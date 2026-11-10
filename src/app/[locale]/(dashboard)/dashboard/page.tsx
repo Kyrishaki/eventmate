@@ -111,21 +111,21 @@ export default function DashboardOverviewPage() {
       </div>
 
       {/* KPI Business Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {metrics.map((metric, idx) => {
           const Icon = metric.icon;
           return (
-            <Card key={idx} className="p-4 bg-white border-[#E8E8E5] shadow-xs">
-              <div className="flex items-center justify-between text-[#737373] mb-2">
-                <span className="text-xs font-medium">{metric.title}</span>
-                <div className="w-7 h-7 rounded-[4px] bg-[#F7F7F5] border border-[#E8E8E5] flex items-center justify-center text-[#315C4C]">
+            <Card key={idx} className="p-3 sm:p-4 bg-white border-[#E8E8E5] shadow-xs">
+              <div className="flex items-center justify-between text-[#737373] mb-1.5">
+                <span className="text-[11px] sm:text-xs font-medium truncate pr-1">{metric.title}</span>
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-[4px] bg-[#F7F7F5] border border-[#E8E8E5] flex items-center justify-center text-[#315C4C] shrink-0">
                   <Icon className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <div className="text-2xl font-bold tracking-tight text-[#202124]">
+              <div className="text-lg sm:text-2xl font-bold tracking-tight text-[#202124] truncate">
                 {metric.value}
               </div>
-              <p className="text-[11px] text-[#737373] mt-1">{metric.change}</p>
+              <p className="text-[10px] sm:text-[11px] text-[#737373] mt-0.5 truncate">{metric.change}</p>
             </Card>
           );
         })}

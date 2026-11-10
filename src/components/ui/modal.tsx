@@ -56,7 +56,7 @@ export function Modal({
       {/* Modal Dialog */}
       <div
         className={cn(
-          'relative w-full rounded-[8px] border border-[#E8E8E5] bg-white p-6 text-[#202124] shadow-lg z-10 max-h-[90vh] overflow-y-auto animate-in zoom-in-95',
+          'relative w-full rounded-[8px] border border-[#E8E8E5] bg-white p-4 sm:p-6 text-[#202124] shadow-lg z-10 max-h-[92vh] overflow-y-auto animate-in zoom-in-95',
           maxWidths[maxWidth]
         )}
       >

@@ -186,7 +186,8 @@ export default function AnalyticsPage() {
           </CardDescription>
         </CardHeader>
 
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-xs text-left">
             <thead className="bg-[#F7F7F5] border-b border-[#E8E8E5] text-[#737373] uppercase text-[10px] tracking-wider">
               <tr>
@@ -260,6 +261,62 @@ export default function AnalyticsPage() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Cards View */}
+        <div className="md:hidden divide-y divide-[#F0F0ED]">
+          {boothSalesMap.map((row) => (
+            <div key={row.booth.id} className="p-3.5 space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h4 className="font-bold text-sm text-[#202124]">{row.booth.name}</h4>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="font-mono text-[10px] text-[#737373] bg-[#F0F0ED] px-1.5 py-0.2 rounded">
+                      {row.booth.code}
+                    </span>
+                    <span className="text-xs text-[#737373]">{row.event?.name}</span>
+                  </div>
+                </div>
+
+                {row.isCollab ? (
+                  <Badge variant="warning" className="text-[10px] shrink-0">
+                    Collab {row.partnerSharePercent}%
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-[10px] shrink-0">
+                    Độc lập
+                  </Badge>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 bg-[#F7F7F5] p-2.5 rounded-[6px] text-xs">
+                <div>
+                  <span className="text-[#737373] text-[10px] block">Tổng doanh thu:</span>
+                  <span className="font-bold text-sm text-[#315C4C]">
+                    {formatCurrency(row.revenue, activeWorkspace?.currency || 'VND')}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[#737373] text-[10px] block">Đã bán:</span>
+                  <span className="font-semibold text-xs text-[#202124]">
+                    {row.orderCount} đơn • {row.units} món
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[#737373] text-[10px] block">Trả đối tác:</span>
+                  <span className="font-bold text-xs text-[#B7791F]">
+                    {row.isCollab ? formatCurrency(row.partnerAmount, activeWorkspace?.currency || 'VND') : '0 ₫'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[#737373] text-[10px] block">Thực nhận Artist:</span>
+                  <span className="font-bold text-xs text-[#2F7D55]">
+                    {formatCurrency(row.netRetained, activeWorkspace?.currency || 'VND')}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </Card>
     </div>

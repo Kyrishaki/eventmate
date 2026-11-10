@@ -423,13 +423,14 @@ export default function ProductsPage() {
               </Button>
             </div>
 
-            <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+            <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
               {formVariants.map((v, idx) => (
                 <div
                   key={idx}
-                  className="p-3 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5] grid grid-cols-12 gap-2 items-center"
+                  className="p-3 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5] grid grid-cols-2 sm:grid-cols-12 gap-2 items-center"
                 >
-                  <div className="col-span-3">
+                  <div className="col-span-1 sm:col-span-3">
+                    <span className="sm:hidden text-[10px] text-[#737373] block mb-1 font-semibold">Tên biến thể:</span>
                     <Input
                       placeholder={t('variantNamePlaceholder')}
                       value={v.name}
@@ -438,7 +439,8 @@ export default function ProductsPage() {
                       required
                     />
                   </div>
-                  <div className="col-span-3">
+                  <div className="col-span-1 sm:col-span-3">
+                    <span className="sm:hidden text-[10px] text-[#737373] block mb-1 font-semibold">Mã SKU:</span>
                     <Input
                       placeholder="Mã SKU"
                       value={v.sku}
@@ -447,7 +449,8 @@ export default function ProductsPage() {
                       required
                     />
                   </div>
-                  <div className="col-span-3">
+                  <div className="col-span-1 sm:col-span-3">
+                    <span className="sm:hidden text-[10px] text-[#737373] block mb-1 font-semibold">Giá bán (VND):</span>
                     <Input
                       type="number"
                       placeholder="Giá bán"
@@ -457,7 +460,8 @@ export default function ProductsPage() {
                       required
                     />
                   </div>
-                  <div className="col-span-2">
+                  <div className="col-span-1 sm:col-span-2">
+                    <span className="sm:hidden text-[10px] text-[#737373] block mb-1 font-semibold">Tổng tồn kho:</span>
                     <Input
                       type="number"
                       placeholder="Số lượng"
@@ -469,14 +473,15 @@ export default function ProductsPage() {
                       required
                     />
                   </div>
-                  <div className="col-span-1 text-center">
+                  <div className="col-span-2 sm:col-span-1 flex justify-end sm:justify-center pt-1 sm:pt-0">
                     <button
                       type="button"
                       disabled={formVariants.length <= 1}
                       onClick={() => removeVariantField(idx)}
-                      className="p-1 text-[#737373] hover:text-[#C44536] disabled:opacity-30"
+                      className="p-1.5 text-[#737373] hover:text-[#C44536] disabled:opacity-30 flex items-center gap-1 text-xs"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
+                      <span className="sm:hidden text-xs">Xóa biến thể</span>
                     </button>
                   </div>
                 </div>

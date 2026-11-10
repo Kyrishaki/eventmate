@@ -106,6 +106,18 @@ const defaultCategories: ProductCategory[] = [
 
 const defaultEvents: EventItem[] = [
   {
+    id: 'evt-test-pos',
+    workspace_id: 'ws-hac-cam-studio',
+    name: '🧪 Sự kiện Test (Chạy thử nghiệm POS)',
+    description: 'Sự kiện dành riêng để chạy thử máy POS, test giao dịch và đối soát doanh thu',
+    location: 'Quầy Demo & Test POS',
+    start_date: '2026-11-01T00:00:00Z',
+    end_date: '2026-12-31T23:59:59Z',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
     id: 'evt-hanoi-2026',
     workspace_id: 'ws-hac-cam-studio',
     name: 'Hạc Cầm Live Concert - Hà Nội',
@@ -132,6 +144,16 @@ const defaultEvents: EventItem[] = [
 ];
 
 const defaultBooths: Booth[] = [
+  {
+    id: 'booth-test-1',
+    workspace_id: 'ws-hac-cam-studio',
+    event_id: 'evt-test-pos',
+    name: 'Quầy Test POS 01',
+    code: 'BOOTH-TEST',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
   {
     id: 'booth-a',
     workspace_id: 'ws-hac-cam-studio',
@@ -342,6 +364,14 @@ const defaultAllocations: InventoryAllocation[] = [
   { id: 'alloc-sg-4', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-saigon-2026', booth_id: 'booth-sg-1', variant_id: 'var-cap-blk', allocated_quantity: 50, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
   { id: 'alloc-sg-5', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-saigon-2026', booth_id: 'booth-sg-1', variant_id: 'var-lightstick-rgb', allocated_quantity: 90, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
   { id: 'alloc-sg-6', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-saigon-2026', booth_id: 'booth-sg-1', variant_id: 'var-vinyl-limited', allocated_quantity: 20, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+
+  // Test Event Allocations (Quầy Test POS 01)
+  { id: 'alloc-test-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-tshirt-s', allocated_quantity: 50, sold_quantity: 31, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-2', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-tshirt-m', allocated_quantity: 50, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-3', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-tshirt-l', allocated_quantity: 50, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-4', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-cap-blk', allocated_quantity: 30, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-5', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-lightstick-rgb', allocated_quantity: 50, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-6', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-vinyl-limited', allocated_quantity: 15, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 ];
 
 const defaultMembers: WorkspaceMember[] = [
@@ -444,14 +474,14 @@ const defaultInvitations: WorkspaceInvitation[] = [
 export const useDataStore = create<DataStoreState>()(
   persist(
     (set, get) => ({
-      events: [],
-      booths: [],
-      categories: [],
-      products: [],
-      variants: [],
-      allocations: [],
-      members: [],
-      invitations: [],
+      events: defaultEvents,
+      booths: defaultBooths,
+      categories: defaultCategories,
+      products: defaultProducts,
+      variants: defaultVariants,
+      allocations: defaultAllocations,
+      members: defaultMembers,
+      invitations: defaultInvitations,
 
       // Events
       createEvent: (eventData) => {
@@ -877,6 +907,45 @@ export const useDataStore = create<DataStoreState>()(
     }),
     {
       name: 'eventmate_core_data_v3',
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        // Self-heal and ensure events exist
+        if (!state.events || state.events.length === 0) {
+          state.events = defaultEvents;
+        } else {
+          // If evt-test-pos is missing, prepend it
+          if (!state.events.some((e) => e.id === 'evt-test-pos')) {
+            const testEvt = defaultEvents.find((e) => e.id === 'evt-test-pos');
+            if (testEvt) state.events = [testEvt, ...state.events];
+          }
+        }
+
+        // Self-heal booths
+        if (!state.booths || state.booths.length === 0) {
+          state.booths = defaultBooths;
+        } else {
+          if (!state.booths.some((b) => b.id === 'booth-test-1')) {
+            const testBooth = defaultBooths.find((b) => b.id === 'booth-test-1');
+            if (testBooth) state.booths = [testBooth, ...state.booths];
+          }
+        }
+
+        // Self-heal allocations
+        if (!state.allocations || state.allocations.length === 0) {
+          state.allocations = defaultAllocations;
+        } else {
+          if (!state.allocations.some((a) => a.event_id === 'evt-test-pos')) {
+            const testAllocs = defaultAllocations.filter((a) => a.event_id === 'evt-test-pos');
+            state.allocations = [...state.allocations, ...testAllocs];
+          }
+        }
+
+        // Self-heal products, variants, categories
+        if (!state.products || state.products.length === 0) state.products = defaultProducts;
+        if (!state.variants || state.variants.length === 0) state.variants = defaultVariants;
+        if (!state.categories || state.categories.length === 0) state.categories = defaultCategories;
+        if (!state.members || state.members.length === 0) state.members = defaultMembers;
+      },
     }
   )
 );

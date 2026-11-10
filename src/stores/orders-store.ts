@@ -57,77 +57,67 @@ interface OrdersStoreState {
   mergeCollabOrders: (incomingOrders: Order[]) => void;
 }
 
-// Initial sample completed orders for realistic history
+// Initial completed orders attributed to Test Event (as shown in dashboard screenshot)
 const sampleInitialOrders: Order[] = [
   {
-    id: 'ord-1001',
+    id: 'ord-test-4748',
     workspace_id: 'ws-hac-cam-studio',
-    event_id: 'evt-hanoi-2026',
-    booth_id: 'booth-a',
+    event_id: 'evt-test-pos',
+    booth_id: 'booth-test-1',
     cashier_id: 'user-artist-demo',
-    order_number: 'EM-2026-0001',
-    subtotal_amount: 700000,
+    order_number: 'EM-4748',
+    subtotal_amount: 10500000,
     discount_amount: 0,
-    final_amount: 700000,
-    payment_method: 'qr_manual',
+    final_amount: 10500000,
+    payment_method: 'cash',
     payment_status: 'completed',
     sync_status: 'synced',
-    idempotency_key: 'idem-ord-1001',
-    notes: 'Khách thanh toán quét mã VietQR',
-    offline_created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-    created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-    updated_at: new Date(Date.now() - 3600000 * 2).toISOString(),
+    idempotency_key: 'idem-ord-test-4748',
+    notes: 'Đơn hàng thử nghiệm máy bán hàng POS (30 món)',
+    offline_created_at: '2026-11-10T20:27:00.000Z',
+    created_at: '2026-11-10T20:27:00.000Z',
+    updated_at: '2026-11-10T20:27:00.000Z',
     items: [
       {
-        id: 'item-1',
-        order_id: 'ord-1001',
+        id: 'item-test-4748-1',
+        order_id: 'ord-test-4748',
         workspace_id: 'ws-hac-cam-studio',
-        variant_id: 'var-tshirt-m',
-        quantity: 2,
+        variant_id: 'var-tshirt-s',
+        quantity: 30,
         unit_price: 350000,
-        total_price: 700000,
-        created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
+        total_price: 10500000,
+        created_at: '2026-11-10T20:27:00.000Z',
       },
     ],
   },
   {
-    id: 'ord-1002',
+    id: 'ord-test-9089',
     workspace_id: 'ws-hac-cam-studio',
-    event_id: 'evt-hanoi-2026',
-    booth_id: 'booth-a',
+    event_id: 'evt-test-pos',
+    booth_id: 'booth-test-1',
     cashier_id: 'user-artist-demo',
-    order_number: 'EM-2026-0002',
-    subtotal_amount: 500000,
+    order_number: 'EM-9089',
+    subtotal_amount: 350000,
     discount_amount: 0,
-    final_amount: 500000,
+    final_amount: 350000,
     payment_method: 'cash',
     payment_status: 'completed',
     sync_status: 'synced',
-    idempotency_key: 'idem-ord-1002',
-    notes: 'Tiền mặt khách đưa 500k',
-    offline_created_at: new Date(Date.now() - 3600000 * 1).toISOString(),
-    created_at: new Date(Date.now() - 3600000 * 1).toISOString(),
-    updated_at: new Date(Date.now() - 3600000 * 1).toISOString(),
+    idempotency_key: 'idem-ord-test-9089',
+    notes: 'Đơn hàng thử nghiệm máy bán hàng POS (1 món)',
+    offline_created_at: '2026-11-10T20:25:00.000Z',
+    created_at: '2026-11-10T20:25:00.000Z',
+    updated_at: '2026-11-10T20:25:00.000Z',
     items: [
       {
-        id: 'item-2',
-        order_id: 'ord-1002',
+        id: 'item-test-9089-1',
+        order_id: 'ord-test-9089',
         workspace_id: 'ws-hac-cam-studio',
-        variant_id: 'var-cap-blk',
+        variant_id: 'var-tshirt-s',
         quantity: 1,
-        unit_price: 220000,
-        total_price: 220000,
-        created_at: new Date(Date.now() - 3600000 * 1).toISOString(),
-      },
-      {
-        id: 'item-3',
-        order_id: 'ord-1002',
-        workspace_id: 'ws-hac-cam-studio',
-        variant_id: 'var-lightstick-rgb',
-        quantity: 1,
-        unit_price: 280000,
-        total_price: 280000,
-        created_at: new Date(Date.now() - 3600000 * 1).toISOString(),
+        unit_price: 350000,
+        total_price: 350000,
+        created_at: '2026-11-10T20:25:00.000Z',
       },
     ],
   },
@@ -136,7 +126,7 @@ const sampleInitialOrders: Order[] = [
 export const useOrdersStore = create<OrdersStoreState>()(
   persist(
     (set, get) => ({
-      orders: [],
+      orders: sampleInitialOrders,
       cart: [],
       discountAmount: 0,
       activeBankConfig: {
@@ -379,6 +369,35 @@ export const useOrdersStore = create<OrdersStoreState>()(
     }),
     {
       name: 'eventmate_orders_state_v3',
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        if (!state.orders || state.orders.length === 0) {
+          state.orders = sampleInitialOrders;
+          return;
+        }
+
+        // Reassign EM-4748, EM-9089 or legacy test orders to evt-test-pos and booth-test-1
+        state.orders = state.orders.map((o) => {
+          if (o.order_number === 'EM-4748' || o.order_number === 'EM-9089') {
+            return {
+              ...o,
+              event_id: 'evt-test-pos',
+              booth_id: o.booth_id || 'booth-test-1',
+            };
+          }
+          return o;
+        });
+
+        // Ensure sample test orders EM-4748 and EM-9089 are present
+        const has4748 = state.orders.some((o) => o.order_number === 'EM-4748');
+        const has9089 = state.orders.some((o) => o.order_number === 'EM-9089');
+        if (!has4748 || !has9089) {
+          const missing = sampleInitialOrders.filter(
+            (so) => !state.orders.some((o) => o.order_number === so.order_number)
+          );
+          state.orders = [...missing, ...state.orders];
+        }
+      },
     }
   )
 );

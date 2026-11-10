@@ -14,15 +14,15 @@ import {
   DollarSign,
   ShoppingCart,
   Boxes,
-  TrendingUp,
   Calendar,
-  AlertTriangle,
   ArrowRight,
   Store,
   Plus,
   MapPin,
-  Clock,
   CheckCircle2,
+  Filter,
+  FlaskConical,
+  RotateCcw,
 } from 'lucide-react';
 
 export default function DashboardOverviewPage() {
@@ -36,42 +36,88 @@ export default function DashboardOverviewPage() {
   const workspaceEvents = events.filter(
     (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
   );
-  const upcomingEvents = workspaceEvents.filter((e) => e.status === 'upcoming' || e.status === 'active');
 
+  const [selectedEventId, setSelectedEventId] = React.useState<string>('all');
+
+  // Hydrate selected event from localStorage
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('eventmate_dashboard_selected_event');
+      if (saved && (saved === 'all' || workspaceEvents.some((e) => e.id === saved))) {
+        setSelectedEventId(saved);
+      }
+    }
+  }, [workspaceEvents]);
+
+  const handleEventChange = (eventId: string) => {
+    setSelectedEventId(eventId);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('eventmate_dashboard_selected_event', eventId);
+    }
+  };
+
+  const selectedEvent = workspaceEvents.find((e) => e.id === selectedEventId);
+
+  // Filter orders according to event
   const workspaceOrders = orders.filter(
     (o) => !activeWorkspace || o.workspace_id === activeWorkspace.id
   );
 
-  const totalRevenue = workspaceOrders.reduce((sum, o) => sum + o.final_amount, 0);
-  const totalAllocated = allocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
-  const totalSold = allocations.reduce((sum, a) => sum + a.sold_quantity, 0);
-  const totalStock = variants.reduce((sum, v) => sum + v.total_inventory, 0);
-  const avgOrderValue = workspaceOrders.length > 0 ? totalRevenue / workspaceOrders.length : 0;
+  const filteredOrders =
+    selectedEventId === 'all'
+      ? workspaceOrders
+      : workspaceOrders.filter((o) => o.event_id === selectedEventId);
 
-  // Business metrics calculated from real state
+  // Filter booths and allocations according to event
+  const filteredBooths =
+    selectedEventId === 'all'
+      ? booths.filter((b) => workspaceEvents.some((e) => e.id === b.event_id))
+      : booths.filter((b) => b.event_id === selectedEventId);
+
+  const filteredAllocations =
+    selectedEventId === 'all'
+      ? allocations.filter((a) => workspaceEvents.some((e) => e.id === a.event_id))
+      : allocations.filter((a) => a.event_id === selectedEventId);
+
+  const allAllocations = allocations.filter((a) =>
+    workspaceEvents.some((e) => e.id === a.event_id)
+  );
+
+  // Dynamic calculations
+  const totalRevenue = filteredOrders.reduce((sum, o) => sum + o.final_amount, 0);
+  const totalAllocated = filteredAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
+  const totalSold = filteredAllocations.reduce((sum, a) => sum + a.sold_quantity, 0);
+  const totalStock = variants.reduce((sum, v) => sum + v.total_inventory, 0);
+  const allAllocatedTotal = allAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
+  const activeBoothsCount = filteredBooths.filter((b) => b.status === 'active').length;
+
+  // Business metrics calculated from filtered state
   const metrics = [
     {
       title: t('metrics.totalRevenue'),
       value: formatCurrency(totalRevenue, activeWorkspace?.currency || 'VND'),
-      change: `${workspaceOrders.length} giao dịch thành công`,
+      change: `${filteredOrders.length} giao dịch thành công`,
       icon: DollarSign,
     },
     {
       title: t('metrics.ordersCount'),
-      value: `${workspaceOrders.length} đơn`,
-      change: 'Đã xuất tại quầy POS',
+      value: `${filteredOrders.length} đơn`,
+      change: selectedEventId === 'all' ? 'Đã xuất tại quầy POS' : `Tại ${filteredBooths.length} quầy bán`,
       icon: ShoppingCart,
     },
     {
       title: t('metrics.unitsSold'),
       value: `${totalSold} / ${totalAllocated}`,
-      change: `${totalStock} trong tổng kho`,
+      change: selectedEventId === 'all' ? `${totalStock} trong tổng kho` : 'Hàng cấp cho sự kiện',
       icon: Boxes,
     },
     {
       title: 'Quầy bán kích hoạt',
-      value: `${booths.filter((b) => b.status === 'active').length} quầy`,
-      change: `Thuộc ${workspaceEvents.length} sự kiện`,
+      value: `${activeBoothsCount} quầy`,
+      change:
+        selectedEventId === 'all'
+          ? `Thuộc ${workspaceEvents.length} sự kiện`
+          : `Thuộc sự kiện đang chọn`,
       icon: Store,
     },
   ];
@@ -79,17 +125,17 @@ export default function DashboardOverviewPage() {
   return (
     <div className="space-y-6">
       {/* Header with Title and Primary Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#E8E8E5]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#E8E8E5] dark:border-[#333333]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-[#202124]">
+            <h1 className="text-xl font-bold tracking-tight text-[#202124] dark:text-[#F0F0F0]">
               {t('overviewTitle')}
             </h1>
             <Badge variant="outline" className="text-[11px] font-mono">
               {activeWorkspace?.name || 'Workspace'}
             </Badge>
           </div>
-          <p className="text-xs text-[#737373] mt-0.5">
+          <p className="text-xs text-[#737373] dark:text-[#9E9E9C] mt-0.5">
             Theo dõi phân bổ hàng hóa, tiến độ bán tại từng gian hàng và doanh thu thời gian thực.
           </p>
         </div>
@@ -110,22 +156,75 @@ export default function DashboardOverviewPage() {
         </div>
       </div>
 
+      {/* Event Filter Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white dark:bg-[#1E1E1E] rounded-[8px] border border-[#E8E8E5] dark:border-[#333333] shadow-xs">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#555555] dark:text-[#CCCCCC]">
+            <Filter className="w-4 h-4 text-[#315C4C]" />
+            <span>Lọc theo sự kiện:</span>
+          </div>
+
+          <div className="relative">
+            <select
+              value={selectedEventId}
+              onChange={(e) => handleEventChange(e.target.value)}
+              className="h-8.5 pl-8 pr-8 text-xs font-semibold text-[#202124] dark:text-[#F0F0F0] bg-[#F7F7F5] dark:bg-[#2A2A2A] border border-[#D5D5D0] dark:border-[#444444] rounded-[6px] focus:outline-none focus:ring-1 focus:ring-[#315C4C] cursor-pointer appearance-none"
+            >
+              <option value="all">🌐 Tất cả sự kiện (Toàn bộ)</option>
+              {workspaceEvents.map((evt) => (
+                <option key={evt.id} value={evt.id}>
+                  {evt.name}
+                </option>
+              ))}
+            </select>
+            <Calendar className="w-3.5 h-3.5 text-[#315C4C] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+
+          {selectedEventId !== 'all' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEventChange('all')}
+              className="text-xs h-8 text-[#737373] hover:text-[#202124] gap-1 px-2"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Xem tất cả</span>
+            </Button>
+          )}
+        </div>
+
+        {selectedEventId === 'evt-test-pos' ? (
+          <div className="flex items-center gap-1.5 text-xs text-[#B7791F] bg-[#B7791F]/10 px-2.5 py-1 rounded-[6px] font-medium border border-[#B7791F]/20">
+            <FlaskConical className="w-3.5 h-3.5 shrink-0" />
+            <span>Chế độ thử nghiệm: Đơn hàng & tiền test được lưu tại đây</span>
+          </div>
+        ) : selectedEventId !== 'all' ? (
+          <Badge variant="outline" className="text-xs border-[#315C4C] text-[#315C4C] bg-[#315C4C]/5">
+            Đang xem: {selectedEvent?.name}
+          </Badge>
+        ) : (
+          <span className="text-[11px] text-[#737373]">
+            Hiển thị tổng hợp {workspaceEvents.length} sự kiện
+          </span>
+        )}
+      </div>
+
       {/* KPI Business Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {metrics.map((metric, idx) => {
           const Icon = metric.icon;
           return (
-            <Card key={idx} className="p-3 sm:p-4 bg-white border-[#E8E8E5] shadow-xs">
-              <div className="flex items-center justify-between text-[#737373] mb-1.5">
+            <Card key={idx} className="p-3 sm:p-4 bg-white dark:bg-[#1E1E1E] border-[#E8E8E5] dark:border-[#333333] shadow-xs">
+              <div className="flex items-center justify-between text-[#737373] dark:text-[#9E9E9C] mb-1.5">
                 <span className="text-[11px] sm:text-xs font-medium truncate pr-1">{metric.title}</span>
-                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-[4px] bg-[#F7F7F5] border border-[#E8E8E5] flex items-center justify-center text-[#315C4C] shrink-0">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-[4px] bg-[#F7F7F5] dark:bg-[#2A2A2A] border border-[#E8E8E5] dark:border-[#333333] flex items-center justify-center text-[#315C4C] shrink-0">
                   <Icon className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <div className="text-lg sm:text-2xl font-bold tracking-tight text-[#202124] truncate">
+              <div className="text-lg sm:text-2xl font-bold tracking-tight text-[#202124] dark:text-[#F0F0F0] truncate">
                 {metric.value}
               </div>
-              <p className="text-[10px] sm:text-[11px] text-[#737373] mt-0.5 truncate">{metric.change}</p>
+              <p className="text-[10px] sm:text-[11px] text-[#737373] dark:text-[#9E9E9C] mt-0.5 truncate">{metric.change}</p>
             </Card>
           );
         })}
@@ -133,78 +232,158 @@ export default function DashboardOverviewPage() {
 
       {/* Two Column Layout: Events & Stock Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Upcoming Events */}
-        <Card className="border-[#E8E8E5] shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between py-4 border-b border-[#F0F0ED]">
+        {/* Events / Booths Overview Card */}
+        <Card className="border-[#E8E8E5] dark:border-[#333333] shadow-xs bg-white dark:bg-[#1E1E1E]">
+          <CardHeader className="flex flex-row items-center justify-between py-4 border-b border-[#F0F0ED] dark:border-[#2D2D2D]">
             <div>
-              <CardTitle className="text-sm font-semibold">{t('upcomingEvents')}</CardTitle>
-              <CardDescription className="text-xs">Lịch diễn và danh sách gian hàng chuẩn bị mở bán</CardDescription>
+              <CardTitle className="text-sm font-semibold text-[#202124] dark:text-[#F0F0F0]">
+                {selectedEventId === 'all' ? t('upcomingEvents') : 'Gian hàng thuộc sự kiện'}
+              </CardTitle>
+              <CardDescription className="text-xs text-[#737373] dark:text-[#9E9E9C]">
+                {selectedEventId === 'all'
+                  ? 'Lịch diễn và danh sách gian hàng chuẩn bị mở bán'
+                  : selectedEvent?.name}
+              </CardDescription>
             </div>
-            <Link href="/dashboard/events">
-              <Button variant="ghost" size="sm" className="text-xs gap-1 h-7 text-[#315C4C]">
-                <span>Tất cả</span>
+            {selectedEventId === 'all' ? (
+              <Link href="/dashboard/events">
+                <Button variant="ghost" size="sm" className="text-xs gap-1 h-7 text-[#315C4C]">
+                  <span>Tất cả</span>
+                  <ArrowRight className="w-3 h-3" />
+                </Button>
+              </Link>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleEventChange('all')}
+                className="text-xs gap-1 h-7 text-[#315C4C]"
+              >
+                <span>Xem tất cả sự kiện</span>
                 <ArrowRight className="w-3 h-3" />
               </Button>
-            </Link>
+            )}
           </CardHeader>
           <CardContent className="p-5">
-            {upcomingEvents.length === 0 ? (
-              <div className="text-center py-8 px-4 rounded-[6px] border border-dashed border-[#E8E8E5] bg-[#FBFBFA]">
-                <Calendar className="w-8 h-8 text-[#9E9E9C] mx-auto mb-2" />
-                <p className="text-xs font-medium text-[#202124]">{t('noUpcomingEvents')}</p>
-                <Link href="/dashboard/events" className="inline-block mt-3">
-                  <Button variant="outline" size="sm" className="text-xs gap-1">
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Tạo sự kiện đầu tiên</span>
-                  </Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {upcomingEvents.slice(0, 3).map((evt) => {
-                  const eventBooths = booths.filter((b) => b.event_id === evt.id);
-                  return (
-                    <div
-                      key={evt.id}
-                      className="p-3 bg-[#FBFBFA] border border-[#E8E8E5] rounded-[6px] flex items-center justify-between"
-                    >
-                      <div className="min-w-0 pr-2">
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs font-bold text-[#202124] truncate">{evt.name}</p>
-                          <Badge variant={evt.status === 'active' ? 'success' : 'default'} className="text-[9px]">
-                            {tEvents(`statusList.${evt.status}` as any)}
-                          </Badge>
+            {selectedEventId === 'all' ? (
+              workspaceEvents.length === 0 ? (
+                <div className="text-center py-8 px-4 rounded-[6px] border border-dashed border-[#E8E8E5] dark:border-[#333333] bg-[#FBFBFA] dark:bg-[#252525]">
+                  <Calendar className="w-8 h-8 text-[#9E9E9C] mx-auto mb-2" />
+                  <p className="text-xs font-medium text-[#202124] dark:text-[#F0F0F0]">{t('noUpcomingEvents')}</p>
+                  <Link href="/dashboard/events" className="inline-block mt-3">
+                    <Button variant="outline" size="sm" className="text-xs gap-1">
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Tạo sự kiện đầu tiên</span>
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {workspaceEvents.slice(0, 4).map((evt) => {
+                    const eventBooths = booths.filter((b) => b.event_id === evt.id);
+                    return (
+                      <div
+                        key={evt.id}
+                        onClick={() => handleEventChange(evt.id)}
+                        className="p-3 bg-[#FBFBFA] dark:bg-[#252525] hover:bg-[#F2F2EF] dark:hover:bg-[#2D2D2D] border border-[#E8E8E5] dark:border-[#333333] rounded-[6px] flex items-center justify-between cursor-pointer transition-colors"
+                      >
+                        <div className="min-w-0 pr-2">
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs font-bold text-[#202124] dark:text-[#F0F0F0] truncate">{evt.name}</p>
+                            <Badge
+                              variant={evt.status === 'active' ? 'success' : 'default'}
+                              className="text-[9px]"
+                            >
+                              {evt.id === 'evt-test-pos'
+                                ? 'Thử nghiệm'
+                                : tEvents(`statusList.${evt.status}` as any)}
+                            </Badge>
+                          </div>
+                          <p className="text-[11px] text-[#737373] dark:text-[#9E9E9C] flex items-center gap-1 mt-1 truncate">
+                            <MapPin className="w-3 h-3 text-[#9E9E9C] shrink-0" />
+                            <span>{evt.location || 'Địa điểm tổ chức'}</span>
+                          </p>
                         </div>
-                        <p className="text-[11px] text-[#737373] flex items-center gap-1 mt-1 truncate">
-                          <MapPin className="w-3 h-3 text-[#9E9E9C] shrink-0" />
-                          <span>{evt.location || 'Địa điểm tổ chức'}</span>
-                        </p>
-                      </div>
 
-                      <div className="text-right shrink-0">
-                        <span className="text-[11px] font-semibold text-[#315C4C] block">
-                          {eventBooths.length} quầy bán
-                        </span>
-                        <Link href="/dashboard/inventory">
-                          <span className="text-[10px] text-[#737373] hover:underline">
-                            Xem phân bổ →
+                        <div className="text-right shrink-0">
+                          <span className="text-[11px] font-semibold text-[#315C4C] block">
+                            {eventBooths.length} quầy bán
                           </span>
+                          <span className="text-[10px] text-[#737373] dark:text-[#9E9E9C]">
+                            Lọc sự kiện này →
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            ) : (
+              /* Specific Event Booths Breakdown */
+              <div className="space-y-3">
+                <div className="p-3 bg-[#F7F7F5] dark:bg-[#252525] rounded-[6px] border border-[#E8E8E5] dark:border-[#333333] text-xs space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#737373] dark:text-[#9E9E9C]">Địa điểm:</span>
+                    <span className="font-semibold text-[#202124] dark:text-[#F0F0F0]">{selectedEvent?.location || 'Chưa đặt'}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#737373] dark:text-[#9E9E9C]">Thời gian:</span>
+                    <span className="font-semibold text-[#202124] dark:text-[#F0F0F0]">
+                      {selectedEvent?.start_date ? formatDate(selectedEvent.start_date) : 'Đang cập nhật'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-2 mt-2">
+                  <p className="text-xs font-semibold text-[#202124] dark:text-[#F0F0F0]">
+                    Danh sách quầy bán ({filteredBooths.length} quầy):
+                  </p>
+                  {filteredBooths.map((booth) => {
+                    const boothAllocs = filteredAllocations.filter((a) => a.booth_id === booth.id);
+                    const boothAllocQty = boothAllocs.reduce((sum, a) => sum + a.allocated_quantity, 0);
+                    const boothSoldQty = boothAllocs.reduce((sum, a) => sum + a.sold_quantity, 0);
+
+                    return (
+                      <div
+                        key={booth.id}
+                        className="p-3 bg-[#FBFBFA] dark:bg-[#252525] border border-[#E8E8E5] dark:border-[#333333] rounded-[6px] flex items-center justify-between text-xs"
+                      >
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-[#202124] dark:text-[#F0F0F0]">{booth.name}</span>
+                            <Badge variant="outline" className="text-[9px] font-mono">
+                              {booth.code}
+                            </Badge>
+                          </div>
+                          <p className="text-[11px] text-[#737373] dark:text-[#9E9E9C] mt-0.5">
+                            Đã bán: <span className="font-semibold text-[#315C4C]">{boothSoldQty}</span> / Cấp: {boothAllocQty} món
+                          </p>
+                        </div>
+                        <Link href="/pos">
+                          <Button variant="outline" size="sm" className="text-xs h-7 gap-1">
+                            <Store className="w-3 h-3" />
+                            <span>Vào POS</span>
+                          </Button>
                         </Link>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
 
         {/* Inventory Summary */}
-        <Card className="border-[#E8E8E5] shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between py-4 border-b border-[#F0F0ED]">
+        <Card className="border-[#E8E8E5] dark:border-[#333333] shadow-xs bg-white dark:bg-[#1E1E1E]">
+          <CardHeader className="flex flex-row items-center justify-between py-4 border-b border-[#F0F0ED] dark:border-[#2D2D2D]">
             <div>
-              <CardTitle className="text-sm font-semibold">{t('inventoryWarnings')}</CardTitle>
-              <CardDescription className="text-xs">Tỷ lệ phân bổ và tình trạng tồn kho</CardDescription>
+              <CardTitle className="text-sm font-semibold text-[#202124] dark:text-[#F0F0F0]">{t('inventoryWarnings')}</CardTitle>
+              <CardDescription className="text-xs text-[#737373] dark:text-[#9E9E9C]">
+                {selectedEventId === 'all'
+                  ? 'Tỷ lệ phân bổ và tình trạng tồn kho toàn tour'
+                  : `Tình trạng kho hàng sự kiện: ${selectedEvent?.name}`}
+              </CardDescription>
             </div>
             <Link href="/dashboard/inventory">
               <Button variant="ghost" size="sm" className="text-xs gap-1 h-7 text-[#315C4C]">
@@ -215,21 +394,48 @@ export default function DashboardOverviewPage() {
           </CardHeader>
           <CardContent className="p-5">
             <div className="space-y-4">
-              <div className="p-3 bg-[#FBFBFA] rounded-[6px] border border-[#E8E8E5] space-y-2 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-[#737373]">Tổng hàng hóa đã nhập:</span>
-                  <span className="font-bold text-[#202124]">{totalStock} món</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[#737373]">Đã cấp cho các quầy bán:</span>
-                  <span className="font-semibold text-[#315C4C]">{totalAllocated} món</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[#737373]">Trữ lượng kho tổng:</span>
-                  <span className="font-semibold text-[#B7791F]">
-                    {Math.max(0, totalStock - totalAllocated)} món
-                  </span>
-                </div>
+              <div className="p-3 bg-[#FBFBFA] dark:bg-[#252525] rounded-[6px] border border-[#E8E8E5] dark:border-[#333333] space-y-2 text-xs">
+                {selectedEventId === 'all' ? (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#737373] dark:text-[#9E9E9C]">Tổng hàng hóa đã nhập (Kho tổng):</span>
+                      <span className="font-bold text-[#202124] dark:text-[#F0F0F0]">{totalStock} món</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#737373] dark:text-[#9E9E9C]">Đã cấp cho các quầy bán:</span>
+                      <span className="font-semibold text-[#315C4C]">{totalAllocated} món</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#737373] dark:text-[#9E9E9C]">Trữ lượng kho tổng chưa cấp:</span>
+                      <span className="font-semibold text-[#B7791F]">
+                        {Math.max(0, totalStock - totalAllocated)} món
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#737373] dark:text-[#9E9E9C]">Hàng hóa cấp cho sự kiện này:</span>
+                      <span className="font-bold text-[#202124] dark:text-[#F0F0F0]">{totalAllocated} món</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#737373] dark:text-[#9E9E9C]">Đã bán thành công tại sự kiện:</span>
+                      <span className="font-semibold text-[#315C4C]">{totalSold} món</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#737373] dark:text-[#9E9E9C]">Tồn khả dụng tại các quầy:</span>
+                      <span className="font-semibold text-[#202124] dark:text-[#F0F0F0]">
+                        {Math.max(0, totalAllocated - totalSold)} món
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between pt-1 border-t border-[#E8E8E5] dark:border-[#333333]">
+                      <span className="text-[#737373] dark:text-[#9E9E9C]">Trữ lượng kho tổng còn lại:</span>
+                      <span className="font-semibold text-[#B7791F]">
+                        {Math.max(0, totalStock - allAllocatedTotal)} món
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="flex items-center justify-between pt-2">
@@ -249,11 +455,15 @@ export default function DashboardOverviewPage() {
       </div>
 
       {/* Recent Orders Section */}
-      <Card className="border-[#E8E8E5] shadow-xs">
-        <CardHeader className="flex flex-row items-center justify-between py-4 border-b border-[#F0F0ED]">
+      <Card className="border-[#E8E8E5] dark:border-[#333333] shadow-xs bg-white dark:bg-[#1E1E1E]">
+        <CardHeader className="flex flex-row items-center justify-between py-4 border-b border-[#F0F0ED] dark:border-[#2D2D2D]">
           <div>
-            <CardTitle className="text-sm font-semibold">{t('recentOrders')}</CardTitle>
-            <CardDescription className="text-xs">Các giao dịch được ghi nhận qua POS hoặc đồng bộ từ máy bán hàng</CardDescription>
+            <CardTitle className="text-sm font-semibold text-[#202124] dark:text-[#F0F0F0]">{t('recentOrders')}</CardTitle>
+            <CardDescription className="text-xs text-[#737373] dark:text-[#9E9E9C]">
+              {selectedEventId === 'all'
+                ? 'Các giao dịch được ghi nhận qua POS hoặc đồng bộ từ máy bán hàng'
+                : `Giao dịch thuộc: ${selectedEvent?.name}`}
+            </CardDescription>
           </div>
           <Link href="/dashboard/orders">
             <Button variant="ghost" size="sm" className="text-xs gap-1 h-7 text-[#315C4C]">
@@ -263,39 +473,61 @@ export default function DashboardOverviewPage() {
           </Link>
         </CardHeader>
         <CardContent className="p-5">
-          {workspaceOrders.length === 0 ? (
-            <div className="text-center py-10 rounded-[6px] border border-dashed border-[#E8E8E5] bg-[#FBFBFA]">
+          {filteredOrders.length === 0 ? (
+            <div className="text-center py-10 rounded-[6px] border border-dashed border-[#E8E8E5] dark:border-[#333333] bg-[#FBFBFA] dark:bg-[#252525]">
               <ShoppingCart className="w-8 h-8 text-[#9E9E9C] mx-auto mb-2" />
-              <p className="text-xs font-medium text-[#202124]">{t('noRecentOrders')}</p>
-              <p className="text-[11px] text-[#737373] mt-0.5">
+              <p className="text-xs font-medium text-[#202124] dark:text-[#F0F0F0]">
+                {selectedEventId === 'all'
+                  ? t('noRecentOrders')
+                  : `Chưa có đơn hàng nào tại ${selectedEvent?.name}`}
+              </p>
+              <p className="text-[11px] text-[#737373] dark:text-[#9E9E9C] mt-0.5">
                 Đơn hàng tạo từ POS (cả online và offline) sẽ được tổng hợp tự động khi kết nối Internet.
               </p>
+              {selectedEventId !== 'all' && (
+                <Link href="/pos" className="inline-block mt-3">
+                  <Button variant="outline" size="sm" className="text-xs gap-1">
+                    <Store className="w-3.5 h-3.5" />
+                    <span>Mở máy POS sự kiện này</span>
+                  </Button>
+                </Link>
+              )}
             </div>
           ) : (
-            <div className="divide-y divide-[#F0F0ED]">
-              {workspaceOrders.slice(0, 3).map((ord) => {
+            <div className="divide-y divide-[#F0F0ED] dark:divide-[#2D2D2D]">
+              {filteredOrders.slice(0, 5).map((ord) => {
                 const event = events.find((e) => e.id === ord.event_id);
                 const booth = booths.find((b) => b.id === ord.booth_id);
 
                 return (
-                  <div key={ord.id} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between text-xs">
+                  <div
+                    key={ord.id}
+                    className="py-3 first:pt-0 last:pb-0 flex items-center justify-between text-xs"
+                  >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-[#202124]">{ord.order_number}</span>
+                        <span className="font-mono font-bold text-[#202124] dark:text-[#F0F0F0]">
+                          {ord.order_number}
+                        </span>
                         <Badge variant="outline" className="text-[9px]">
                           {ord.payment_method === 'cash' ? 'Tiền mặt' : 'VietQR'}
                         </Badge>
+                        {ord.event_id === 'evt-test-pos' && (
+                          <Badge variant="outline" className="text-[9px] border-[#B7791F] text-[#B7791F] bg-[#B7791F]/5">
+                            Thử nghiệm
+                          </Badge>
+                        )}
                       </div>
-                      <p className="text-[11px] text-[#737373] mt-0.5">
-                        {event?.name} • {booth?.name} • {formatDate(ord.created_at)}
+                      <p className="text-[11px] text-[#737373] dark:text-[#9E9E9C] mt-0.5">
+                        {event?.name || 'Sự kiện'} • {booth?.name || 'Quầy POS'} • {formatDate(ord.created_at)}
                       </p>
                     </div>
                     <div className="text-right">
                       <span className="font-bold text-[#315C4C] text-sm block">
                         {formatCurrency(ord.final_amount, activeWorkspace?.currency || 'VND')}
                       </span>
-                      <span className="text-[10px] text-[#737373]">
-                        {ord.items?.length || 1} món
+                      <span className="text-[10px] text-[#737373] dark:text-[#9E9E9C]">
+                        {ord.items?.reduce((s, it) => s + (it.quantity || 1), 0) || 1} món
                       </span>
                     </div>
                   </div>

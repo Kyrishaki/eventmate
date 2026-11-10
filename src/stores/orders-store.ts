@@ -51,6 +51,7 @@ interface OrdersStoreState {
   // Sync actions
   syncPendingOrders: () => Promise<{ successCount: number; failCount: number }>;
   retryOrderSync: (orderId: string) => Promise<boolean>;
+  mergeCollabOrders: (incomingOrders: Order[]) => void;
 }
 
 // Initial sample completed orders for realistic history
@@ -338,6 +339,13 @@ export const useOrdersStore = create<OrdersStoreState>()(
           ),
         });
         return true;
+      },
+
+      mergeCollabOrders: (incomingOrders: Order[]) => {
+        const { orders } = get();
+        const existingIds = new Set(orders.map((o) => o.id));
+        const toAdd = incomingOrders.filter((o) => !existingIds.has(o.id));
+        set({ orders: [...toAdd, ...orders] });
       },
     }),
     {

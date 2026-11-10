@@ -22,6 +22,11 @@ import {
   TabletSmartphone,
   Users2,
   Percent,
+  Handshake,
+  Share2,
+  ExternalLink,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 
@@ -46,6 +51,44 @@ export default function BoothsPage() {
   const [boothType, setBoothType] = React.useState<BoothType>('solo');
   const [collabPartner, setCollabPartner] = React.useState('');
   const [revenueShareRatio, setRevenueShareRatio] = React.useState<number>(50);
+
+  // Collab Portal Share Modal
+  const [selectedCollabBooth, setSelectedCollabBooth] = React.useState<Booth | null>(null);
+  const [isCollabModalOpen, setIsCollabModalOpen] = React.useState(false);
+  const [copiedShareText, setCopiedShareText] = React.useState(false);
+
+  function openShareCollabModal(booth: Booth) {
+    setSelectedCollabBooth(booth);
+    setIsCollabModalOpen(true);
+    setCopiedShareText(false);
+  }
+
+  function getCollabShareUrl(booth: Booth) {
+    if (typeof window === 'undefined') return '';
+    const evt = events.find((e) => e.id === booth.event_id);
+    return `${window.location.origin}/vi/collab/${booth.id}?partner=${encodeURIComponent(
+      booth.collab_partner || 'Đối tác'
+    )}&event=${encodeURIComponent(evt?.name || '')}&ratio=${
+      booth.revenue_share_ratio || 50
+    }&name=${encodeURIComponent(booth.name)}&evtId=${encodeURIComponent(booth.event_id)}`;
+  }
+
+  function handleCopyCollabShare(booth: Booth) {
+    const url = getCollabShareUrl(booth);
+    const evt = events.find((e) => e.id === booth.event_id);
+    const text = `🎪 CỔNG HỢP TÁC GIAN HÀNG SỰ KIỆN — EVENTMATE
+• Sự kiện: ${evt?.name || 'Sự kiện chung'}
+• Gian hàng liên danh: ${booth.name} (${booth.code})
+• Đối tác: ${booth.collab_partner || 'Đối tác'}
+• Tỷ lệ chia sẻ doanh thu: ${booth.revenue_share_ratio || 50}% cho Đối tác
+
+👉 Nhấn vào liên kết sau để mở Cổng Đối tác, đồng bộ hàng hóa và xem doanh thu thời gian thực:
+${url}`;
+
+    navigator.clipboard.writeText(text);
+    setCopiedShareText(true);
+    setTimeout(() => setCopiedShareText(false), 2500);
+  }
 
   const workspaceEvents = events.filter(
     (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
@@ -267,10 +310,47 @@ export default function BoothsPage() {
                     <span className="truncate">{event?.name || 'Sự kiện'}</span>
                   </p>
 
-                  {isCollab && booth.revenue_share_ratio && (
-                    <div className="mt-2 text-[11px] text-[#B7791F] flex items-center gap-1 bg-[#FEF7EC] px-2 py-1 rounded">
-                      <Percent className="w-3 h-3" />
-                      <span>Chia sẻ doanh thu đối tác: {booth.revenue_share_ratio}%</span>
+                  {isCollab && (
+                    <div className="mt-3 p-3 bg-[#FEF7EC] rounded-[6px] border border-[#B7791F]/30 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-[#8C5D17] flex items-center gap-1">
+                          <Handshake className="w-3.5 h-3.5 text-[#B7791F]" />
+                          <span>Đối tác: {booth.collab_partner || 'Chưa đặt tên'}</span>
+                        </span>
+                        <span className="font-mono text-[11px] text-[#B7791F] font-bold bg-white px-1.5 py-0.5 rounded border border-[#B7791F]/20">
+                          {booth.revenue_share_ratio || 50}% Doanh số
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 pt-1 border-t border-[#B7791F]/20">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs gap-1 border-[#B7791F]/40 text-[#8C5D17] hover:bg-[#FDF2E2] flex-1 font-semibold"
+                          onClick={() => openShareCollabModal(booth)}
+                        >
+                          <Share2 className="w-3 h-3 text-[#B7791F]" />
+                          <span>🔗 Chia sẻ Cổng Đối tác</span>
+                        </Button>
+                        <Link
+                          href={`/collab/${booth.id}?partner=${encodeURIComponent(
+                            booth.collab_partner || ''
+                          )}&event=${encodeURIComponent(event?.name || '')}&ratio=${
+                            booth.revenue_share_ratio || 50
+                          }&name=${encodeURIComponent(booth.name)}&evtId=${encodeURIComponent(booth.event_id)}`}
+                          className="flex-1"
+                        >
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            className="h-7 text-xs gap-1 w-full bg-white text-[#B7791F] hover:bg-[#FDF2E2] border border-[#B7791F]/30 font-semibold"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            <span>Mở Cổng</span>
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
                   )}
 
@@ -495,6 +575,100 @@ export default function BoothsPage() {
           </div>
         </form>
       </Modal>
+
+      {/* Modal: Chia sẻ Cổng Hợp Tác Đối Tác */}
+      {selectedCollabBooth && (
+        <Modal
+          isOpen={isCollabModalOpen}
+          onClose={() => setIsCollabModalOpen(false)}
+          title={`Cổng Hợp Tác Đối Tác — ${selectedCollabBooth.name}`}
+          description={`Gửi liên kết độc quyền này cho đối tác "${selectedCollabBooth.collab_partner || 'Đối tác'}" để họ có thể mở trang giao diện riêng, đồng bộ sản phẩm và xem báo cáo chia sẻ doanh thu.`}
+        >
+          <div className="space-y-4">
+            <div className="p-3 bg-[#FEF7EC] rounded-[6px] border border-[#B7791F]/30 space-y-1.5 text-xs text-[#8C5D17]">
+              <div className="flex items-center justify-between font-bold">
+                <span>Gian hàng: {selectedCollabBooth.name} ({selectedCollabBooth.code})</span>
+                <span>Tỷ lệ: {selectedCollabBooth.revenue_share_ratio || 50}% Đối tác</span>
+              </div>
+              <p className="text-[11px]">
+                Đối tác khi truy cập link này sẽ vào thẳng cổng làm việc riêng của gian hàng, không cần tài khoản admin chính của bạn.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Liên kết truy cập Cổng Đối tác:</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  readOnly
+                  value={getCollabShareUrl(selectedCollabBooth)}
+                  className="font-mono text-xs bg-[#F7F7F5] select-all"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0 text-xs gap-1"
+                  onClick={() => handleCopyCollabShare(selectedCollabBooth)}
+                >
+                  {copiedShareText ? <Check className="w-3.5 h-3.5 text-[#2F7D55]" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedShareText ? 'Đã copy' : 'Copy'}</span>
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Mẫu tin nhắn gửi qua Zalo / Telegram:</Label>
+              <div className="p-3 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[6px] text-xs font-mono text-[#202124] whitespace-pre-wrap leading-relaxed">
+{`🎪 CỔNG HỢP TÁC GIAN HÀNG SỰ KIỆN — EVENTMATE
+• Sự kiện: ${events.find((e) => e.id === selectedCollabBooth.event_id)?.name || 'Sự kiện chung'}
+• Gian hàng liên danh: ${selectedCollabBooth.name} (${selectedCollabBooth.code})
+• Đối tác: ${selectedCollabBooth.collab_partner || 'Đối tác'}
+• Tỷ lệ chia sẻ doanh thu: ${selectedCollabBooth.revenue_share_ratio || 50}% cho Đối tác
+
+👉 Nhấn vào link sau để mở Cổng Đối tác, đồng bộ hàng hóa và xem doanh thu thời gian thực:
+${getCollabShareUrl(selectedCollabBooth)}`}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-[#F0F0ED]">
+              <Link
+                href={`/collab/${selectedCollabBooth.id}?partner=${encodeURIComponent(
+                  selectedCollabBooth.collab_partner || ''
+                )}&event=${encodeURIComponent(events.find((e) => e.id === selectedCollabBooth.event_id)?.name || '')}&ratio=${
+                  selectedCollabBooth.revenue_share_ratio || 50
+                }&name=${encodeURIComponent(selectedCollabBooth.name)}&evtId=${encodeURIComponent(selectedCollabBooth.event_id)}`}
+                target="_blank"
+              >
+                <Button variant="ghost" size="sm" className="text-xs gap-1 text-[#315C4C]">
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Mở xem thử giao diện Đối tác</span>
+                </Button>
+              </Link>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsCollabModalOpen(false)}
+                >
+                  Đóng
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  className="bg-[#B7791F] hover:bg-[#975F16] border-none text-white font-bold gap-1.5"
+                  onClick={() => handleCopyCollabShare(selectedCollabBooth)}
+                >
+                  {copiedShareText ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                  <span>{copiedShareText ? 'Đã sao chép tin nhắn!' : 'Sao chép tin nhắn gửi Đối tác'}</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

@@ -23,6 +23,7 @@ import {
   Trash2,
   ArrowRight,
   Boxes,
+  Users2,
 } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 
@@ -255,6 +256,14 @@ export default function EventsPage() {
                   </div>
 
                   <div className="flex items-center gap-2">
+                    {eventBooths.some((b) => b.booth_type === 'collab' || !!b.collab_partner) && (
+                      <Link href="/dashboard/booths">
+                        <Badge variant="warning" className="text-[10px] gap-1 cursor-pointer hover:opacity-80">
+                          <Users2 className="w-2.5 h-2.5" />
+                          <span>Quầy Collab</span>
+                        </Badge>
+                      </Link>
+                    )}
                     <Link href="/dashboard/inventory">
                       <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs gap-1">
                         <Boxes className="w-3 h-3" />

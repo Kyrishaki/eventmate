@@ -98,6 +98,24 @@ export default function PosTerminalPage() {
     }
   }, [selectedEventId, booths, selectedBoothId]);
 
+  // Handle URL query preselection (?booth=...&event=...) safely after mount
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const qBooth = urlParams.get('booth');
+    const qEvent = urlParams.get('event');
+
+    if (qBooth) {
+      const b = booths.find((item) => item.id === qBooth);
+      if (b) {
+        setSelectedBoothId(b.id);
+        setSelectedEventId(b.event_id);
+      }
+    } else if (qEvent) {
+      setSelectedEventId(qEvent);
+    }
+  }, [booths]);
+
   // Search & Category Filtering
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedCategory, setSelectedCategory] = React.useState('all');

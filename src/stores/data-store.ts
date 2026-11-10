@@ -59,6 +59,28 @@ export interface DataStoreState {
   removeMember: (memberId: string) => void;
   revokeInvitation: (invitationId: string) => void;
 
+  // Collab Actions
+  addCollabProduct: (params: {
+    workspaceId: string;
+    eventId: string;
+    boothId: string;
+    partnerName: string;
+    name: string;
+    price: number;
+    quantity: number;
+    sku?: string;
+    variantName?: string;
+    imageUrl?: string;
+    barcode?: string;
+  }) => { product: Product; variant: ProductVariant; allocation: InventoryAllocation };
+  restockCollabVariant: (boothId: string, variantId: string, addedQty: number) => boolean;
+  mergeCollabSyncPackage: (pkg: {
+    booth?: Partial<Booth>;
+    products?: Product[];
+    variants?: ProductVariant[];
+    allocations?: InventoryAllocation[];
+  }) => void;
+
   // Seeding & Reset
   seedDemoTourData: (workspaceId: string) => void;
   clearAllData: () => void;
@@ -591,6 +613,136 @@ export const useDataStore = create<DataStoreState>()(
       },
       revokeInvitation: (invitationId) => {
         set({ invitations: get().invitations.filter((i) => i.id !== invitationId) });
+      },
+
+      // Collab Actions
+      addCollabProduct: ({
+        workspaceId,
+        eventId,
+        boothId,
+        partnerName,
+        name,
+        price,
+        quantity,
+        sku,
+        variantName,
+        imageUrl,
+        barcode,
+      }) => {
+        const prodId = `prod-collab-${Date.now()}`;
+        const varId = `var-collab-${Date.now()}`;
+        const allocId = `alloc-collab-${Date.now()}`;
+
+        const newProduct: Product = {
+          id: prodId,
+          workspace_id: workspaceId,
+          category_id: null,
+          name: name.trim(),
+          description: `Sản phẩm do đối tác ${partnerName} mang đến`,
+          image_url: imageUrl?.trim() || null,
+          is_active: true,
+          collab_partner: partnerName,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        const newVariant: ProductVariant = {
+          id: varId,
+          workspace_id: workspaceId,
+          product_id: prodId,
+          sku: sku?.trim().toUpperCase() || `COL-${partnerName.slice(0, 3).toUpperCase()}-${Date.now().toString().slice(-4)}`,
+          name: variantName?.trim() || 'Tiêu chuẩn',
+          price: Number(price) || 0,
+          barcode: barcode?.trim() || null,
+          total_inventory: Number(quantity) || 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        const newAlloc: InventoryAllocation = {
+          id: allocId,
+          workspace_id: workspaceId,
+          event_id: eventId,
+          booth_id: boothId,
+          variant_id: varId,
+          allocated_quantity: Number(quantity) || 0,
+          sold_quantity: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        set({
+          products: [newProduct, ...get().products],
+          variants: [newVariant, ...get().variants],
+          allocations: [newAlloc, ...get().allocations],
+        });
+
+        return { product: newProduct, variant: newVariant, allocation: newAlloc };
+      },
+
+      restockCollabVariant: (boothId, variantId, addedQty) => {
+        const { variants, allocations } = get();
+        const variant = variants.find((v) => v.id === variantId);
+        if (!variant) return false;
+
+        const alloc = allocations.find((a) => a.booth_id === boothId && a.variant_id === variantId);
+        if (!alloc) return false;
+
+        set({
+          variants: variants.map((v) =>
+            v.id === variantId
+              ? { ...v, total_inventory: v.total_inventory + addedQty, updated_at: new Date().toISOString() }
+              : v
+          ),
+          allocations: allocations.map((a) =>
+            a.id === alloc.id
+              ? { ...a, allocated_quantity: a.allocated_quantity + addedQty, updated_at: new Date().toISOString() }
+              : a
+          ),
+        });
+        return true;
+      },
+
+      mergeCollabSyncPackage: (pkg) => {
+        const { products, variants, allocations, booths } = get();
+        const newProducts = [...products];
+        const newVariants = [...variants];
+        const newAllocations = [...allocations];
+
+        if (pkg.products) {
+          pkg.products.forEach((p) => {
+            const idx = newProducts.findIndex((item) => item.id === p.id);
+            if (idx >= 0) newProducts[idx] = p;
+            else newProducts.unshift(p);
+          });
+        }
+        if (pkg.variants) {
+          pkg.variants.forEach((v) => {
+            const idx = newVariants.findIndex((item) => item.id === v.id);
+            if (idx >= 0) newVariants[idx] = v;
+            else newVariants.push(v);
+          });
+        }
+        if (pkg.allocations) {
+          pkg.allocations.forEach((a) => {
+            const idx = newAllocations.findIndex(
+              (item) => item.id === a.id || (item.booth_id === a.booth_id && item.variant_id === a.variant_id)
+            );
+            if (idx >= 0) newAllocations[idx] = a;
+            else newAllocations.push(a);
+          });
+        }
+        if (pkg.booth && pkg.booth.id) {
+          set({
+            booths: booths.map((b) => (b.id === pkg.booth!.id ? { ...b, ...pkg.booth } : b)),
+          });
+        }
+
+        set({
+          products: newProducts,
+          variants: newVariants,
+          allocations: newAllocations,
+        });
       },
 
       // Seed helper

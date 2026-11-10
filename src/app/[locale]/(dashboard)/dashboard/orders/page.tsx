@@ -26,12 +26,20 @@ import {
   Eye,
   FileSpreadsheet,
   Camera,
+  FlaskConical,
+  Trash2,
 } from 'lucide-react';
+import {
+  isTestEvent,
+  isTestOrder,
+  filterRealOrders,
+  filterRealEvents,
+} from '@/lib/test-data-filter';
 
 export default function DashboardOrdersPage() {
   const tCommon = useTranslations('common');
   const { activeWorkspace } = useWorkspaceStore();
-  const { orders } = useOrdersStore();
+  const { orders, clearTestOrders } = useOrdersStore();
   const { events, booths, variants, products } = useDataStore();
 
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -42,16 +50,28 @@ export default function DashboardOrdersPage() {
   const workspaceEvents = events.filter(
     (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
   );
+  const realEvents = filterRealEvents(workspaceEvents);
+  const testEvents = workspaceEvents.filter((e) => isTestEvent(e));
 
   const workspaceOrders = orders.filter(
-    (o) => !activeWorkspace || o.workspace_id === activeWorkspace.id
+    (o) => !activeWorkspace || o.workspace_id === activeWorkspace.id || o.workspace_id === 'ws-hac-cam-studio'
   );
+  const realOrders = filterRealOrders(workspaceOrders);
+  const testOrders = workspaceOrders.filter((o) => isTestOrder(o));
 
+  // Filter orders: Default 'all' excludes test transactions
   const filteredOrders = workspaceOrders.filter((o) => {
     const matchesSearch =
       o.order_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (o.notes && o.notes.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesEvent = filterEvent === 'all' || o.event_id === filterEvent;
+
+    const matchesEvent =
+      filterEvent === 'all'
+        ? !isTestOrder(o)
+        : isTestEvent(filterEvent)
+        ? o.event_id === filterEvent || isTestOrder(o)
+        : o.event_id === filterEvent && !isTestOrder(o);
+
     const matchesPayment = filterPayment === 'all' || o.payment_method === filterPayment;
     return matchesSearch && matchesEvent && matchesPayment;
   });
@@ -64,7 +84,11 @@ export default function DashboardOrdersPage() {
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-[#202124]">Đơn hàng & Giao dịch</h1>
             <Badge variant="outline" className="text-[11px] font-mono">
-              {workspaceOrders.length} đơn
+              {filterEvent === 'all'
+                ? `${realOrders.length} đơn thực tế`
+                : isTestEvent(filterEvent)
+                ? `${testOrders.length} đơn test`
+                : `${filteredOrders.length} đơn`}
             </Badge>
           </div>
           <p className="text-xs text-[#737373] mt-0.5">
@@ -72,6 +96,41 @@ export default function DashboardOrdersPage() {
           </p>
         </div>
       </div>
+
+      {/* Sandbox Test Mode Notice Banner */}
+      {isTestEvent(filterEvent) && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 rounded-[8px] bg-[#FEF7EC] border border-[#B7791F]/30 text-xs text-[#B7791F] shadow-xs">
+          <div className="flex items-start sm:items-center gap-2.5">
+            <FlaskConical className="w-4 h-4 shrink-0 text-[#B7791F] mt-0.5 sm:mt-0" />
+            <span>
+              <strong>Dữ liệu thử nghiệm (Sandbox):</strong> Bạn đang xem {filteredOrders.length} đơn hàng TEST phát sinh khi chạy thử POS. Các đơn hàng này <strong>hoàn toàn không được tính vào doanh thu thực tế</strong>.
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (confirm('Bạn có muốn xóa toàn bộ các đơn hàng thử nghiệm để làm sạch danh sách đơn?')) {
+                  clearTestOrders();
+                }
+              }}
+              className="h-7 text-xs border-[#B7791F] text-[#B7791F] hover:bg-[#B7791F]/15 gap-1"
+            >
+              <Trash2 className="w-3 h-3" />
+              <span>Xóa đơn test</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setFilterEvent('all')}
+              className="h-7 text-xs gap-1"
+            >
+              <span>Về đơn thực tế</span>
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Filter and Search Bar */}
       <div className="flex flex-wrap items-center gap-3">
@@ -91,12 +150,23 @@ export default function DashboardOrdersPage() {
           value={filterEvent}
           onChange={(e) => setFilterEvent(e.target.value)}
         >
-          <option value="all">Tất cả sự kiện</option>
-          {workspaceEvents.map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.name}
-            </option>
-          ))}
+          <option value="all">Tất cả sự kiện (Dữ liệu thực tế)</option>
+          <optgroup label="Sự kiện thực tế">
+            {realEvents.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.name}
+              </option>
+            ))}
+          </optgroup>
+          {testEvents.length > 0 && (
+            <optgroup label="Thử nghiệm / Sandbox (Tách biệt)">
+              {testEvents.map((e) => (
+                <option key={e.id} value={e.id}>
+                  🧪 {e.name}
+                </option>
+              ))}
+            </optgroup>
+          )}
         </select>
 
         {/* Payment Filter */}
@@ -148,7 +218,14 @@ export default function DashboardOrdersPage() {
                     <tr key={ord.id} className="hover:bg-[#FBFBFA] transition-colors">
                       <td className="py-3 px-4 font-mono font-bold text-[#202124]">
                         <div className="flex flex-col gap-0.5">
-                          <span>{ord.order_number}</span>
+                          <div className="flex items-center gap-1.5">
+                            <span>{ord.order_number}</span>
+                            {isTestOrder(ord) && (
+                              <Badge variant="outline" className="text-[9px] border-[#B7791F] text-[#B7791F] bg-[#B7791F]/10">
+                                Thử nghiệm
+                              </Badge>
+                            )}
+                          </div>
                           {ord.proof_image_url && (
                             <span className="inline-flex items-center gap-1 text-[9px] text-[#2F7D55] bg-[#EBF1EE] px-1 py-0.2 rounded font-semibold border border-[#2F7D55]/20 w-fit">
                               <Camera className="w-2.5 h-2.5" />
@@ -214,9 +291,16 @@ export default function DashboardOrdersPage() {
               return (
                 <div key={ord.id} className="p-3.5 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono font-bold text-sm text-[#202124]">
-                      {ord.order_number}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-mono font-bold text-sm text-[#202124]">
+                        {ord.order_number}
+                      </span>
+                      {isTestOrder(ord) && (
+                        <Badge variant="outline" className="text-[9px] border-[#B7791F] text-[#B7791F] bg-[#B7791F]/10">
+                          Thử nghiệm
+                        </Badge>
+                      )}
+                    </div>
                     <Badge
                       variant={ord.sync_status === 'synced' ? 'success' : 'warning'}
                       className="text-[10px]"

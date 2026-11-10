@@ -80,6 +80,7 @@ export interface EventItem {
   end_date: string;
   status: EventStatus;
   event_type?: EventType;
+  is_test?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -94,6 +95,7 @@ export interface Booth {
   booth_type?: BoothType;
   collab_partner?: string | null;
   revenue_share_ratio?: number; // e.g. 50% collab
+  is_test?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -154,6 +156,7 @@ export interface InventoryAllocation {
   variant_id: string;
   allocated_quantity: number;
   sold_quantity: number;
+  is_test?: boolean;
   created_at: string;
   updated_at: string;
   variant?: ProductVariant;
@@ -180,6 +183,7 @@ export interface Order {
   customer_phone?: string | null;
   tendered_amount?: number | null;
   change_amount?: number | null;
+  is_test?: boolean;
   offline_created_at: string;
   created_at: string;
   updated_at: string;

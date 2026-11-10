@@ -26,7 +26,15 @@ import {
   Package,
   Bookmark,
   Globe,
+  FlaskConical,
 } from 'lucide-react';
+import {
+  filterRealAllocations,
+  filterRealEvents,
+  isTestEvent,
+  isTestBooth,
+  isTestAllocation,
+} from '@/lib/test-data-filter';
 
 export default function InventoryPage() {
   const t = useTranslations('inventory');
@@ -58,9 +66,11 @@ export default function InventoryPage() {
   const workspaceEvents = events.filter(
     (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
   );
+  const realEvents = filterRealEvents(workspaceEvents);
+  const testEvents = workspaceEvents.filter((e) => isTestEvent(e));
 
   const [selectedEventId, setSelectedEventId] = React.useState<string>(
-    workspaceEvents[0]?.id || ''
+    realEvents[0]?.id || workspaceEvents[0]?.id || ''
   );
 
   const eventBooths = booths.filter((b) => b.event_id === selectedEventId);
@@ -84,12 +94,13 @@ export default function InventoryPage() {
     return !prod?.is_deleted;
   });
 
-  // Overall Inventory Stats across active variants
+  // Overall Inventory Stats across active variants (strictly REAL allocations - test isolated)
   const totalStockAll = activeVariants.reduce((sum, v) => sum + v.total_inventory, 0);
   const activeVariantIds = new Set(activeVariants.map((v) => v.id));
-  const activeAllocations = allocations.filter((a) => activeVariantIds.has(a.variant_id));
-  const totalAllocatedAll = activeAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
-  const totalSoldAll = activeAllocations.reduce((sum, a) => sum + a.sold_quantity, 0);
+  const realAllocations = filterRealAllocations(allocations);
+  const activeRealAllocations = realAllocations.filter((a) => activeVariantIds.has(a.variant_id));
+  const totalAllocatedAll = activeRealAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
+  const totalSoldAll = activeRealAllocations.reduce((sum, a) => sum + a.sold_quantity, 0);
   const storageStockAll = Math.max(0, totalStockAll - totalAllocatedAll);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
@@ -149,11 +160,22 @@ export default function InventoryPage() {
                 value={selectedEventId}
                 onChange={(e) => handleSelectEvent(e.target.value)}
               >
-                {workspaceEvents.map((evt) => (
-                  <option key={evt.id} value={evt.id}>
-                    {evt.name}
-                  </option>
-                ))}
+                <optgroup label="Sự kiện thực tế">
+                  {realEvents.map((evt) => (
+                    <option key={evt.id} value={evt.id}>
+                      {evt.name}
+                    </option>
+                  ))}
+                </optgroup>
+                {testEvents.length > 0 && (
+                  <optgroup label="Thử nghiệm / Sandbox (Tách biệt)">
+                    {testEvents.map((evt) => (
+                      <option key={evt.id} value={evt.id}>
+                        🧪 {evt.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
             </div>
 
@@ -190,6 +212,16 @@ export default function InventoryPage() {
           </div>
         </div>
       </Card>
+
+      {/* Sandbox Test Mode Notice Banner */}
+      {isTestEvent(selectedEventId) && (
+        <div className="flex items-center gap-2 p-3 rounded-[6px] bg-[#FEF7EC] border border-[#B7791F]/30 text-xs text-[#B7791F] shadow-xs">
+          <FlaskConical className="w-4 h-4 shrink-0 text-[#B7791F]" />
+          <span>
+            <strong>Quầy hàng thử nghiệm (Sandbox):</strong> Lượng hàng cấp và doanh số tại quầy test POS được cách ly độc lập, <strong>hoàn toàn không ảnh hưởng</strong> đến tồn kho tổng hay số liệu xuất kho thực tế của các show diễn.
+          </span>
+        </div>
+      )}
 
       {/* Allocation Management Table */}
       {!selectedBooth ? (

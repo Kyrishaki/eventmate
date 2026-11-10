@@ -19,7 +19,9 @@ import {
   Save,
   ShieldCheck,
   Smartphone,
+  FlaskConical,
 } from 'lucide-react';
+import { filterRealOrders, isTestOrder } from '@/lib/test-data-filter';
 
 export default function PaymentsPage() {
   const { activeWorkspace } = useWorkspaceStore();
@@ -30,16 +32,22 @@ export default function PaymentsPage() {
   const [accountName, setAccountName] = React.useState(activeBankConfig.accountName);
   const [isSaved, setIsSaved] = React.useState(false);
 
-  // Revenue breakdown by method
-  const cashRevenue = orders
+  // Revenue breakdown by method (REAL PRODUCTION ONLY - test transactions quarantined)
+  const realOrders = filterRealOrders(orders);
+  const testOrders = orders.filter((o) => isTestOrder(o));
+  const testCashAmount = testOrders
     .filter((o) => o.payment_method === 'cash')
     .reduce((sum, o) => sum + o.final_amount, 0);
 
-  const qrRevenue = orders
+  const cashRevenue = realOrders
+    .filter((o) => o.payment_method === 'cash')
+    .reduce((sum, o) => sum + o.final_amount, 0);
+
+  const qrRevenue = realOrders
     .filter((o) => o.payment_method === 'qr_manual')
     .reduce((sum, o) => sum + o.final_amount, 0);
 
-  const gatewayRevenue = orders
+  const gatewayRevenue = realOrders
     .filter((o) => o.payment_method === 'gateway')
     .reduce((sum, o) => sum + o.final_amount, 0);
 
@@ -83,7 +91,7 @@ export default function PaymentsPage() {
           <div className="text-xl font-bold text-[#315C4C]">
             {formatCurrency(qrRevenue, activeWorkspace?.currency || 'VND')}
           </div>
-          <p className="text-[10px] text-[#737373] mt-0.5">Vào thẳng tài khoản ngân hàng</p>
+          <p className="text-[10px] text-[#737373] mt-0.5">Doanh thu thực tế vào tài khoản</p>
         </Card>
 
         <Card className="p-4 bg-white border-[#E8E8E5] shadow-2xs">
@@ -94,7 +102,7 @@ export default function PaymentsPage() {
           <div className="text-xl font-bold text-[#B7791F]">
             {formatCurrency(cashRevenue, activeWorkspace?.currency || 'VND')}
           </div>
-          <p className="text-[10px] text-[#737373] mt-0.5">Thu ngân giữ tại quầy</p>
+          <p className="text-[10px] text-[#737373] mt-0.5">Thu ngân giữ tại quầy thực tế</p>
         </Card>
 
         <Card className="p-4 bg-white border-[#E8E8E5] shadow-2xs">
@@ -108,6 +116,18 @@ export default function PaymentsPage() {
           <p className="text-[10px] text-[#737373] mt-0.5">Qua thiết bị thanh toán ngoài</p>
         </Card>
       </div>
+
+      {/* Sandbox Isolation Notice */}
+      {testOrders.length > 0 && (
+        <div className="flex items-center justify-between p-3 rounded-[6px] bg-[#FEF7EC] border border-[#B7791F]/30 text-xs text-[#B7791F] shadow-xs">
+          <div className="flex items-center gap-2">
+            <FlaskConical className="w-4 h-4 shrink-0 text-[#B7791F]" />
+            <span>
+              Hệ thống đã tự động cách ly <strong>{testOrders.length} đơn hàng thử nghiệm ({formatCurrency(testCashAmount, 'VND')})</strong> khỏi dòng tiền thực tế tại quầy để đảm bảo số liệu kế toán chính xác.
+            </span>
+          </div>
+        </div>
+      )}
 
       {isSaved && (
         <div className="flex items-center gap-2 p-3 text-xs text-[#2F7D55] bg-[#EAF4EE] border border-[#CEE6D7] rounded-[6px]">

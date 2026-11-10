@@ -23,7 +23,19 @@ import {
   Filter,
   FlaskConical,
   RotateCcw,
+  AlertTriangle,
+  Trash2,
 } from 'lucide-react';
+import {
+  isTestEvent,
+  isTestOrder,
+  isTestBooth,
+  isTestAllocation,
+  filterRealEvents,
+  filterRealBooths,
+  filterRealOrders,
+  filterRealAllocations,
+} from '@/lib/test-data-filter';
 
 export default function DashboardOverviewPage() {
   const t = useTranslations('dashboard');
@@ -31,12 +43,16 @@ export default function DashboardOverviewPage() {
   const tEvents = useTranslations('events');
   const { activeWorkspace } = useWorkspaceStore();
   const { events, booths, variants, allocations } = useDataStore();
-  const { orders } = useOrdersStore();
+  const { orders, clearTestOrders } = useOrdersStore();
 
   const workspaceEvents = events.filter(
     (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
   );
-  const effectiveEvents = workspaceEvents.length > 0 ? workspaceEvents : events;
+  const realEvents = filterRealEvents(workspaceEvents);
+  const testEvents = workspaceEvents.filter((e) => isTestEvent(e));
+
+  // The "Upcoming Events" section should only list real performance events
+  const effectiveEvents = realEvents.length > 0 ? realEvents : workspaceEvents;
 
   const [selectedEventId, setSelectedEventId] = React.useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -53,31 +69,36 @@ export default function DashboardOverviewPage() {
     }
   };
 
-  const selectedEvent = effectiveEvents.find((e) => e.id === selectedEventId);
+  const selectedEvent = workspaceEvents.find((e) => e.id === selectedEventId);
 
-  // Filter orders according to event
+  // Orders filtered by workspace
   const workspaceOrders = orders.filter(
     (o) => !activeWorkspace || o.workspace_id === activeWorkspace.id || o.workspace_id === 'ws-hac-cam-studio'
   );
 
+  // RULE: Test data MUST NEVER be counted into real revenue / general metrics!
+  // When selectedEventId === 'all', only real production orders are calculated.
   const filteredOrders =
     selectedEventId === 'all'
-      ? workspaceOrders
-      : workspaceOrders.filter((o) => o.event_id === selectedEventId);
+      ? filterRealOrders(workspaceOrders)
+      : isTestEvent(selectedEventId)
+      ? workspaceOrders.filter((o) => o.event_id === selectedEventId || isTestOrder(o))
+      : workspaceOrders.filter((o) => o.event_id === selectedEventId && !isTestOrder(o));
 
-  // Filter booths and allocations according to event
+  // Filter booths according to event (excluding test booths from general overview)
   const filteredBooths =
     selectedEventId === 'all'
-      ? booths.filter((b) => effectiveEvents.some((e) => e.id === b.event_id))
+      ? filterRealBooths(booths.filter((b) => realEvents.some((e) => e.id === b.event_id)))
       : booths.filter((b) => b.event_id === selectedEventId);
 
+  // Filter allocations according to event (excluding test allocations from general overview)
   const filteredAllocations =
     selectedEventId === 'all'
-      ? allocations.filter((a) => effectiveEvents.some((e) => e.id === a.event_id))
+      ? filterRealAllocations(allocations.filter((a) => realEvents.some((e) => e.id === a.event_id)))
       : allocations.filter((a) => a.event_id === selectedEventId);
 
-  const allAllocations = allocations.filter((a) =>
-    effectiveEvents.some((e) => e.id === a.event_id)
+  const allRealAllocations = filterRealAllocations(
+    allocations.filter((a) => realEvents.some((e) => e.id === a.event_id))
   );
 
   // Dynamic calculations
@@ -85,7 +106,7 @@ export default function DashboardOverviewPage() {
   const totalAllocated = filteredAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
   const totalSold = filteredAllocations.reduce((sum, a) => sum + a.sold_quantity, 0);
   const totalStock = variants.reduce((sum, v) => sum + v.total_inventory, 0);
-  const allAllocatedTotal = allAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
+  const allAllocatedTotal = allRealAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
   const activeBoothsCount = filteredBooths.filter((b) => b.status === 'active').length;
 
   // Business metrics calculated from filtered state
@@ -99,7 +120,7 @@ export default function DashboardOverviewPage() {
     {
       title: t('metrics.ordersCount'),
       value: `${filteredOrders.length} đơn`,
-      change: selectedEventId === 'all' ? 'Quầy POS' : `${filteredBooths.length} quầy`,
+      change: selectedEventId === 'all' ? 'Quầy POS thực tế' : `${filteredBooths.length} quầy`,
       icon: ShoppingCart,
     },
     {
@@ -113,7 +134,7 @@ export default function DashboardOverviewPage() {
       value: `${activeBoothsCount} quầy`,
       change:
         selectedEventId === 'all'
-          ? `${workspaceEvents.length} sự kiện`
+          ? `${realEvents.length} sự kiện thực`
           : 'Sự kiện hiện tại',
       icon: Store,
     },
@@ -167,12 +188,23 @@ export default function DashboardOverviewPage() {
               onChange={(e) => handleEventChange(e.target.value)}
               className="h-8.5 pl-8 pr-8 text-xs font-semibold text-[#202124] bg-[#F7F7F5] border border-[#D5D5D0] rounded-[6px] focus:outline-none focus:ring-1 focus:ring-[#315C4C] cursor-pointer appearance-none"
             >
-              <option value="all">Tất cả sự kiện</option>
-              {workspaceEvents.map((evt) => (
-                <option key={evt.id} value={evt.id}>
-                  {evt.name}
-                </option>
-              ))}
+              <optgroup label="Dữ liệu thực tế">
+                <option value="all">Tất cả sự kiện (Số liệu thực tế)</option>
+                {realEvents.map((evt) => (
+                  <option key={evt.id} value={evt.id}>
+                    {evt.name}
+                  </option>
+                ))}
+              </optgroup>
+              {testEvents.length > 0 && (
+                <optgroup label="Thử nghiệm / Sandbox (Tách biệt)">
+                  {testEvents.map((evt) => (
+                    <option key={evt.id} value={evt.id}>
+                      {evt.name} (Không tính vào báo cáo thật)
+                    </option>
+                  ))}
+                </optgroup>
+              )}
             </select>
             <Calendar className="w-3.5 h-3.5 text-[#315C4C] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
@@ -185,15 +217,15 @@ export default function DashboardOverviewPage() {
               className="text-xs h-8 text-[#737373] hover:text-[#202124] gap-1 px-2"
             >
               <RotateCcw className="w-3 h-3" />
-              <span>Xem tất cả</span>
+              <span>Xem số liệu thật</span>
             </Button>
           )}
         </div>
 
-        {selectedEventId === 'evt-test-pos' ? (
+        {isTestEvent(selectedEventId) ? (
           <div className="flex items-center gap-1.5 text-xs text-[#B7791F] bg-[#B7791F]/10 px-2.5 py-1 rounded-[6px] font-medium border border-[#B7791F]/20">
             <FlaskConical className="w-3.5 h-3.5 shrink-0" />
-            <span>Sự kiện thử nghiệm</span>
+            <span>Chế độ Sandbox — Dữ liệu Test</span>
           </div>
         ) : selectedEventId !== 'all' ? (
           <Badge variant="outline" className="text-xs border-[#315C4C] text-[#315C4C] bg-[#315C4C]/5">
@@ -201,10 +233,45 @@ export default function DashboardOverviewPage() {
           </Badge>
         ) : (
           <span className="text-[11px] text-[#737373]">
-            {workspaceEvents.length} sự kiện
+            {realEvents.length} sự kiện thực tế
           </span>
         )}
       </div>
+
+      {/* Sandbox Test Mode Notice Banner */}
+      {isTestEvent(selectedEventId) && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 rounded-[8px] bg-[#FEF7EC] border border-[#B7791F]/30 text-xs text-[#B7791F] shadow-xs">
+          <div className="flex items-start sm:items-center gap-2.5">
+            <FlaskConical className="w-4 h-4 shrink-0 text-[#B7791F] mt-0.5 sm:mt-0" />
+            <span>
+              <strong>Dữ liệu thử nghiệm (Sandbox):</strong> Doanh thu ({formatCurrency(totalRevenue, 'VND')}) và {filteredOrders.length} đơn hàng tại đây là số liệu TEST phát sinh khi chạy thử máy POS, <strong>hoàn toàn không được cộng vào tổng doanh thu thực tế</strong> của hệ thống.
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (confirm('Bạn có muốn xóa toàn bộ các đơn hàng thử nghiệm để làm sạch dữ liệu test?')) {
+                  clearTestOrders();
+                }
+              }}
+              className="h-7 text-xs border-[#B7791F] text-[#B7791F] hover:bg-[#B7791F]/15 gap-1"
+            >
+              <Trash2 className="w-3 h-3" />
+              <span>Xóa đơn test</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleEventChange('all')}
+              className="h-7 text-xs gap-1"
+            >
+              <span>Về số liệu thật</span>
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* KPI Business Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -509,9 +576,9 @@ export default function DashboardOverviewPage() {
                         <Badge variant="outline" className="text-[9px]">
                           {ord.payment_method === 'cash' ? 'Tiền mặt' : 'VietQR'}
                         </Badge>
-                        {ord.event_id === 'evt-test-pos' && (
+                        {isTestOrder(ord) && (
                           <Badge variant="outline" className="text-[9px] border-[#B7791F] text-[#B7791F] bg-[#B7791F]/5">
-                            Thử nghiệm
+                            Thử nghiệm (Sandbox)
                           </Badge>
                         )}
                       </div>

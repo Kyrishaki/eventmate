@@ -13,6 +13,7 @@ import {
   EventStatus,
   BoothStatus,
 } from '@/types/database';
+import { isTestAllocation } from '@/lib/test-data-filter';
 
 export interface DataStoreState {
   events: EventItem[];
@@ -62,6 +63,7 @@ export interface DataStoreState {
     allocatedQuantity: number
   ) => void;
   quickTransferStock: (boothId: string, variantId: string, delta: number) => boolean;
+  resetTestAllocations: () => void;
 
   // Team Actions
   inviteMember: (workspaceId: string, email: string, role: WorkspaceRole, invitedBy: string) => WorkspaceInvitation;
@@ -114,6 +116,7 @@ const defaultEvents: EventItem[] = [
     start_date: '2026-11-01T00:00:00Z',
     end_date: '2026-12-31T23:59:59Z',
     status: 'active',
+    is_test: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -151,6 +154,7 @@ const defaultBooths: Booth[] = [
     name: 'Quầy Test POS 01',
     code: 'BOOTH-TEST',
     status: 'active',
+    is_test: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -366,12 +370,12 @@ const defaultAllocations: InventoryAllocation[] = [
   { id: 'alloc-sg-6', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-saigon-2026', booth_id: 'booth-sg-1', variant_id: 'var-vinyl-limited', allocated_quantity: 20, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 
   // Test Event Allocations (Quầy Test POS 01)
-  { id: 'alloc-test-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-tshirt-s', allocated_quantity: 50, sold_quantity: 31, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-test-2', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-tshirt-m', allocated_quantity: 50, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-test-3', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-tshirt-l', allocated_quantity: 50, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-test-4', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-cap-blk', allocated_quantity: 30, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-test-5', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-lightstick-rgb', allocated_quantity: 50, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-test-6', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-vinyl-limited', allocated_quantity: 15, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-tshirt-s', allocated_quantity: 50, sold_quantity: 31, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-2', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-tshirt-m', allocated_quantity: 50, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-3', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-tshirt-l', allocated_quantity: 50, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-4', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-cap-blk', allocated_quantity: 30, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-5', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-lightstick-rgb', allocated_quantity: 50, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-6', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-vinyl-limited', allocated_quantity: 15, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 ];
 
 const defaultMembers: WorkspaceMember[] = [
@@ -713,6 +717,13 @@ export const useDataStore = create<DataStoreState>()(
         }
         return true;
       },
+      resetTestAllocations: () => {
+        set({
+          allocations: get().allocations.map((a) =>
+            isTestAllocation(a) ? { ...a, sold_quantity: 0, updated_at: new Date().toISOString() } : a
+          ),
+        });
+      },
 
       // Team & Invitations
       inviteMember: (workspaceId, email, role, invitedBy) => {
@@ -918,6 +929,10 @@ export const useDataStore = create<DataStoreState>()(
             const testEvt = defaultEvents.find((e) => e.id === 'evt-test-pos');
             if (testEvt) state.events = [testEvt, ...state.events];
           }
+          // Ensure test flag is set on test events
+          state.events = state.events.map((e) =>
+            e.id === 'evt-test-pos' || e.id.includes('test') ? { ...e, is_test: true } : e
+          );
         }
 
         // Self-heal booths
@@ -928,6 +943,11 @@ export const useDataStore = create<DataStoreState>()(
             const testBooth = defaultBooths.find((b) => b.id === 'booth-test-1');
             if (testBooth) state.booths = [testBooth, ...state.booths];
           }
+          state.booths = state.booths.map((b) =>
+            b.id === 'booth-test-1' || b.event_id === 'evt-test-pos' || b.code === 'BOOTH-TEST'
+              ? { ...b, is_test: true }
+              : b
+          );
         }
 
         // Self-heal allocations
@@ -938,6 +958,9 @@ export const useDataStore = create<DataStoreState>()(
             const testAllocs = defaultAllocations.filter((a) => a.event_id === 'evt-test-pos');
             state.allocations = [...state.allocations, ...testAllocs];
           }
+          state.allocations = state.allocations.map((a) =>
+            a.event_id === 'evt-test-pos' || a.id.includes('test') ? { ...a, is_test: true } : a
+          );
         }
 
         // Self-heal products, variants, categories

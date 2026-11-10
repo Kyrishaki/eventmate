@@ -4,6 +4,7 @@ import { Order, OrderItem, PaymentMethod, PaymentStatus, SyncStatus } from '@/ty
 import { localDb, LocalOrder, SyncQueueItem } from '@/lib/db';
 import { useDataStore } from './data-store';
 import { logActivity } from './audit-store';
+import { isTestEvent, isTestOrder } from '@/lib/test-data-filter';
 
 export interface CartItem {
   variantId: string;
@@ -55,6 +56,7 @@ interface OrdersStoreState {
   syncPendingOrders: () => Promise<{ successCount: number; failCount: number }>;
   retryOrderSync: (orderId: string) => Promise<boolean>;
   mergeCollabOrders: (incomingOrders: Order[]) => void;
+  clearTestOrders: () => void;
 }
 
 // Initial completed orders attributed to Test Event (as shown in dashboard screenshot)
@@ -74,6 +76,7 @@ const sampleInitialOrders: Order[] = [
     sync_status: 'synced',
     idempotency_key: 'idem-ord-test-4748',
     notes: 'Đơn hàng thử nghiệm máy bán hàng POS (30 món)',
+    is_test: true,
     offline_created_at: '2026-11-10T20:27:00.000Z',
     created_at: '2026-11-10T20:27:00.000Z',
     updated_at: '2026-11-10T20:27:00.000Z',
@@ -105,6 +108,7 @@ const sampleInitialOrders: Order[] = [
     sync_status: 'synced',
     idempotency_key: 'idem-ord-test-9089',
     notes: 'Đơn hàng thử nghiệm máy bán hàng POS (1 món)',
+    is_test: true,
     offline_created_at: '2026-11-10T20:25:00.000Z',
     created_at: '2026-11-10T20:25:00.000Z',
     updated_at: '2026-11-10T20:25:00.000Z',
@@ -242,6 +246,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
           notes: notes || null,
           tendered_amount: tenderedAmount !== undefined ? tenderedAmount : (paymentMethod === 'cash' ? finalAmount : null),
           change_amount: changeAmount !== undefined ? changeAmount : (paymentMethod === 'cash' ? 0 : null),
+          is_test: isTestEvent(eventId) || boothId === 'booth-test-1',
           offline_created_at: nowIso,
           created_at: nowIso,
           updated_at: nowIso,
@@ -366,6 +371,16 @@ export const useOrdersStore = create<OrdersStoreState>()(
         const toAdd = incomingOrders.filter((o) => !existingIds.has(o.id));
         set({ orders: [...toAdd, ...orders] });
       },
+
+      clearTestOrders: () => {
+        const { orders } = get();
+        set({ orders: orders.filter((o) => !isTestOrder(o)) });
+        try {
+          useDataStore.getState().resetTestAllocations();
+        } catch (e) {
+          console.warn('Could not reset test allocations:', e);
+        }
+      },
     }),
     {
       name: 'eventmate_orders_state_v3',
@@ -376,13 +391,14 @@ export const useOrdersStore = create<OrdersStoreState>()(
           return;
         }
 
-        // Reassign EM-4748, EM-9089 or legacy test orders to evt-test-pos and booth-test-1
+        // Reassign EM-4748, EM-9089 or legacy test orders to evt-test-pos and booth-test-1, and tag is_test: true
         state.orders = state.orders.map((o) => {
-          if (o.order_number === 'EM-4748' || o.order_number === 'EM-9089') {
+          if (o.order_number === 'EM-4748' || o.order_number === 'EM-9089' || o.event_id === 'evt-test-pos') {
             return {
               ...o,
               event_id: 'evt-test-pos',
               booth_id: o.booth_id || 'booth-test-1',
+              is_test: true,
             };
           }
           return o;

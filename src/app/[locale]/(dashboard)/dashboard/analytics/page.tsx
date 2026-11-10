@@ -20,9 +20,20 @@ import {
   Percent,
   Users2,
   FileSpreadsheet,
+  Filter,
+  FlaskConical,
+  Trash2,
 } from 'lucide-react';
 
 import { Order, EventItem, Booth } from '@/types/database';
+import {
+  isTestEvent,
+  isTestOrder,
+  isTestBooth,
+  filterRealEvents,
+  filterRealOrders,
+  filterRealBooths,
+} from '@/lib/test-data-filter';
 
 function downloadRevenueCsv(
   orders: Order[],
@@ -77,24 +88,48 @@ function downloadRevenueCsv(
 
 export default function AnalyticsPage() {
   const { activeWorkspace } = useWorkspaceStore();
-  const { orders } = useOrdersStore();
+  const { orders, clearTestOrders } = useOrdersStore();
   const { events, booths, products, variants, allocations } = useDataStore();
 
+  const [selectedEventId, setSelectedEventId] = React.useState<string>('all');
+
+  const workspaceEvents = events.filter(
+    (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
+  );
+  const realEvents = filterRealEvents(workspaceEvents);
+  const testEvents = workspaceEvents.filter((e) => isTestEvent(e));
+  const selectedEvent = workspaceEvents.find((e) => e.id === selectedEventId);
+
   const workspaceOrders = orders.filter(
-    (o) => !activeWorkspace || o.workspace_id === activeWorkspace.id
+    (o) => !activeWorkspace || o.workspace_id === activeWorkspace.id || o.workspace_id === 'ws-hac-cam-studio'
   );
 
-  const totalRevenue = workspaceOrders.reduce((sum, o) => sum + o.final_amount, 0);
-  const totalOrdersCount = workspaceOrders.length;
-  const totalUnitsSold = workspaceOrders.reduce(
+  // STRICT RULE: Test orders must NOT contaminate real business metrics
+  const filteredOrders =
+    selectedEventId === 'all'
+      ? filterRealOrders(workspaceOrders)
+      : isTestEvent(selectedEventId)
+      ? workspaceOrders.filter((o) => o.event_id === selectedEventId || isTestOrder(o))
+      : workspaceOrders.filter((o) => o.event_id === selectedEventId && !isTestOrder(o));
+
+  const displayBooths =
+    selectedEventId === 'all'
+      ? filterRealBooths(booths.filter((b) => realEvents.some((e) => e.id === b.event_id)))
+      : isTestEvent(selectedEventId)
+      ? booths.filter((b) => isTestBooth(b) || b.event_id === selectedEventId)
+      : booths.filter((b) => b.event_id === selectedEventId && !isTestBooth(b));
+
+  const totalRevenue = filteredOrders.reduce((sum, o) => sum + o.final_amount, 0);
+  const totalOrdersCount = filteredOrders.length;
+  const totalUnitsSold = filteredOrders.reduce(
     (sum, o) => sum + (o.items?.reduce((iSum, item) => iSum + item.quantity, 0) || 0),
     0
   );
   const avgOrderValue = totalOrdersCount > 0 ? totalRevenue / totalOrdersCount : 0;
 
   // Breakdown by Booth
-  const boothSalesMap = booths.map((b) => {
-    const boothOrders = workspaceOrders.filter((o) => o.booth_id === b.id);
+  const boothSalesMap = displayBooths.map((b) => {
+    const boothOrders = filteredOrders.filter((o) => o.booth_id === b.id);
     const revenue = boothOrders.reduce((sum, o) => sum + o.final_amount, 0);
     const units = boothOrders.reduce(
       (sum, o) => sum + (o.items?.reduce((iSum, item) => iSum + item.quantity, 0) || 0),
@@ -121,7 +156,7 @@ export default function AnalyticsPage() {
 
   // Export CSV Functionality
   const handleExportCsv = () => {
-    downloadRevenueCsv(workspaceOrders, events, booths);
+    downloadRevenueCsv(filteredOrders, events, displayBooths);
   };
 
   return (
@@ -152,6 +187,91 @@ export default function AnalyticsPage() {
           <span>Xuất báo cáo CSV</span>
         </Button>
       </div>
+
+      {/* Event Filter Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-[8px] border border-[#E8E8E5] shadow-xs">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#555555]">
+            <Filter className="w-3.5 h-3.5 text-[#737373]" />
+            <span>Phạm vi sự kiện:</span>
+          </div>
+
+          <select
+            value={selectedEventId}
+            onChange={(e) => setSelectedEventId(e.target.value)}
+            className="h-8 rounded-[6px] border border-[#E8E8E5] bg-[#F7F7F5] px-2.5 text-xs font-medium text-[#202124] focus:outline-none focus:border-[#315C4C]"
+          >
+            <option value="all">Tất cả sự kiện (Dữ liệu thực tế)</option>
+            <optgroup label="Dữ liệu thực tế">
+              {realEvents.map((evt) => (
+                <option key={evt.id} value={evt.id}>
+                  {evt.name}
+                </option>
+              ))}
+            </optgroup>
+            {testEvents.length > 0 && (
+              <optgroup label="Thử nghiệm / Sandbox (Tách biệt)">
+                {testEvents.map((evt) => (
+                  <option key={evt.id} value={evt.id}>
+                    🧪 {evt.name}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+          </select>
+        </div>
+
+        <div className="text-xs text-[#737373]">
+          {isTestEvent(selectedEventId) ? (
+            <Badge variant="outline" className="text-xs border-[#B7791F] text-[#B7791F] bg-[#B7791F]/10">
+              Chế độ Sandbox (Test)
+            </Badge>
+          ) : selectedEventId !== 'all' ? (
+            <Badge variant="outline" className="text-xs border-[#315C4C] text-[#315C4C] bg-[#315C4C]/5">
+              {selectedEvent?.name}
+            </Badge>
+          ) : (
+            <span className="text-[11px] text-[#737373]">
+              Doanh thu thực tế ({realEvents.length} sự kiện)
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Sandbox Test Mode Notice Banner */}
+      {isTestEvent(selectedEventId) && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 rounded-[8px] bg-[#FEF7EC] border border-[#B7791F]/30 text-xs text-[#B7791F] shadow-xs">
+          <div className="flex items-start sm:items-center gap-2.5">
+            <FlaskConical className="w-4 h-4 shrink-0 text-[#B7791F] mt-0.5 sm:mt-0" />
+            <span>
+              <strong>Dữ liệu thử nghiệm (Sandbox):</strong> Doanh thu ({formatCurrency(totalRevenue, activeWorkspace?.currency || 'VND')}) và {filteredOrders.length} đơn hàng tại đây là số liệu TEST phát sinh khi chạy thử máy POS, <strong>hoàn toàn không được cộng vào tổng doanh thu thực tế</strong> của hệ thống.
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (confirm('Bạn có muốn xóa toàn bộ các đơn hàng thử nghiệm để làm sạch dữ liệu test?')) {
+                  clearTestOrders();
+                }
+              }}
+              className="h-7 text-xs border-[#B7791F] text-[#B7791F] hover:bg-[#B7791F]/15 gap-1"
+            >
+              <Trash2 className="w-3 h-3" />
+              <span>Xóa đơn test</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedEventId('all')}
+              className="h-7 text-xs gap-1"
+            >
+              <span>Về số liệu thật</span>
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* KPI Overview */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

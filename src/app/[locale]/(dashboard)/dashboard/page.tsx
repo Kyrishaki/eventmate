@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useDataStore } from '@/stores/data-store';
+import { useOrdersStore } from '@/stores/orders-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,28 +31,35 @@ export default function DashboardOverviewPage() {
   const tEvents = useTranslations('events');
   const { activeWorkspace } = useWorkspaceStore();
   const { events, booths, variants, allocations } = useDataStore();
+  const { orders } = useOrdersStore();
 
   const workspaceEvents = events.filter(
     (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
   );
   const upcomingEvents = workspaceEvents.filter((e) => e.status === 'upcoming' || e.status === 'active');
 
+  const workspaceOrders = orders.filter(
+    (o) => !activeWorkspace || o.workspace_id === activeWorkspace.id
+  );
+
+  const totalRevenue = workspaceOrders.reduce((sum, o) => sum + o.final_amount, 0);
   const totalAllocated = allocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
   const totalSold = allocations.reduce((sum, a) => sum + a.sold_quantity, 0);
   const totalStock = variants.reduce((sum, v) => sum + v.total_inventory, 0);
+  const avgOrderValue = workspaceOrders.length > 0 ? totalRevenue / workspaceOrders.length : 0;
 
   // Business metrics calculated from real state
   const metrics = [
     {
       title: t('metrics.totalRevenue'),
-      value: formatCurrency(0, activeWorkspace?.currency || 'VND'),
-      change: 'Theo dõi doanh thu thực',
+      value: formatCurrency(totalRevenue, activeWorkspace?.currency || 'VND'),
+      change: `${workspaceOrders.length} giao dịch thành công`,
       icon: DollarSign,
     },
     {
       title: t('metrics.ordersCount'),
-      value: '0',
-      change: 'Chưa có phiên POS',
+      value: `${workspaceOrders.length} đơn`,
+      change: 'Đã xuất tại quầy POS',
       icon: ShoppingCart,
     },
     {
@@ -255,13 +263,46 @@ export default function DashboardOverviewPage() {
           </Link>
         </CardHeader>
         <CardContent className="p-5">
-          <div className="text-center py-10 rounded-[6px] border border-dashed border-[#E8E8E5] bg-[#FBFBFA]">
-            <ShoppingCart className="w-8 h-8 text-[#9E9E9C] mx-auto mb-2" />
-            <p className="text-xs font-medium text-[#202124]">{t('noRecentOrders')}</p>
-            <p className="text-[11px] text-[#737373] mt-0.5">
-              Đơn hàng tạo từ POS (cả online và offline) sẽ được tổng hợp tự động khi kết nối Internet.
-            </p>
-          </div>
+          {workspaceOrders.length === 0 ? (
+            <div className="text-center py-10 rounded-[6px] border border-dashed border-[#E8E8E5] bg-[#FBFBFA]">
+              <ShoppingCart className="w-8 h-8 text-[#9E9E9C] mx-auto mb-2" />
+              <p className="text-xs font-medium text-[#202124]">{t('noRecentOrders')}</p>
+              <p className="text-[11px] text-[#737373] mt-0.5">
+                Đơn hàng tạo từ POS (cả online và offline) sẽ được tổng hợp tự động khi kết nối Internet.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-[#F0F0ED]">
+              {workspaceOrders.slice(0, 3).map((ord) => {
+                const event = events.find((e) => e.id === ord.event_id);
+                const booth = booths.find((b) => b.id === ord.booth_id);
+
+                return (
+                  <div key={ord.id} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between text-xs">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-[#202124]">{ord.order_number}</span>
+                        <Badge variant="outline" className="text-[9px]">
+                          {ord.payment_method === 'cash' ? 'Tiền mặt' : 'VietQR'}
+                        </Badge>
+                      </div>
+                      <p className="text-[11px] text-[#737373] mt-0.5">
+                        {event?.name} • {booth?.name} • {formatDate(ord.created_at)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-bold text-[#315C4C] text-sm block">
+                        {formatCurrency(ord.final_amount, activeWorkspace?.currency || 'VND')}
+                      </span>
+                      <span className="text-[10px] text-[#737373]">
+                        {ord.items?.length || 1} món
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

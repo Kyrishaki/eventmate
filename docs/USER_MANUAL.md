@@ -283,14 +283,23 @@ Tại bảng phân tích chi tiết:
 
 ---
 
-### 5.3. Xuất dữ liệu Kế toán định dạng CSV
-1. Tại trang **Báo cáo & Phân tích (`/dashboard/analytics`)**, bấm nút **`Xuất báo cáo CSV`**.
-2. File CSV chuẩn mã hóa UTF-8 (hỗ trợ tiếng Việt có dấu mở tốt trên Excel) sẽ được tải xuống, bao gồm đầy đủ các cột:
-   - Mã đơn hàng, Thời gian phát sinh.
-   - Tên sự kiện, Tên quầy bán.
-   - Mô hình (Solo / Collab) & Tên đối tác.
-   - Phương thức thanh toán (Tiền mặt / VietQR / Cổng thẻ).
-   - Tạm tính, Tiền giảm giá, Tổng thanh toán cuối cùng.
+### 5.3. Xuất dữ liệu Kế toán & Vận hành ra File Excel (.xlsx) Toàn diện
+Hệ thống cho phép xuất toàn bộ dữ liệu sự kiện ra file Excel đa trang tính (`.xlsx`) tại các màn hình: **Báo cáo Doanh thu (`/dashboard/analytics`)**, **Danh sách Đơn hàng (`/dashboard/orders`)**, **Sự kiện & Tour (`/dashboard/events`)**, hoặc ngay tại **Bảng điều khiển Tổng quan (`/dashboard`)**.
+
+File Excel tự động tích hợp 4 Sheet dữ liệu chuyên sâu:
+1. **Sheet 1 - `📊 Tổng quan & Tài chính`**:
+   - Thông tin sự kiện: Địa điểm, thời gian, tên tour, workspace.
+   - Chỉ số kinh doanh cốt lõi: Tổng doanh thu, số đơn hàng, số lượng món xuất kho, giá trị trung bình đơn (AOV).
+   - Dòng tiền theo hình thức thanh toán: Tiền mặt tại két (Cash), Chuyển khoản VietQR (Ngân hàng), Cổng thẻ POS.
+   - Đối soát tự động chia sẻ doanh thu đối tác Collab.
+2. **Sheet 2 - `🛒 Chi tiết Đơn hàng`**:
+   - Toàn bộ danh sách đơn hàng chi tiết từng dòng: Mã đơn, thời gian, quầy bán, thu ngân phụ trách, phương thức, tình trạng đồng bộ, danh sách món & biến thể SKU đã mua, tạm tính, giảm giá, tổng tiền, tiền khách đưa, tiền thối, và mã khóa đối soát idempotency.
+3. **Sheet 3 - `🏬 Hiệu suất Quầy & Collab`**:
+   - Thống kê chi tiết theo từng quầy bán: Mô hình gian hàng, tên đối tác, tỷ lệ chia %, số đơn, số món bán, tổng doanh thu, thu tiền mặt, thu VietQR, số tiền chi trả đối tác Collab và thực nhận của BTC.
+4. **Sheet 4 - `📦 Tồn kho & Phân bổ SKU`**:
+   - Bảng kê từng mã SKU: Mã vạch, tên sản phẩm, biến thể (size/màu), đơn giá niêm yết, tổng kho nhập, số lượng giữ chỗ VIP, số lượng đặt trước online, số lượng cấp cho sự kiện, số lượng đã bán, doanh thu phát sinh từ SKU, tồn khả dụng còn lại tại quầy, tồn kho trung tâm và trạng thái mở bán.
+
+*(Ngoài ra bạn vẫn có thể bấm nút **`Xuất CSV`** để trích xuất nhanh file phẳng nếu cần).*
 
 ---
 

@@ -24,8 +24,11 @@ import {
   ArrowRight,
   Boxes,
   Users2,
+  Download,
 } from 'lucide-react';
 import { Link } from '@/i18n/routing';
+import { useOrdersStore } from '@/stores/orders-store';
+import { exportEventToExcel } from '@/lib/export-excel';
 
 export default function EventsPage() {
   const t = useTranslations('events');
@@ -125,6 +128,21 @@ export default function EventsPage() {
       default:
         return 'outline';
     }
+  };
+
+  const handleExportEventExcel = (evt: EventItem) => {
+    const orders = useOrdersStore.getState().orders;
+    const { products, variants, allocations } = useDataStore.getState();
+    exportEventToExcel({
+      event: evt,
+      orders,
+      booths,
+      products,
+      variants,
+      allocations,
+      workspaceName: activeWorkspace?.name || 'Gian hàng',
+      currency: activeWorkspace?.currency || 'VND',
+    });
   };
 
   return (
@@ -256,6 +274,16 @@ export default function EventsPage() {
                   </div>
 
                   <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleExportEventExcel(evt)}
+                      className="h-7 px-2 text-xs gap-1 text-[#2F7D55] border-[#2F7D55]/30 hover:bg-[#EAF4EE] font-medium"
+                      title="Xuất toàn bộ dữ liệu sự kiện này ra file Excel (.xlsx)"
+                    >
+                      <Download className="w-3 h-3 text-[#2F7D55]" />
+                      <span>Xuất Excel</span>
+                    </Button>
                     {eventBooths.some((b) => b.booth_type === 'collab' || !!b.collab_partner) && (
                       <Link href="/dashboard/booths">
                         <Badge variant="warning" className="text-[10px] gap-1 cursor-pointer hover:opacity-80">

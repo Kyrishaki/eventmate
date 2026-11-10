@@ -28,6 +28,7 @@ import {
   Camera,
   FlaskConical,
   Trash2,
+  Download,
 } from 'lucide-react';
 import {
   isTestEvent,
@@ -35,6 +36,7 @@ import {
   filterRealOrders,
   filterRealEvents,
 } from '@/lib/test-data-filter';
+import { exportEventToExcel } from '@/lib/export-excel';
 
 export default function DashboardOrdersPage() {
   const tCommon = useTranslations('common');
@@ -76,6 +78,20 @@ export default function DashboardOrdersPage() {
     return matchesSearch && matchesEvent && matchesPayment;
   });
 
+  const handleExportExcel = () => {
+    const activeEvt = filterEvent === 'all' ? null : events.find((e) => e.id === filterEvent);
+    exportEventToExcel({
+      event: activeEvt,
+      orders: filteredOrders,
+      booths,
+      products,
+      variants,
+      allocations: useDataStore.getState().allocations,
+      workspaceName: activeWorkspace?.name || 'Gian hàng',
+      currency: activeWorkspace?.currency || 'VND',
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Header */}
@@ -95,6 +111,17 @@ export default function DashboardOrdersPage() {
             Lịch sử toàn bộ các giao dịch phát sinh qua máy POS từ tất cả quầy bán của sự kiện.
           </p>
         </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExportExcel}
+          className="gap-1.5 text-xs text-[#2F7D55] border-[#2F7D55]/30 hover:bg-[#EAF4EE] h-8 font-semibold shadow-2xs self-start sm:self-auto"
+          title="Xuất danh sách đơn hàng và dữ liệu vận hành ra file Excel"
+        >
+          <Download className="w-3.5 h-3.5 text-[#2F7D55]" />
+          <span>Xuất Excel (.xlsx)</span>
+        </Button>
       </div>
 
       {/* Sandbox Test Mode Notice Banner */}

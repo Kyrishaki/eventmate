@@ -25,6 +25,7 @@ import {
   RotateCcw,
   AlertTriangle,
   Trash2,
+  Download,
 } from 'lucide-react';
 import {
   isTestEvent,
@@ -36,6 +37,7 @@ import {
   filterRealOrders,
   filterRealAllocations,
 } from '@/lib/test-data-filter';
+import { exportEventToExcel } from '@/lib/export-excel';
 
 export default function DashboardOverviewPage() {
   const t = useTranslations('dashboard');
@@ -140,6 +142,19 @@ export default function DashboardOverviewPage() {
     },
   ];
 
+  const handleExportExcel = () => {
+    exportEventToExcel({
+      event: selectedEventId === 'all' ? null : selectedEvent,
+      orders: filteredOrders,
+      booths: filteredBooths,
+      products: useDataStore.getState().products,
+      variants,
+      allocations,
+      workspaceName: activeWorkspace?.name || 'Gian hàng',
+      currency: activeWorkspace?.currency || 'VND',
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header with Title and Primary Action */}
@@ -158,15 +173,25 @@ export default function DashboardOverviewPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportExcel}
+            className="gap-1.5 text-xs text-[#2F7D55] border-[#2F7D55]/30 hover:bg-[#EAF4EE] font-semibold h-8 shadow-2xs"
+            title="Xuất toàn bộ dữ liệu sự kiện này ra file Excel (.xlsx)"
+          >
+            <Download className="w-3.5 h-3.5 text-[#2F7D55]" />
+            <span>Xuất Excel</span>
+          </Button>
           <Link href="/dashboard/events">
-            <Button variant="outline" size="sm" className="gap-1.5">
+            <Button variant="outline" size="sm" className="gap-1.5 h-8">
               <Calendar className="w-3.5 h-3.5" />
               <span>{tNav('events')}</span>
             </Button>
           </Link>
           <Link href="/pos">
-            <Button variant="primary" size="sm" className="gap-1.5">
+            <Button variant="primary" size="sm" className="gap-1.5 h-8">
               <Store className="w-3.5 h-3.5" />
               <span>{tNav('posTerminal')}</span>
             </Button>

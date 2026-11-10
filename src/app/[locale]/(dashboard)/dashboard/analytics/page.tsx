@@ -34,6 +34,7 @@ import {
   filterRealOrders,
   filterRealBooths,
 } from '@/lib/test-data-filter';
+import { exportEventToExcel } from '@/lib/export-excel';
 
 function downloadRevenueCsv(
   orders: Order[],
@@ -159,6 +160,20 @@ export default function AnalyticsPage() {
     downloadRevenueCsv(filteredOrders, events, displayBooths);
   };
 
+  // Comprehensive Multi-Sheet Excel Export
+  const handleExportExcel = () => {
+    exportEventToExcel({
+      event: selectedEventId === 'all' ? null : selectedEvent,
+      orders: filteredOrders,
+      booths: displayBooths,
+      products,
+      variants,
+      allocations,
+      workspaceName: activeWorkspace?.name || 'Gian hàng',
+      currency: activeWorkspace?.currency || 'VND',
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Header */}
@@ -177,15 +192,29 @@ export default function AnalyticsPage() {
           </p>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExportCsv}
-          className="gap-1.5 border-[#315C4C] text-[#315C4C] hover:bg-[#EBF1EE]"
-        >
-          <FileSpreadsheet className="w-3.5 h-3.5" />
-          <span>Xuất báo cáo CSV</span>
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCsv}
+            className="gap-1.5 text-xs text-[#555555] hover:text-[#202124] h-8"
+            title="Xuất file CSV phẳng cơ bản"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span>Xuất CSV</span>
+          </Button>
+
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleExportExcel}
+            className="gap-1.5 text-xs bg-[#2F7D55] hover:bg-[#286646] text-white shadow-xs font-semibold h-8"
+            title="Xuất trọn gói dữ liệu Sự kiện, Doanh thu, Quầy Collab & Tồn kho ra file Excel (.xlsx)"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Xuất Excel (.xlsx)</span>
+          </Button>
+        </div>
       </div>
 
       {/* Event Filter Bar */}

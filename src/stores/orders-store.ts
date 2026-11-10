@@ -275,6 +275,14 @@ export const useOrdersStore = create<OrdersStoreState>()(
         });
         useDataStore.setState({ allocations: updatedAllocations });
 
+        // Broadcast order completion and updated stock to other cashiers in real time
+        if (typeof window !== 'undefined') {
+          try {
+            const { useRealtimeCartSync } = await import('./realtime-cart-sync');
+            useRealtimeCartSync.getState().broadcastOrderCompleted(boothId, orderId, updatedAllocations);
+          } catch (e) {}
+        }
+
         // 2. Persist locally to Dexie IndexedDB
         try {
           if (typeof window !== 'undefined' && localDb) {

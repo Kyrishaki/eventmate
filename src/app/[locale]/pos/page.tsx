@@ -19,6 +19,7 @@ import { PaymentMethod, Product, ProductVariant, Order } from '@/types/database'
 import { PreorderPickupModal } from '@/components/pos/preorder-pickup-modal';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { usePreorderStore } from '@/stores/preorder-store';
+import { useRealtimeCartSync } from '@/stores/realtime-cart-sync';
 import {
   Store,
   Calendar,
@@ -65,18 +66,38 @@ export default function PosTerminalPage() {
     activeBankConfig,
   } = useOrdersStore();
 
-  // Active Event & Booth Selection
+  // Active Event & Booth Selection with localStorage Persistence
   const workspaceEvents = events.filter(
     (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
   );
-  const [selectedEventId, setSelectedEventId] = React.useState<string>(
-    workspaceEvents[0]?.id || ''
-  );
+  const [selectedEventId, setSelectedEventId] = React.useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('eventmate_pos_selected_event') || '';
+    }
+    return '';
+  });
 
   const eventBooths = booths.filter((b) => b.event_id === selectedEventId);
-  const [selectedBoothId, setSelectedBoothId] = React.useState<string>(
-    eventBooths[0]?.id || ''
-  );
+  const [selectedBoothId, setSelectedBoothId] = React.useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('eventmate_pos_selected_booth') || '';
+    }
+    return '';
+  });
+
+  // Real-time Multi-seller Cart Synchronization
+  const { initSync, broadcastMyCart, getRemoteHeldQty } = useRealtimeCartSync();
+
+  React.useEffect(() => {
+    initSync();
+  }, [initSync]);
+
+  // Broadcast local cart changes immediately so other cashiers see updated stock
+  React.useEffect(() => {
+    if (selectedBoothId) {
+      broadcastMyCart(selectedBoothId, cart);
+    }
+  }, [cart, selectedBoothId, broadcastMyCart]);
 
   // Online / Offline State Listener
   const [isOnline, setIsOnline] = React.useState<boolean>(true);
@@ -96,13 +117,72 @@ export default function PosTerminalPage() {
     };
   }, []);
 
-  // When event changes, auto-select first booth
+  // Ensure valid event and booth are ALWAYS selected (anti-flicker & F5 reload recovery)
   React.useEffect(() => {
-    const available = booths.filter((b) => b.event_id === selectedEventId);
-    if (available.length > 0 && !available.some((b) => b.id === selectedBoothId)) {
-      setSelectedBoothId(available[0].id);
+    if (typeof window === 'undefined' || workspaceEvents.length === 0) return;
+
+    // 1. Resolve Event
+    let activeEvtId = selectedEventId;
+    if (!activeEvtId || !workspaceEvents.some((e) => e.id === activeEvtId)) {
+      const saved = localStorage.getItem('eventmate_pos_selected_event');
+      if (saved && workspaceEvents.some((e) => e.id === saved)) {
+        activeEvtId = saved;
+      } else {
+        const evtWithBooths = workspaceEvents.find((e) => booths.some((b) => b.event_id === e.id));
+        activeEvtId = evtWithBooths?.id || workspaceEvents[0].id;
+      }
+      setSelectedEventId(activeEvtId);
+      localStorage.setItem('eventmate_pos_selected_event', activeEvtId);
     }
-  }, [selectedEventId, booths, selectedBoothId]);
+
+    // 2. Resolve Booth for the resolved event
+    const currentEventBooths = booths.filter((b) => b.event_id === activeEvtId);
+    if (currentEventBooths.length > 0) {
+      let activeBthId = selectedBoothId;
+      if (!activeBthId || !currentEventBooths.some((b) => b.id === activeBthId)) {
+        const savedBooth = localStorage.getItem('eventmate_pos_selected_booth');
+        if (savedBooth && currentEventBooths.some((b) => b.id === savedBooth)) {
+          activeBthId = savedBooth;
+        } else {
+          activeBthId = currentEventBooths[0].id;
+        }
+        setSelectedBoothId(activeBthId);
+        localStorage.setItem('eventmate_pos_selected_booth', activeBthId);
+      }
+    } else {
+      // Fallback if current event has no booths: auto-switch to an event that DOES have booths
+      const anyValidBooth = booths.find((b) => workspaceEvents.some((e) => e.id === b.event_id));
+      if (anyValidBooth) {
+        setSelectedEventId(anyValidBooth.event_id);
+        setSelectedBoothId(anyValidBooth.id);
+        localStorage.setItem('eventmate_pos_selected_event', anyValidBooth.event_id);
+        localStorage.setItem('eventmate_pos_selected_booth', anyValidBooth.id);
+      }
+    }
+  }, [workspaceEvents, booths, selectedEventId, selectedBoothId]);
+
+  function handleSelectEvent(eventId: string) {
+    setSelectedEventId(eventId);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('eventmate_pos_selected_event', eventId);
+    }
+    const newBooths = booths.filter((b) => b.event_id === eventId);
+    if (newBooths.length > 0) {
+      setSelectedBoothId(newBooths[0].id);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('eventmate_pos_selected_booth', newBooths[0].id);
+      }
+    } else {
+      setSelectedBoothId('');
+    }
+  }
+
+  function handleSelectBooth(boothId: string) {
+    setSelectedBoothId(boothId);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('eventmate_pos_selected_booth', boothId);
+    }
+  }
 
   // Handle URL query preselection (?booth=...&event=...) safely after mount
   React.useEffect(() => {
@@ -114,11 +194,11 @@ export default function PosTerminalPage() {
     if (qBooth) {
       const b = booths.find((item) => item.id === qBooth);
       if (b) {
-        setSelectedBoothId(b.id);
-        setSelectedEventId(b.event_id);
+        handleSelectBooth(b.id);
+        handleSelectEvent(b.event_id);
       }
     } else if (qEvent) {
-      setSelectedEventId(qEvent);
+      handleSelectEvent(qEvent);
     }
   }, [booths]);
 
@@ -161,7 +241,8 @@ export default function PosTerminalPage() {
   // Toggle to hide sold-out products on POS terminal (defaults to true as requested)
   const [hideSoldOut, setHideSoldOut] = React.useState(true);
 
-  // Calculate available stock for a variant at currently selected booth (respecting VIP hold & online pre-orders)
+  // Calculate available stock for a variant at currently selected booth
+  // (strictly respecting VIP hold, online pre-orders, my current cart, and other cashiers' active carts in real time)
   function getVariantAvailableStock(variantId: string) {
     if (!selectedBoothId) return 0;
     const alloc = allocations.find(
@@ -171,7 +252,13 @@ export default function PosTerminalPage() {
     const variant = variants.find((v) => v.id === variantId);
     const totalHeld = (variant?.reserved_quantity || 0) + (variant?.online_preorder_quantity || 0);
     const inCart = cart.find((c) => c.variantId === variantId)?.quantity || 0;
-    return Math.max(0, alloc.allocated_quantity - totalHeld - alloc.sold_quantity - inCart);
+    const remoteHeld = getRemoteHeldQty(selectedBoothId, variantId);
+    return Math.max(0, alloc.allocated_quantity - totalHeld - alloc.sold_quantity - inCart - remoteHeld);
+  }
+
+  function getVariantRemoteHeldQty(variantId: string) {
+    if (!selectedBoothId) return 0;
+    return getRemoteHeldQty(selectedBoothId, variantId);
   }
 
   // Filtered Products (strictly exclude soft-deleted products)
@@ -213,7 +300,15 @@ export default function PosTerminalPage() {
     const variant = prodVariants.find((v) => v.id === activeVarId) || prodVariants[0];
 
     const available = getVariantAvailableStock(variant.id);
-    if (available <= 0) return;
+    if (available <= 0) {
+      const remoteHeld = getVariantRemoteHeldQty(variant.id);
+      if (remoteHeld > 0) {
+        alert(`Sản phẩm này tạm thời hết hàng khả dụng vì đang có ${remoteHeld} sản phẩm nằm trong giỏ của thu ngân khác!`);
+      } else {
+        alert('Sản phẩm đã hết hàng khả dụng tại quầy này!');
+      }
+      return;
+    }
 
     addToCart({
       variantId: variant.id,
@@ -232,7 +327,12 @@ export default function PosTerminalPage() {
     if (!existing) return;
     const available = getVariantAvailableStock(variantId);
     if (available <= 0) {
-      alert('Đã đạt giới hạn hạn mức phân bổ cho quầy này.');
+      const remoteHeld = getVariantRemoteHeldQty(variantId);
+      if (remoteHeld > 0) {
+        alert(`Không thể mua quá số lượng! Đang có ${remoteHeld} sản phẩm nằm trong giỏ hàng của thu ngân khác.`);
+      } else {
+        alert('Không thể mua quá số lượng! Đã đạt số lượng tồn khả dụng tối đa của quầy.');
+      }
       return;
     }
     updateQuantity(variantId, existing.quantity + 1);
@@ -343,7 +443,7 @@ export default function PosTerminalPage() {
               <select
                 className="h-8 rounded-[4px] border border-[#E8E8E5] bg-[#F7F7F5] px-2 text-xs font-semibold text-[#202124] focus:outline-none focus:border-[#315C4C] max-w-[170px] truncate"
                 value={selectedEventId}
-                onChange={(e) => setSelectedEventId(e.target.value)}
+                onChange={(e) => handleSelectEvent(e.target.value)}
               >
                 {workspaceEvents.length === 0 && <option value="">(Chưa có sự kiện)</option>}
                 {workspaceEvents.map((evt) => (
@@ -356,7 +456,7 @@ export default function PosTerminalPage() {
               <select
                 className="h-8 rounded-[4px] border border-[#315C4C]/40 bg-[#F7F7F5] px-2 text-xs font-bold text-[#315C4C] focus:outline-none focus:border-[#315C4C] max-w-[150px] truncate"
                 value={selectedBoothId}
-                onChange={(e) => setSelectedBoothId(e.target.value)}
+                onChange={(e) => handleSelectBooth(e.target.value)}
               >
                 {eventBooths.length === 0 && <option value="">(Chưa có gian hàng)</option>}
                 {eventBooths.map((b) => (
@@ -434,7 +534,7 @@ export default function PosTerminalPage() {
             <select
               className="w-full h-8 rounded-[4px] border border-[#E8E8E5] bg-white px-2 text-xs font-semibold text-[#202124] focus:outline-none focus:border-[#315C4C] truncate"
               value={selectedEventId}
-              onChange={(e) => setSelectedEventId(e.target.value)}
+              onChange={(e) => handleSelectEvent(e.target.value)}
             >
               {workspaceEvents.length === 0 && <option value="">(Chưa có sự kiện)</option>}
               {workspaceEvents.map((evt) => (
@@ -452,7 +552,7 @@ export default function PosTerminalPage() {
             <select
               className="w-full h-8 rounded-[4px] border border-[#315C4C]/40 bg-white px-2 text-xs font-bold text-[#315C4C] focus:outline-none focus:border-[#315C4C] truncate"
               value={selectedBoothId}
-              onChange={(e) => setSelectedBoothId(e.target.value)}
+              onChange={(e) => handleSelectBooth(e.target.value)}
             >
               {eventBooths.length === 0 && <option value="">(Chưa có gian hàng)</option>}
               {eventBooths.map((b) => (
@@ -545,6 +645,10 @@ export default function PosTerminalPage() {
                   ? getVariantAvailableStock(activeVariant.id)
                   : 0;
 
+                const remoteHeldStock = activeVariant
+                  ? getVariantRemoteHeldQty(activeVariant.id)
+                  : 0;
+
                 const qtyInCart = activeVariant ? getVariantInCartQty(activeVariant.id) : 0;
 
                 return (
@@ -569,8 +673,21 @@ export default function PosTerminalPage() {
                         {/* Stock Badge */}
                         <div className="absolute top-2 right-2">
                           {availableStock > 0 ? (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-black/70 text-white backdrop-blur-[2px]">
-                              Còn {availableStock}
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-black/70 text-white backdrop-blur-[2px] flex items-center gap-1">
+                              <span>Còn {availableStock}</span>
+                              {remoteHeldStock > 0 && (
+                                <span className="text-[#F3B05C] font-normal" title="Đang được chọn tại quầy/thu ngân khác">
+                                  ({remoteHeldStock} giỏ khác)
+                                </span>
+                              )}
+                            </span>
+                          ) : qtyInCart > 0 ? (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#315C4C] text-white">
+                              Đã lấy ({qtyInCart})
+                            </span>
+                          ) : remoteHeldStock > 0 ? (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#B7791F] text-white" title="Sản phẩm đang nằm trong giỏ hàng của thu ngân khác">
+                              Quầy khác giữ {remoteHeldStock}
                             </span>
                           ) : (
                             <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#C44536] text-white">
@@ -660,7 +777,8 @@ export default function PosTerminalPage() {
                             type="button"
                             disabled={availableStock <= 0}
                             onClick={() => handleIncrease(activeVariant.id)}
-                            className="w-8 h-8 rounded bg-[#315C4C] text-white flex items-center justify-center font-bold text-sm shadow-2xs hover:bg-[#284a3d] disabled:opacity-40 active:scale-95 transition-transform"
+                            className="w-8 h-8 rounded bg-[#315C4C] text-white flex items-center justify-center font-bold text-sm shadow-2xs hover:bg-[#284a3d] disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
+                            title={availableStock <= 0 ? 'Đã đạt giới hạn tồn khả dụng (không thể thêm quá số lượng)' : 'Thêm 1'}
                           >
                             <Plus className="w-3.5 h-3.5" />
                           </button>
@@ -672,10 +790,16 @@ export default function PosTerminalPage() {
                           size="sm"
                           disabled={availableStock <= 0}
                           onClick={() => handleAddToCart(prod)}
-                          className="w-full h-9 text-xs font-semibold gap-1 active:scale-95 transition-transform"
+                          className="w-full h-9 text-xs font-semibold gap-1 active:scale-95 transition-transform disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           <Plus className="w-3.5 h-3.5" />
-                          <span>{availableStock > 0 ? 'Thêm vào giỏ' : 'Hết hàng'}</span>
+                          <span>
+                            {availableStock > 0
+                              ? 'Thêm vào giỏ'
+                              : remoteHeldStock > 0
+                              ? 'Quầy khác đang giữ'
+                              : 'Hết hàng khả dụng'}
+                          </span>
                         </Button>
                       )}
                     </div>
@@ -748,9 +872,10 @@ export default function PosTerminalPage() {
                     <span className="w-6 text-center text-xs font-bold">{item.quantity}</span>
                     <button
                       type="button"
-                      disabled={item.quantity >= item.maxAvailable}
-                      onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
-                      className="p-1 hover:bg-[#F0F0ED] rounded text-[#202124] disabled:opacity-30"
+                      disabled={getVariantAvailableStock(item.variantId) <= 0}
+                      onClick={() => handleIncrease(item.variantId)}
+                      className="p-1 hover:bg-[#F0F0ED] rounded text-[#202124] disabled:opacity-30 disabled:cursor-not-allowed"
+                      title={getVariantAvailableStock(item.variantId) <= 0 ? 'Đã đạt số lượng tồn khả dụng' : 'Thêm 1'}
                     >
                       <Plus className="w-3 h-3" />
                     </button>
@@ -897,8 +1022,10 @@ export default function PosTerminalPage() {
                       <span className="w-7 text-center font-bold text-xs">{item.quantity}</span>
                       <button
                         type="button"
+                        disabled={getVariantAvailableStock(item.variantId) <= 0}
                         onClick={() => handleIncrease(item.variantId)}
-                        className="w-7 h-7 flex items-center justify-center text-[#737373] hover:text-[#202124] active:bg-[#F0F0ED]"
+                        className="w-7 h-7 flex items-center justify-center text-[#737373] hover:text-[#202124] disabled:opacity-30 disabled:cursor-not-allowed active:bg-[#F0F0ED]"
+                        title={getVariantAvailableStock(item.variantId) <= 0 ? 'Đã đạt số lượng tồn khả dụng' : 'Thêm 1'}
                       >
                         <Plus className="w-3 h-3" />
                       </button>

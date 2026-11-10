@@ -55,6 +55,7 @@ import { calculateVariantStock } from '@/lib/stock-status';
 import { logActivity } from '@/stores/audit-store';
 import { PreorderPickupModal } from '@/components/pos/preorder-pickup-modal';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { useRealtimeCartSync } from '@/stores/realtime-cart-sync';
 
 function CollabPartnerPortalContent() {
   const tCommon = useTranslations('common');
@@ -123,6 +124,19 @@ function CollabPartnerPortalContent() {
 
   // Locate current booth
   const currentBooth = booths.find((b) => b.id === boothId);
+
+  // Real-time Multi-seller Cart Synchronization
+  const { initSync, broadcastMyCart, getRemoteHeldQty } = useRealtimeCartSync();
+
+  React.useEffect(() => {
+    initSync();
+  }, [initSync]);
+
+  React.useEffect(() => {
+    if (boothId) {
+      broadcastMyCart(boothId, cart);
+    }
+  }, [cart, boothId, broadcastMyCart]);
 
   // Locate current event
   const currentEvent = events.find((e) => e.id === currentBooth?.event_id);
@@ -941,7 +955,9 @@ ${url}`;
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                   {posAvailableVariants.map(({ allocation, variant, product, isPartnerItem }) => {
                     const stock = calculateVariantStock(variant!, allocation.sold_quantity, allocation.allocated_quantity);
-                    const available = stock.availableForSale;
+                    const myInCart = cart.find((c) => c.variantId === variant!.id)?.quantity || 0;
+                    const remoteHeld = getRemoteHeldQty(boothId, variant!.id);
+                    const available = Math.max(0, stock.availableForSale - myInCart - remoteHeld);
                     const isOutOfStock = available <= 0;
 
                     return (

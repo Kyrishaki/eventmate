@@ -53,6 +53,7 @@ export interface DataStoreState {
   ) => void;
 
   // Inventory & Allocation Actions
+  setAllocations: (allocations: InventoryAllocation[]) => void;
   setAllocation: (
     workspaceId: string,
     eventId: string,
@@ -147,6 +148,26 @@ const defaultBooths: Booth[] = [
     event_id: 'evt-hanoi-2026',
     name: 'Quầy B - Khu VIP & Sân trong',
     code: 'BOOTH-B',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'booth-sg-1',
+    workspace_id: 'ws-hac-cam-studio',
+    event_id: 'evt-saigon-2026',
+    name: 'Quầy 1 - Khu Vé & Check-in',
+    code: 'BOOTH-SG1',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'booth-sg-2',
+    workspace_id: 'ws-hac-cam-studio',
+    event_id: 'evt-saigon-2026',
+    name: 'Quầy 2 - Sân khấu chính',
+    code: 'BOOTH-SG2',
     status: 'active',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -313,6 +334,14 @@ const defaultAllocations: InventoryAllocation[] = [
   // Vinyl: Total 50 -> Booth A: 20, Booth B: 20, Storage: 10
   { id: 'alloc-11', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hanoi-2026', booth_id: 'booth-a', variant_id: 'var-vinyl-limited', allocated_quantity: 20, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
   { id: 'alloc-12', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hanoi-2026', booth_id: 'booth-b', variant_id: 'var-vinyl-limited', allocated_quantity: 20, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+
+  // Saigon Event Allocations
+  { id: 'alloc-sg-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-saigon-2026', booth_id: 'booth-sg-1', variant_id: 'var-tshirt-s', allocated_quantity: 40, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-sg-2', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-saigon-2026', booth_id: 'booth-sg-1', variant_id: 'var-tshirt-m', allocated_quantity: 60, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-sg-3', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-saigon-2026', booth_id: 'booth-sg-1', variant_id: 'var-tshirt-l', allocated_quantity: 60, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-sg-4', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-saigon-2026', booth_id: 'booth-sg-1', variant_id: 'var-cap-blk', allocated_quantity: 50, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-sg-5', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-saigon-2026', booth_id: 'booth-sg-1', variant_id: 'var-lightstick-rgb', allocated_quantity: 90, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-sg-6', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-saigon-2026', booth_id: 'booth-sg-1', variant_id: 'var-vinyl-limited', allocated_quantity: 20, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 ];
 
 const defaultMembers: WorkspaceMember[] = [
@@ -573,6 +602,7 @@ export const useDataStore = create<DataStoreState>()(
       },
 
       // Allocations
+      setAllocations: (allocations) => set({ allocations }),
       setAllocation: (workspaceId, eventId, boothId, variantId, allocatedQuantity) => {
         const existing = get().allocations.find(
           (a) => a.booth_id === boothId && a.variant_id === variantId

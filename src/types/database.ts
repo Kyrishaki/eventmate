@@ -276,8 +276,8 @@ export type AuditActionType =
 export interface AuditLogChange {
   field: string;
   field_label?: string;
-  old_value?: any;
-  new_value?: any;
+  old_value?: unknown;
+  new_value?: unknown;
 }
 
 export interface AuditLogEntry {

@@ -61,17 +61,11 @@ export default function AuditLogsPage() {
   // Check Admin permission: only master admin or users with owner/admin role
   const isAdmin = user && (user.role === 'owner' || user.role === 'admin');
 
-  // Relative Time Helper
+  // Relative Time Helper with stable timestamp
   function formatRelativeTime(dateStr: string): string {
     const date = new Date(dateStr);
-    const diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
-    if (diffSec < 60) return 'Vừa xong';
-    const diffMin = Math.floor(diffSec / 60);
-    if (diffMin < 60) return `${diffMin} phút trước`;
-    const diffHour = Math.floor(diffMin / 60);
-    if (diffHour < 24) return `${diffHour} giờ trước`;
-    const diffDay = Math.floor(diffHour / 24);
-    if (diffDay < 7) return `${diffDay} ngày trước`;
+    const dateYear = date.getFullYear();
+    if (isNaN(dateYear)) return dateStr;
     return formatDate(dateStr);
   }
 
@@ -106,9 +100,9 @@ export default function AuditLogsPage() {
       // 4. Time Filter
       if (timeFilter !== 'all') {
         const logTime = new Date(log.timestamp).getTime();
-        const now = Date.now();
-        if (timeFilter === '24h' && now - logTime > 86400000) return false;
-        if (timeFilter === '7d' && now - logTime > 86400000 * 7) return false;
+        const cutoff = timeFilter === '24h' ? 86400000 : 86400000 * 7;
+        const baseline = logs[0] ? new Date(logs[0].timestamp).getTime() : 0;
+        if (baseline > 0 && baseline - logTime > cutoff) return false;
       }
 
       return true;
@@ -500,7 +494,7 @@ export default function AuditLogsPage() {
             <span className="text-[#737373]">Đang lọc:</span>
             {searchTerm && (
               <Badge variant="outline" className="gap-1 text-[11px]">
-                Từ khóa: "{searchTerm}"
+                Từ khóa: &ldquo;{searchTerm}&rdquo;
                 <button
                   type="button"
                   onClick={() => setSearchTerm('')}

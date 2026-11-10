@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Modal } from '@/components/ui/modal';
 import { formatCurrency, cn } from '@/lib/utils';
-import { Product, ProductVariant } from '@/types/database';
+import { Product, ProductVariant, AuditActorRole } from '@/types/database';
 import { calculateVariantStock } from '@/lib/stock-status';
 import { logActivity } from '@/stores/audit-store';
 import { ProductImageUploader } from '@/components/ui/product-image-uploader';
@@ -113,7 +113,7 @@ export default function ProductsPage() {
     if (quickAdjustProduct) {
       logActivity({
         actor_name: user?.fullName || 'Nhân viên / Admin',
-        actor_role: (user?.role as any) || 'staff',
+        actor_role: (user?.role as AuditActorRole) || 'staff',
         action_type: 'preorder_adjust',
         entity_type: 'variant',
         entity_name: quickAdjustProduct.name,
@@ -249,7 +249,7 @@ export default function ProductsPage() {
     setFormVariants(formVariants.filter((_, idx) => idx !== index));
   }
 
-  function updateVariantField(index: number, field: keyof VariantInput, value: any) {
+  function updateVariantField(index: number, field: keyof VariantInput, value: string | number) {
     setFormVariants(
       formVariants.map((v, idx) => (idx === index ? { ...v, [field]: value } : v))
     );
@@ -274,7 +274,7 @@ export default function ProductsPage() {
 
       logActivity({
         actor_name: user?.fullName || 'Người dùng',
-        actor_role: (user?.role as any) || 'staff',
+        actor_role: (user?.role as AuditActorRole) || 'staff',
         action_type: 'update',
         entity_type: 'product',
         entity_name: name,
@@ -308,7 +308,7 @@ export default function ProductsPage() {
 
       logActivity({
         actor_name: user?.fullName || 'Người dùng',
-        actor_role: (user?.role as any) || 'staff',
+        actor_role: (user?.role as AuditActorRole) || 'staff',
         action_type: 'create',
         entity_type: 'product',
         entity_name: name,
@@ -582,7 +582,7 @@ export default function ProductsPage() {
                               restoreProduct(prod.id);
                               logActivity({
                                 actor_name: user?.fullName || 'Người dùng',
-                                actor_role: (user?.role as any) || 'staff',
+                                actor_role: (user?.role as AuditActorRole) || 'staff',
                                 action_type: 'update',
                                 entity_type: 'product',
                                 entity_name: prod.name,
@@ -627,7 +627,7 @@ export default function ProductsPage() {
                                   deleteProduct(prod.id);
                                   logActivity({
                                     actor_name: user?.fullName || 'Người dùng',
-                                    actor_role: (user?.role as any) || 'staff',
+                                    actor_role: (user?.role as AuditActorRole) || 'staff',
                                     action_type: 'delete',
                                     entity_type: 'product',
                                     entity_name: prod.name,

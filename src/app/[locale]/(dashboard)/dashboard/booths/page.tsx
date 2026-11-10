@@ -301,7 +301,7 @@ ${url}`;
                     </div>
 
                     <Badge variant={statusBadgeVariant(booth.status)} className="capitalize text-[10px]">
-                      {t(`statusList.${booth.status}` as any)}
+                      {t(`statusList.${booth.status as 'active' | 'inactive' | 'closed'}`)}
                     </Badge>
                   </div>
 

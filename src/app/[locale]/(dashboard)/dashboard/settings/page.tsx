@@ -27,13 +27,14 @@ export default function SettingsPage() {
   const [seedSuccess, setSeedSuccess] = React.useState(false);
   const [resetSuccess, setResetSuccess] = React.useState(false);
 
-  React.useEffect(() => {
-    if (activeWorkspace) {
-      setName(activeWorkspace.name);
-      setSlug(activeWorkspace.slug);
-      setCurrency(activeWorkspace.currency);
-    }
-  }, [activeWorkspace]);
+  // Sync state if active workspace changes
+  const [prevWorkspaceId, setPrevWorkspaceId] = React.useState(activeWorkspace?.id);
+  if (activeWorkspace && activeWorkspace.id !== prevWorkspaceId) {
+    setPrevWorkspaceId(activeWorkspace.id);
+    setName(activeWorkspace.name);
+    setSlug(activeWorkspace.slug);
+    setCurrency(activeWorkspace.currency);
+  }
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault();

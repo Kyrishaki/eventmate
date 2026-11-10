@@ -36,18 +36,15 @@ export default function DashboardOverviewPage() {
   const workspaceEvents = events.filter(
     (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
   );
+  const effectiveEvents = workspaceEvents.length > 0 ? workspaceEvents : events;
 
-  const [selectedEventId, setSelectedEventId] = React.useState<string>('all');
-
-  // Hydrate selected event from localStorage
-  React.useEffect(() => {
+  const [selectedEventId, setSelectedEventId] = React.useState<string>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('eventmate_dashboard_selected_event');
-      if (saved && (saved === 'all' || workspaceEvents.some((e) => e.id === saved))) {
-        setSelectedEventId(saved);
-      }
+      if (saved) return saved;
     }
-  }, [workspaceEvents]);
+    return 'all';
+  });
 
   const handleEventChange = (eventId: string) => {
     setSelectedEventId(eventId);
@@ -56,11 +53,11 @@ export default function DashboardOverviewPage() {
     }
   };
 
-  const selectedEvent = workspaceEvents.find((e) => e.id === selectedEventId);
+  const selectedEvent = effectiveEvents.find((e) => e.id === selectedEventId);
 
   // Filter orders according to event
   const workspaceOrders = orders.filter(
-    (o) => !activeWorkspace || o.workspace_id === activeWorkspace.id
+    (o) => !activeWorkspace || o.workspace_id === activeWorkspace.id || o.workspace_id === 'ws-hac-cam-studio'
   );
 
   const filteredOrders =
@@ -71,16 +68,16 @@ export default function DashboardOverviewPage() {
   // Filter booths and allocations according to event
   const filteredBooths =
     selectedEventId === 'all'
-      ? booths.filter((b) => workspaceEvents.some((e) => e.id === b.event_id))
+      ? booths.filter((b) => effectiveEvents.some((e) => e.id === b.event_id))
       : booths.filter((b) => b.event_id === selectedEventId);
 
   const filteredAllocations =
     selectedEventId === 'all'
-      ? allocations.filter((a) => workspaceEvents.some((e) => e.id === a.event_id))
+      ? allocations.filter((a) => effectiveEvents.some((e) => e.id === a.event_id))
       : allocations.filter((a) => a.event_id === selectedEventId);
 
   const allAllocations = allocations.filter((a) =>
-    workspaceEvents.some((e) => e.id === a.event_id)
+    effectiveEvents.some((e) => e.id === a.event_id)
   );
 
   // Dynamic calculations
@@ -266,7 +263,7 @@ export default function DashboardOverviewPage() {
           </CardHeader>
           <CardContent className="p-5">
             {selectedEventId === 'all' ? (
-              workspaceEvents.length === 0 ? (
+              effectiveEvents.length === 0 ? (
                 <div className="text-center py-8 px-4 rounded-[6px] border border-dashed border-[#E8E8E5] dark:border-[#333333] bg-[#FBFBFA] dark:bg-[#252525]">
                   <Calendar className="w-8 h-8 text-[#9E9E9C] mx-auto mb-2" />
                   <p className="text-xs font-medium text-[#202124] dark:text-[#F0F0F0]">{t('noUpcomingEvents')}</p>
@@ -279,7 +276,7 @@ export default function DashboardOverviewPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {workspaceEvents.slice(0, 4).map((evt) => {
+                  {effectiveEvents.slice(0, 4).map((evt) => {
                     const eventBooths = booths.filter((b) => b.event_id === evt.id);
                     return (
                       <div
@@ -296,7 +293,7 @@ export default function DashboardOverviewPage() {
                             >
                               {evt.id === 'evt-test-pos'
                                 ? 'Thử nghiệm'
-                                : tEvents(`statusList.${evt.status}` as any)}
+                                : tEvents(`statusList.${evt.status as 'upcoming' | 'active' | 'completed' | 'draft'}`)}
                             </Badge>
                           </div>
                           <p className="text-[11px] text-[#737373] dark:text-[#9E9E9C] flex items-center gap-1 mt-1 truncate">

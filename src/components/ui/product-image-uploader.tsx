@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Camera, Image as ImageIcon, Link as LinkIcon, X, RotateCcw, Check, Upload, Sparkles, Loader2 } from 'lucide-react';
+import { Camera, Image as ImageIcon, Link as LinkIcon, X, Check, Upload, Loader2 } from 'lucide-react';
 import { Button } from './button';
 import { Input } from './input';
 
@@ -82,8 +82,8 @@ export function ProductImageUploader({
       const compressedDataUrl = await compressImageFile(file);
       onChange(compressedDataUrl);
       setShowUrlInput(false);
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Không thể xử lý ảnh này.');
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : 'Không thể xử lý ảnh này.');
     } finally {
       setIsProcessing(false);
     }

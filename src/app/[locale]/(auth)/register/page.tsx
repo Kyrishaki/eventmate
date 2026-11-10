@@ -23,12 +23,16 @@ export default function RegisterPage() {
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const registerSchema = z.object({
-    fullName: z.string().min(2, t('errors.requiredField')),
-    workspaceName: z.string().min(2, t('errors.requiredField')),
-    email: z.string().min(1, t('errors.requiredField')).email(t('errors.invalidEmail')),
-    password: z.string().min(6, t('errors.passwordTooShort')),
-  });
+  const registerSchema = React.useMemo(
+    () =>
+      z.object({
+        fullName: z.string().min(2, t('errors.requiredField')),
+        workspaceName: z.string().min(2, t('errors.requiredField')),
+        email: z.string().min(1, t('errors.requiredField')).email(t('errors.invalidEmail')),
+        password: z.string().min(6, t('errors.passwordTooShort')),
+      }),
+    [t]
+  );
 
   type RegisterFormValues = z.infer<typeof registerSchema>;
 
@@ -46,69 +50,72 @@ export default function RegisterPage() {
     },
   });
 
-  async function onSubmit(data: RegisterFormValues) {
-    setIsLoading(true);
-    setErrorMessage(null);
+  const onSubmit = React.useCallback(
+    async (data: RegisterFormValues) => {
+      setIsLoading(true);
+      setErrorMessage(null);
 
-    try {
-      const supabase = createClient();
-      const { data: authData, error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
-            full_name: data.fullName,
-            workspace_name: data.workspaceName,
+      try {
+        const supabase = createClient();
+        const { data: authData } = await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+          options: {
+            data: {
+              full_name: data.fullName,
+              workspace_name: data.workspaceName,
+            },
           },
-        },
-      });
+        });
 
-      const newWorkspace = {
-        id: `ws-${Date.now()}`,
-        name: data.workspaceName,
-        slug: data.workspaceName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-        owner_id: authData?.user?.id ?? 'user-artist-owner',
-        currency: 'VND',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+        const newWorkspace = {
+          id: `ws-${crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : 'demo'}`,
+          name: data.workspaceName,
+          slug: data.workspaceName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+          owner_id: authData?.user?.id ?? 'user-artist-owner',
+          currency: 'VND',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
 
-      setWorkspaces([newWorkspace, ...workspaces]);
-      setActiveWorkspace(newWorkspace);
+        setWorkspaces([newWorkspace, ...workspaces]);
+        setActiveWorkspace(newWorkspace);
 
-      setUser({
-        id: authData?.user?.id ?? 'user-artist-owner',
-        email: data.email,
-        fullName: data.fullName,
-        role: 'owner',
-      });
+        setUser({
+          id: authData?.user?.id ?? 'user-artist-owner',
+          email: data.email,
+          fullName: data.fullName,
+          role: 'owner',
+        });
 
-      router.push('/dashboard');
-    } catch {
-      // Dev fallback
-      const newWorkspace = {
-        id: `ws-${Date.now()}`,
-        name: data.workspaceName,
-        slug: data.workspaceName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-        owner_id: 'user-artist-owner',
-        currency: 'VND',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setWorkspaces([newWorkspace, ...workspaces]);
-      setActiveWorkspace(newWorkspace);
+        router.push('/dashboard');
+      } catch {
+        // Dev fallback
+        const newWorkspace = {
+          id: `ws-${crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : 'demo'}`,
+          name: data.workspaceName,
+          slug: data.workspaceName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+          owner_id: 'user-artist-owner',
+          currency: 'VND',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        setWorkspaces([newWorkspace, ...workspaces]);
+        setActiveWorkspace(newWorkspace);
 
-      setUser({
-        id: 'user-artist-owner',
-        email: data.email,
-        fullName: data.fullName,
-        role: 'owner',
-      });
-      router.push('/dashboard');
-    } finally {
-      setIsLoading(false);
-    }
-  }
+        setUser({
+          id: 'user-artist-owner',
+          email: data.email,
+          fullName: data.fullName,
+          role: 'owner',
+        });
+        router.push('/dashboard');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [router, setActiveWorkspace, setUser, setWorkspaces, workspaces]
+  );
 
   return (
     <Card className="border-[#E8E8E5] shadow-xs">

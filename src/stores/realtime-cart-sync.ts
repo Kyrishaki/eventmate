@@ -6,10 +6,12 @@ import { InventoryAllocation } from '@/types/database';
 import { useDataStore } from './data-store';
 import { createClient } from '@/lib/supabase/client';
 
+export type RemoteCartItem = { variantId: string; quantity: number };
+
 export interface RemoteCartHold {
   clientId: string;
   boothId: string;
-  items: { variantId: string; quantity: number }[];
+  items: RemoteCartItem[];
   updatedAt: number;
 }
 
@@ -35,9 +37,19 @@ function getOrCreateClientId(): string {
 
 const BROADCAST_CHANNEL_NAME = 'eventmate_pos_stock_channel';
 
+interface IncomingSyncPayload {
+  type: string;
+  clientId: string;
+  boothId?: string;
+  items?: RemoteCartItem[];
+  orderId?: string;
+  allocations?: InventoryAllocation[];
+  timestamp?: number;
+}
+
 export const useRealtimeCartSync = create<RealtimeCartSyncState>((set, get) => {
   let broadcastChannel: BroadcastChannel | null = null;
-  let supabaseChannel: any = null;
+  let supabaseChannel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null;
   let isInitialized = false;
 
   return {
@@ -66,12 +78,14 @@ export const useRealtimeCartSync = create<RealtimeCartSyncState>((set, get) => {
         });
 
         supabaseChannel
-          .on('broadcast', { event: 'cart_update' }, (payload: any) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .on('broadcast' as any, { event: 'cart_update' }, (payload: { payload?: IncomingSyncPayload }) => {
             if (payload.payload && payload.payload.clientId !== myClientId) {
               handleIncomingMessage(payload.payload);
             }
           })
-          .on('broadcast', { event: 'order_completed' }, (payload: any) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .on('broadcast' as any, { event: 'order_completed' }, (payload: { payload?: IncomingSyncPayload }) => {
             if (payload.payload && payload.payload.clientId !== myClientId) {
               handleIncomingMessage(payload.payload);
             }
@@ -83,7 +97,7 @@ export const useRealtimeCartSync = create<RealtimeCartSyncState>((set, get) => {
       }
 
       // Handle message from any channel
-      function handleIncomingMessage(data: any) {
+      function handleIncomingMessage(data: IncomingSyncPayload | null | undefined) {
         if (!data || data.clientId === myClientId) return;
 
         if (data.type === 'CART_UPDATE') {
@@ -94,7 +108,7 @@ export const useRealtimeCartSync = create<RealtimeCartSyncState>((set, get) => {
             } else {
               next[data.clientId] = {
                 clientId: data.clientId,
-                boothId: data.boothId,
+                boothId: data.boothId || '',
                 items: data.items,
                 updatedAt: Date.now(),
               };
@@ -112,11 +126,12 @@ export const useRealtimeCartSync = create<RealtimeCartSyncState>((set, get) => {
           });
 
           // 2. Synchronize newly updated allocations into data-store immediately
-          if (data.allocations && Array.isArray(data.allocations)) {
+          const incomingAllocations = data.allocations;
+          if (incomingAllocations && Array.isArray(incomingAllocations)) {
             const dataStore = useDataStore.getState();
             const currentAllocations = dataStore.allocations;
             const updated = currentAllocations.map((alloc) => {
-              const matched = data.allocations.find((a: InventoryAllocation) => a.id === alloc.id);
+              const matched = incomingAllocations.find((a: InventoryAllocation) => a.id === alloc.id);
               return matched ? matched : alloc;
             });
             dataStore.setAllocations(updated);
@@ -156,7 +171,7 @@ export const useRealtimeCartSync = create<RealtimeCartSyncState>((set, get) => {
       if (broadcastChannel) {
         try {
           broadcastChannel.postMessage(payload);
-        } catch (e) {}
+        } catch {}
       }
 
       // Broadcast via Supabase Realtime
@@ -167,7 +182,7 @@ export const useRealtimeCartSync = create<RealtimeCartSyncState>((set, get) => {
             event: 'cart_update',
             payload,
           });
-        } catch (e) {}
+        } catch {}
       }
     },
 
@@ -185,7 +200,7 @@ export const useRealtimeCartSync = create<RealtimeCartSyncState>((set, get) => {
       if (broadcastChannel) {
         try {
           broadcastChannel.postMessage(payload);
-        } catch (e) {}
+        } catch {}
       }
 
       if (supabaseChannel) {
@@ -195,7 +210,7 @@ export const useRealtimeCartSync = create<RealtimeCartSyncState>((set, get) => {
             event: 'order_completed',
             payload,
           });
-        } catch (e) {}
+        } catch {}
       }
     },
 

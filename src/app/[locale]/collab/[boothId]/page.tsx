@@ -402,8 +402,8 @@ ${url}`;
           { field: 'payment_method', field_label: 'Phương thức', new_value: order.payment_method },
         ],
       });
-    } catch (err: any) {
-      alert(`Lỗi khi tạo đơn: ${err?.message || 'Vui lòng kiểm tra lại tồn kho'}`);
+    } catch (err: unknown) {
+      alert(`Lỗi khi tạo đơn: ${err instanceof Error ? err.message : 'Vui lòng kiểm tra lại tồn kho'}`);
     } finally {
       setIsSubmittingOrder(false);
     }
@@ -949,7 +949,7 @@ ${url}`;
                   <Package className="w-8 h-8 text-[#9E9E9C] mx-auto mb-2" />
                   <p className="text-sm font-semibold text-[#202124]">Không tìm thấy sản phẩm nào</p>
                   <p className="text-xs text-[#737373] mt-1">
-                    Hãy thêm sản phẩm vào gian hàng ở tab "Kho & Sản Phẩm Đồng Bộ" trước khi bán.
+                    Hãy thêm sản phẩm vào gian hàng ở tab &ldquo;Kho &amp; Sản Phẩm Đồng Bộ&rdquo; trước khi bán.
                   </p>
                 </Card>
               ) : (

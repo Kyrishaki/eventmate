@@ -193,7 +193,7 @@ export default function EventsPage() {
                       {evt.name}
                     </h3>
                     <Badge variant={statusBadgeVariant(evt.status)} className="capitalize text-[10px]">
-                      {t(`statusList.${evt.status}` as any)}
+                      {t(`statusList.${evt.status as 'upcoming' | 'active' | 'completed' | 'draft'}`)}
                     </Badge>
                   </div>
 

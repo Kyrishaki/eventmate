@@ -18,10 +18,10 @@ interface WorkspaceState {
 
 const defaultWorkspaces: Workspace[] = [
   {
-    id: 'ws-default',
+    id: 'ws-hac-cam-studio',
     name: 'Gian hàng của tôi',
     slug: 'gian-hang-chinh',
-    owner_id: 'user-owner',
+    owner_id: 'user-artist-demo',
     currency: 'VND',
     description: 'Không gian quản lý bán hàng và sự kiện chính',
     is_collab: false,
@@ -65,6 +65,21 @@ export const useWorkspaceStore = create<WorkspaceState>()(
     }),
     {
       name: 'eventmate_workspace_state_v3',
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        // Migrate legacy ws-default to ws-hac-cam-studio so workspace data always matches inventory
+        if (state.activeWorkspace?.id === 'ws-default') {
+          state.activeWorkspace = {
+            ...state.activeWorkspace,
+            id: 'ws-hac-cam-studio',
+          };
+        }
+        if (state.workspaces) {
+          state.workspaces = state.workspaces.map((w) =>
+            w.id === 'ws-default' ? { ...w, id: 'ws-hac-cam-studio' } : w
+          );
+        }
+      },
     }
   )
 );

@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Modal } from '@/components/ui/modal';
-import { WorkspaceRole } from '@/types/database';
+import { WorkspaceRole, AuditActorRole } from '@/types/database';
 import {
   Users,
   UserPlus,
@@ -75,7 +75,7 @@ export default function TeamPage() {
 
     logActivity({
       actor_name: user?.fullName || 'Admin',
-      actor_role: (user?.role as any) || 'owner',
+      actor_role: (user?.role as AuditActorRole) || 'owner',
       action_type: 'user_create',
       entity_type: 'team_member',
       entity_name: `Tài khoản: ${username}`,
@@ -288,7 +288,7 @@ export default function TeamPage() {
                           deleteStaffAccount(acc.id);
                           logActivity({
                             actor_name: user?.fullName || 'Admin',
-                            actor_role: (user?.role as any) || 'owner',
+                            actor_role: (user?.role as AuditActorRole) || 'owner',
                             action_type: 'user_delete',
                             entity_type: 'team_member',
                             entity_name: `Tài khoản: ${acc.username}`,
@@ -388,7 +388,7 @@ export default function TeamPage() {
           <div className="p-3 bg-[#F7F7F5] rounded text-xs text-[#737373] space-y-1">
             <p className="font-semibold text-[#202124]">💡 Lưu ý bảo mật:</p>
             <p>
-              Sau khi tạo, bạn có thể bấm nút <strong>"Gửi thông tin"</strong> để sao chép tin nhắn định dạng sẵn và gửi qua Zalo/Messenger cho nhân viên.
+              Sau khi tạo, bạn có thể bấm nút <strong>&ldquo;Gửi thông tin&rdquo;</strong> để sao chép tin nhắn định dạng sẵn và gửi qua Zalo/Messenger cho nhân viên.
             </p>
           </div>
 

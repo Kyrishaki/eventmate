@@ -51,6 +51,23 @@ import {
 } from 'lucide-react';
 import { FeedbackModal } from '@/components/feedback/feedback-modal';
 
+function subscribeOnline(callback: () => void) {
+  window.addEventListener('online', callback);
+  window.addEventListener('offline', callback);
+  return () => {
+    window.removeEventListener('online', callback);
+    window.removeEventListener('offline', callback);
+  };
+}
+
+function useOnlineStatus() {
+  return React.useSyncExternalStore(
+    subscribeOnline,
+    () => (typeof navigator !== 'undefined' ? navigator.onLine : true),
+    () => true
+  );
+}
+
 export default function PosTerminalPage() {
   const tCommon = useTranslations('common');
   const { activeWorkspace } = useWorkspaceStore();
@@ -68,23 +85,46 @@ export default function PosTerminalPage() {
     activeBankConfig,
   } = useOrdersStore();
 
-  // Active Event & Booth Selection with localStorage Persistence
+  // Active Event & Booth Selection with localStorage Persistence & Anti-Flicker Fallbacks
   const workspaceEvents = events.filter(
     (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
   );
+  const effectiveEvents = workspaceEvents.length > 0 ? workspaceEvents : events;
+
   const [selectedEventId, setSelectedEventId] = React.useState<string>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('eventmate_pos_selected_event') || '';
+      const urlParams = new URLSearchParams(window.location.search);
+      const qBooth = urlParams.get('booth');
+      const qEvent = urlParams.get('event');
+      if (qBooth) {
+        const b = booths.find((item) => item.id === qBooth);
+        if (b) return b.event_id;
+      }
+      if (qEvent) return qEvent;
+      const saved = localStorage.getItem('eventmate_pos_selected_event');
+      if (saved && (workspaceEvents.some((e) => e.id === saved) || events.some((e) => e.id === saved))) {
+        return saved;
+      }
     }
-    return '';
+    return workspaceEvents[0]?.id || events[0]?.id || '';
   });
 
   const eventBooths = booths.filter((b) => b.event_id === selectedEventId);
+  const effectiveBooths = eventBooths.length > 0 ? eventBooths : booths;
+
   const [selectedBoothId, setSelectedBoothId] = React.useState<string>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('eventmate_pos_selected_booth') || '';
+      const urlParams = new URLSearchParams(window.location.search);
+      const qBooth = urlParams.get('booth');
+      if (qBooth && booths.some((b) => b.id === qBooth)) {
+        return qBooth;
+      }
+      const saved = localStorage.getItem('eventmate_pos_selected_booth');
+      if (saved && booths.some((b) => b.id === saved)) {
+        return saved;
+      }
     }
-    return '';
+    return eventBooths[0]?.id || booths[0]?.id || '';
   });
 
   // Real-time Multi-seller Cart Synchronization
@@ -101,41 +141,32 @@ export default function PosTerminalPage() {
     }
   }, [cart, selectedBoothId, broadcastMyCart]);
 
-  // Online / Offline State Listener
-  const [isOnline, setIsOnline] = React.useState<boolean>(true);
+  // Online / Offline State Listener via useSyncExternalStore
+  const isOnline = useOnlineStatus();
   const [isFeedbackOpen, setIsFeedbackOpen] = React.useState(false);
-  React.useEffect(() => {
-    setIsOnline(navigator.onLine);
-    function handleOnline() {
-      setIsOnline(true);
-    }
-    function handleOffline() {
-      setIsOnline(false);
-    }
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
 
   // Ensure valid event and booth are ALWAYS selected (anti-flicker & F5 reload recovery)
   React.useEffect(() => {
-    if (typeof window === 'undefined' || workspaceEvents.length === 0) return;
+    if (typeof window === 'undefined' || events.length === 0) return;
+
+    const eventPool = workspaceEvents.length > 0 ? workspaceEvents : events;
 
     // 1. Resolve Event
     let activeEvtId = selectedEventId;
-    if (!activeEvtId || !workspaceEvents.some((e) => e.id === activeEvtId)) {
+    if (!activeEvtId || !eventPool.some((e) => e.id === activeEvtId)) {
       const saved = localStorage.getItem('eventmate_pos_selected_event');
-      if (saved && workspaceEvents.some((e) => e.id === saved)) {
+      if (saved && eventPool.some((e) => e.id === saved)) {
         activeEvtId = saved;
       } else {
-        const evtWithBooths = workspaceEvents.find((e) => booths.some((b) => b.event_id === e.id));
-        activeEvtId = evtWithBooths?.id || workspaceEvents[0].id;
+        const evtWithBooths = eventPool.find((e) => booths.some((b) => b.event_id === e.id));
+        activeEvtId = evtWithBooths?.id || eventPool[0]?.id || '';
       }
-      setSelectedEventId(activeEvtId);
-      localStorage.setItem('eventmate_pos_selected_event', activeEvtId);
+      if (activeEvtId) {
+        queueMicrotask(() => {
+          setSelectedEventId(activeEvtId);
+          localStorage.setItem('eventmate_pos_selected_event', activeEvtId);
+        });
+      }
     }
 
     // 2. Resolve Booth for the resolved event
@@ -149,20 +180,24 @@ export default function PosTerminalPage() {
         } else {
           activeBthId = currentEventBooths[0].id;
         }
-        setSelectedBoothId(activeBthId);
-        localStorage.setItem('eventmate_pos_selected_booth', activeBthId);
+        queueMicrotask(() => {
+          setSelectedBoothId(activeBthId);
+          localStorage.setItem('eventmate_pos_selected_booth', activeBthId);
+        });
       }
     } else {
       // Fallback if current event has no booths: auto-switch to an event that DOES have booths
-      const anyValidBooth = booths.find((b) => workspaceEvents.some((e) => e.id === b.event_id));
+      const anyValidBooth = booths.find((b) => eventPool.some((e) => e.id === b.event_id)) || booths[0];
       if (anyValidBooth) {
-        setSelectedEventId(anyValidBooth.event_id);
-        setSelectedBoothId(anyValidBooth.id);
-        localStorage.setItem('eventmate_pos_selected_event', anyValidBooth.event_id);
-        localStorage.setItem('eventmate_pos_selected_booth', anyValidBooth.id);
+        queueMicrotask(() => {
+          setSelectedEventId(anyValidBooth.event_id);
+          setSelectedBoothId(anyValidBooth.id);
+          localStorage.setItem('eventmate_pos_selected_event', anyValidBooth.event_id);
+          localStorage.setItem('eventmate_pos_selected_booth', anyValidBooth.id);
+        });
       }
     }
-  }, [workspaceEvents, booths, selectedEventId, selectedBoothId]);
+  }, [workspaceEvents, events, booths, selectedEventId, selectedBoothId]);
 
   function handleSelectEvent(eventId: string) {
     setSelectedEventId(eventId);
@@ -187,24 +222,6 @@ export default function PosTerminalPage() {
     }
   }
 
-  // Handle URL query preselection (?booth=...&event=...) safely after mount
-  React.useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const urlParams = new URLSearchParams(window.location.search);
-    const qBooth = urlParams.get('booth');
-    const qEvent = urlParams.get('event');
-
-    if (qBooth) {
-      const b = booths.find((item) => item.id === qBooth);
-      if (b) {
-        handleSelectBooth(b.id);
-        handleSelectEvent(b.event_id);
-      }
-    } else if (qEvent) {
-      handleSelectEvent(qEvent);
-    }
-  }, [booths]);
-
   // Search & Category Filtering
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedCategory, setSelectedCategory] = React.useState('all');
@@ -214,6 +231,11 @@ export default function PosTerminalPage() {
 
   // Checkout Modal State
   const [isCheckoutOpen, setIsCheckoutOpen] = React.useState(false);
+  const [qrSessionRef, setQrSessionRef] = React.useState('8899');
+  const openCheckoutModal = React.useCallback(() => {
+    setQrSessionRef(Math.floor(1000 + Math.random() * 9000).toString());
+    setIsCheckoutOpen(true);
+  }, []);
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>('qr_manual');
   const [tenderedCash, setTenderedCash] = React.useState<number>(0);
   const [orderNotes, setOrderNotes] = React.useState('');
@@ -245,23 +267,23 @@ export default function PosTerminalPage() {
   const [hideSoldOut, setHideSoldOut] = React.useState(true);
 
   // Calculate available stock for a variant at currently selected booth
-  // (strictly respecting VIP hold, online pre-orders, my current cart, and other cashiers' active carts in real time)
+  // (strictly respecting booth allocation, my current cart, and other cashiers' active carts in real time)
   function getVariantAvailableStock(variantId: string) {
-    if (!selectedBoothId) return 0;
+    const effectiveBoothId = selectedBoothId || effectiveBooths[0]?.id || booths[0]?.id;
+    if (!effectiveBoothId) return 0;
     const alloc = allocations.find(
-      (a) => a.booth_id === selectedBoothId && a.variant_id === variantId
+      (a) => a.booth_id === effectiveBoothId && a.variant_id === variantId
     );
     if (!alloc) return 0;
-    const variant = variants.find((v) => v.id === variantId);
-    const totalHeld = (variant?.reserved_quantity || 0) + (variant?.online_preorder_quantity || 0);
     const inCart = cart.find((c) => c.variantId === variantId)?.quantity || 0;
-    const remoteHeld = getRemoteHeldQty(selectedBoothId, variantId);
-    return Math.max(0, alloc.allocated_quantity - totalHeld - alloc.sold_quantity - inCart - remoteHeld);
+    const remoteHeld = getRemoteHeldQty(effectiveBoothId, variantId);
+    return Math.max(0, alloc.allocated_quantity - alloc.sold_quantity - inCart - remoteHeld);
   }
 
   function getVariantRemoteHeldQty(variantId: string) {
-    if (!selectedBoothId) return 0;
-    return getRemoteHeldQty(selectedBoothId, variantId);
+    const effectiveBoothId = selectedBoothId || effectiveBooths[0]?.id || booths[0]?.id;
+    if (!effectiveBoothId) return 0;
+    return getRemoteHeldQty(effectiveBoothId, variantId);
   }
 
   // Filtered Products (strictly exclude soft-deleted products)
@@ -385,8 +407,8 @@ export default function PosTerminalPage() {
       setIsMobileCartOpen(false);
       setTenderedCash(0);
       setOrderNotes('');
-    } catch (err: any) {
-      alert(err.message || 'Lỗi tạo đơn hàng');
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Lỗi tạo đơn hàng');
     } finally {
       setIsSubmitting(false);
     }
@@ -448,8 +470,8 @@ export default function PosTerminalPage() {
                 value={selectedEventId}
                 onChange={(e) => handleSelectEvent(e.target.value)}
               >
-                {workspaceEvents.length === 0 && <option value="">(Chưa có sự kiện)</option>}
-                {workspaceEvents.map((evt) => (
+                {effectiveEvents.length === 0 && <option value="">(Chưa có sự kiện)</option>}
+                {effectiveEvents.map((evt) => (
                   <option key={evt.id} value={evt.id}>
                     {evt.name}
                   </option>
@@ -461,8 +483,8 @@ export default function PosTerminalPage() {
                 value={selectedBoothId}
                 onChange={(e) => handleSelectBooth(e.target.value)}
               >
-                {eventBooths.length === 0 && <option value="">(Chưa có gian hàng)</option>}
-                {eventBooths.map((b) => (
+                {effectiveBooths.length === 0 && <option value="">(Chưa có gian hàng)</option>}
+                {effectiveBooths.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.name} ({b.code})
                   </option>
@@ -550,8 +572,8 @@ export default function PosTerminalPage() {
               value={selectedEventId}
               onChange={(e) => handleSelectEvent(e.target.value)}
             >
-              {workspaceEvents.length === 0 && <option value="">(Chưa có sự kiện)</option>}
-              {workspaceEvents.map((evt) => (
+              {effectiveEvents.length === 0 && <option value="">(Chưa có sự kiện)</option>}
+              {effectiveEvents.map((evt) => (
                 <option key={evt.id} value={evt.id}>
                   {evt.name}
                 </option>
@@ -568,8 +590,8 @@ export default function PosTerminalPage() {
               value={selectedBoothId}
               onChange={(e) => handleSelectBooth(e.target.value)}
             >
-              {eventBooths.length === 0 && <option value="">(Chưa có gian hàng)</option>}
-              {eventBooths.map((b) => (
+              {effectiveBooths.length === 0 && <option value="">(Chưa có gian hàng)</option>}
+              {effectiveBooths.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name} ({b.code})
                 </option>
@@ -941,7 +963,7 @@ export default function PosTerminalPage() {
               disabled={cart.length === 0}
               onClick={() => {
                 setTenderedCash(cartTotal);
-                setIsCheckoutOpen(true);
+                openCheckoutModal();
               }}
               className="w-full h-11 text-sm font-bold uppercase tracking-wider gap-2 shadow-xs"
             >
@@ -989,7 +1011,7 @@ export default function PosTerminalPage() {
               size="sm"
               onClick={() => {
                 setTenderedCash(cartTotal);
-                setIsCheckoutOpen(true);
+                openCheckoutModal();
               }}
               className="h-10 px-4 text-xs font-bold bg-[#315C4C] text-white shadow-xs active:scale-95 transition-transform"
             >
@@ -1100,7 +1122,7 @@ export default function PosTerminalPage() {
                   onClick={() => {
                     setIsMobileCartOpen(false);
                     setTenderedCash(cartTotal);
-                    setIsCheckoutOpen(true);
+                    openCheckoutModal();
                   }}
                   className="flex-1 h-10 text-xs font-bold gap-1.5 active:scale-95 transition-transform"
                 >
@@ -1175,7 +1197,7 @@ export default function PosTerminalPage() {
               <div className="w-48 h-48 mx-auto bg-white p-2 rounded-[8px] border border-[#E8E8E5] shadow-xs flex items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={`https://img.vietqr.io/image/${activeBankConfig.bankId}-${activeBankConfig.accountNo}-compact2.png?amount=${cartTotal}&addInfo=EM${Date.now().toString().slice(-4)}&accountName=${encodeURIComponent(
+                  src={`https://img.vietqr.io/image/${activeBankConfig.bankId}-${activeBankConfig.accountNo}-compact2.png?amount=${cartTotal}&addInfo=EM${qrSessionRef}&accountName=${encodeURIComponent(
                     activeBankConfig.accountName
                   )}`}
                   alt="VietQR code"

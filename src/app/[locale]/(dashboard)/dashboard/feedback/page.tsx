@@ -53,12 +53,10 @@ export default function DashboardFeedbackPage() {
   const [copiedRoadmap, setCopiedRoadmap] = React.useState(false);
   const [viewScreenshotUrl, setViewScreenshotUrl] = React.useState<string | null>(null);
 
-  // Sync notes when selecting item
-  React.useEffect(() => {
-    if (selectedItem) {
-      setEditingNotes(selectedItem.admin_notes || '');
-    }
-  }, [selectedItem]);
+  function handleSelectItem(item: FeedbackItem) {
+    setSelectedItem(item);
+    setEditingNotes(item.admin_notes || '');
+  }
 
   // Metrics
   const totalCount = items.length;
@@ -437,7 +435,7 @@ export default function DashboardFeedbackPage() {
                       </div>
 
                       <h3
-                        onClick={() => setSelectedItem(item)}
+                        onClick={() => handleSelectItem(item)}
                         className="text-xs sm:text-sm font-bold text-[#202124] dark:text-[#F0F0F0] hover:text-[#315C4C] dark:hover:text-[#A6C4B8] cursor-pointer transition-colors"
                       >
                         {item.title}
@@ -494,7 +492,7 @@ export default function DashboardFeedbackPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setSelectedItem(item)}
+                        onClick={() => handleSelectItem(item)}
                         className="h-8 text-xs"
                       >
                         <span>Chi tiết</span>

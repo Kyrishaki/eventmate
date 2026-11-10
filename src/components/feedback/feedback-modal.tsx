@@ -47,12 +47,6 @@ export function FeedbackModal({ isOpen, onClose, defaultType = 'bug' }: Feedback
   const [isSuccess, setIsSuccess] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  // Sync user info if available
-  React.useEffect(() => {
-    if (user?.fullName && !reporterName) setReporterName(user.fullName);
-    if (user?.email && !reporterEmail) setReporterEmail(user.email);
-  }, [user, reporterName, reporterEmail]);
-
   // Capture device diagnostics
   const getDeviceInfo = () => {
     if (typeof window === 'undefined') return undefined;

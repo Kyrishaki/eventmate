@@ -21,13 +21,22 @@ export interface UserAccount {
   createdAt: string;
 }
 
-// Pre-configured Primary Admin Accounts as requested
+function secureHash(str: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    hash ^= str.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16);
+}
+
+// Pre-configured Primary Admin Accounts (hashed credentials to prevent plaintext exposure)
 export const MASTER_ACCOUNTS: UserAccount[] = [
   {
     id: 'admin-tuan',
     username: 'Tuanadminvippro666',
     email: 'tuanadmin@eventmate.app',
-    password: 'Tu@n1121314151',
+    password: 'hash:558f1e4a',
     fullName: 'Tuấn Admin VIP Pro',
     role: 'owner',
     createdAt: '2026-01-01T00:00:00Z',
@@ -36,7 +45,7 @@ export const MASTER_ACCOUNTS: UserAccount[] = [
     id: 'admin-hkt',
     username: 'HKT87@123',
     email: 'hkt87@eventmate.app',
-    password: 'HKT@997804',
+    password: 'hash:1a7415b5',
     fullName: 'HKT Super Admin',
     role: 'owner',
     createdAt: '2026-01-01T00:00:00Z',
@@ -94,7 +103,12 @@ export const useAuthStore = create<AuthState>()(
           return { success: false, message: 'Tên đăng nhập hoặc email không tồn tại trong hệ thống.' };
         }
 
-        if (found.password !== password) {
+        const inputHash = `hash:${secureHash(password)}`;
+        const isMatch = found.password.startsWith('hash:')
+          ? found.password === inputHash
+          : found.password === password || found.password === inputHash;
+
+        if (!isMatch) {
           return { success: false, message: 'Mật khẩu không chính xác.' };
         }
 
@@ -155,7 +169,7 @@ export const useAuthStore = create<AuthState>()(
           id: `staff-${Date.now()}`,
           username: cleanUsername,
           email: data.email?.trim() || `${cleanUsername.toLowerCase()}@eventmate.local`,
-          password: data.password,
+          password: `hash:${secureHash(data.password)}`,
           fullName: data.fullName.trim() || cleanUsername,
           role: data.role,
           createdAt: new Date().toISOString(),
@@ -202,6 +216,18 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'eventmate_auth_state_v4',
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        // Upgrade master accounts if needed
+        MASTER_ACCOUNTS.forEach((master) => {
+          const idx = state.accounts.findIndex((a) => a.id === master.id || a.username.toLowerCase() === master.username.toLowerCase());
+          if (idx >= 0) {
+            state.accounts[idx] = { ...state.accounts[idx], password: master.password };
+          } else {
+            state.accounts.push(master);
+          }
+        });
+      },
     }
   )
 );

@@ -10,6 +10,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { useAuthStore } from '@/stores/auth-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { CheckCircle2, ShieldCheck, Users } from 'lucide-react';
+import { WorkspaceRole } from '@/types/database';
 
 export default function AcceptInvitationPage() {
   const t = useTranslations('auth');
@@ -45,7 +46,7 @@ export default function AcceptInvitationPage() {
       id: 'user-invited-member',
       email: 'crew@eventmate.com',
       fullName: 'Crew Member',
-      role: role as any,
+      role: (role as WorkspaceRole) || 'cashier',
     });
 
     setIsAccepted(true);

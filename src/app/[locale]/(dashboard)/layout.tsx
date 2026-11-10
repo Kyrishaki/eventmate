@@ -9,15 +9,20 @@ import { Button } from '@/components/ui/button';
 import { Lock, Eye, LogIn } from 'lucide-react';
 import { FloatingFeedbackWidget } from '@/components/feedback/feedback-modal';
 
+const emptySubscribe = () => () => {};
+function useMounted() {
+  return React.useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const { isAuthenticated, user, loginAsGuest } = useAuthStore();
   const router = useRouter();
-  const [hasMounted, setHasMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setHasMounted(true);
-  }, []);
+  const hasMounted = useMounted();
 
   if (!hasMounted) {
     return (

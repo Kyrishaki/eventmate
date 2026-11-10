@@ -5,13 +5,21 @@ import { Sun, Moon, Laptop } from 'lucide-react';
 import { useThemeStore, ThemeMode } from '@/stores/theme-store';
 import { cn } from '@/lib/utils';
 
+const emptySubscribe = () => () => {};
+function useMounted() {
+  return React.useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+}
+
 export function ThemeToggle({ className }: { className?: string }) {
   const { resolvedTheme, toggleTheme, initTheme } = useThemeStore();
-  const [mounted, setMounted] = React.useState(false);
+  const mounted = useMounted();
 
   React.useEffect(() => {
     initTheme();
-    setMounted(true);
   }, [initTheme]);
 
   if (!mounted) {
@@ -49,11 +57,10 @@ export function ThemeToggle({ className }: { className?: string }) {
 
 export function ThemeSelector({ className }: { className?: string }) {
   const { theme, setTheme, initTheme } = useThemeStore();
-  const [mounted, setMounted] = React.useState(false);
+  const mounted = useMounted();
 
   React.useEffect(() => {
     initTheme();
-    setMounted(true);
   }, [initTheme]);
 
   if (!mounted) return null;

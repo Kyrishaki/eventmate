@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { logActivity } from './audit-store';
+import { AuditActorRole } from '@/types/database';
 
 export type FeedbackType = 'bug' | 'feature' | 'ux' | 'other';
 export type FeedbackSeverity = 'low' | 'medium' | 'high' | 'critical';
@@ -138,7 +139,7 @@ export const useFeedbackStore = create<FeedbackStoreState>()(
         // Log to audit log
         logActivity({
           actor_name: data.reporter_name || 'Người dùng / Thu ngân',
-          actor_role: (data.reporter_role as any) || 'cashier',
+          actor_role: (data.reporter_role as AuditActorRole) || 'cashier',
           action_type: 'create',
           entity_type: 'system',
           entity_name: data.title,

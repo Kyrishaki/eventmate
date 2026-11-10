@@ -22,6 +22,59 @@ import {
   FileSpreadsheet,
 } from 'lucide-react';
 
+import { Order, EventItem, Booth } from '@/types/database';
+
+function downloadRevenueCsv(
+  orders: Order[],
+  events: EventItem[],
+  booths: Booth[]
+) {
+  if (orders.length === 0) {
+    alert('Không có dữ liệu giao dịch để xuất');
+    return;
+  }
+
+  const headers = [
+    'Mã đơn hàng',
+    'Thời gian',
+    'Sự kiện',
+    'Gian hàng',
+    'Mô hình',
+    'Đối tác Collab',
+    'Phương thức thanh toán',
+    'Tạm tính',
+    'Giảm giá',
+    'Tổng thanh toán',
+  ];
+
+  const rows = orders.map((o) => {
+    const event = events.find((e) => e.id === o.event_id);
+    const booth = booths.find((b) => b.id === o.booth_id);
+    return [
+      o.order_number,
+      o.created_at,
+      `"${event?.name || ''}"`,
+      `"${booth?.name || ''}"`,
+      booth?.booth_type === 'collab' ? 'Collab' : 'Solo',
+      `"${booth?.collab_partner || ''}"`,
+      o.payment_method,
+      o.subtotal_amount,
+      o.discount_amount,
+      o.final_amount,
+    ].join(',');
+  });
+
+  const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `EventMate_BaoCaoDoanhThu_${new Date().toISOString().replace(/[:.]/g, '-')}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 export default function AnalyticsPage() {
   const { activeWorkspace } = useWorkspaceStore();
   const { orders } = useOrdersStore();
@@ -67,52 +120,9 @@ export default function AnalyticsPage() {
   });
 
   // Export CSV Functionality
-  function handleExportCsv() {
-    if (workspaceOrders.length === 0) {
-      alert('Không có dữ liệu giao dịch để xuất');
-      return;
-    }
-
-    const headers = [
-      'Mã đơn hàng',
-      'Thời gian',
-      'Sự kiện',
-      'Gian hàng',
-      'Mô hình',
-      'Đối tác Collab',
-      'Phương thức thanh toán',
-      'Tạm tính',
-      'Giảm giá',
-      'Tổng thanh toán',
-    ];
-
-    const rows = workspaceOrders.map((o) => {
-      const event = events.find((e) => e.id === o.event_id);
-      const booth = booths.find((b) => b.id === o.booth_id);
-      return [
-        o.order_number,
-        o.created_at,
-        `"${event?.name || ''}"`,
-        `"${booth?.name || ''}"`,
-        booth?.booth_type === 'collab' ? 'Collab' : 'Solo',
-        `"${booth?.collab_partner || ''}"`,
-        o.payment_method,
-        o.subtotal_amount,
-        o.discount_amount,
-        o.final_amount,
-      ].join(',');
-    });
-
-    const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `EventMate_BaoCaoDoanhThu_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
+  const handleExportCsv = () => {
+    downloadRevenueCsv(workspaceOrders, events, booths);
+  };
 
   return (
     <div className="space-y-6">

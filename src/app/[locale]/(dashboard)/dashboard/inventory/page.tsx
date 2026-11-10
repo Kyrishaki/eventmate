@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { formatCurrency } from '@/lib/utils';
 import { calculateVariantStock } from '@/lib/stock-status';
 import { logActivity } from '@/stores/audit-store';
+import { AuditActorRole } from '@/types/database';
 import {
   Boxes,
   Store,
@@ -41,7 +42,7 @@ export default function InventoryPage() {
     quickTransferStock(selectedBooth.id, variantId, amount);
     logActivity({
       actor_name: user?.fullName || 'Nhân viên kho',
-      actor_role: (user?.role as any) || 'inventory_staff',
+      actor_role: (user?.role as AuditActorRole) || 'inventory_staff',
       action_type: 'stock_adjust',
       entity_type: 'inventory',
       entity_name: variantName,
@@ -67,13 +68,15 @@ export default function InventoryPage() {
     eventBooths[0]?.id || ''
   );
 
-  // Sync selected booth when event changes
-  React.useEffect(() => {
-    const availableBooths = booths.filter((b) => b.event_id === selectedEventId);
-    if (availableBooths.length > 0 && !availableBooths.some((b) => b.id === selectedBoothId)) {
+  function handleSelectEvent(eventId: string) {
+    setSelectedEventId(eventId);
+    const availableBooths = booths.filter((b) => b.event_id === eventId);
+    if (availableBooths.length > 0) {
       setSelectedBoothId(availableBooths[0].id);
+    } else {
+      setSelectedBoothId('');
     }
-  }, [selectedEventId, booths, selectedBoothId]);
+  }
 
   // Active variants of non-deleted products
   const activeVariants = variants.filter((v) => {
@@ -144,7 +147,7 @@ export default function InventoryPage() {
               <select
                 className="h-8 rounded-[6px] border border-[#E8E8E5] bg-white px-2.5 text-xs font-medium text-[#202124] focus:outline-none focus:border-[#315C4C]"
                 value={selectedEventId}
-                onChange={(e) => setSelectedEventId(e.target.value)}
+                onChange={(e) => handleSelectEvent(e.target.value)}
               >
                 {workspaceEvents.map((evt) => (
                   <option key={evt.id} value={evt.id}>

@@ -1,14 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import { useTranslations } from 'next-intl';
-import { Link, useRouter } from '@/i18n/routing';
+import { useRouter } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/auth-store';
-import { AlertCircle, Lock, User, Eye, EyeOff, ShieldCheck, UserCheck } from 'lucide-react';
+import { AlertCircle, Lock, User, Eye, EyeOff, UserCheck } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -67,12 +66,6 @@ export default function LoginPage() {
   function handleGuestLogin() {
     loginAsGuest();
     router.push('/dashboard');
-  }
-
-  function fillPreset(u: string, p: string) {
-    setIdentifier(u);
-    setPassword(p);
-    setErrorMessage(null);
   }
 
   return (
@@ -140,32 +133,6 @@ export default function LoginPage() {
                 className="absolute right-3 top-2.5 text-[#9E9E9C] hover:text-[#202124]"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-
-          {/* Master Admin Fast Fill Preset Pill Box */}
-          <div className="p-3 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5] space-y-2 text-xs">
-            <div className="flex items-center gap-1.5 font-bold text-[#315C4C] text-[11px] uppercase tracking-wider">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Tài khoản Quản trị viên chính:</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => fillPreset('Tuanadminvippro666', 'Tu@n1121314151')}
-                className="p-2 rounded bg-white border border-[#E8E8E5] hover:border-[#315C4C] text-left transition-colors"
-              >
-                <p className="font-semibold text-[#202124] text-[11px] truncate">Tuanadminvippro666</p>
-                <p className="text-[10px] text-[#737373] mt-0.5 font-mono">Tu@n1121314151</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => fillPreset('HKT87@123', 'HKT@997804')}
-                className="p-2 rounded bg-white border border-[#E8E8E5] hover:border-[#315C4C] text-left transition-colors"
-              >
-                <p className="font-semibold text-[#202124] text-[11px] truncate">HKT87@123</p>
-                <p className="text-[10px] text-[#737373] mt-0.5 font-mono">HKT@997804</p>
               </button>
             </div>
           </div>

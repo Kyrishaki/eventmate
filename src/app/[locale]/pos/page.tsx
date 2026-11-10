@@ -16,6 +16,8 @@ import { Modal } from '@/components/ui/modal';
 import { SyncStatusBadge, SyncState } from '@/components/ui/sync-status-badge';
 import { formatCurrency } from '@/lib/utils';
 import { PaymentMethod, Product, ProductVariant, Order } from '@/types/database';
+import { PreorderPickupModal } from '@/components/pos/preorder-pickup-modal';
+import { usePreorderStore } from '@/stores/preorder-store';
 import {
   Store,
   Calendar,
@@ -134,6 +136,11 @@ export default function PosTerminalPage() {
 
   // Mobile Cart Drawer Toggle
   const [isMobileCartOpen, setIsMobileCartOpen] = React.useState(false);
+
+  // Preorder Pickup Modal State
+  const [isPreorderPickupOpen, setIsPreorderPickupOpen] = React.useState(false);
+  const { preorders } = usePreorderStore();
+  const pendingPreordersCount = preorders.filter((p) => p.status === 'pending_pickup').length;
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
   const selectedBooth = booths.find((b) => b.id === selectedBoothId);
@@ -363,6 +370,24 @@ export default function PosTerminalPage() {
               <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-[#2F7D55]' : 'bg-[#B7791F]'}`} />
               <span className="text-[11px] font-semibold">{isOnline ? 'Online' : 'Offline'}</span>
             </div>
+
+            {/* Pre-order Pickup Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-2.5 text-xs gap-1.5 border-[#B7791F]/40 text-[#8C5D17] hover:bg-[#FEF7EC] font-bold shadow-2xs"
+              onClick={() => setIsPreorderPickupOpen(true)}
+              title="Trả hàng cho khách đã đặt trước / online (Bắt buộc chụp ảnh minh chứng)"
+            >
+              <Package className="w-3.5 h-3.5 text-[#B7791F]" />
+              <span className="hidden sm:inline">Trả Hàng Đặt Trước</span>
+              <span className="sm:hidden">Trả hàng</span>
+              {pendingPreordersCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#B7791F] text-white font-mono">
+                  {pendingPreordersCount}
+                </span>
+              )}
+            </Button>
 
             <Link href="/pos/orders">
               <Button variant="outline" size="sm" className="h-8 px-2 text-xs gap-1">
@@ -1187,6 +1212,14 @@ export default function PosTerminalPage() {
           </div>
         )}
       </Modal>
+
+      {/* Preorder Pickup Modal with Mandatory Photo Proof */}
+      <PreorderPickupModal
+        isOpen={isPreorderPickupOpen}
+        onClose={() => setIsPreorderPickupOpen(false)}
+        currentBoothId={selectedBoothId}
+        currentBoothName={selectedBooth?.name}
+      />
     </div>
   );
 }

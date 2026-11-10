@@ -51,6 +51,7 @@ import {
 } from 'lucide-react';
 import { calculateVariantStock } from '@/lib/stock-status';
 import { logActivity } from '@/stores/audit-store';
+import { PreorderPickupModal } from '@/components/pos/preorder-pickup-modal';
 
 function CollabPartnerPortalContent() {
   const tCommon = useTranslations('common');
@@ -107,6 +108,7 @@ function CollabPartnerPortalContent() {
   // POS Checkout State
   const [posSearch, setPosSearch] = React.useState('');
   const [hideSoldOut, setHideSoldOut] = React.useState(true);
+  const [isPreorderPickupOpen, setIsPreorderPickupOpen] = React.useState(false);
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>('qr_manual');
   const [isSubmittingOrder, setIsSubmittingOrder] = React.useState(false);
   const [orderSuccess, setOrderSuccess] = React.useState<Order | null>(null);
@@ -444,6 +446,18 @@ ${url}`;
 
             {/* Right: Actions */}
             <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs h-8 border-[#B7791F]/40 text-[#8C5D17] hover:bg-[#FEF7EC] font-bold shadow-2xs"
+                onClick={() => setIsPreorderPickupOpen(true)}
+                title="Trả hàng cho khách đã đặt trước (Bắt buộc chụp ảnh minh chứng)"
+              >
+                <Package className="w-3.5 h-3.5 text-[#B7791F]" />
+                <span className="hidden sm:inline">Trả Hàng Đặt Trước</span>
+                <span className="sm:hidden">Trả hàng</span>
+              </Button>
+
               <Button
                 variant="outline"
                 size="sm"
@@ -1520,6 +1534,14 @@ ${url}`;
           </div>
         </form>
       </Modal>
+
+      {/* Preorder Pickup Modal with Mandatory Photo Proof */}
+      <PreorderPickupModal
+        isOpen={isPreorderPickupOpen}
+        onClose={() => setIsPreorderPickupOpen(false)}
+        currentBoothId={currentBooth?.id}
+        currentBoothName={currentBooth?.name}
+      />
 
       {/* Footer */}
       <footer className="border-t border-[#E8E8E5] py-4 bg-white mt-12 text-center text-xs text-[#737373]">

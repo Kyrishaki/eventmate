@@ -174,10 +174,47 @@ export interface Order {
   sync_status: SyncStatus;
   idempotency_key: string;
   notes: string | null;
+  order_type?: 'pos_walkin' | 'preorder_pickup';
+  proof_image_url?: string | null;
+  customer_name?: string | null;
+  customer_phone?: string | null;
   offline_created_at: string;
   created_at: string;
   updated_at: string;
   items?: OrderItem[];
+}
+
+export type PreorderStatus = 'pending_pickup' | 'picked_up' | 'cancelled';
+export type PreorderType = 'vip_hold' | 'online_preorder';
+
+export interface PreorderItem {
+  variant_id: string;
+  variant_name: string;
+  product_name: string;
+  quantity: number;
+  unit_price: number;
+}
+
+export interface PreorderReservation {
+  id: string;
+  code: string;                 // e.g. "PRE-7821", "ONL-4512"
+  workspace_id: string;
+  event_id?: string;
+  booth_id?: string;
+  customer_name: string;
+  customer_phone?: string;
+  preorder_type: PreorderType;  // 'vip_hold' | 'online_preorder'
+  status: PreorderStatus;       // 'pending_pickup' | 'picked_up' | 'cancelled'
+  items: PreorderItem[];
+  total_amount: number;
+  deposit_paid: number;
+  remaining_amount: number;
+  notes?: string;
+  proof_image_url?: string;     // MANDATORY PHOTO PROOF (Base64 data or URL)
+  picked_up_at?: string;
+  picked_up_by?: string;        // Cashier name or Staff ID
+  created_at: string;
+  updated_at: string;
 }
 
 export interface OrderItem {

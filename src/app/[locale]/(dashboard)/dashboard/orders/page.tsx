@@ -25,6 +25,7 @@ import {
   Clock,
   Eye,
   FileSpreadsheet,
+  Camera,
 } from 'lucide-react';
 
 export default function DashboardOrdersPage() {
@@ -146,7 +147,15 @@ export default function DashboardOrdersPage() {
                   return (
                     <tr key={ord.id} className="hover:bg-[#FBFBFA] transition-colors">
                       <td className="py-3 px-4 font-mono font-bold text-[#202124]">
-                        {ord.order_number}
+                        <div className="flex flex-col gap-0.5">
+                          <span>{ord.order_number}</span>
+                          {ord.proof_image_url && (
+                            <span className="inline-flex items-center gap-1 text-[9px] text-[#2F7D55] bg-[#EBF1EE] px-1 py-0.2 rounded font-semibold border border-[#2F7D55]/20 w-fit">
+                              <Camera className="w-2.5 h-2.5" />
+                              Ảnh nhận hàng
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       <td className="py-3 px-4 text-[#737373] whitespace-nowrap">
@@ -319,6 +328,23 @@ export default function DashboardOrdersPage() {
                 {formatCurrency(selectedOrder.final_amount, activeWorkspace?.currency || 'VND')}
               </span>
             </div>
+
+            {selectedOrder.proof_image_url && (
+              <div className="p-3 bg-[#EBF1EE]/50 border border-[#2F7D55]/30 rounded-[6px] space-y-2">
+                <div className="flex items-center gap-1.5 font-bold text-xs text-[#2F7D55]">
+                  <Camera className="w-4 h-4" />
+                  <span>Ảnh Minh Chứng Nhận Hàng (Đơn Đặt Trước):</span>
+                </div>
+                <div className="max-h-52 overflow-hidden rounded-[6px] border border-[#E8E8E5] flex items-center justify-center bg-white p-1">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={selectedOrder.proof_image_url}
+                    alt="Minh chứng nhận hàng"
+                    className="max-h-52 w-auto object-contain rounded"
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="pt-2 text-right">
               <Button

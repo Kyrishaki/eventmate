@@ -33,6 +33,7 @@ interface OrdersStoreState {
   removeFromCart: (variantId: string) => void;
   updateQuantity: (variantId: string, quantity: number) => void;
   clearCart: () => void;
+  clearOrders: () => void;
   setDiscountAmount: (amount: number) => void;
   setBankConfig: (config: BankConfig) => void;
 
@@ -131,14 +132,16 @@ const sampleInitialOrders: Order[] = [
 export const useOrdersStore = create<OrdersStoreState>()(
   persist(
     (set, get) => ({
-      orders: sampleInitialOrders,
+      orders: [],
       cart: [],
       discountAmount: 0,
       activeBankConfig: {
         bankId: 'MB',
-        accountNo: '0987654321',
-        accountName: 'NGUYEN VAN A - TOUR MERCH',
+        accountNo: '',
+        accountName: '',
       },
+
+      clearOrders: () => set({ orders: [], cart: [] }),
 
       addToCart: (item) => {
         const { cart } = get();
@@ -338,7 +341,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
       },
     }),
     {
-      name: 'eventmate_orders_state',
+      name: 'eventmate_orders_state_v3',
     }
   )
 );

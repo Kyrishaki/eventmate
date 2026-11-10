@@ -246,6 +246,7 @@ export default function PosTerminalPage() {
                 value={selectedEventId}
                 onChange={(e) => setSelectedEventId(e.target.value)}
               >
+                {workspaceEvents.length === 0 && <option value="">(Chưa có sự kiện)</option>}
                 {workspaceEvents.map((evt) => (
                   <option key={evt.id} value={evt.id}>
                     {evt.name}
@@ -258,6 +259,7 @@ export default function PosTerminalPage() {
                 value={selectedBoothId}
                 onChange={(e) => setSelectedBoothId(e.target.value)}
               >
+                {eventBooths.length === 0 && <option value="">(Chưa có gian hàng)</option>}
                 {eventBooths.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.name} ({b.code})
@@ -315,6 +317,7 @@ export default function PosTerminalPage() {
               value={selectedEventId}
               onChange={(e) => setSelectedEventId(e.target.value)}
             >
+              {workspaceEvents.length === 0 && <option value="">(Chưa có sự kiện)</option>}
               {workspaceEvents.map((evt) => (
                 <option key={evt.id} value={evt.id}>
                   {evt.name}
@@ -332,6 +335,7 @@ export default function PosTerminalPage() {
               value={selectedBoothId}
               onChange={(e) => setSelectedBoothId(e.target.value)}
             >
+              {eventBooths.length === 0 && <option value="">(Chưa có gian hàng)</option>}
               {eventBooths.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name} ({b.code})
@@ -364,138 +368,158 @@ export default function PosTerminalPage() {
             )}
           </div>
 
-          {/* Product Cards Touch Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
-            {filteredProducts.map((prod) => {
-              const prodVariants = variants.filter((v) => v.product_id === prod.id);
-              const activeVarId = selectedVariantMap[prod.id] || prodVariants[0]?.id;
-              const activeVariant =
-                prodVariants.find((v) => v.id === activeVarId) || prodVariants[0];
+          {filteredProducts.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white border border-[#E8E8E5] rounded-[8px] my-auto">
+              <Package className="w-12 h-12 text-[#9E9E9C] mb-3" />
+              <h3 className="text-sm font-bold text-[#202124]">Chưa có sản phẩm nào tại quầy</h3>
+              <p className="text-xs text-[#737373] mt-1 max-w-xs">
+                {workspaceEvents.length === 0
+                  ? 'Hãy tạo Sự kiện và Gian hàng trong Dashboard trước để bắt đầu bán.'
+                  : 'Hãy thêm sản phẩm và phân bổ số lượng tồn kho cho gian hàng này trong mục Quản lý Kho.'}
+              </p>
+              <Link
+                href={workspaceEvents.length === 0 ? '/dashboard/events' : '/dashboard/inventory'}
+                className="mt-4"
+              >
+                <Button variant="primary" size="sm" className="text-xs">
+                  {workspaceEvents.length === 0 ? 'Tạo Sự Kiện Ngay' : 'Phân Bổ Tồn Kho'}
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            /* Product Cards Touch Grid */
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
+              {filteredProducts.map((prod) => {
+                const prodVariants = variants.filter((v) => v.product_id === prod.id);
+                const activeVarId = selectedVariantMap[prod.id] || prodVariants[0]?.id;
+                const activeVariant =
+                  prodVariants.find((v) => v.id === activeVarId) || prodVariants[0];
 
-              const availableStock = activeVariant
-                ? getVariantAvailableStock(activeVariant.id)
-                : 0;
+                const availableStock = activeVariant
+                  ? getVariantAvailableStock(activeVariant.id)
+                  : 0;
 
-              const qtyInCart = activeVariant ? getVariantInCartQty(activeVariant.id) : 0;
+                const qtyInCart = activeVariant ? getVariantInCartQty(activeVariant.id) : 0;
 
-              return (
-                <div
-                  key={prod.id}
-                  className="rounded-[8px] border border-[#E8E8E5] bg-white overflow-hidden shadow-2xs hover:border-[#315C4C]/40 transition-colors flex flex-col justify-between"
-                >
-                  <div>
-                    {/* Product Image */}
-                    <div className="relative h-28 sm:h-36 bg-[#F7F7F5] overflow-hidden flex items-center justify-center">
-                      {prod.image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={prod.image_url}
-                          alt={prod.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Package className="w-8 h-8 text-[#9E9E9C]" />
-                      )}
-
-                      {/* Stock Badge */}
-                      <div className="absolute top-2 right-2">
-                        {availableStock > 0 ? (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-black/70 text-white backdrop-blur-[2px]">
-                            Còn {availableStock}
-                          </span>
+                return (
+                  <div
+                    key={prod.id}
+                    className="rounded-[8px] border border-[#E8E8E5] bg-white overflow-hidden shadow-2xs hover:border-[#315C4C]/40 transition-colors flex flex-col justify-between"
+                  >
+                    <div>
+                      {/* Product Image */}
+                      <div className="relative h-28 sm:h-36 bg-[#F7F7F5] overflow-hidden flex items-center justify-center">
+                        {prod.image_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={prod.image_url}
+                            alt={prod.name}
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#C44536] text-white">
-                            Hết hàng
-                          </span>
+                          <Package className="w-8 h-8 text-[#9E9E9C]" />
+                        )}
+
+                        {/* Stock Badge */}
+                        <div className="absolute top-2 right-2">
+                          {availableStock > 0 ? (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-black/70 text-white backdrop-blur-[2px]">
+                              Còn {availableStock}
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#C44536] text-white">
+                              Hết hàng
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="p-2.5 sm:p-3">
+                        <h4 className="text-xs font-bold text-[#202124] line-clamp-2 leading-tight">
+                          {prod.name}
+                        </h4>
+                        <p className="text-sm font-bold text-[#315C4C] mt-1">
+                          {formatCurrency(
+                            activeVariant?.price || 0,
+                            activeWorkspace?.currency || 'VND'
+                          )}
+                        </p>
+
+                        {/* Variant Selector Pills */}
+                        {prodVariants.length > 1 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {prodVariants.map((v) => {
+                              const isVarSelected = v.id === activeVarId;
+                              return (
+                                <button
+                                  key={v.id}
+                                  type="button"
+                                  onClick={() =>
+                                    setSelectedVariantMap({
+                                      ...selectedVariantMap,
+                                      [prod.id]: v.id,
+                                    })
+                                  }
+                                  className={`px-2 py-0.5 text-[10px] rounded font-medium transition-colors ${
+                                    isVarSelected
+                                      ? 'bg-[#315C4C] text-white'
+                                      : 'bg-[#F0F0ED] text-[#202124] hover:bg-[#E8E8E5]'
+                                  }`}
+                                >
+                                  {v.name}
+                                </button>
+                              );
+                            })}
+                          </div>
                         )}
                       </div>
                     </div>
 
-                    <div className="p-2.5 sm:p-3">
-                      <h4 className="text-xs font-bold text-[#202124] line-clamp-2 leading-tight">
-                        {prod.name}
-                      </h4>
-                      <p className="text-sm font-bold text-[#315C4C] mt-1">
-                        {formatCurrency(
-                          activeVariant?.price || 0,
-                          activeWorkspace?.currency || 'VND'
-                        )}
-                      </p>
-
-                      {/* Variant Selector Pills */}
-                      {prodVariants.length > 1 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {prodVariants.map((v) => {
-                            const isVarSelected = v.id === activeVarId;
-                            return (
-                              <button
-                                key={v.id}
-                                type="button"
-                                onClick={() =>
-                                  setSelectedVariantMap({
-                                    ...selectedVariantMap,
-                                    [prod.id]: v.id,
-                                  })
-                                }
-                                className={`px-2 py-0.5 text-[10px] rounded font-medium transition-colors ${
-                                  isVarSelected
-                                    ? 'bg-[#315C4C] text-white'
-                                    : 'bg-[#F0F0ED] text-[#202124] hover:bg-[#E8E8E5]'
-                                }`}
-                              >
-                                {v.name}
-                              </button>
-                            );
-                          })}
+                    {/* Add to Cart / Inline Stepper Touch Action */}
+                    <div className="p-2.5 sm:p-3 pt-0">
+                      {qtyInCart > 0 ? (
+                        <div className="flex items-center justify-between bg-[#EBF1EE] border border-[#315C4C]/40 rounded-[6px] p-1">
+                          <button
+                            type="button"
+                            onClick={() => handleDecrease(activeVariant.id)}
+                            className="w-8 h-8 rounded bg-white text-[#202124] flex items-center justify-center font-bold text-sm shadow-2xs hover:bg-[#F0F0ED] active:scale-95 transition-transform"
+                          >
+                            <Minus className="w-3.5 h-3.5" />
+                          </button>
+                          <div className="text-center">
+                            <span className="font-bold text-xs text-[#315C4C] leading-none block">
+                              {qtyInCart}
+                            </span>
+                            <span className="text-[9px] text-[#737373] leading-none">trong giỏ</span>
+                          </div>
+                          <button
+                            type="button"
+                            disabled={availableStock <= 0}
+                            onClick={() => handleIncrease(activeVariant.id)}
+                            className="w-8 h-8 rounded bg-[#315C4C] text-white flex items-center justify-center font-bold text-sm shadow-2xs hover:bg-[#284a3d] disabled:opacity-40 active:scale-95 transition-transform"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
                         </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Add to Cart / Inline Stepper Touch Action */}
-                  <div className="p-2.5 sm:p-3 pt-0">
-                    {qtyInCart > 0 ? (
-                      <div className="flex items-center justify-between bg-[#EBF1EE] border border-[#315C4C]/40 rounded-[6px] p-1">
-                        <button
+                      ) : (
+                        <Button
                           type="button"
-                          onClick={() => handleDecrease(activeVariant.id)}
-                          className="w-8 h-8 rounded bg-white text-[#202124] flex items-center justify-center font-bold text-sm shadow-2xs hover:bg-[#F0F0ED] active:scale-95 transition-transform"
-                        >
-                          <Minus className="w-3.5 h-3.5" />
-                        </button>
-                        <div className="text-center">
-                          <span className="font-bold text-xs text-[#315C4C] leading-none block">
-                            {qtyInCart}
-                          </span>
-                          <span className="text-[9px] text-[#737373] leading-none">trong giỏ</span>
-                        </div>
-                        <button
-                          type="button"
+                          variant="primary"
+                          size="sm"
                           disabled={availableStock <= 0}
-                          onClick={() => handleIncrease(activeVariant.id)}
-                          className="w-8 h-8 rounded bg-[#315C4C] text-white flex items-center justify-center font-bold text-sm shadow-2xs hover:bg-[#284a3d] disabled:opacity-40 active:scale-95 transition-transform"
+                          onClick={() => handleAddToCart(prod)}
+                          className="w-full h-9 text-xs font-semibold gap-1 active:scale-95 transition-transform"
                         >
                           <Plus className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="primary"
-                        size="sm"
-                        disabled={availableStock <= 0}
-                        onClick={() => handleAddToCart(prod)}
-                        className="w-full h-9 text-xs font-semibold gap-1 active:scale-95 transition-transform"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>{availableStock > 0 ? 'Thêm vào giỏ' : 'Hết hàng'}</span>
-                      </Button>
-                    )}
+                          <span>{availableStock > 0 ? 'Thêm vào giỏ' : 'Hết hàng'}</span>
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </main>
 
         {/* Right: Persistent Shopping Cart (Desktop) */}

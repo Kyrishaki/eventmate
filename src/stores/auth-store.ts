@@ -21,9 +21,9 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: {
-        id: 'user-artist-demo',
-        email: 'artist@eventmate.com',
-        fullName: 'Alex Rivera (Tour Lead)',
+        id: 'user-owner',
+        email: 'owner@eventmate.app',
+        fullName: 'Chủ Gian Hàng',
         role: 'owner',
       },
       isAuthenticated: true,
@@ -31,7 +31,7 @@ export const useAuthStore = create<AuthState>()(
       logout: () => set({ user: null, isAuthenticated: false }),
     }),
     {
-      name: 'eventmate_auth_state',
+      name: 'eventmate_auth_state_v3',
     }
   )
 );

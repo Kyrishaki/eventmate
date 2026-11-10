@@ -4,24 +4,27 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useDataStore } from '@/stores/data-store';
+import { useOrdersStore } from '@/stores/orders-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, Database, Save, Sparkles, Building2 } from 'lucide-react';
+import { CheckCircle2, Database, Save, Sparkles, Building2, Trash2 } from 'lucide-react';
 
 export default function SettingsPage() {
   const t = useTranslations('settings');
   const tCommon = useTranslations('common');
-  const { activeWorkspace, setActiveWorkspace, workspaces, setWorkspaces } = useWorkspaceStore();
-  const { seedDemoTourData } = useDataStore();
+  const { activeWorkspace, setActiveWorkspace, workspaces, setWorkspaces, resetWorkspaces } = useWorkspaceStore();
+  const { seedDemoTourData, clearAllData } = useDataStore();
+  const { clearOrders } = useOrdersStore();
 
   const [name, setName] = React.useState(activeWorkspace?.name || '');
   const [slug, setSlug] = React.useState(activeWorkspace?.slug || '');
   const [currency, setCurrency] = React.useState(activeWorkspace?.currency || 'VND');
   const [saveSuccess, setSaveSuccess] = React.useState(false);
   const [seedSuccess, setSeedSuccess] = React.useState(false);
+  const [resetSuccess, setResetSuccess] = React.useState(false);
 
   React.useEffect(() => {
     if (activeWorkspace) {
@@ -54,6 +57,15 @@ export default function SettingsPage() {
     seedDemoTourData(activeWorkspace.id);
     setSeedSuccess(true);
     setTimeout(() => setSeedSuccess(false), 3000);
+  }
+
+  function handleResetAll() {
+    if (!confirm('Bạn có chắc chắn muốn xóa toàn bộ dữ liệu (sự kiện, gian hàng, sản phẩm, đơn hàng) để hệ thống hoàn toàn trắng không?')) return;
+    clearAllData();
+    clearOrders();
+    resetWorkspaces();
+    setResetSuccess(true);
+    setTimeout(() => setResetSuccess(false), 3000);
   }
 
   return (
@@ -170,6 +182,41 @@ export default function SettingsPage() {
             >
               <Database className="w-3.5 h-3.5" />
               <span>{t('loadDemoData')}</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Reset to Clean Data */}
+      <Card className="border-[#E8E8E5] bg-white shadow-xs">
+        <CardHeader className="border-b border-[#F0F0ED] pb-4">
+          <CardTitle className="text-sm font-semibold text-[#202124] flex items-center gap-2">
+            <Trash2 className="w-4 h-4 text-[#C44536]" />
+            Khởi tạo Hệ thống Trắng (Xóa sạch dữ liệu mẫu)
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Xóa toàn bộ các dữ liệu mẫu (sự kiện, gian hàng, đơn hàng, sản phẩm) để bắt đầu nhập dữ liệu kinh doanh thực tế của bạn.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="pt-4 space-y-3">
+          {resetSuccess && (
+            <div className="flex items-center gap-2 p-3 text-xs text-[#2F7D55] bg-[#EAF4EE] border border-[#CEE6D7] rounded-[6px]">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>Đã xóa toàn bộ dữ liệu mẫu thành công. Hệ thống đang ở trạng thái trắng hoàn toàn.</span>
+            </div>
+          )}
+
+          <div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleResetAll}
+              className="gap-1.5 border-[#C44536] text-[#C44536] hover:bg-[#FDF1F0]"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Xóa sạch dữ liệu mẫu & Đặt lại về trắng</span>
             </Button>
           </div>
         </CardContent>

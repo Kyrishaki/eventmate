@@ -59,8 +59,9 @@ export interface DataStoreState {
   removeMember: (memberId: string) => void;
   revokeInvitation: (invitationId: string) => void;
 
-  // Seeding
+  // Seeding & Reset
   seedDemoTourData: (workspaceId: string) => void;
+  clearAllData: () => void;
 }
 
 const defaultCategories: ProductCategory[] = [
@@ -369,14 +370,14 @@ const defaultInvitations: WorkspaceInvitation[] = [
 export const useDataStore = create<DataStoreState>()(
   persist(
     (set, get) => ({
-      events: defaultEvents,
-      booths: defaultBooths,
-      categories: defaultCategories,
-      products: defaultProducts,
-      variants: defaultVariants,
-      allocations: defaultAllocations,
-      members: defaultMembers,
-      invitations: defaultInvitations,
+      events: [],
+      booths: [],
+      categories: [],
+      products: [],
+      variants: [],
+      allocations: [],
+      members: [],
+      invitations: [],
 
       // Events
       createEvent: (eventData) => {
@@ -603,9 +604,22 @@ export const useDataStore = create<DataStoreState>()(
           allocations: defaultAllocations.map((a) => ({ ...a, workspace_id: workspaceId })),
         });
       },
+
+      clearAllData: () => {
+        set({
+          events: [],
+          booths: [],
+          categories: [],
+          products: [],
+          variants: [],
+          allocations: [],
+          members: [],
+          invitations: [],
+        });
+      },
     }),
     {
-      name: 'eventmate_core_data',
+      name: 'eventmate_core_data_v3',
     }
   )
 );

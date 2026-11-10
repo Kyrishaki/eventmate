@@ -11,41 +11,20 @@ interface WorkspaceState {
   setActiveWorkspace: (workspace: Workspace) => void;
   setWorkspaces: (workspaces: Workspace[]) => void;
   createWorkspace: (name: string, currency: string, isCollab?: boolean, description?: string) => Workspace;
+  resetWorkspaces: () => void;
   setSyncState: (state: SyncState) => void;
   setUnsyncedOrdersCount: (count: number) => void;
 }
 
 const defaultWorkspaces: Workspace[] = [
   {
-    id: 'ws-hac-cam-studio',
-    name: 'Hạc Cầm Studio Tour',
-    slug: 'hac-cam-studio',
-    owner_id: 'user-artist-demo',
+    id: 'ws-default',
+    name: 'Gian hàng của tôi',
+    slug: 'gian-hang-chinh',
+    owner_id: 'user-owner',
     currency: 'VND',
-    description: 'Không gian quản lý tour diễn cá nhân của ban nhạc Hạc Cầm',
+    description: 'Không gian quản lý bán hàng và sự kiện chính',
     is_collab: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'ws-collab-monsoon',
-    name: 'Collab: Hạc Cầm x The Cassette @ Monsoon Fest',
-    slug: 'collab-monsoon-fest',
-    owner_id: 'user-artist-demo',
-    currency: 'VND',
-    description: 'Gian hàng hợp tác liên danh tại Lễ hội Âm nhạc Monsoon',
-    is_collab: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'ws-comiccon-popup',
-    name: 'Gian hàng Pop-up @ Manga Comic Con',
-    slug: 'manga-comic-con-2026',
-    owner_id: 'user-artist-demo',
-    currency: 'VND',
-    description: 'Gian hàng merchandise tại hội chợ triển lãm',
-    is_collab: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -80,11 +59,12 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         });
         return newWs;
       },
+      resetWorkspaces: () => set({ workspaces: defaultWorkspaces, activeWorkspace: defaultWorkspaces[0] }),
       setSyncState: (syncState) => set({ syncState }),
       setUnsyncedOrdersCount: (unsyncedOrdersCount) => set({ unsyncedOrdersCount }),
     }),
     {
-      name: 'eventmate_workspace_state',
+      name: 'eventmate_workspace_state_v3',
     }
   )
 );

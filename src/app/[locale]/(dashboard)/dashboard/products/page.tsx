@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Modal } from '@/components/ui/modal';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { Product, ProductVariant } from '@/types/database';
 import { calculateVariantStock } from '@/lib/stock-status';
 import { logActivity } from '@/stores/audit-store';
@@ -31,6 +31,9 @@ import {
   Clock,
   Info,
   Edit,
+  RotateCcw,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 interface VariantInput {
@@ -55,12 +58,14 @@ export default function ProductsPage() {
     createProduct,
     updateProduct,
     deleteProduct,
+    restoreProduct,
     toggleProductActive,
     updateVariantPreorders,
   } = useDataStore();
   const { canEditData, user } = useAuthStore();
   const editable = canEditData();
 
+  const [statusFilter, setStatusFilter] = React.useState<'active' | 'all' | 'sold_out' | 'archived'>('active');
   const [selectedCategory, setSelectedCategory] = React.useState<string>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [isModalOpen, setIsModalOpen] = React.useState(false);
@@ -144,7 +149,39 @@ export default function ProductsPage() {
     (p) => !activeWorkspace || p.workspace_id === activeWorkspace.id
   );
 
+  // Check if a product is completely sold out across all variants
+  function isProductSoldOut(prodId: string): boolean {
+    const prodVariants = variants.filter((v) => v.product_id === prodId);
+    if (prodVariants.length === 0) return true;
+    const totalAvail = prodVariants.reduce(
+      (sum, v) => sum + calculateVariantStock(v).availableForSale,
+      0
+    );
+    return totalAvail <= 0;
+  }
+
+  // Counts for Status Tabs
+  const activeCount = workspaceProducts.filter(
+    (p) => !p.is_deleted && p.is_active && !isProductSoldOut(p.id)
+  ).length;
+  const soldOutCount = workspaceProducts.filter(
+    (p) => !p.is_deleted && p.is_active && isProductSoldOut(p.id)
+  ).length;
+  const archivedCount = workspaceProducts.filter((p) => p.is_deleted || !p.is_active).length;
+  const allCount = workspaceProducts.length;
+
   const filteredProducts = workspaceProducts.filter((p) => {
+    const isSoldOut = isProductSoldOut(p.id);
+    const isArchived = Boolean(p.is_deleted || !p.is_active);
+
+    if (statusFilter === 'active') {
+      if (isArchived || isSoldOut) return false;
+    } else if (statusFilter === 'sold_out') {
+      if (isArchived || !isSoldOut) return false;
+    } else if (statusFilter === 'archived') {
+      if (!isArchived) return false;
+    }
+
     const matchesCat = selectedCategory === 'all' || p.category_id === selectedCategory;
     const matchesSearch =
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -276,6 +313,76 @@ export default function ProductsPage() {
         )}
       </div>
 
+      {/* Status Filter Tabs (Active, Sold Out, Hidden/Archived, All) */}
+      <div className="flex flex-wrap items-center gap-1.5 p-1 bg-[#F0F0ED] rounded-[8px] w-fit text-xs">
+        <button
+          type="button"
+          onClick={() => setStatusFilter('active')}
+          className={cn(
+            'px-3 py-1.5 rounded-[6px] font-semibold transition-all flex items-center gap-1.5',
+            statusFilter === 'active'
+              ? 'bg-white text-[#315C4C] shadow-2xs'
+              : 'text-[#737373] hover:text-[#202124]'
+          )}
+        >
+          <span className="w-2 h-2 rounded-full bg-[#2F7D55]" />
+          <span>Đang mở bán</span>
+          <span className="text-[10px] bg-[#EBF1EE] px-1.5 py-0.2 rounded font-mono text-[#315C4C]">
+            {activeCount}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setStatusFilter('sold_out')}
+          className={cn(
+            'px-3 py-1.5 rounded-[6px] font-semibold transition-all flex items-center gap-1.5',
+            statusFilter === 'sold_out'
+              ? 'bg-white text-[#B7791F] shadow-2xs'
+              : 'text-[#737373] hover:text-[#202124]'
+          )}
+        >
+          <EyeOff className="w-3.5 h-3.5 text-[#B7791F]" />
+          <span>Đã bán hết (Ẩn)</span>
+          <span className="text-[10px] bg-[#FEF7EC] px-1.5 py-0.2 rounded font-mono text-[#B7791F]">
+            {soldOutCount}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setStatusFilter('archived')}
+          className={cn(
+            'px-3 py-1.5 rounded-[6px] font-semibold transition-all flex items-center gap-1.5',
+            statusFilter === 'archived'
+              ? 'bg-white text-[#C44536] shadow-2xs'
+              : 'text-[#737373] hover:text-[#202124]'
+          )}
+        >
+          <Archive className="w-3.5 h-3.5 text-[#C44536]" />
+          <span>Đã ẩn / Đã xóa</span>
+          <span className="text-[10px] bg-[#FDF1F0] px-1.5 py-0.2 rounded font-mono text-[#C44536]">
+            {archivedCount}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setStatusFilter('all')}
+          className={cn(
+            'px-3 py-1.5 rounded-[6px] font-medium transition-all flex items-center gap-1.5',
+            statusFilter === 'all'
+              ? 'bg-white text-[#202124] shadow-2xs font-semibold'
+              : 'text-[#737373] hover:text-[#202124]'
+          )}
+        >
+          <span>Tất cả</span>
+          <span className="text-[10px] bg-[#E8E8E5] px-1.5 py-0.2 rounded font-mono text-[#737373]">
+            {allCount}
+          </span>
+        </button>
+      </div>
+
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="max-w-xs w-full">
@@ -363,9 +470,19 @@ export default function ProductsPage() {
                             <span>Collab: {prod.collab_partner}</span>
                           </Badge>
                         )}
-                        {!prod.is_active && (
+                        {prod.is_deleted && (
+                          <Badge variant="outline" className="text-[10px] text-[#C44536] border-[#F8B4AF] bg-[#FDF1F0] font-semibold">
+                            Đã xóa (Đang ẩn)
+                          </Badge>
+                        )}
+                        {!prod.is_active && !prod.is_deleted && (
                           <Badge variant="warning" className="text-[10px]">
-                            Lưu trữ
+                            Tạm ngưng bán
+                          </Badge>
+                        )}
+                        {isProductSoldOut(prod.id) && !prod.is_deleted && prod.is_active && (
+                          <Badge variant="outline" className="text-[10px] text-[#8C5D17] border-[#B7791F]/30 bg-[#FEF7EC] font-semibold">
+                            Đã bán hết (Ẩn khỏi POS)
                           </Badge>
                         )}
                       </div>
@@ -402,44 +519,74 @@ export default function ProductsPage() {
                           <span>⚡ Chỉnh Đặt Trước / Online</span>
                         </Button>
 
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 text-xs gap-1"
-                          onClick={() => toggleProductActive(prod.id)}
-                        >
-                          {prod.is_active ? (
-                            <>
-                              <Archive className="w-3 h-3 text-[#737373]" />
-                              <span>Lưu trữ</span>
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle className="w-3 h-3 text-[#2F7D55]" />
-                              <span>Kích hoạt</span>
-                            </>
-                          )}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 px-2 text-xs text-[#C44536] hover:bg-[#FDF1F0]"
-                          onClick={() => {
-                            if (confirm(`Bạn có chắc muốn xóa sản phẩm "${prod.name}"?`)) {
-                              deleteProduct(prod.id);
+                        {prod.is_deleted ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs gap-1 border-[#2F7D55]/50 text-[#2F7D55] hover:bg-[#EBF1EE] font-semibold"
+                            onClick={() => {
+                              restoreProduct(prod.id);
                               logActivity({
                                 actor_name: user?.fullName || 'Người dùng',
                                 actor_role: (user?.role as any) || 'staff',
-                                action_type: 'delete',
+                                action_type: 'update',
                                 entity_type: 'product',
                                 entity_name: prod.name,
-                                description: `Đã xóa sản phẩm "${prod.name}" (${prod.collab_partner ? `Hàng Collab: ${prod.collab_partner}` : 'Hàng Host'}) khỏi danh mục hệ thống.`,
+                                description: `Khôi phục sản phẩm "${prod.name}" trở lại danh mục đang mở bán.`,
                               });
-                            }
-                          }}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                            }}
+                            title="Khôi phục sản phẩm này trở lại mở bán"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            <span>Khôi phục</span>
+                          </Button>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs gap-1"
+                              onClick={() => toggleProductActive(prod.id)}
+                            >
+                              {prod.is_active ? (
+                                <>
+                                  <Archive className="w-3 h-3 text-[#737373]" />
+                                  <span>Ẩn sản phẩm</span>
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle className="w-3 h-3 text-[#2F7D55]" />
+                                  <span>Hiện lại</span>
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2 text-xs text-[#C44536] hover:bg-[#FDF1F0]"
+                              onClick={() => {
+                                if (
+                                  confirm(
+                                    `Bạn có chắc muốn ẩn/xóa sản phẩm "${prod.name}"? (Sản phẩm sẽ được ẩn đi chứ không bị xóa vĩnh viễn, bạn có thể khôi phục lại bất kỳ lúc nào).`
+                                  )
+                                ) {
+                                  deleteProduct(prod.id);
+                                  logActivity({
+                                    actor_name: user?.fullName || 'Người dùng',
+                                    actor_role: (user?.role as any) || 'staff',
+                                    action_type: 'delete',
+                                    entity_type: 'product',
+                                    entity_name: prod.name,
+                                    description: `Đã ẩn/xóa sản phẩm "${prod.name}" khỏi danh mục đang bán (chuyển vào mục Đã ẩn/Đã xóa).`,
+                                  });
+                                }
+                              }}
+                              title="Ẩn / Xóa sản phẩm (Chỉ ẩn đi, không bị mất dữ liệu)"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </>
+                        )}
                       </>
                     ) : (
                       <span className="text-[11px] text-[#9E9E9C] italic">Chỉ xem</span>

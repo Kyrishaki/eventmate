@@ -40,6 +40,7 @@ import {
   Sparkles,
   LogIn,
   Eye,
+  EyeOff,
 } from 'lucide-react';
 
 export default function PosTerminalPage() {
@@ -145,30 +146,47 @@ export default function PosTerminalPage() {
   // Cash Change
   const cashChange = Math.max(0, (tenderedCash || 0) - cartTotal);
 
-  // Filtered Products
-  const activeProducts = products.filter(
-    (p) => (!activeWorkspace || p.workspace_id === activeWorkspace.id) && p.is_active
-  );
+  // Toggle to hide sold-out products on POS terminal (defaults to true as requested)
+  const [hideSoldOut, setHideSoldOut] = React.useState(true);
 
-  const filteredProducts = activeProducts.filter((p) => {
-    const matchesSearch =
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      variants
-        .filter((v) => v.product_id === p.id)
-        .some((v) => v.sku.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesSearch;
-  });
-
-  // Calculate available stock for a variant at currently selected booth
+  // Calculate available stock for a variant at currently selected booth (respecting VIP hold & online pre-orders)
   function getVariantAvailableStock(variantId: string) {
     if (!selectedBoothId) return 0;
     const alloc = allocations.find(
       (a) => a.booth_id === selectedBoothId && a.variant_id === variantId
     );
     if (!alloc) return 0;
+    const variant = variants.find((v) => v.id === variantId);
+    const totalHeld = (variant?.reserved_quantity || 0) + (variant?.online_preorder_quantity || 0);
     const inCart = cart.find((c) => c.variantId === variantId)?.quantity || 0;
-    return Math.max(0, alloc.allocated_quantity - alloc.sold_quantity - inCart);
+    return Math.max(0, alloc.allocated_quantity - totalHeld - alloc.sold_quantity - inCart);
   }
+
+  // Filtered Products (strictly exclude soft-deleted products)
+  const activeProducts = products.filter(
+    (p) => (!activeWorkspace || p.workspace_id === activeWorkspace.id) && p.is_active && !p.is_deleted
+  );
+
+  // Count sold-out products at this booth
+  const soldOutPosCount = activeProducts.filter((p) => {
+    const prodVariants = variants.filter((v) => v.product_id === p.id);
+    return !prodVariants.some((v) => getVariantAvailableStock(v.id) > 0);
+  }).length;
+
+  const filteredProducts = activeProducts.filter((p) => {
+    const prodVariants = variants.filter((v) => v.product_id === p.id);
+
+    // If hideSoldOut is true, automatically hide products with 0 stock
+    if (hideSoldOut) {
+      const hasAvailable = prodVariants.some((v) => getVariantAvailableStock(v.id) > 0);
+      if (!hasAvailable) return false;
+    }
+
+    const matchesSearch =
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      prodVariants.some((v) => v.sku.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchesSearch;
+  });
 
   function handleAddToCart(product: Product) {
     if (user?.role === 'viewer') {
@@ -413,9 +431,9 @@ export default function PosTerminalPage() {
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Product Catalog */}
         <main className="flex-1 overflow-y-auto p-3 sm:p-5 flex flex-col pb-28 lg:pb-5">
-          {/* Search bar */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="relative flex-1 max-w-md">
+          {/* Search bar & Sold Out Filter Toggle */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div className="relative flex-1 max-w-md min-w-[200px]">
               <Search className="w-4 h-4 text-[#9E9E9C] absolute left-3 top-2.5" />
               <Input
                 placeholder="Tìm sản phẩm theo tên hoặc SKU..."
@@ -424,11 +442,38 @@ export default function PosTerminalPage() {
                 className="pl-9 h-9 text-xs bg-white"
               />
             </div>
-            {selectedBooth?.collab_partner && (
-              <Badge variant="warning" className="text-xs shrink-0">
-                Quầy Collab: {selectedBooth.collab_partner}
-              </Badge>
-            )}
+
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Toggle: Tự động ẩn hàng bán hết */}
+              <button
+                type="button"
+                onClick={() => setHideSoldOut(!hideSoldOut)}
+                className={`text-xs px-2.5 py-1.5 rounded-[6px] border font-medium transition-colors flex items-center gap-1.5 shadow-2xs ${
+                  hideSoldOut
+                    ? 'bg-[#EBF1EE] border-[#315C4C]/40 text-[#315C4C] font-semibold'
+                    : 'bg-white border-[#E8E8E5] text-[#737373] hover:text-[#202124]'
+                }`}
+                title="Tự động ẩn các sản phẩm đã bán hết khỏi màn hình thu ngân"
+              >
+                {hideSoldOut ? (
+                  <>
+                    <EyeOff className="w-3.5 h-3.5 text-[#315C4C]" />
+                    <span>Đang ẩn hàng hết ({soldOutPosCount})</span>
+                  </>
+                ) : (
+                  <>
+                    <Eye className="w-3.5 h-3.5 text-[#737373]" />
+                    <span>Hiện tất cả ({soldOutPosCount} hết hàng)</span>
+                  </>
+                )}
+              </button>
+
+              {selectedBooth?.collab_partner && (
+                <Badge variant="warning" className="text-xs shrink-0">
+                  Quầy Collab: {selectedBooth.collab_partner}
+                </Badge>
+              )}
+            </div>
           </div>
 
           {filteredProducts.length === 0 ? (

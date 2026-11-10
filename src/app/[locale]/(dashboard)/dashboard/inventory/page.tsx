@@ -75,10 +75,18 @@ export default function InventoryPage() {
     }
   }, [selectedEventId, booths, selectedBoothId]);
 
-  // Overall Inventory Stats across all variants
-  const totalStockAll = variants.reduce((sum, v) => sum + v.total_inventory, 0);
-  const totalAllocatedAll = allocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
-  const totalSoldAll = allocations.reduce((sum, a) => sum + a.sold_quantity, 0);
+  // Active variants of non-deleted products
+  const activeVariants = variants.filter((v) => {
+    const prod = products.find((p) => p.id === v.product_id);
+    return !prod?.is_deleted;
+  });
+
+  // Overall Inventory Stats across active variants
+  const totalStockAll = activeVariants.reduce((sum, v) => sum + v.total_inventory, 0);
+  const activeVariantIds = new Set(activeVariants.map((v) => v.id));
+  const activeAllocations = allocations.filter((a) => activeVariantIds.has(a.variant_id));
+  const totalAllocatedAll = activeAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
+  const totalSoldAll = activeAllocations.reduce((sum, a) => sum + a.sold_quantity, 0);
   const storageStockAll = Math.max(0, totalStockAll - totalAllocatedAll);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
@@ -230,7 +238,7 @@ export default function InventoryPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#F0F0ED]">
-                {variants.map((v) => {
+                {activeVariants.map((v) => {
                   const product = products.find((p) => p.id === v.product_id);
                   const allAllocations = allocations.filter((a) => a.variant_id === v.id);
                   const totalAllocated = allAllocations.reduce(
@@ -348,7 +356,7 @@ export default function InventoryPage() {
 
           {/* Mobile Responsive Cards View */}
           <div className="md:hidden divide-y divide-[#F0F0ED]">
-            {variants.map((v) => {
+            {activeVariants.map((v) => {
               const product = products.find((p) => p.id === v.product_id);
               const allAllocations = allocations.filter((a) => a.variant_id === v.id);
               const totalAllocated = allAllocations.reduce(

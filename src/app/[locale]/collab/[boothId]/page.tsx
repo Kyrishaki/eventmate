@@ -46,6 +46,8 @@ import {
   Info,
   Bookmark,
   Globe,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { calculateVariantStock } from '@/lib/stock-status';
 import { logActivity } from '@/stores/audit-store';
@@ -104,6 +106,7 @@ function CollabPartnerPortalContent() {
 
   // POS Checkout State
   const [posSearch, setPosSearch] = React.useState('');
+  const [hideSoldOut, setHideSoldOut] = React.useState(true);
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>('qr_manual');
   const [isSubmittingOrder, setIsSubmittingOrder] = React.useState(false);
   const [orderSuccess, setOrderSuccess] = React.useState<Order | null>(null);
@@ -178,7 +181,7 @@ function CollabPartnerPortalContent() {
           Boolean(product?.collab_partner),
       };
     })
-    .filter((item) => item.variant && item.product);
+    .filter((item) => item.variant && item.product && !item.product.is_deleted);
 
   const partnerItems = boothVariants.filter((item) => item.isPartnerItem);
   const hostItems = boothVariants.filter((item) => !item.isPartnerItem);
@@ -375,8 +378,18 @@ ${url}`;
     }
   }
 
+  // Count sold-out variants at this collab booth
+  const soldOutCollabPosCount = boothVariants.filter((item) => {
+    const stock = calculateVariantStock(item.variant!, item.allocation.sold_quantity, item.allocation.allocated_quantity);
+    return stock.availableForSale <= 0;
+  }).length;
+
   // Filtered variants for POS view
   const posAvailableVariants = boothVariants.filter((item) => {
+    if (hideSoldOut) {
+      const stock = calculateVariantStock(item.variant!, item.allocation.sold_quantity, item.allocation.allocated_quantity);
+      if (stock.availableForSale <= 0) return false;
+    }
     const q = posSearch.toLowerCase();
     const matchName = item.product?.name.toLowerCase().includes(q);
     const matchVariant = item.variant?.name.toLowerCase().includes(q);
@@ -855,13 +868,35 @@ ${url}`;
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Left 8 Cols: Product Selection Grid */}
             <div className="lg:col-span-7 xl:col-span-8 space-y-4">
-              <div className="flex items-center gap-3 bg-white p-3 rounded-[8px] border border-[#E8E8E5]">
+              <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-[8px] border border-[#E8E8E5]">
                 <Input
                   placeholder="Tìm sản phẩm bán tại quầy (tên, mã SKU)..."
                   value={posSearch}
                   onChange={(e) => setPosSearch(e.target.value)}
-                  className="h-9 text-xs"
+                  className="h-9 text-xs flex-1 max-w-md min-w-[200px]"
                 />
+                <button
+                  type="button"
+                  onClick={() => setHideSoldOut(!hideSoldOut)}
+                  className={`text-xs px-2.5 py-1.5 rounded-[6px] border font-medium transition-colors flex items-center gap-1.5 shadow-2xs shrink-0 ${
+                    hideSoldOut
+                      ? 'bg-[#EBF1EE] border-[#315C4C]/40 text-[#315C4C] font-semibold'
+                      : 'bg-white border-[#E8E8E5] text-[#737373] hover:text-[#202124]'
+                  }`}
+                  title="Tự động ẩn sản phẩm đã bán hết khỏi màn hình thu ngân"
+                >
+                  {hideSoldOut ? (
+                    <>
+                      <EyeOff className="w-3.5 h-3.5 text-[#315C4C]" />
+                      <span>Đang ẩn hàng hết ({soldOutCollabPosCount})</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-3.5 h-3.5 text-[#737373]" />
+                      <span>Hiện tất cả ({soldOutCollabPosCount} hết hàng)</span>
+                    </>
+                  )}
+                </button>
               </div>
 
               {posAvailableVariants.length === 0 ? (

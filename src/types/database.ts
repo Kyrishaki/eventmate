@@ -114,6 +114,8 @@ export interface Product {
   description: string | null;
   image_url: string | null;
   is_active: boolean;
+  is_deleted?: boolean;
+  deleted_at?: string | null;
   collab_partner?: string | null;
   created_at: string;
   updated_at: string;

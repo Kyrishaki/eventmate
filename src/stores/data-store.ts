@@ -41,6 +41,7 @@ export interface DataStoreState {
   ) => Product;
   updateProduct: (id: string, updates: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
+  restoreProduct: (id: string) => void;
   toggleProductActive: (id: string) => void;
   updateVariantPreorders: (
     variantId: string,
@@ -510,11 +511,35 @@ export const useDataStore = create<DataStoreState>()(
         });
       },
       deleteProduct: (id) => {
-        const variantIdsToDelete = get().variants.filter((v) => v.product_id === id).map((v) => v.id);
+        // SOFT-DELETE: Mark product as hidden/deleted without deleting data or allocations
         set({
-          products: get().products.filter((p) => p.id !== id),
-          variants: get().variants.filter((v) => v.product_id !== id),
-          allocations: get().allocations.filter((a) => !variantIdsToDelete.includes(a.variant_id)),
+          products: get().products.map((p) =>
+            p.id === id
+              ? {
+                  ...p,
+                  is_deleted: true,
+                  is_active: false,
+                  deleted_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
+                }
+              : p
+          ),
+        });
+      },
+      restoreProduct: (id) => {
+        // RESTORE: Bring soft-deleted product back to active
+        set({
+          products: get().products.map((p) =>
+            p.id === id
+              ? {
+                  ...p,
+                  is_deleted: false,
+                  is_active: true,
+                  deleted_at: null,
+                  updated_at: new Date().toISOString(),
+                }
+              : p
+          ),
         });
       },
       toggleProductActive: (id) => {

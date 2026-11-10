@@ -3,11 +3,12 @@
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { useWorkspaceStore } from '@/stores/workspace-store';
+import { useDataStore } from '@/stores/data-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/routing';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import {
   DollarSign,
   ShoppingCart,
@@ -18,38 +19,52 @@ import {
   ArrowRight,
   Store,
   Plus,
+  MapPin,
+  Clock,
+  CheckCircle2,
 } from 'lucide-react';
 
 export default function DashboardOverviewPage() {
   const t = useTranslations('dashboard');
   const tNav = useTranslations('nav');
+  const tEvents = useTranslations('events');
   const { activeWorkspace } = useWorkspaceStore();
+  const { events, booths, variants, allocations } = useDataStore();
 
-  // Metrics from real workspace data or empty state
+  const workspaceEvents = events.filter(
+    (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
+  );
+  const upcomingEvents = workspaceEvents.filter((e) => e.status === 'upcoming' || e.status === 'active');
+
+  const totalAllocated = allocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
+  const totalSold = allocations.reduce((sum, a) => sum + a.sold_quantity, 0);
+  const totalStock = variants.reduce((sum, v) => sum + v.total_inventory, 0);
+
+  // Business metrics calculated from real state
   const metrics = [
     {
       title: t('metrics.totalRevenue'),
       value: formatCurrency(0, activeWorkspace?.currency || 'VND'),
-      change: '0% so với tour trước',
+      change: 'Theo dõi doanh thu thực',
       icon: DollarSign,
     },
     {
       title: t('metrics.ordersCount'),
       value: '0',
-      change: '0 đơn hàng',
+      change: 'Chưa có phiên POS',
       icon: ShoppingCart,
     },
     {
       title: t('metrics.unitsSold'),
-      value: '0',
-      change: '0 sản phẩm',
+      value: `${totalSold} / ${totalAllocated}`,
+      change: `${totalStock} trong tổng kho`,
       icon: Boxes,
     },
     {
-      title: t('metrics.avgOrderValue'),
-      value: formatCurrency(0, activeWorkspace?.currency || 'VND'),
-      change: 'AOV chuẩn hóa',
-      icon: TrendingUp,
+      title: 'Quầy bán kích hoạt',
+      value: `${booths.filter((b) => b.status === 'active').length} quầy`,
+      change: `Thuộc ${workspaceEvents.length} sự kiện`,
+      icon: Store,
     },
   ];
 
@@ -108,7 +123,7 @@ export default function DashboardOverviewPage() {
         })}
       </div>
 
-      {/* Two Column Layout: Events & Stock Warnings */}
+      {/* Two Column Layout: Events & Stock Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Upcoming Events */}
         <Card className="border-[#E8E8E5] shadow-xs">
@@ -125,28 +140,63 @@ export default function DashboardOverviewPage() {
             </Link>
           </CardHeader>
           <CardContent className="p-5">
-            <div className="text-center py-8 px-4 rounded-[6px] border border-dashed border-[#E8E8E5] bg-[#FBFBFA]">
-              <Calendar className="w-8 h-8 text-[#9E9E9C] mx-auto mb-2" />
-              <p className="text-xs font-medium text-[#202124]">{t('noUpcomingEvents')}</p>
-              <p className="text-[11px] text-[#737373] mt-0.5 max-w-xs mx-auto">
-                Bắt đầu bằng việc tạo một sự kiện biểu diễn để phân bổ merchandise cho các quầy bán.
-              </p>
-              <Link href="/dashboard/events" className="inline-block mt-3">
-                <Button variant="outline" size="sm" className="text-xs gap-1">
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Tạo sự kiện đầu tiên</span>
-                </Button>
-              </Link>
-            </div>
+            {upcomingEvents.length === 0 ? (
+              <div className="text-center py-8 px-4 rounded-[6px] border border-dashed border-[#E8E8E5] bg-[#FBFBFA]">
+                <Calendar className="w-8 h-8 text-[#9E9E9C] mx-auto mb-2" />
+                <p className="text-xs font-medium text-[#202124]">{t('noUpcomingEvents')}</p>
+                <Link href="/dashboard/events" className="inline-block mt-3">
+                  <Button variant="outline" size="sm" className="text-xs gap-1">
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Tạo sự kiện đầu tiên</span>
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {upcomingEvents.slice(0, 3).map((evt) => {
+                  const eventBooths = booths.filter((b) => b.event_id === evt.id);
+                  return (
+                    <div
+                      key={evt.id}
+                      className="p-3 bg-[#FBFBFA] border border-[#E8E8E5] rounded-[6px] flex items-center justify-between"
+                    >
+                      <div className="min-w-0 pr-2">
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-bold text-[#202124] truncate">{evt.name}</p>
+                          <Badge variant={evt.status === 'active' ? 'success' : 'default'} className="text-[9px]">
+                            {tEvents(`statusList.${evt.status}` as any)}
+                          </Badge>
+                        </div>
+                        <p className="text-[11px] text-[#737373] flex items-center gap-1 mt-1 truncate">
+                          <MapPin className="w-3 h-3 text-[#9E9E9C] shrink-0" />
+                          <span>{evt.location || 'Địa điểm tổ chức'}</span>
+                        </p>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <span className="text-[11px] font-semibold text-[#315C4C] block">
+                          {eventBooths.length} quầy bán
+                        </span>
+                        <Link href="/dashboard/inventory">
+                          <span className="text-[10px] text-[#737373] hover:underline">
+                            Xem phân bổ →
+                          </span>
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Inventory Warnings */}
+        {/* Inventory Summary */}
         <Card className="border-[#E8E8E5] shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between py-4 border-b border-[#F0F0ED]">
             <div>
               <CardTitle className="text-sm font-semibold">{t('inventoryWarnings')}</CardTitle>
-              <CardDescription className="text-xs">Cảnh báo biến thể sắp hết tại gian hàng</CardDescription>
+              <CardDescription className="text-xs">Tỷ lệ phân bổ và tình trạng tồn kho</CardDescription>
             </div>
             <Link href="/dashboard/inventory">
               <Button variant="ghost" size="sm" className="text-xs gap-1 h-7 text-[#315C4C]">
@@ -156,17 +206,35 @@ export default function DashboardOverviewPage() {
             </Link>
           </CardHeader>
           <CardContent className="p-5">
-            <div className="text-center py-8 px-4 rounded-[6px] border border-dashed border-[#E8E8E5] bg-[#FBFBFA]">
-              <AlertTriangle className="w-8 h-8 text-[#9E9E9C] mx-auto mb-2" />
-              <p className="text-xs font-medium text-[#202124]">{t('noWarnings')}</p>
-              <p className="text-[11px] text-[#737373] mt-0.5 max-w-xs mx-auto">
-                Khi các gian hàng bán tới hạn mức cảnh báo (dưới 10 món), thông tin sẽ hiển thị tức thì tại đây.
-              </p>
-              <Link href="/dashboard/inventory" className="inline-block mt-3">
-                <Button variant="outline" size="sm" className="text-xs gap-1">
-                  <span>Phân bổ tồn kho</span>
-                </Button>
-              </Link>
+            <div className="space-y-4">
+              <div className="p-3 bg-[#FBFBFA] rounded-[6px] border border-[#E8E8E5] space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[#737373]">Tổng hàng hóa đã nhập:</span>
+                  <span className="font-bold text-[#202124]">{totalStock} món</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[#737373]">Đã cấp cho các quầy bán:</span>
+                  <span className="font-semibold text-[#315C4C]">{totalAllocated} món</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[#737373]">Trữ lượng kho tổng:</span>
+                  <span className="font-semibold text-[#B7791F]">
+                    {Math.max(0, totalStock - totalAllocated)} món
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center gap-1.5 text-xs text-[#2F7D55]">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Các quầy bán sẵn sàng hoạt động</span>
+                </div>
+                <Link href="/dashboard/inventory">
+                  <Button variant="outline" size="sm" className="text-xs gap-1">
+                    <span>Điều phối kho</span>
+                  </Button>
+                </Link>
+              </div>
             </div>
           </CardContent>
         </Card>

@@ -135,7 +135,7 @@ export function ProductImageUploader({
       />
 
       <div className="flex items-center justify-between">
-        <label className="text-xs font-semibold text-[#202124] dark:text-[#F0F0F0] flex items-center gap-1.5">
+        <label className="text-xs font-semibold text-[#202124] flex items-center gap-1.5">
           <ImageIcon className="w-3.5 h-3.5 text-[#315C4C]" />
           <span>{label}</span>
         </label>
@@ -153,8 +153,8 @@ export function ProductImageUploader({
 
       {/* Image Preview If Exists */}
       {value ? (
-        <div className="p-3 bg-[#FBFBFA] dark:bg-[#252525] rounded-[8px] border border-[#E8E8E5] dark:border-[#333333] flex flex-col sm:flex-row items-center gap-4">
-          <div className="relative w-28 h-28 rounded-[6px] overflow-hidden bg-black/5 dark:bg-white/5 border border-[#E8E8E5] dark:border-[#333333] shrink-0 flex items-center justify-center">
+        <div className="p-3 bg-[#FBFBFA] rounded-[8px] border border-[#E8E8E5] flex flex-col sm:flex-row items-center gap-4">
+          <div className="relative w-28 h-28 rounded-[6px] overflow-hidden bg-black/5 border border-[#E8E8E5] shrink-0 flex items-center justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={value} alt="Preview" className="w-full h-full object-cover" />
             <button
@@ -172,7 +172,7 @@ export function ProductImageUploader({
               <Check className="w-4 h-4 text-[#2F7D55]" />
               <span>Đã có ảnh sản phẩm</span>
             </div>
-            <p className="text-[11px] text-[#737373] dark:text-[#9E9E9C]">
+            <p className="text-[11px] text-[#737373]">
               Ảnh sẽ hiển thị trên bảng điều khiển quản lý và màn hình máy bán hàng POS.
             </p>
 
@@ -183,7 +183,7 @@ export function ProductImageUploader({
                 size="sm"
                 onClick={() => cameraInputRef.current?.click()}
                 disabled={isProcessing}
-                className="text-xs h-7.5 gap-1.5 bg-white dark:bg-[#1E1E1E]"
+                className="text-xs h-7.5 gap-1.5 bg-white"
               >
                 <Camera className="w-3.5 h-3.5 text-[#315C4C]" />
                 <span>Chụp lại</span>
@@ -195,7 +195,7 @@ export function ProductImageUploader({
                 size="sm"
                 onClick={() => galleryInputRef.current?.click()}
                 disabled={isProcessing}
-                className="text-xs h-7.5 gap-1.5 bg-white dark:bg-[#1E1E1E]"
+                className="text-xs h-7.5 gap-1.5 bg-white"
               >
                 <Upload className="w-3.5 h-3.5 text-[#315C4C]" />
                 <span>Chọn ảnh khác</span>
@@ -206,7 +206,7 @@ export function ProductImageUploader({
                 variant="ghost"
                 size="sm"
                 onClick={() => onChange(null)}
-                className="text-xs h-7.5 text-[#C44536] hover:bg-[#FDF1F0] dark:hover:bg-[#3E1F1D]"
+                className="text-xs h-7.5 text-[#C44536] hover:bg-[#FDF1F0]"
               >
                 <span>Xóa ảnh</span>
               </Button>
@@ -225,32 +225,32 @@ export function ProductImageUploader({
           className={`p-4 rounded-[8px] border-2 border-dashed transition-all text-center space-y-3 ${
             isDragging
               ? 'border-[#315C4C] bg-[#315C4C]/5'
-              : 'border-[#D5D5D0] dark:border-[#444444] bg-[#FBFBFA] dark:bg-[#252525]'
+              : 'border-[#D5D5D0] bg-[#FBFBFA]'
           }`}
         >
           {isProcessing ? (
             <div className="py-6 flex flex-col items-center justify-center space-y-2">
               <Loader2 className="w-6 h-6 animate-spin text-[#315C4C]" />
-              <p className="text-xs font-semibold text-[#202124] dark:text-[#F0F0F0]">
+              <p className="text-xs font-semibold text-[#202124]">
                 Đang xử lý & tối ưu hóa ảnh...
               </p>
             </div>
           ) : (
             <>
               <div className="flex items-center justify-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-[#EBF1EE] dark:bg-[#2F3E37] text-[#315C4C] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-[#EBF1EE] text-[#315C4C] flex items-center justify-center">
                   <Camera className="w-5 h-5" />
                 </div>
-                <div className="w-10 h-10 rounded-full bg-[#EBF1EE] dark:bg-[#2F3E37] text-[#315C4C] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-[#EBF1EE] text-[#315C4C] flex items-center justify-center">
                   <ImageIcon className="w-5 h-5" />
                 </div>
               </div>
 
               <div>
-                <p className="text-xs font-bold text-[#202124] dark:text-[#F0F0F0]">
+                <p className="text-xs font-bold text-[#202124]">
                   Tải lên ảnh từ điện thoại hoặc máy tính
                 </p>
-                <p className="text-[11px] text-[#737373] dark:text-[#9E9E9C] mt-0.5">
+                <p className="text-[11px] text-[#737373] mt-0.5">
                   Chụp ảnh trực tiếp từ máy ảnh điện thoại hoặc chọn ảnh có sẵn trong thư viện
                 </p>
               </div>
@@ -275,7 +275,7 @@ export function ProductImageUploader({
                   variant="outline"
                   size="sm"
                   onClick={() => galleryInputRef.current?.click()}
-                  className="text-xs gap-1.5 bg-white dark:bg-[#1E1E1E]"
+                  className="text-xs gap-1.5 bg-white"
                 >
                   <Upload className="w-3.5 h-3.5 text-[#315C4C]" />
                   <span>Chọn ảnh từ thiết bị</span>
@@ -284,12 +284,12 @@ export function ProductImageUploader({
 
               {/* Paste URL Input Form if toggled */}
               {showUrlInput && (
-                <div className="pt-2 border-t border-[#E8E8E5] dark:border-[#333333] flex items-center gap-2 max-w-md mx-auto">
+                <div className="pt-2 border-t border-[#E8E8E5] flex items-center gap-2 max-w-md mx-auto">
                   <Input
                     placeholder="Dán link ảnh (https://...)"
                     value={urlInputValue}
                     onChange={(e) => setUrlInputValue(e.target.value)}
-                    className="h-8 text-xs bg-white dark:bg-[#1E1E1E]"
+                    className="h-8 text-xs bg-white"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();

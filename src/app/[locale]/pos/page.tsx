@@ -534,7 +534,7 @@ export default function PosTerminalPage() {
             <Button
               variant="outline"
               size="sm"
-              className="h-8 px-2 text-xs gap-1 text-[#C44536] border-[#C44536]/30 hover:bg-[#FDF1F0] dark:hover:bg-[#3E1F1D]"
+              className="h-8 px-2 text-xs gap-1 text-[#C44536] border-[#C44536]/30 hover:bg-[#FDF1F0]"
               onClick={() => setIsFeedbackOpen(true)}
               title="Góp ý hoặc báo lỗi hệ thống"
             >

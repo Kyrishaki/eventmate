@@ -122,17 +122,17 @@ export default function DashboardOverviewPage() {
   return (
     <div className="space-y-6">
       {/* Header with Title and Primary Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#E8E8E5] dark:border-[#333333]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#E8E8E5]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-[#202124] dark:text-[#F0F0F0]">
+            <h1 className="text-xl font-bold tracking-tight text-[#202124]">
               {t('overviewTitle')}
             </h1>
             <Badge variant="outline" className="text-[11px] font-mono">
               {activeWorkspace?.name || 'Workspace'}
             </Badge>
           </div>
-          <p className="text-xs text-[#737373] dark:text-[#9E9E9C] mt-0.5">
+          <p className="text-xs text-[#737373] mt-0.5">
             Theo dõi doanh thu, kho hàng và quầy bán.
           </p>
         </div>
@@ -154,9 +154,9 @@ export default function DashboardOverviewPage() {
       </div>
 
       {/* Event Filter Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white dark:bg-[#1E1E1E] rounded-[8px] border border-[#E8E8E5] dark:border-[#333333] shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-[8px] border border-[#E8E8E5] shadow-xs">
         <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#555555] dark:text-[#CCCCCC]">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#555555]">
             <Filter className="w-4 h-4 text-[#315C4C]" />
             <span>Sự kiện:</span>
           </div>
@@ -165,7 +165,7 @@ export default function DashboardOverviewPage() {
             <select
               value={selectedEventId}
               onChange={(e) => handleEventChange(e.target.value)}
-              className="h-8.5 pl-8 pr-8 text-xs font-semibold text-[#202124] dark:text-[#F0F0F0] bg-[#F7F7F5] dark:bg-[#2A2A2A] border border-[#D5D5D0] dark:border-[#444444] rounded-[6px] focus:outline-none focus:ring-1 focus:ring-[#315C4C] cursor-pointer appearance-none"
+              className="h-8.5 pl-8 pr-8 text-xs font-semibold text-[#202124] bg-[#F7F7F5] border border-[#D5D5D0] rounded-[6px] focus:outline-none focus:ring-1 focus:ring-[#315C4C] cursor-pointer appearance-none"
             >
               <option value="all">Tất cả sự kiện</option>
               {workspaceEvents.map((evt) => (
@@ -211,17 +211,17 @@ export default function DashboardOverviewPage() {
         {metrics.map((metric, idx) => {
           const Icon = metric.icon;
           return (
-            <Card key={idx} className="p-3 sm:p-4 bg-white dark:bg-[#1E1E1E] border-[#E8E8E5] dark:border-[#333333] shadow-xs">
-              <div className="flex items-center justify-between text-[#737373] dark:text-[#9E9E9C] mb-1.5">
+            <Card key={idx} className="p-3 sm:p-4 bg-white border-[#E8E8E5] shadow-xs">
+              <div className="flex items-center justify-between text-[#737373] mb-1.5">
                 <span className="text-[11px] sm:text-xs font-medium truncate pr-1">{metric.title}</span>
-                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-[4px] bg-[#F7F7F5] dark:bg-[#2A2A2A] border border-[#E8E8E5] dark:border-[#333333] flex items-center justify-center text-[#315C4C] shrink-0">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-[4px] bg-[#F7F7F5] border border-[#E8E8E5] flex items-center justify-center text-[#315C4C] shrink-0">
                   <Icon className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <div className="text-lg sm:text-2xl font-bold tracking-tight text-[#202124] dark:text-[#F0F0F0] truncate">
+              <div className="text-lg sm:text-2xl font-bold tracking-tight text-[#202124] truncate">
                 {metric.value}
               </div>
-              <p className="text-[10px] sm:text-[11px] text-[#737373] dark:text-[#9E9E9C] mt-0.5 truncate">{metric.change}</p>
+              <p className="text-[10px] sm:text-[11px] text-[#737373] mt-0.5 truncate">{metric.change}</p>
             </Card>
           );
         })}
@@ -230,13 +230,13 @@ export default function DashboardOverviewPage() {
       {/* Two Column Layout: Events & Stock Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Events / Booths Overview Card */}
-        <Card className="border-[#E8E8E5] dark:border-[#333333] shadow-xs bg-white dark:bg-[#1E1E1E]">
-          <CardHeader className="flex flex-row items-center justify-between py-4 border-b border-[#F0F0ED] dark:border-[#2D2D2D]">
+        <Card className="border-[#E8E8E5] shadow-xs bg-white">
+          <CardHeader className="flex flex-row items-center justify-between py-4 border-b border-[#F0F0ED]">
             <div>
-              <CardTitle className="text-sm font-semibold text-[#202124] dark:text-[#F0F0F0]">
+              <CardTitle className="text-sm font-semibold text-[#202124]">
                 {selectedEventId === 'all' ? t('upcomingEvents') : 'Gian hàng sự kiện'}
               </CardTitle>
-              <CardDescription className="text-xs text-[#737373] dark:text-[#9E9E9C]">
+              <CardDescription className="text-xs text-[#737373]">
                 {selectedEventId === 'all'
                   ? 'Danh sách sự kiện và quầy bán'
                   : selectedEvent?.name}
@@ -264,9 +264,9 @@ export default function DashboardOverviewPage() {
           <CardContent className="p-5">
             {selectedEventId === 'all' ? (
               effectiveEvents.length === 0 ? (
-                <div className="text-center py-8 px-4 rounded-[6px] border border-dashed border-[#E8E8E5] dark:border-[#333333] bg-[#FBFBFA] dark:bg-[#252525]">
+                <div className="text-center py-8 px-4 rounded-[6px] border border-dashed border-[#E8E8E5] bg-[#FBFBFA]">
                   <Calendar className="w-8 h-8 text-[#9E9E9C] mx-auto mb-2" />
-                  <p className="text-xs font-medium text-[#202124] dark:text-[#F0F0F0]">{t('noUpcomingEvents')}</p>
+                  <p className="text-xs font-medium text-[#202124]">{t('noUpcomingEvents')}</p>
                   <Link href="/dashboard/events" className="inline-block mt-3">
                     <Button variant="outline" size="sm" className="text-xs gap-1">
                       <Plus className="w-3.5 h-3.5" />
@@ -282,11 +282,11 @@ export default function DashboardOverviewPage() {
                       <div
                         key={evt.id}
                         onClick={() => handleEventChange(evt.id)}
-                        className="p-3 bg-[#FBFBFA] dark:bg-[#252525] hover:bg-[#F2F2EF] dark:hover:bg-[#2D2D2D] border border-[#E8E8E5] dark:border-[#333333] rounded-[6px] flex items-center justify-between cursor-pointer transition-colors"
+                        className="p-3 bg-[#FBFBFA] hover:bg-[#F2F2EF] border border-[#E8E8E5] rounded-[6px] flex items-center justify-between cursor-pointer transition-colors"
                       >
                         <div className="min-w-0 pr-2">
                           <div className="flex items-center gap-2">
-                            <p className="text-xs font-bold text-[#202124] dark:text-[#F0F0F0] truncate">{evt.name}</p>
+                            <p className="text-xs font-bold text-[#202124] truncate">{evt.name}</p>
                             <Badge
                               variant={evt.status === 'active' ? 'success' : 'default'}
                               className="text-[9px]"
@@ -296,7 +296,7 @@ export default function DashboardOverviewPage() {
                                 : tEvents(`statusList.${evt.status as 'upcoming' | 'active' | 'completed' | 'draft'}`)}
                             </Badge>
                           </div>
-                          <p className="text-[11px] text-[#737373] dark:text-[#9E9E9C] flex items-center gap-1 mt-1 truncate">
+                          <p className="text-[11px] text-[#737373] flex items-center gap-1 mt-1 truncate">
                             <MapPin className="w-3 h-3 text-[#9E9E9C] shrink-0" />
                             <span>{evt.location || 'Địa điểm tổ chức'}</span>
                           </p>
@@ -306,7 +306,7 @@ export default function DashboardOverviewPage() {
                           <span className="text-[11px] font-semibold text-[#315C4C] block">
                             {eventBooths.length} quầy bán
                           </span>
-                          <span className="text-[10px] text-[#737373] dark:text-[#9E9E9C]">
+                          <span className="text-[10px] text-[#737373]">
                             Lọc sự kiện này →
                           </span>
                         </div>
@@ -318,21 +318,21 @@ export default function DashboardOverviewPage() {
             ) : (
               /* Specific Event Booths Breakdown */
               <div className="space-y-3">
-                <div className="p-3 bg-[#F7F7F5] dark:bg-[#252525] rounded-[6px] border border-[#E8E8E5] dark:border-[#333333] text-xs space-y-1.5">
+                <div className="p-3 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5] text-xs space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-[#737373] dark:text-[#9E9E9C]">Địa điểm:</span>
-                    <span className="font-semibold text-[#202124] dark:text-[#F0F0F0]">{selectedEvent?.location || 'Chưa đặt'}</span>
+                    <span className="text-[#737373]">Địa điểm:</span>
+                    <span className="font-semibold text-[#202124]">{selectedEvent?.location || 'Chưa đặt'}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[#737373] dark:text-[#9E9E9C]">Thời gian:</span>
-                    <span className="font-semibold text-[#202124] dark:text-[#F0F0F0]">
+                    <span className="text-[#737373]">Thời gian:</span>
+                    <span className="font-semibold text-[#202124]">
                       {selectedEvent?.start_date ? formatDate(selectedEvent.start_date) : 'Đang cập nhật'}
                     </span>
                   </div>
                 </div>
 
                 <div className="space-y-2 mt-2">
-                  <p className="text-xs font-semibold text-[#202124] dark:text-[#F0F0F0]">
+                  <p className="text-xs font-semibold text-[#202124]">
                     Danh sách quầy bán ({filteredBooths.length} quầy):
                   </p>
                   {filteredBooths.map((booth) => {
@@ -343,16 +343,16 @@ export default function DashboardOverviewPage() {
                     return (
                       <div
                         key={booth.id}
-                        className="p-3 bg-[#FBFBFA] dark:bg-[#252525] border border-[#E8E8E5] dark:border-[#333333] rounded-[6px] flex items-center justify-between text-xs"
+                        className="p-3 bg-[#FBFBFA] border border-[#E8E8E5] rounded-[6px] flex items-center justify-between text-xs"
                       >
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <span className="font-bold text-[#202124] dark:text-[#F0F0F0]">{booth.name}</span>
+                            <span className="font-bold text-[#202124]">{booth.name}</span>
                             <Badge variant="outline" className="text-[9px] font-mono">
                               {booth.code}
                             </Badge>
                           </div>
-                          <p className="text-[11px] text-[#737373] dark:text-[#9E9E9C] mt-0.5">
+                          <p className="text-[11px] text-[#737373] mt-0.5">
                             Đã bán: <span className="font-semibold text-[#315C4C]">{boothSoldQty}</span> / Cấp: {boothAllocQty} món
                           </p>
                         </div>
@@ -372,11 +372,11 @@ export default function DashboardOverviewPage() {
         </Card>
 
         {/* Inventory Summary */}
-        <Card className="border-[#E8E8E5] dark:border-[#333333] shadow-xs bg-white dark:bg-[#1E1E1E]">
-          <CardHeader className="flex flex-row items-center justify-between py-4 border-b border-[#F0F0ED] dark:border-[#2D2D2D]">
+        <Card className="border-[#E8E8E5] shadow-xs bg-white">
+          <CardHeader className="flex flex-row items-center justify-between py-4 border-b border-[#F0F0ED]">
             <div>
-              <CardTitle className="text-sm font-semibold text-[#202124] dark:text-[#F0F0F0]">{t('inventoryWarnings')}</CardTitle>
-              <CardDescription className="text-xs text-[#737373] dark:text-[#9E9E9C]">
+              <CardTitle className="text-sm font-semibold text-[#202124]">{t('inventoryWarnings')}</CardTitle>
+              <CardDescription className="text-xs text-[#737373]">
                 {selectedEventId === 'all'
                   ? 'Tình trạng tồn kho và phân bổ'
                   : `Kho hàng: ${selectedEvent?.name}`}
@@ -391,19 +391,19 @@ export default function DashboardOverviewPage() {
           </CardHeader>
           <CardContent className="p-5">
             <div className="space-y-4">
-              <div className="p-3 bg-[#FBFBFA] dark:bg-[#252525] rounded-[6px] border border-[#E8E8E5] dark:border-[#333333] space-y-2 text-xs">
+              <div className="p-3 bg-[#FBFBFA] rounded-[6px] border border-[#E8E8E5] space-y-2 text-xs">
                 {selectedEventId === 'all' ? (
                   <>
                     <div className="flex items-center justify-between">
-                      <span className="text-[#737373] dark:text-[#9E9E9C]">Kho tổng:</span>
-                      <span className="font-bold text-[#202124] dark:text-[#F0F0F0]">{totalStock} món</span>
+                      <span className="text-[#737373]">Kho tổng:</span>
+                      <span className="font-bold text-[#202124]">{totalStock} món</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[#737373] dark:text-[#9E9E9C]">Đã cấp cho quầy:</span>
+                      <span className="text-[#737373]">Đã cấp cho quầy:</span>
                       <span className="font-semibold text-[#315C4C]">{totalAllocated} món</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[#737373] dark:text-[#9E9E9C]">Chưa phân bổ:</span>
+                      <span className="text-[#737373]">Chưa phân bổ:</span>
                       <span className="font-semibold text-[#B7791F]">
                         {Math.max(0, totalStock - totalAllocated)} món
                       </span>
@@ -412,21 +412,21 @@ export default function DashboardOverviewPage() {
                 ) : (
                   <>
                     <div className="flex items-center justify-between">
-                      <span className="text-[#737373] dark:text-[#9E9E9C]">Hàng sự kiện:</span>
-                      <span className="font-bold text-[#202124] dark:text-[#F0F0F0]">{totalAllocated} món</span>
+                      <span className="text-[#737373]">Hàng sự kiện:</span>
+                      <span className="font-bold text-[#202124]">{totalAllocated} món</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[#737373] dark:text-[#9E9E9C]">Đã bán:</span>
+                      <span className="text-[#737373]">Đã bán:</span>
                       <span className="font-semibold text-[#315C4C]">{totalSold} món</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[#737373] dark:text-[#9E9E9C]">Tồn tại quầy:</span>
-                      <span className="font-semibold text-[#202124] dark:text-[#F0F0F0]">
+                      <span className="text-[#737373]">Tồn tại quầy:</span>
+                      <span className="font-semibold text-[#202124]">
                         {Math.max(0, totalAllocated - totalSold)} món
                       </span>
                     </div>
-                    <div className="flex items-center justify-between pt-1 border-t border-[#E8E8E5] dark:border-[#333333]">
-                      <span className="text-[#737373] dark:text-[#9E9E9C]">Kho tổng còn:</span>
+                    <div className="flex items-center justify-between pt-1 border-t border-[#E8E8E5]">
+                      <span className="text-[#737373]">Kho tổng còn:</span>
                       <span className="font-semibold text-[#B7791F]">
                         {Math.max(0, totalStock - allAllocatedTotal)} món
                       </span>
@@ -452,11 +452,11 @@ export default function DashboardOverviewPage() {
       </div>
 
       {/* Recent Orders Section */}
-      <Card className="border-[#E8E8E5] dark:border-[#333333] shadow-xs bg-white dark:bg-[#1E1E1E]">
-        <CardHeader className="flex flex-row items-center justify-between py-4 border-b border-[#F0F0ED] dark:border-[#2D2D2D]">
+      <Card className="border-[#E8E8E5] shadow-xs bg-white">
+        <CardHeader className="flex flex-row items-center justify-between py-4 border-b border-[#F0F0ED]">
           <div>
-            <CardTitle className="text-sm font-semibold text-[#202124] dark:text-[#F0F0F0]">{t('recentOrders')}</CardTitle>
-            <CardDescription className="text-xs text-[#737373] dark:text-[#9E9E9C]">
+            <CardTitle className="text-sm font-semibold text-[#202124]">{t('recentOrders')}</CardTitle>
+            <CardDescription className="text-xs text-[#737373]">
               {selectedEventId === 'all'
                 ? 'Giao dịch gần nhất qua POS'
                 : `Giao dịch: ${selectedEvent?.name}`}
@@ -471,14 +471,14 @@ export default function DashboardOverviewPage() {
         </CardHeader>
         <CardContent className="p-5">
           {filteredOrders.length === 0 ? (
-            <div className="text-center py-10 rounded-[6px] border border-dashed border-[#E8E8E5] dark:border-[#333333] bg-[#FBFBFA] dark:bg-[#252525]">
+            <div className="text-center py-10 rounded-[6px] border border-dashed border-[#E8E8E5] bg-[#FBFBFA]">
               <ShoppingCart className="w-8 h-8 text-[#9E9E9C] mx-auto mb-2" />
-              <p className="text-xs font-medium text-[#202124] dark:text-[#F0F0F0]">
+              <p className="text-xs font-medium text-[#202124]">
                 {selectedEventId === 'all'
                   ? t('noRecentOrders')
                   : `Chưa có đơn hàng nào tại ${selectedEvent?.name}`}
               </p>
-              <p className="text-[11px] text-[#737373] dark:text-[#9E9E9C] mt-0.5">
+              <p className="text-[11px] text-[#737373] mt-0.5">
                 Đơn hàng tạo từ POS (cả online và offline) sẽ được tổng hợp tự động khi kết nối Internet.
               </p>
               {selectedEventId !== 'all' && (
@@ -491,7 +491,7 @@ export default function DashboardOverviewPage() {
               )}
             </div>
           ) : (
-            <div className="divide-y divide-[#F0F0ED] dark:divide-[#2D2D2D]">
+            <div className="divide-y divide-[#F0F0ED]">
               {filteredOrders.slice(0, 5).map((ord) => {
                 const event = events.find((e) => e.id === ord.event_id);
                 const booth = booths.find((b) => b.id === ord.booth_id);
@@ -503,7 +503,7 @@ export default function DashboardOverviewPage() {
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-[#202124] dark:text-[#F0F0F0]">
+                        <span className="font-mono font-bold text-[#202124]">
                           {ord.order_number}
                         </span>
                         <Badge variant="outline" className="text-[9px]">
@@ -515,7 +515,7 @@ export default function DashboardOverviewPage() {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-[11px] text-[#737373] dark:text-[#9E9E9C] mt-0.5">
+                      <p className="text-[11px] text-[#737373] mt-0.5">
                         {event?.name || 'Sự kiện'} • {booth?.name || 'Quầy POS'} • {formatDate(ord.created_at)}
                       </p>
                     </div>
@@ -523,7 +523,7 @@ export default function DashboardOverviewPage() {
                       <span className="font-bold text-[#315C4C] text-sm block">
                         {formatCurrency(ord.final_amount, activeWorkspace?.currency || 'VND')}
                       </span>
-                      <span className="text-[10px] text-[#737373] dark:text-[#9E9E9C]">
+                      <span className="text-[10px] text-[#737373]">
                         {ord.items?.reduce((s, it) => s + (it.quantity || 1), 0) || 1} món
                       </span>
                     </div>

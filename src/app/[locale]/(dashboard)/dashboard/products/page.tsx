@@ -474,7 +474,7 @@ export default function ProductsPage() {
                   <div className="flex items-start gap-3.5 min-w-0">
                     <div
                       onClick={() => editable && openEditModal(prod)}
-                      className={`w-16 h-16 rounded-[6px] bg-[#F7F7F5] dark:bg-[#252525] border border-[#E8E8E5] dark:border-[#333333] overflow-hidden shrink-0 flex items-center justify-center relative group ${
+                      className={`w-16 h-16 rounded-[6px] bg-[#F7F7F5] border border-[#E8E8E5] overflow-hidden shrink-0 flex items-center justify-center relative group ${
                         editable ? 'cursor-pointer hover:border-[#315C4C]' : ''
                       }`}
                       title={editable ? 'Bấm để đổi ảnh hoặc sửa thông tin sản phẩm' : undefined}

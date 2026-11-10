@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #F7F7F5;
   --surface: #FFFFFF;
@@ -99,6 +101,13 @@ html.dark .bg-\[\#F0F0ED\] {
   background-color: var(--muted-light) !important;
 }
 
+html.dark .bg-\[\#FBFBFA\],
+html.dark .bg-\[\#FAFAF8\],
+html.dark .bg-\[\#F9F9F8\],
+html.dark .bg-\[\#F5F5F3\] {
+  background-color: var(--muted-light) !important;
+}
+
 html.dark .bg-\[\#E8E8E5\] {
   background-color: var(--border) !important;
 }
@@ -109,43 +118,55 @@ html.dark .border-border {
   border-color: var(--border) !important;
 }
 
-html.dark .border-\[\#F0F0ED\] {
-  border-color: var(--muted-light) !important;
-}
-
-html.dark .border-\[\#D6D6D2\],
-html.dark .border-\[\#D2D2CE\] {
-  border-color: var(--border-strong) !important;
-}
-
-html.dark .divide-\[\#E8E8E5\] > :not([hidden]) ~ :not([hidden]) {
+html.dark .border-\[\#F0F0ED\],
+html.dark .border-\[\#F2F2EF\] {
   border-color: var(--border) !important;
 }
 
-html.dark .divide-\[\#F0F0ED\] > :not([hidden]) ~ :not([hidden]) {
-  border-color: var(--muted-light) !important;
+html.dark .border-\[\#D6D6D2\],
+html.dark .border-\[\#D2D2CE\],
+html.dark .border-\[\#D5D5D0\],
+html.dark .border-\[\#E5E5E0\],
+html.dark .border-\[\#E0E0DC\],
+html.dark .border-\[\#CCCCCC\] {
+  border-color: var(--border-strong) !important;
+}
+
+html.dark .divide-\[\#E8E8E5\] > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-\[\#F0F0ED\] > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-\[\#2D2D2D\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border) !important;
 }
 
 /* Text Colors */
 html.dark .text-\[\#202124\],
+html.dark .text-\[\#111111\],
+html.dark .text-\[\#1A1A1A\],
+html.dark .text-\[\#222222\],
+html.dark .text-\[\#333333\],
 html.dark .text-foreground {
   color: var(--foreground) !important;
 }
 
 html.dark .text-\[\#737373\],
 html.dark .text-\[\#5F6368\],
+html.dark .text-\[\#555555\],
+html.dark .text-\[\#666666\],
 html.dark .text-muted {
   color: var(--muted) !important;
 }
 
-html.dark .text-\[\#9E9E9C\] {
-  color: #7E848C !important;
+html.dark .text-\[\#9E9E9C\],
+html.dark .text-\[\#7E848C\] {
+  color: var(--muted) !important;
 }
 
 /* Hover States */
 html.dark .hover\:bg-\[\#F7F7F5\]:hover,
 html.dark .hover\:bg-\[\#F0F0ED\]:hover,
-html.dark .hover\:bg-\[\#E8E8E5\]:hover {
+html.dark .hover\:bg-\[\#E8E8E5\]:hover,
+html.dark .hover\:bg-\[\#F2F2EF\]:hover,
+html.dark .hover\:bg-\[\#FBFBFA\]:hover {
   background-color: var(--surface-hover) !important;
 }
 
@@ -220,6 +241,17 @@ html.dark .bg-\[\#FDF1F0\],
 html.dark .bg-\[\#FCE8E6\] {
   background-color: var(--error-bg) !important;
   color: #F87171 !important;
+}
+
+html.dark .hover\:bg-\[\#FDF1F0\]:hover {
+  background-color: var(--error-bg) !important;
+}
+html.dark .hover\:bg-\[\#EBF1EE\]:hover,
+html.dark .hover\:bg-\[\#EAF4EE\]:hover {
+  background-color: var(--success-bg) !important;
+}
+html.dark .hover\:bg-\[\#FEF7EC\]:hover {
+  background-color: var(--warning-bg) !important;
 }
 
 html.dark .text-\[\#C44536\],

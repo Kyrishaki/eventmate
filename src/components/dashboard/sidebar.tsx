@@ -18,6 +18,7 @@ import {
   Settings,
   TabletSmartphone,
   History,
+  MessageSquarePlus,
   X,
 } from 'lucide-react';
 
@@ -40,6 +41,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { href: '/dashboard/payments', label: t('payments'), icon: CreditCard },
     { href: '/dashboard/team', label: t('team'), icon: Users },
     { href: '/dashboard/logs', label: t('logs'), icon: History, badge: 'Admin' },
+    { href: '/dashboard/feedback', label: t('feedback'), icon: MessageSquarePlus },
     { href: '/dashboard/analytics', label: t('analytics'), icon: BarChart3 },
     { href: '/dashboard/settings', label: t('settings'), icon: Settings },
   ];

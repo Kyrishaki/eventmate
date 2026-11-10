@@ -47,7 +47,9 @@ import {
   EyeOff,
   Coins,
   AlertCircle,
+  Bug,
 } from 'lucide-react';
+import { FeedbackModal } from '@/components/feedback/feedback-modal';
 
 export default function PosTerminalPage() {
   const tCommon = useTranslations('common');
@@ -101,6 +103,7 @@ export default function PosTerminalPage() {
 
   // Online / Offline State Listener
   const [isOnline, setIsOnline] = React.useState<boolean>(true);
+  const [isFeedbackOpen, setIsFeedbackOpen] = React.useState(false);
   React.useEffect(() => {
     setIsOnline(navigator.onLine);
     function handleOnline() {
@@ -506,6 +509,17 @@ export default function PosTerminalPage() {
                 <span className="hidden sm:inline">Lịch sử</span>
               </Button>
             </Link>
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-2 text-xs gap-1 text-[#C44536] border-[#C44536]/30 hover:bg-[#FDF1F0] dark:hover:bg-[#3E1F1D]"
+              onClick={() => setIsFeedbackOpen(true)}
+              title="Báo cáo lỗi hoặc góp ý cải thiện POS"
+            >
+              <Bug className="w-3.5 h-3.5 text-[#C44536]" />
+              <span className="hidden sm:inline">Báo lỗi</span>
+            </Button>
 
             <ThemeToggle />
 
@@ -1470,6 +1484,13 @@ export default function PosTerminalPage() {
         onClose={() => setIsPreorderPickupOpen(false)}
         currentBoothId={selectedBoothId}
         currentBoothName={selectedBooth?.name}
+      />
+
+      {/* POS Bug Report / Feedback Modal */}
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+        defaultType="bug"
       />
     </div>
   );

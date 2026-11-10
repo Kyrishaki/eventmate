@@ -7,6 +7,7 @@ import { useAuthStore, isViewerOnly } from '@/stores/auth-store';
 import { Link, useRouter } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
 import { Lock, Eye, LogIn } from 'lucide-react';
+import { FloatingFeedbackWidget } from '@/components/feedback/feedback-modal';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
@@ -95,6 +96,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </main>
         </div>
       </div>
+
+      {/* Floating Bug Report & Feedback Widget */}
+      <FloatingFeedbackWidget />
     </div>
   );
 }

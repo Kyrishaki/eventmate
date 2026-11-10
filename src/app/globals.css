@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+:root {
+  --background: #F7F7F5;
+  --surface: #FFFFFF;
+  --foreground: #202124;
+  --muted: #737373;
+  --muted-light: #F0F0ED;
+  --border: #E8E8E5;
+  --border-strong: #D6D6D2;
+  --primary: #315C4C;
+  --primary-hover: #284A3D;
+  --primary-foreground: #FFFFFF;
+  --success: #2F7D55;
+  --success-bg: #EAF4EE;
+  --warning: #B7791F;
+  --warning-bg: #FEF7EC;
+  --error: #C44536;
+  --error-bg: #FDF1F0;
+  
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-light: var(--muted-light);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-error: var(--error);
+  --color-error-bg: var(--error-bg);
+  
+  --font-sans: var(--font-inter), var(--font-be-vietnam-pro), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

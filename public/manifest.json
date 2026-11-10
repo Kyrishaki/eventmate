@@ -1,0 +1,17 @@
+{
+  "name": "EventMate — Event Merch & POS",
+  "short_name": "EventMate",
+  "description": "Offline-first merchandise sales and inventory management for artists and event crews",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F7F7F5",
+  "theme_color": "#315C4C",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

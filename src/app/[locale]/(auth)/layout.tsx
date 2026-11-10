@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Link } from '@/i18n/routing';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -15,7 +16,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             EventMate
           </span>
         </Link>
-        <LanguageSwitcher />
+        <div className="flex items-center gap-2">
+          <LanguageSwitcher />
+          <ThemeToggle />
+        </div>
       </header>
 
       {/* Main Centered Auth Form */}

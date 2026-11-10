@@ -3,6 +3,7 @@
 :root {
   --background: #F7F7F5;
   --surface: #FFFFFF;
+  --surface-hover: #F0F0ED;
   --foreground: #202124;
   --muted: #737373;
   --muted-light: #F0F0ED;
@@ -21,6 +22,27 @@
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
+}
+
+html.dark {
+  color-scheme: dark;
+  --background: #111215;
+  --surface: #1B1D22;
+  --surface-hover: #24272E;
+  --foreground: #F2F3F5;
+  --muted: #9BA1A6;
+  --muted-light: #25282F;
+  --border: #2C3038;
+  --border-strong: #3D424D;
+  --primary: #3E7A65;
+  --primary-hover: #4C8E77;
+  --primary-foreground: #FFFFFF;
+  --success: #3EB378;
+  --success-bg: #152A20;
+  --warning: #D9822B;
+  --warning-bg: #2E1F0E;
+  --error: #E5534B;
+  --error-bg: #2E1515;
 }
 
 @theme {
@@ -50,4 +72,166 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ==========================================================================
+   Comprehensive Dark Mode Overrides for Swiss Merch & POS UI
+   ========================================================================== */
+
+html.dark body {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+}
+
+/* Backgrounds */
+html.dark .bg-white,
+html.dark .bg-surface {
+  background-color: var(--surface) !important;
+}
+
+html.dark .bg-\[\#F7F7F5\],
+html.dark .bg-background {
+  background-color: var(--background) !important;
+}
+
+html.dark .bg-\[\#F0F0ED\] {
+  background-color: var(--muted-light) !important;
+}
+
+html.dark .bg-\[\#E8E8E5\] {
+  background-color: var(--border) !important;
+}
+
+/* Borders */
+html.dark .border-\[\#E8E8E5\],
+html.dark .border-border {
+  border-color: var(--border) !important;
+}
+
+html.dark .border-\[\#F0F0ED\] {
+  border-color: var(--muted-light) !important;
+}
+
+html.dark .border-\[\#D6D6D2\],
+html.dark .border-\[\#D2D2CE\] {
+  border-color: var(--border-strong) !important;
+}
+
+html.dark .divide-\[\#E8E8E5\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border) !important;
+}
+
+html.dark .divide-\[\#F0F0ED\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--muted-light) !important;
+}
+
+/* Text Colors */
+html.dark .text-\[\#202124\],
+html.dark .text-foreground {
+  color: var(--foreground) !important;
+}
+
+html.dark .text-\[\#737373\],
+html.dark .text-\[\#5F6368\],
+html.dark .text-muted {
+  color: var(--muted) !important;
+}
+
+html.dark .text-\[\#9E9E9C\] {
+  color: #7E848C !important;
+}
+
+/* Hover States */
+html.dark .hover\:bg-\[\#F7F7F5\]:hover,
+html.dark .hover\:bg-\[\#F0F0ED\]:hover,
+html.dark .hover\:bg-\[\#E8E8E5\]:hover {
+  background-color: var(--surface-hover) !important;
+}
+
+html.dark .hover\:text-\[\#202124\]:hover {
+  color: var(--foreground) !important;
+}
+
+/* Inputs, Textareas, Selects */
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark textarea,
+html.dark select {
+  background-color: var(--surface) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: var(--muted) !important;
+}
+
+html.dark select option {
+  background-color: var(--surface) !important;
+  color: var(--foreground) !important;
+}
+
+/* Shadows in dark mode */
+html.dark .shadow-xs,
+html.dark .shadow-sm,
+html.dark .shadow-md,
+html.dark .shadow-lg,
+html.dark .shadow-2xs {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Primary buttons keep solid brand identity */
+html.dark button.bg-\[\#315C4C\],
+html.dark .bg-\[\#315C4C\] {
+  background-color: #315C4C !important;
+  color: #FFFFFF !important;
+}
+
+html.dark button.bg-\[\#315C4C\]:hover {
+  background-color: #3B6F5C !important;
+}
+
+/* Green status banners & cards */
+html.dark .bg-\[\#EAF4EE\],
+html.dark .bg-\[\#EBF1EE\] {
+  background-color: var(--success-bg) !important;
+  color: #5ED69D !important;
+}
+
+html.dark .text-\[\#2F7D55\],
+html.dark .text-\[\#315C4C\]:not(button) {
+  color: #5ED69D !important;
+}
+
+/* Amber/Warning status cards */
+html.dark .bg-\[\#FEF7EC\],
+html.dark .bg-\[\#FDF2E9\] {
+  background-color: var(--warning-bg) !important;
+  color: #F3B05C !important;
+}
+
+html.dark .text-\[\#B7791F\] {
+  color: #F3B05C !important;
+}
+
+/* Red/Error status cards */
+html.dark .bg-\[\#FDF1F0\],
+html.dark .bg-\[\#FCE8E6\] {
+  background-color: var(--error-bg) !important;
+  color: #F87171 !important;
+}
+
+html.dark .text-\[\#C44536\],
+html.dark .text-\[\#C5221F\] {
+  color: #F87171 !important;
+}
+
+/* Smooth dark scrollbar */
+html.dark ::-webkit-scrollbar-thumb {
+  background-color: #2E323A;
+  border-radius: 4px;
+}
+html.dark ::-webkit-scrollbar-track {
+  background-color: #15171B;
 }

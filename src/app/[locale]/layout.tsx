@@ -56,7 +56,26 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={`${inter.variable} ${beVietnamPro.variable}`}>
+    <html lang={locale} className={`${inter.variable} ${beVietnamPro.variable}`} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var saved = localStorage.getItem('eventmate-theme');
+                  var isDark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                  if (isDark) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="bg-[#F7F7F5] text-[#202124] min-h-screen antialiased selection:bg-[#315C4C]/15 selection:text-[#315C4C]">
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}

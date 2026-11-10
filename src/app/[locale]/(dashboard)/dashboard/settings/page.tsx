@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, Database, Save, Sparkles, Building2, Trash2 } from 'lucide-react';
+import { CheckCircle2, Database, Save, Sparkles, Building2, Trash2, Palette } from 'lucide-react';
+import { ThemeSelector } from '@/components/ui/theme-toggle';
 
 export default function SettingsPage() {
   const t = useTranslations('settings');
@@ -148,6 +149,30 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </form>
+      </Card>
+
+      {/* Theme & Appearance Settings */}
+      <Card className="border-[#E8E8E5] bg-white shadow-xs">
+        <CardHeader className="border-b border-[#F0F0ED] pb-4">
+          <CardTitle className="text-sm font-semibold text-[#202124] flex items-center gap-2">
+            <Palette className="w-4 h-4 text-[#315C4C]" />
+            Chế độ Giao diện (Sáng / Tối)
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Tùy chỉnh giao diện hiển thị cho toàn bộ hệ thống quản trị và màn hình bán hàng POS.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[6px]">
+            <div>
+              <p className="text-xs font-semibold text-[#202124]">Lựa chọn chủ đề:</p>
+              <p className="text-[11px] text-[#737373] mt-0.5">
+                Chế độ Tối (Dark mode) giúp bảo vệ mắt khi bán hàng ban đêm tại các tour lưu diễn hoặc sân khấu âm nhạc.
+              </p>
+            </div>
+            <ThemeSelector />
+          </div>
+        </CardContent>
       </Card>
 
       {/* Demo Tour Data Seeder */}

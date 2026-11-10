@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useAuthStore } from '@/stores/auth-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { SyncStatusBadge } from '@/components/ui/sync-status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Menu, LogOut, User as UserIcon } from 'lucide-react';
@@ -44,11 +45,13 @@ export function Topbar({ onToggleSidebar, title }: TopbarProps) {
         )}
       </div>
 
-      {/* Right: Sync Status, Language, Profile & Logout */}
+      {/* Right: Sync Status, Language, Theme, Profile & Logout */}
       <div className="flex items-center gap-2.5 sm:gap-3.5">
         <SyncStatusBadge status={syncState} pendingCount={unsyncedOrdersCount} />
 
         <LanguageSwitcher />
+
+        <ThemeToggle />
 
         {/* User Account & Logout */}
         <div className="flex items-center gap-2 pl-2 border-l border-[#E8E8E5]">

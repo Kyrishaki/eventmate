@@ -17,6 +17,7 @@ import { SyncStatusBadge, SyncState } from '@/components/ui/sync-status-badge';
 import { formatCurrency } from '@/lib/utils';
 import { PaymentMethod, Product, ProductVariant, Order } from '@/types/database';
 import { PreorderPickupModal } from '@/components/pos/preorder-pickup-modal';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { usePreorderStore } from '@/stores/preorder-store';
 import {
   Store,
@@ -405,6 +406,8 @@ export default function PosTerminalPage() {
                 <span className="hidden sm:inline">Lịch sử</span>
               </Button>
             </Link>
+
+            <ThemeToggle />
 
             {/* Mobile Cart Button Toggle */}
             <button

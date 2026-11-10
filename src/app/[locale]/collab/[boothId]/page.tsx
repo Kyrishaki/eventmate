@@ -54,6 +54,7 @@ import {
 import { calculateVariantStock } from '@/lib/stock-status';
 import { logActivity } from '@/stores/audit-store';
 import { PreorderPickupModal } from '@/components/pos/preorder-pickup-modal';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 function CollabPartnerPortalContent() {
   const tCommon = useTranslations('common');
@@ -499,6 +500,8 @@ ${url}`;
                 <ShoppingCart className="w-3.5 h-3.5" />
                 <span>{activeTab === 'pos' ? 'Đóng POS Bán Hàng' : 'Mở POS Bán Hàng'}</span>
               </Button>
+
+              <ThemeToggle />
             </div>
           </div>
 

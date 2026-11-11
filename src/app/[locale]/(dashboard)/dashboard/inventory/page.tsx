@@ -186,23 +186,6 @@ export default function InventoryPage() {
 
     if (!targetVariant) return;
 
-    const maxOfflineLimit = Math.max(
-      0,
-      targetVariant.total_inventory -
-        (targetVariant.online_preorder_quantity || 0) -
-        (targetVariant.reserved_quantity || 0)
-    );
-    const allAllocations = allocations.filter((a) => a.variant_id === variantId);
-    const currentTotalAllocated = allAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
-    const centralOfflineRemaining = Math.max(0, maxOfflineLimit - currentTotalAllocated);
-
-    if (amount > 0 && centralOfflineRemaining < amount) {
-      alert(
-        `Không thể cấp thêm ${amount} sản phẩm!\nKho tổng chỉ còn ${centralOfflineRemaining} sản phẩm chưa cấp (Tổng nhập ${targetVariant.total_inventory} − Online ${targetVariant.online_preorder_quantity || 0} − Giữ VIP ${targetVariant.reserved_quantity || 0} − Đã cấp các quầy ${currentTotalAllocated}).`
-      );
-      return;
-    }
-
     const success = quickTransferStock(selectedBooth.id, variantId, amount);
     if (success) {
       setAllocInputs((prev) => {
@@ -255,10 +238,12 @@ export default function InventoryPage() {
         (targetVariant.online_preorder_quantity || 0) -
         (targetVariant.reserved_quantity || 0)
     );
-    const otherBoothsAlloc = allocations
-      .filter((a) => a.variant_id === variantId && a.booth_id !== selectedBooth.id)
-      .reduce((sum, a) => sum + a.allocated_quantity, 0);
-    const maxPossibleAlloc = Math.max(minAlloc, maxOfflineLimit - otherBoothsAlloc);
+    const otherRealSold = allocations
+      .filter(
+        (a) => a.variant_id === variantId && a.booth_id !== selectedBooth.id && !a.is_test
+      )
+      .reduce((sum, a) => sum + (a.sold_quantity || 0), 0);
+    const maxPossibleAlloc = Math.max(minAlloc, maxOfflineLimit - otherRealSold);
 
     let clampedAlloc = Math.max(minAlloc, targetAlloc);
     if (clampedAlloc > maxPossibleAlloc) {
@@ -308,7 +293,7 @@ export default function InventoryPage() {
     });
   }
 
-  // Bulk allocate all remaining available central stock of a single product (or all products) to selectedBooth
+  // Bulk allocate all remaining available stock of a single product to selectedBooth
   function handleAllocateMaxForProduct(prod: Product) {
     if (!selectedBooth || !selectedEvent) return;
     if (!canManageProduct(user, prod.collab_partner)) return;
@@ -326,10 +311,10 @@ export default function InventoryPage() {
         0,
         v.total_inventory - (v.online_preorder_quantity || 0) - (v.reserved_quantity || 0)
       );
-      const otherBoothsAlloc = allAllocs
-        .filter((a) => a.booth_id !== selectedBooth.id)
-        .reduce((sum, a) => sum + a.allocated_quantity, 0);
-      const maxAllowed = Math.max(currentSoldQty, maxOfflineCap - otherBoothsAlloc);
+      const otherRealSold = allAllocs
+        .filter((a) => a.booth_id !== selectedBooth.id && !a.is_test)
+        .reduce((sum, a) => sum + (a.sold_quantity || 0), 0);
+      const maxAllowed = Math.max(currentSoldQty, maxOfflineCap - otherRealSold);
 
       if (maxAllowed > currentAllocQty) {
         setAllocation(
@@ -374,10 +359,10 @@ export default function InventoryPage() {
         0,
         v.total_inventory - (v.online_preorder_quantity || 0) - (v.reserved_quantity || 0)
       );
-      const otherBoothsAlloc = allAllocs
-        .filter((a) => a.booth_id !== selectedBooth.id)
-        .reduce((sum, a) => sum + a.allocated_quantity, 0);
-      const maxAllowed = Math.max(currentSoldQty, maxOfflineCap - otherBoothsAlloc);
+      const otherRealSold = allAllocs
+        .filter((a) => a.booth_id !== selectedBooth.id && !a.is_test)
+        .reduce((sum, a) => sum + (a.sold_quantity || 0), 0);
+      const maxAllowed = Math.max(currentSoldQty, maxOfflineCap - otherRealSold);
 
       if (maxAllowed > currentAllocQty) {
         setAllocation(
@@ -428,21 +413,20 @@ export default function InventoryPage() {
     const product = products.find((p) => p.id === v.product_id);
     const allAllocations = allocations.filter((a) => a.variant_id === v.id);
     const realAllocationsForVar = allAllocations.filter((a) => !a.is_test);
-    const totalAllocated = allAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
+    const totalAllocated = realAllocationsForVar.reduce(
+      (sum, a) => sum + a.allocated_quantity,
+      0
+    );
     const totalSoldOffline = realAllocationsForVar.reduce(
       (sum, a) => sum + (a.sold_quantity || 0),
       0
     );
 
-    const maxOfflineCap = Math.max(
-      0,
-      v.total_inventory - (v.online_preorder_quantity || 0) - (v.reserved_quantity || 0)
-    );
-    const otherBoothsAlloc = selectedBooth
-      ? allAllocations
-          .filter((a) => a.booth_id !== selectedBooth.id)
-          .reduce((sum, a) => sum + a.allocated_quantity, 0)
-      : totalAllocated;
+    const totalHeldOnlineVip =
+      (v.online_preorder_quantity || 0) + (v.reserved_quantity || 0);
+    const isOverReserved = totalHeldOnlineVip > v.total_inventory;
+
+    const maxOfflineCap = Math.max(0, v.total_inventory - totalHeldOnlineVip);
 
     const boothAlloc = selectedBooth
       ? allAllocations.find((a) => a.booth_id === selectedBooth.id)
@@ -451,8 +435,15 @@ export default function InventoryPage() {
     const currentSoldQty = boothAlloc?.sold_quantity || 0;
     const availableToSell = Math.max(0, currentAllocQty - currentSoldQty);
 
-    const maxAllowedBoothAlloc = Math.max(currentSoldQty, maxOfflineCap - otherBoothsAlloc);
-    const centralStorageRemaining = Math.max(0, maxOfflineCap - totalAllocated);
+    // Physical stock sold at other real booths cannot be reallocated; unsold stock CAN be allocated to this booth
+    const otherRealSold = selectedBooth
+      ? realAllocationsForVar
+          .filter((a) => a.booth_id !== selectedBooth.id)
+          .reduce((sum, a) => sum + (a.sold_quantity || 0), 0)
+      : totalSoldOffline;
+
+    const maxAllowedBoothAlloc = Math.max(currentSoldQty, maxOfflineCap - otherRealSold);
+    const centralStorageRemaining = Math.max(0, maxAllowedBoothAlloc - currentAllocQty);
     const stock = calculateVariantStock(v, totalSoldOffline, totalAllocated);
 
     return {
@@ -460,8 +451,9 @@ export default function InventoryPage() {
       product,
       totalAllocated,
       totalSoldOffline,
+      totalHeldOnlineVip,
+      isOverReserved,
       maxOfflineCap,
-      otherBoothsAlloc,
       currentAllocQty,
       currentSoldQty,
       availableToSell,
@@ -619,9 +611,11 @@ export default function InventoryPage() {
 
         <div className="bg-white border border-[#E8E8E5] rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
           <div>
-            <p className="text-[11px] font-medium text-[#737373]">Kho tổng còn chưa cấp</p>
+            <p className="text-[11px] font-medium text-[#737373]">
+              Có thể cấp thêm cho {selectedBooth ? selectedBooth.name : 'quầy'}
+            </p>
             <p className="text-lg font-extrabold text-[#B7791F] mt-0.5 font-mono">
-              {boothStats.unallocatedInWarehouse.toLocaleString('vi-VN')}
+              +{boothStats.unallocatedInWarehouse.toLocaleString('vi-VN')}
               <span className="text-xs font-normal text-[#737373] ml-1">món khả dụng</span>
             </p>
           </div>
@@ -659,10 +653,10 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      {/* Step 1: Event & Booth Selector Bar + Step 2: Search & Filter Toolbar */}
+      {/* Unified Event & Booth Selector + Filter & Search Toolbar (Solid Dark-Mode-Safe Surfaces) */}
       <div className="bg-white border border-[#E8E8E5] rounded-xl shadow-2xs overflow-hidden divide-y divide-[#F0F0ED]">
         {/* Top Row: Event & Booth Selection */}
-        <div className="p-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="p-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white">
           <div className="flex flex-wrap items-center gap-3">
             {/* Event Selector */}
             <div className="flex items-center gap-2">
@@ -748,8 +742,8 @@ export default function InventoryPage() {
           </div>
         </div>
 
-        {/* Bottom Row: Filter Tabs + Search Input + View Switcher */}
-        <div className="p-2.5 bg-[#F7F7F5]/60 flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
+        {/* Bottom Row: Filter Tabs + Search Input + View Switcher (No /60 opacity!) */}
+        <div className="p-2.5 bg-white flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
           {/* Quick Filter Tabs */}
           <div className="flex flex-wrap items-center gap-1 p-1 bg-[#F7F7F5] rounded-lg border border-[#E8E8E5] text-xs">
             <button
@@ -796,7 +790,7 @@ export default function InventoryPage() {
               )}
             >
               <Boxes className="w-3.5 h-3.5 text-[#B7791F]" />
-              <span>Kho còn dư chưa cấp</span>
+              <span>Có thể cấp thêm</span>
               <span className="text-[10px] font-mono px-1.5 rounded bg-[#FEF7EC] text-[#B7791F]">
                 {countHasUnallocated}
               </span>
@@ -866,7 +860,7 @@ export default function InventoryPage() {
                     ? 'bg-white text-[#315C4C] shadow-2xs'
                     : 'text-[#737373] hover:text-[#202124]'
                 )}
-                title="Xem dạng bảng phẳng"
+                title="Xem dạng bảng gọn"
               >
                 <Table2 className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline text-[11px]">Bảng gọn</span>
@@ -924,11 +918,289 @@ export default function InventoryPage() {
       ) : viewMode === 'grouped' ? (
         /* =========================================================
            GROUPED BY PRODUCT VIEW (Default - Clean & Ergonomic)
+           - Single-variant products render as ONE unified row (no redundant 2-level header!)
+           - Multi-variant products render with a clean dark-mode-safe header + variant rows
            ========================================================= */
-        <div className="space-y-4">
+        <div className="space-y-3">
           {groupedProducts.map(({ product, items }) => {
             const thumbUrl = getProductThumbnail(product);
             const canEditThisProd = canManage && canManageProduct(user, product.collab_partner);
+            const isSingleVariant = items.length === 1;
+
+            if (isSingleVariant) {
+              const item = items[0];
+              const {
+                variant: v,
+                currentAllocQty,
+                currentSoldQty,
+                availableToSell,
+                maxAllowedBoothAlloc,
+                centralStorageRemaining,
+                isOverReserved,
+                totalHeldOnlineVip,
+                stock,
+              } = item;
+              const inputValue =
+                allocInputs[v.id] !== undefined ? allocInputs[v.id] : String(currentAllocQty);
+
+              return (
+                <Card
+                  key={product.id}
+                  className="border-[#E8E8E5] bg-white rounded-xl shadow-2xs p-4 hover:border-[#315C4C]/35 transition-all"
+                >
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                    {/* Col 1-4: Product Image + Name + SKU + Price */}
+                    <div className="lg:col-span-4 flex items-center gap-3.5 min-w-0">
+                      <div className="w-14 h-14 rounded-xl bg-[#F7F7F5] border border-[#E8E8E5] overflow-hidden shrink-0 flex items-center justify-center">
+                        {thumbUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={thumbUrl}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Package className="w-6 h-6 text-[#9E9E9C]" />
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <h3 className="text-sm font-bold text-[#202124] truncate">
+                            {product.name}
+                          </h3>
+                          {product.collab_partner && (
+                            <Badge variant="warning" className="text-[10px] gap-1">
+                              <Users2 className="w-2.5 h-2.5" />
+                              <span>{product.collab_partner}</span>
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                          <span className="text-xs font-extrabold text-[#315C4C] font-mono">
+                            {formatCurrency(v.price, currency)}
+                          </span>
+                          <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[#F7F7F5] border border-[#E8E8E5] text-[#737373]">
+                            {v.name} · {v.sku}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Col 5-7: Central Warehouse & Online/VIP Info (Clickable to Edit Master Stock) */}
+                    <div className="lg:col-span-3">
+                      <div
+                        onClick={() => canEditThisProd && openMasterStockModal(product)}
+                        className={cn(
+                          'bg-[#F7F7F5] border border-[#E8E8E5] rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-xs transition-colors',
+                          canEditThisProd ? 'cursor-pointer hover:border-[#315C4C]/50' : ''
+                        )}
+                        title={
+                          canEditThisProd
+                            ? 'Bấm để chỉnh sửa Tổng kho nhập, Giữ VIP hoặc đơn Online'
+                            : undefined
+                        }
+                      >
+                        <div>
+                          <span className="text-[10px] text-[#737373] block">Tổng kho</span>
+                          <span className="font-bold text-[#202124] font-mono text-sm">
+                            {v.total_inventory}
+                          </span>
+                        </div>
+
+                        <div className="h-6 w-px bg-[#E8E8E5]" />
+
+                        <div>
+                          <span className="text-[10px] text-[#737373] block">Khóa Onl / VIP</span>
+                          <div className="flex items-center gap-1 font-mono text-xs">
+                            <span className="font-bold text-[#1D4ED8]">{stock.online} Onl</span>
+                            <span className="text-[#9E9E9C]">·</span>
+                            <span className="font-bold text-[#B7791F]">{stock.preord} VIP</span>
+                          </div>
+                        </div>
+
+                        <div className="h-6 w-px bg-[#E8E8E5]" />
+
+                        <div className="text-right">
+                          <span className="text-[10px] text-[#737373] block">Cấp thêm được</span>
+                          <span
+                            className={cn(
+                              'font-extrabold font-mono text-sm',
+                              centralStorageRemaining > 0 ? 'text-[#2F7D55]' : 'text-[#737373]'
+                            )}
+                          >
+                            +{centralStorageRemaining}
+                          </span>
+                        </div>
+                      </div>
+
+                      {isOverReserved && (
+                        <div className="mt-1 flex items-center justify-between text-[10px] text-[#C44536] px-1">
+                          <span>
+                            ⚠️ Khóa Onl+VIP ({totalHeldOnlineVip}) &gt; Tổng kho (
+                            {v.total_inventory})
+                          </span>
+                          {canEditThisProd && (
+                            <button
+                              type="button"
+                              onClick={() => openMasterStockModal(product)}
+                              className="underline font-bold cursor-pointer"
+                            >
+                              Sửa ngay
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Col 8-9: Booth Status */}
+                    <div className="lg:col-span-2 flex items-center justify-between lg:flex-col lg:items-start lg:justify-center gap-1">
+                      <div
+                        className={cn(
+                          'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border',
+                          availableToSell <= 0
+                            ? 'bg-[#FDF1F0] text-[#C44536] border-[#C44536]/20'
+                            : availableToSell <= 5
+                            ? 'bg-[#FEF7EC] text-[#B7791F] border-[#B7791F]/20'
+                            : 'bg-[#EAF4EE] text-[#2F7D55] border-[#2F7D55]/20'
+                        )}
+                      >
+                        <span>Còn bán tại quầy:</span>
+                        <span className="font-mono text-sm font-extrabold">{availableToSell}</span>
+                      </div>
+                      <span className="text-[11px] text-[#737373] pl-0.5">
+                        Đã bán:{' '}
+                        <strong className="text-[#202124] font-mono">{currentSoldQty}</strong> /{' '}
+                        <span className="font-mono">{currentAllocQty}</span> đã cấp
+                      </span>
+                    </div>
+
+                    {/* Col 10-12: Direct Allocation Stepper + 1-Click Max + Master Edit */}
+                    <div className="lg:col-span-3 flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end justify-end gap-1.5">
+                      {canEditThisProd ? (
+                        <>
+                          <div className="flex items-center justify-between sm:justify-end gap-1.5">
+                            <div className="inline-flex items-center gap-1 bg-[#F7F7F5] p-1 rounded-xl border border-[#E8E8E5]">
+                              <button
+                                type="button"
+                                className="h-8 w-8 rounded-lg bg-white hover:bg-[#E8E8E5] text-[#202124] flex items-center justify-center font-bold text-xs border border-[#E8E8E5] disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
+                                title={
+                                  currentAllocQty <= currentSoldQty
+                                    ? `Không thể giảm dưới số lượng đã bán (${currentSoldQty})`
+                                    : 'Thu hồi 1 món về kho tổng'
+                                }
+                                disabled={currentAllocQty <= currentSoldQty}
+                                onClick={() => handleStockTransfer(v.id, v.name, -1)}
+                              >
+                                <Minus className="w-3.5 h-3.5" />
+                              </button>
+
+                              <input
+                                type="number"
+                                min={currentSoldQty}
+                                max={maxAllowedBoothAlloc}
+                                value={inputValue}
+                                onChange={(e) => {
+                                  setAllocInputs((prev) => ({
+                                    ...prev,
+                                    [v.id]: e.target.value,
+                                  }));
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    const val = parseInt(
+                                      allocInputs[v.id] ?? String(currentAllocQty),
+                                      10
+                                    );
+                                    handleDirectSetAllocation(
+                                      v.id,
+                                      v.name,
+                                      isNaN(val) ? currentAllocQty : val
+                                    );
+                                    (e.target as HTMLInputElement).blur();
+                                  }
+                                }}
+                                onBlur={() => {
+                                  if (allocInputs[v.id] !== undefined) {
+                                    const val = parseInt(allocInputs[v.id], 10);
+                                    handleDirectSetAllocation(
+                                      v.id,
+                                      v.name,
+                                      isNaN(val) ? currentAllocQty : val
+                                    );
+                                  }
+                                }}
+                                className="w-16 h-8 text-center text-sm font-extrabold font-mono bg-white border border-[#E8E8E5] rounded-lg text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                                title={`Nhập trực tiếp số lượng cấp cho quầy (Tối thiểu: ${currentSoldQty}, Tối đa: ${maxAllowedBoothAlloc})`}
+                              />
+
+                              <button
+                                type="button"
+                                className="h-8 w-8 rounded-lg bg-white hover:bg-[#E8E8E5] text-[#202124] flex items-center justify-center font-bold text-xs border border-[#E8E8E5] disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
+                                title={
+                                  centralStorageRemaining < 1
+                                    ? 'Đã đạt tối đa số lượng khả dụng'
+                                    : 'Cấp thêm 1 món cho quầy'
+                                }
+                                disabled={centralStorageRemaining < 1}
+                                onClick={() => handleStockTransfer(v.id, v.name, 1)}
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+
+                            {centralStorageRemaining > 0 ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDirectSetAllocation(v.id, v.name, maxAllowedBoothAlloc)
+                                }
+                                className="h-8 px-2.5 rounded-lg text-[11px] font-bold bg-[#EAF4EE] text-[#2F7D55] border border-[#2F7D55]/30 hover:bg-[#2F7D55] hover:text-white transition-colors shrink-0 cursor-pointer"
+                                title={`Cấp toàn bộ +${centralStorageRemaining} món khả dụng ra quầy này`}
+                              >
+                                Cấp tối đa ({maxAllowedBoothAlloc})
+                              </button>
+                            ) : availableToSell > 0 ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDirectSetAllocation(v.id, v.name, currentSoldQty)
+                                }
+                                className="h-8 px-2.5 rounded-lg text-[11px] font-semibold bg-[#F7F7F5] text-[#737373] border border-[#E8E8E5] hover:text-[#C44536] transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
+                                title={`Thu hồi ${availableToSell} món chưa bán về lại kho tổng`}
+                              >
+                                <RotateCcw className="w-3 h-3" />
+                                <span>Thu hồi</span>
+                              </button>
+                            ) : null}
+
+                            <button
+                              type="button"
+                              onClick={() => openMasterStockModal(product)}
+                              className="h-8 w-8 rounded-lg bg-[#F7F7F5] border border-[#E8E8E5] text-[#737373] hover:text-[#202124] flex items-center justify-center shrink-0 cursor-pointer"
+                              title="Chỉnh sửa Tổng kho gốc / Online / Giữ VIP"
+                            >
+                              <SlidersHorizontal className="w-3.5 h-3.5 text-[#B7791F]" />
+                            </button>
+                          </div>
+
+                          <span className="text-[10px] text-[#737373] font-mono text-right">
+                            Tối đa cấp được: {maxAllowedBoothAlloc} món
+                          </span>
+                        </>
+                      ) : (
+                        <span className="px-3 py-1.5 text-xs font-semibold text-[#737373] bg-[#F7F7F5] rounded-lg border border-[#E8E8E5]">
+                          Đã cấp: {currentAllocQty} (Chỉ xem)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              );
+            }
+
+            // Multi-variant Product Card (e.g., Size S, Size M, Size L)
             const prodTotalUnallocated = items.reduce(
               (sum, i) => sum + i.centralStorageRemaining,
               0
@@ -941,10 +1213,10 @@ export default function InventoryPage() {
                 key={product.id}
                 className="border-[#E8E8E5] bg-white rounded-xl shadow-2xs overflow-hidden"
               >
-                {/* Product Group Header */}
-                <div className="p-4 bg-[#F7F7F5]/70 border-b border-[#E8E8E5] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                {/* Solid Dark-Mode-Safe Product Group Header (NO /70 opacity!) */}
+                <div className="p-4 bg-[#F7F7F5] border-b border-[#E8E8E5] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-14 h-14 rounded-xl bg-white border border-[#E8E8E5] overflow-hidden shrink-0 flex items-center justify-center shadow-2xs">
+                    <div className="w-12 h-12 rounded-xl bg-white border border-[#E8E8E5] overflow-hidden shrink-0 flex items-center justify-center">
                       {thumbUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -973,7 +1245,7 @@ export default function InventoryPage() {
                         </span>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5 text-xs">
                         <span className="text-[#737373]">
                           Đã cấp cho <strong>{selectedBooth.name}</strong>:{' '}
                           <strong className="text-[#202124] font-mono">
@@ -989,7 +1261,7 @@ export default function InventoryPage() {
                           <>
                             <span className="text-[#E8E8E5]">•</span>
                             <span className="text-[#B7791F] font-semibold">
-                              Kho tổng còn dư:{' '}
+                              Có thể cấp thêm:{' '}
                               <strong className="font-mono">+{prodTotalUnallocated}</strong>
                             </span>
                           </>
@@ -1008,10 +1280,10 @@ export default function InventoryPage() {
                             size="sm"
                             onClick={() => handleAllocateMaxForProduct(product)}
                             className="h-8 px-3 text-xs gap-1.5 rounded-lg border-[#2F7D55]/40 text-[#2F7D55] hover:bg-[#EAF4EE] font-semibold bg-white"
-                            title="Cấp toàn bộ số lượng còn dư trong kho tổng của sản phẩm này ra quầy"
+                            title="Cấp toàn bộ số lượng khả dụng của tất cả các size ra quầy này"
                           >
                             <ArrowUpRight className="w-3.5 h-3.5" />
-                            <span>Cấp hết kho (+{prodTotalUnallocated})</span>
+                            <span>Cấp tối đa tất cả size (+{prodTotalUnallocated})</span>
                           </Button>
                         )}
                         <Button
@@ -1034,7 +1306,7 @@ export default function InventoryPage() {
                   </div>
                 </div>
 
-                {/* Variants Rows inside Product Card */}
+                {/* Variants Rows inside Multi-Variant Product Card */}
                 <div className="divide-y divide-[#F0F0ED]">
                   {items.map((item) => {
                     const {
@@ -1053,7 +1325,7 @@ export default function InventoryPage() {
                     return (
                       <div
                         key={v.id}
-                        className="p-4 hover:bg-[#F7F7F5]/40 transition-colors grid grid-cols-1 lg:grid-cols-12 gap-4 items-center"
+                        className="p-3.5 hover:bg-[#F7F7F5] transition-colors grid grid-cols-1 lg:grid-cols-12 gap-4 items-center"
                       >
                         {/* Col 1-3: Variant Name, SKU & Price */}
                         <div className="lg:col-span-3 flex items-center justify-between lg:block">
@@ -1068,16 +1340,12 @@ export default function InventoryPage() {
                               {formatCurrency(v.price, currency)}
                             </span>
                           </div>
-
-                          <Badge variant={stock.badgeVariant} className="lg:hidden text-[10px]">
-                            {stock.statusLabel}
-                          </Badge>
                         </div>
 
-                        {/* Col 4-6: Central Warehouse Breakdown (Kho tổng) */}
+                        {/* Col 4-7: Central Warehouse Breakdown */}
                         <div className="lg:col-span-4 bg-[#F7F7F5] border border-[#E8E8E5] rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-xs">
                           <div>
-                            <span className="text-[10px] text-[#737373] block">Tổng kho nhập</span>
+                            <span className="text-[10px] text-[#737373] block">Tổng kho</span>
                             <span className="font-bold text-[#202124] font-mono text-sm">
                               {v.total_inventory}
                             </span>
@@ -1087,7 +1355,7 @@ export default function InventoryPage() {
 
                           <div>
                             <span className="text-[10px] text-[#737373] block">
-                              Đã khóa (Onl / VIP)
+                              Khóa Onl / VIP
                             </span>
                             <div className="flex items-center gap-1.5 font-mono text-xs">
                               <span className="font-bold text-[#1D4ED8]">{stock.online} Onl</span>
@@ -1099,21 +1367,19 @@ export default function InventoryPage() {
                           <div className="h-6 w-px bg-[#E8E8E5]" />
 
                           <div className="text-right">
-                            <span className="text-[10px] text-[#737373] block">Kho còn dư</span>
+                            <span className="text-[10px] text-[#737373] block">Cấp thêm được</span>
                             <span
                               className={cn(
                                 'font-extrabold font-mono text-sm',
-                                centralStorageRemaining > 0 ? 'text-[#B7791F]' : 'text-[#737373]'
+                                centralStorageRemaining > 0 ? 'text-[#2F7D55]' : 'text-[#737373]'
                               )}
                             >
-                              {centralStorageRemaining > 0
-                                ? `+${centralStorageRemaining}`
-                                : '0 (Đã cấp hết)'}
+                              +{centralStorageRemaining}
                             </span>
                           </div>
                         </div>
 
-                        {/* Col 7-8: Booth Current Status (Tại quầy đang chọn) */}
+                        {/* Col 8-9: Booth Current Status */}
                         <div className="lg:col-span-2 flex items-center justify-between lg:flex-col lg:items-start lg:justify-center gap-1">
                           <div
                             className={cn(
@@ -1131,18 +1397,17 @@ export default function InventoryPage() {
                             </span>
                           </div>
                           <span className="text-[11px] text-[#737373] pl-0.5">
-                            Đã bán tại quầy:{' '}
+                            Đã bán:{' '}
                             <strong className="text-[#202124] font-mono">{currentSoldQty}</strong> /{' '}
                             <span className="font-mono">{currentAllocQty}</span> đã cấp
                           </span>
                         </div>
 
-                        {/* Col 9-12: Direct Allocation Controls (Điều chỉnh cấp cho quầy) */}
+                        {/* Col 10-12: Direct Allocation Controls */}
                         <div className="lg:col-span-3 flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end justify-end gap-1.5">
                           {canEditThisProd ? (
                             <>
                               <div className="flex items-center justify-between sm:justify-end gap-1.5">
-                                {/* Direct Stepper + Manual Number Input */}
                                 <div className="inline-flex items-center gap-1 bg-[#F7F7F5] p-1 rounded-xl border border-[#E8E8E5]">
                                   <button
                                     type="button"
@@ -1158,54 +1423,52 @@ export default function InventoryPage() {
                                     <Minus className="w-3.5 h-3.5" />
                                   </button>
 
-                                  <div className="relative">
-                                    <input
-                                      type="number"
-                                      min={currentSoldQty}
-                                      max={maxAllowedBoothAlloc}
-                                      value={inputValue}
-                                      onChange={(e) => {
-                                        setAllocInputs((prev) => ({
-                                          ...prev,
-                                          [v.id]: e.target.value,
-                                        }));
-                                      }}
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                          const val = parseInt(
-                                            allocInputs[v.id] ?? String(currentAllocQty),
-                                            10
-                                          );
-                                          handleDirectSetAllocation(
-                                            v.id,
-                                            v.name,
-                                            isNaN(val) ? currentAllocQty : val
-                                          );
-                                          (e.target as HTMLInputElement).blur();
-                                        }
-                                      }}
-                                      onBlur={() => {
-                                        if (allocInputs[v.id] !== undefined) {
-                                          const val = parseInt(allocInputs[v.id], 10);
-                                          handleDirectSetAllocation(
-                                            v.id,
-                                            v.name,
-                                            isNaN(val) ? currentAllocQty : val
-                                          );
-                                        }
-                                      }}
-                                      className="w-20 h-8 text-center text-sm font-extrabold font-mono bg-white border border-[#E8E8E5] rounded-lg text-[#202124] focus:outline-none focus:border-[#315C4C]"
-                                      title={`Nhập trực tiếp tổng số lượng cấp cho quầy (Tối thiểu: ${currentSoldQty}, Tối đa: ${maxAllowedBoothAlloc})`}
-                                    />
-                                  </div>
+                                  <input
+                                    type="number"
+                                    min={currentSoldQty}
+                                    max={maxAllowedBoothAlloc}
+                                    value={inputValue}
+                                    onChange={(e) => {
+                                      setAllocInputs((prev) => ({
+                                        ...prev,
+                                        [v.id]: e.target.value,
+                                      }));
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        const val = parseInt(
+                                          allocInputs[v.id] ?? String(currentAllocQty),
+                                          10
+                                        );
+                                        handleDirectSetAllocation(
+                                          v.id,
+                                          v.name,
+                                          isNaN(val) ? currentAllocQty : val
+                                        );
+                                        (e.target as HTMLInputElement).blur();
+                                      }
+                                    }}
+                                    onBlur={() => {
+                                      if (allocInputs[v.id] !== undefined) {
+                                        const val = parseInt(allocInputs[v.id], 10);
+                                        handleDirectSetAllocation(
+                                          v.id,
+                                          v.name,
+                                          isNaN(val) ? currentAllocQty : val
+                                        );
+                                      }
+                                    }}
+                                    className="w-16 h-8 text-center text-sm font-extrabold font-mono bg-white border border-[#E8E8E5] rounded-lg text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                                    title={`Nhập trực tiếp tổng số lượng cấp cho quầy (Tối thiểu: ${currentSoldQty}, Tối đa: ${maxAllowedBoothAlloc})`}
+                                  />
 
                                   <button
                                     type="button"
                                     className="h-8 w-8 rounded-lg bg-white hover:bg-[#E8E8E5] text-[#202124] flex items-center justify-center font-bold text-xs border border-[#E8E8E5] disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
                                     title={
                                       centralStorageRemaining < 1
-                                        ? 'Kho tổng đã cấp hết hàng khả dụng'
-                                        : 'Cấp thêm 1 món từ kho tổng'
+                                        ? 'Đã đạt mức tối đa khả dụng'
+                                        : 'Cấp thêm 1 món cho quầy'
                                     }
                                     disabled={centralStorageRemaining < 1}
                                     onClick={() => handleStockTransfer(v.id, v.name, 1)}
@@ -1214,7 +1477,6 @@ export default function InventoryPage() {
                                   </button>
                                 </div>
 
-                                {/* 1-Click Quick Action Pill: Allocate Max or Recall Unsold */}
                                 {centralStorageRemaining > 0 ? (
                                   <button
                                     type="button"
@@ -1226,9 +1488,9 @@ export default function InventoryPage() {
                                       )
                                     }
                                     className="h-8 px-2.5 rounded-lg text-[11px] font-bold bg-[#EAF4EE] text-[#2F7D55] border border-[#2F7D55]/30 hover:bg-[#2F7D55] hover:text-white transition-colors shrink-0 cursor-pointer"
-                                    title={`Cấp toàn bộ +${centralStorageRemaining} món còn dư trong kho cho quầy này (Lên mức tối đa ${maxAllowedBoothAlloc})`}
+                                    title={`Cấp toàn bộ +${centralStorageRemaining} món khả dụng cho quầy này`}
                                   >
-                                    Tối đa ({maxAllowedBoothAlloc})
+                                    Cấp tối đa ({maxAllowedBoothAlloc})
                                   </button>
                                 ) : availableToSell > 0 ? (
                                   <button
@@ -1236,17 +1498,17 @@ export default function InventoryPage() {
                                     onClick={() =>
                                       handleDirectSetAllocation(v.id, v.name, currentSoldQty)
                                     }
-                                    className="h-8 px-2.5 rounded-lg text-[11px] font-semibold bg-[#F7F7F5] text-[#737373] border border-[#E8E8E5] hover:text-[#C44536] hover:border-[#C44536]/30 transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
+                                    className="h-8 px-2.5 rounded-lg text-[11px] font-semibold bg-[#F7F7F5] text-[#737373] border border-[#E8E8E5] hover:text-[#C44536] transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
                                     title={`Thu hồi ${availableToSell} món chưa bán về lại kho tổng`}
                                   >
                                     <RotateCcw className="w-3 h-3" />
-                                    <span>Thu hồi dư</span>
+                                    <span>Thu hồi</span>
                                   </button>
                                 ) : null}
                               </div>
 
                               <span className="text-[10px] text-[#737373] font-mono text-right">
-                                Giới hạn cấp: {currentSoldQty} → {maxAllowedBoothAlloc} món
+                                Tối đa cấp được: {maxAllowedBoothAlloc} món
                               </span>
                             </>
                           ) : (
@@ -1265,7 +1527,7 @@ export default function InventoryPage() {
         </div>
       ) : (
         /* =========================================================
-           COMPACT TABLE VIEW (6 Clear Columns Instead of 10 Cluttered Columns)
+           COMPACT TABLE VIEW (6 Clear Columns)
            ========================================================= */
         <Card className="border-[#E8E8E5] bg-white rounded-xl shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
@@ -1274,7 +1536,7 @@ export default function InventoryPage() {
                 <tr>
                   <th className="py-3 px-4">Sản phẩm & Phân loại</th>
                   <th className="py-3 px-4 text-center">Tổng kho & Đã khóa</th>
-                  <th className="py-3 px-4 text-center">Kho tổng còn dư</th>
+                  <th className="py-3 px-4 text-center">Cấp thêm được</th>
                   <th className="py-3 px-4 text-center">Đã bán tại quầy</th>
                   <th className="py-3 px-4 text-center">Còn bán tại quầy</th>
                   <th className="py-3 px-4 text-right">
@@ -1300,7 +1562,7 @@ export default function InventoryPage() {
                     allocInputs[v.id] !== undefined ? allocInputs[v.id] : String(currentAllocQty);
 
                   return (
-                    <tr key={v.id} className="hover:bg-[#F7F7F5]/50 transition-colors">
+                    <tr key={v.id} className="hover:bg-[#F7F7F5] transition-colors">
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg bg-[#F7F7F5] border border-[#E8E8E5] overflow-hidden shrink-0 flex items-center justify-center">
@@ -1344,11 +1606,11 @@ export default function InventoryPage() {
                           className={cn(
                             'inline-flex items-center px-2 py-0.5 rounded-md font-mono font-bold text-xs',
                             centralStorageRemaining > 0
-                              ? 'bg-[#FEF7EC] text-[#B7791F]'
+                              ? 'bg-[#EAF4EE] text-[#2F7D55]'
                               : 'bg-[#F7F7F5] text-[#737373]'
                           )}
                         >
-                          {centralStorageRemaining > 0 ? `+${centralStorageRemaining}` : '0'}
+                          +{centralStorageRemaining}
                         </span>
                       </td>
 
@@ -1438,7 +1700,7 @@ export default function InventoryPage() {
                                 }
                                 className="h-7 px-2 rounded text-[10px] font-bold bg-[#EAF4EE] text-[#2F7D55] border border-[#2F7D55]/30 hover:bg-[#2F7D55] hover:text-white transition-colors"
                               >
-                                Max ({maxAllowedBoothAlloc})
+                                Cấp tối đa ({maxAllowedBoothAlloc})
                               </button>
                             )}
                           </div>

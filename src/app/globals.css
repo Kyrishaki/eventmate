@@ -156,18 +156,22 @@ html.dark .bg-surface {
 }
 
 html.dark .bg-\[\#F7F7F5\],
+html.dark [class*="bg-[#F7F7F5]"],
 html.dark .bg-background {
   background-color: var(--background) !important;
 }
 
-html.dark .bg-\[\#F0F0ED\] {
+html.dark .bg-\[\#F0F0ED\],
+html.dark [class*="bg-[#F0F0ED]"] {
   background-color: var(--muted-light) !important;
 }
 
 html.dark .bg-\[\#FBFBFA\],
 html.dark .bg-\[\#FAFAF8\],
 html.dark .bg-\[\#F9F9F8\],
-html.dark .bg-\[\#F5F5F3\] {
+html.dark .bg-\[\#F5F5F3\],
+html.dark [class*="bg-[#FBFBFA]"],
+html.dark [class*="bg-[#FAFAF8]"] {
   background-color: var(--muted-light) !important;
 }
 

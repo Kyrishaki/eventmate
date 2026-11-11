@@ -699,29 +699,86 @@ export const useDataStore = create<DataStoreState>()(
       // Allocations
       setAllocations: (allocations) => set({ allocations }),
       setAllocation: (workspaceId, eventId, boothId, variantId, allocatedQuantity) => {
-        const { variants, allocations } = get();
+        const { variants, allocations, booths } = get();
         const variant = variants.find((v) => v.id === variantId);
         const existing = allocations.find(
           (a) => a.booth_id === boothId && a.variant_id === variantId
         );
+        const targetBooth = booths.find((b) => b.id === boothId);
+        const isTargetTest = Boolean(existing?.is_test || targetBooth?.is_test);
         const currentSold = existing?.sold_quantity || 0;
 
         let finalQty = Math.max(currentSold, allocatedQuantity);
-        if (variant) {
+        let updatedAllocations = [...allocations];
+
+        if (variant && !isTargetTest) {
           const maxOfflineLimit = Math.max(
             0,
-            variant.total_inventory - (variant.online_preorder_quantity || 0) - (variant.reserved_quantity || 0)
+            variant.total_inventory -
+              (variant.online_preorder_quantity || 0) -
+              (variant.reserved_quantity || 0)
           );
-          const otherBoothsAlloc = allocations
-            .filter((a) => a.variant_id === variantId && a.booth_id !== boothId)
-            .reduce((sum, a) => sum + a.allocated_quantity, 0);
-          const maxAllowed = Math.max(currentSold, maxOfflineLimit - otherBoothsAlloc);
-          finalQty = Math.min(finalQty, maxAllowed);
+
+          // Real allocations for this variant at OTHER booths
+          const otherRealAllocs = updatedAllocations.filter(
+            (a) => a.variant_id === variantId && a.booth_id !== boothId && !isTestAllocation(a)
+          );
+          const otherRealSold = otherRealAllocs.reduce(
+            (sum, a) => sum + (a.sold_quantity || 0),
+            0
+          );
+
+          // Maximum physical stock possible for this booth (cannot take what was already sold elsewhere)
+          const maxPossibleForBooth = Math.max(currentSold, maxOfflineLimit - otherRealSold);
+          finalQty = Math.min(finalQty, maxPossibleForBooth);
+
+          // If other booths currently hold unsold allocation that would push total allocated > maxOfflineLimit,
+          // automatically reclaim the needed unsold quantity (prioritizing booths from other events first)
+          const currentOtherAllocated = otherRealAllocs.reduce(
+            (sum, a) => sum + a.allocated_quantity,
+            0
+          );
+          let neededToReclaim = Math.max(0, finalQty + currentOtherAllocated - maxOfflineLimit);
+
+          if (neededToReclaim > 0) {
+            // Sort other allocations: other events first, then same event
+            const sortedOthers = [...otherRealAllocs].sort((a, b) => {
+              const aDiffEvent = a.event_id !== eventId ? 0 : 1;
+              const bDiffEvent = b.event_id !== eventId ? 0 : 1;
+              return aDiffEvent - bDiffEvent;
+            });
+
+            const reductions = new Map<string, number>();
+            for (const other of sortedOthers) {
+              if (neededToReclaim <= 0) break;
+              const unsoldAtOther = Math.max(
+                0,
+                other.allocated_quantity - (other.sold_quantity || 0)
+              );
+              if (unsoldAtOther > 0) {
+                const take = Math.min(unsoldAtOther, neededToReclaim);
+                reductions.set(other.id, other.allocated_quantity - take);
+                neededToReclaim -= take;
+              }
+            }
+
+            if (reductions.size > 0) {
+              updatedAllocations = updatedAllocations.map((a) =>
+                reductions.has(a.id)
+                  ? {
+                      ...a,
+                      allocated_quantity: reductions.get(a.id)!,
+                      updated_at: new Date().toISOString(),
+                    }
+                  : a
+              );
+            }
+          }
         }
 
         if (existing) {
           set({
-            allocations: allocations.map((a) =>
+            allocations: updatedAllocations.map((a) =>
               a.id === existing.id
                 ? {
                     ...a,
@@ -733,71 +790,64 @@ export const useDataStore = create<DataStoreState>()(
           });
         } else {
           const newAlloc: InventoryAllocation = {
-            id: `alloc-${Date.now()}`,
+            id: `alloc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
             workspace_id: workspaceId,
             event_id: eventId,
             booth_id: boothId,
             variant_id: variantId,
             allocated_quantity: finalQty,
             sold_quantity: 0,
+            is_test: isTargetTest,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           };
-          set({ allocations: [...allocations, newAlloc] });
+          set({ allocations: [...updatedAllocations, newAlloc] });
         }
       },
       quickTransferStock: (boothId, variantId, delta) => {
-        const { variants, allocations } = get();
+        const { variants, allocations, booths } = get();
         const variant = variants.find((v) => v.id === variantId);
         if (!variant) return false;
 
-        // Maximum stock available for offline allocation (excluding online orders & VIP preorders)
-        const maxOfflineLimit = Math.max(
-          0,
-          variant.total_inventory - (variant.online_preorder_quantity || 0) - (variant.reserved_quantity || 0)
+        const booth = booths.find((b) => b.id === boothId);
+        const currentBoothAlloc = allocations.find(
+          (a) => a.booth_id === boothId && a.variant_id === variantId
         );
-
-        // Calculate total allocated across all booths
-        const allVariantAllocations = allocations.filter((a) => a.variant_id === variantId);
-        const currentTotalAllocated = allVariantAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
-        const centralOfflineRemaining = Math.max(0, maxOfflineLimit - currentTotalAllocated);
-
-        const currentBoothAlloc = allVariantAllocations.find((a) => a.booth_id === boothId);
         const currentQty = currentBoothAlloc ? currentBoothAlloc.allocated_quantity : 0;
+        const currentSold = currentBoothAlloc?.sold_quantity || 0;
         const targetQty = currentQty + delta;
 
-        // Validation: cannot drop below sold quantity, cannot exceed remaining offline storage
-        if (delta > 0 && delta > centralOfflineRemaining) {
-          return false; // Not enough offline stock in central storage
-        }
-        if (targetQty < (currentBoothAlloc?.sold_quantity || 0)) {
-          return false; // Cannot de-allocate already sold stock
+        if (targetQty < currentSold) {
+          return false;
         }
 
-        if (currentBoothAlloc) {
-          set({
-            allocations: allocations.map((a) =>
-              a.id === currentBoothAlloc.id
-                ? { ...a, allocated_quantity: targetQty, updated_at: new Date().toISOString() }
-                : a
-            ),
-          });
-        } else {
-          const booth = get().booths.find((b) => b.id === boothId);
-          if (!booth) return false;
-          const newAlloc: InventoryAllocation = {
-            id: `alloc-${Date.now()}`,
-            workspace_id: booth.workspace_id,
-            event_id: booth.event_id,
-            booth_id: boothId,
-            variant_id: variantId,
-            allocated_quantity: targetQty,
-            sold_quantity: 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-          set({ allocations: [...allocations, newAlloc] });
+        const isTargetTest = Boolean(currentBoothAlloc?.is_test || booth?.is_test);
+        if (!isTargetTest) {
+          const maxOfflineLimit = Math.max(
+            0,
+            variant.total_inventory -
+              (variant.online_preorder_quantity || 0) -
+              (variant.reserved_quantity || 0)
+          );
+          const otherRealSold = allocations
+            .filter(
+              (a) => a.variant_id === variantId && a.booth_id !== boothId && !isTestAllocation(a)
+            )
+            .reduce((sum, a) => sum + (a.sold_quantity || 0), 0);
+          const maxPossibleForBooth = Math.max(currentSold, maxOfflineLimit - otherRealSold);
+
+          if (delta > 0 && targetQty > maxPossibleForBooth) {
+            return false;
+          }
         }
+
+        get().setAllocation(
+          booth?.workspace_id || currentBoothAlloc?.workspace_id || 'ws-hac-cam-studio',
+          booth?.event_id || currentBoothAlloc?.event_id || '',
+          boothId,
+          variantId,
+          targetQty
+        );
         return true;
       },
       resetTestAllocations: () => {

@@ -447,12 +447,12 @@ ${url}`;
                 <ArrowLeft className="w-4 h-4" />
               </Link>
 
-              <div className="h-9 w-auto flex items-center justify-center shrink-0">
+              <div className="h-11 sm:h-12 w-auto flex items-center justify-center shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/logo.png"
                   alt="HikaruStore Logo"
-                  className="h-9 w-auto max-w-[80px] object-contain"
+                  className="h-11 sm:h-12 w-auto max-w-[100px] object-contain"
                 />
               </div>
 

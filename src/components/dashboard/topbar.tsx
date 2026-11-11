@@ -27,9 +27,9 @@ export function Topbar({ onToggleSidebar, title }: TopbarProps) {
   }
 
   return (
-    <header className="h-12 sm:h-14 border-b border-[#E8E8E5] bg-white px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30">
+    <header className="h-14 sm:h-16 border-b border-[#E8E8E5] bg-white px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-2xs">
       {/* Left: Mobile Menu & Current Title */}
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
         <button
           type="button"
           onClick={onToggleSidebar}
@@ -39,21 +39,22 @@ export function Topbar({ onToggleSidebar, title }: TopbarProps) {
           <Menu className="w-5 h-5" />
         </button>
 
-        <Link href="/dashboard" className="lg:hidden flex items-center gap-2">
+        <Link href="/dashboard" className="flex items-center gap-2.5 sm:gap-3 group shrink-0" title="Về trang tổng quan">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/logo.png"
             alt="HikaruStore Logo"
-            className="h-8 w-auto max-w-[75px] object-contain"
+            className="h-9 sm:h-11 w-auto max-w-[85px] sm:max-w-[105px] object-contain transition-transform group-hover:scale-105"
           />
-          <span className="font-bold text-xs text-[#202124]">HikaruStore</span>
+          <div className="flex flex-col">
+            <span className="font-extrabold text-xs sm:text-sm text-[#202124] leading-tight">HikaruStore</span>
+            {title && (
+              <span className="text-[10px] sm:text-[11px] text-[#737373] font-medium leading-none mt-0.5 truncate max-w-[140px] sm:max-w-[200px]">
+                {title}
+              </span>
+            )}
+          </div>
         </Link>
-
-        {title && (
-          <h1 className="text-sm font-semibold text-[#202124] tracking-tight truncate hidden sm:block">
-            {title}
-          </h1>
-        )}
       </div>
 
       {/* Right: Sync Status, Language, Theme, Scale, Profile & Logout */}

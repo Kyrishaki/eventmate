@@ -71,24 +71,24 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       >
         <div className="flex flex-col flex-1 min-h-0">
           {/* Header & Logo */}
-          <div className="h-16 px-4 flex items-center justify-between border-b border-[#E8E8E5]">
+          <div className="h-17 px-4 flex items-center justify-between border-b border-[#E8E8E5]">
             <Link href="/dashboard" className="flex items-center gap-3 text-[#202124] group">
-              <div className="h-11 w-auto flex items-center justify-center shrink-0">
+              <div className="h-12 w-auto flex items-center justify-center shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/logo.png"
                   alt="HikaruStore Logo"
-                  className="h-11 w-auto max-w-[90px] object-contain transition-transform group-hover:scale-105"
+                  className="h-12 w-auto max-w-[100px] object-contain transition-transform group-hover:scale-105"
                 />
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-base tracking-tight text-[#202124]">HikaruStore</span>
-                  <span className="text-[9px] text-[#737373] border border-[#E8E8E5] px-1 py-0.2 rounded font-mono">
+                  <span className="font-extrabold text-base tracking-tight text-[#202124]">HikaruStore</span>
+                  <span className="text-[9px] text-[#737373] border border-[#E8E8E5] px-1 py-0.2 rounded font-mono font-semibold">
                     v1.0
                   </span>
                 </div>
-                <span className="text-[10.5px] text-[#737373] leading-none mt-0.5">Event Merchandise</span>
+                <span className="text-[11px] text-[#737373] leading-none mt-0.5">Event Merchandise</span>
               </div>
             </Link>
             {onClose && (

@@ -49,15 +49,19 @@ export default function PosOrdersPage() {
   return (
     <div className="min-h-screen bg-[#F7F7F5] flex flex-col">
       {/* Top Header */}
-      <header className="h-14 bg-white border-b border-[#E8E8E5] px-4 flex items-center justify-between sticky top-0 z-30">
+      <header className="h-14 sm:h-16 bg-white border-b border-[#E8E8E5] px-4 flex items-center justify-between sticky top-0 z-30 shadow-2xs">
         <div className="flex items-center gap-3">
           <Link href="/pos">
             <Button variant="outline" size="sm" className="h-8 px-2 text-xs gap-1">
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Về POS Bán hàng</span>
+              <span>Về POS</span>
             </Button>
           </Link>
-          <h1 className="text-sm font-bold text-[#202124]">Lịch sử Đơn hàng tại Quầy</h1>
+          <div className="flex items-center gap-2.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="Logo" className="h-9 w-auto max-w-[80px] object-contain hidden sm:block" />
+            <h1 className="text-sm font-bold text-[#202124]">Lịch sử Đơn hàng tại Quầy</h1>
+          </div>
         </div>
 
         <Badge variant="outline" className="text-xs font-mono">

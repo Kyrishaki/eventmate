@@ -642,17 +642,17 @@ export default function PosTerminalPage() {
         <div className="h-14 sm:h-16 px-3 sm:px-5 flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
             <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0 group" title="Về trang quản lý">
-              <div className="h-9 sm:h-11 w-auto flex items-center justify-center shrink-0">
+              <div className="h-10 sm:h-12 w-auto flex items-center justify-center shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/logo.png"
                   alt="HikaruStore Logo"
-                  className="h-9 sm:h-11 w-auto max-w-[85px] sm:max-w-[95px] object-contain transition-transform group-hover:scale-105"
+                  className="h-10 sm:h-12 w-auto max-w-[90px] sm:max-w-[110px] object-contain transition-transform group-hover:scale-105"
                 />
               </div>
               <div className="hidden md:flex flex-col">
-                <span className="font-bold text-sm text-[#202124] leading-tight">HikaruStore</span>
-                <span className="text-[10px] text-[#315C4C] font-semibold leading-none">POS Terminal</span>
+                <span className="font-extrabold text-sm sm:text-base text-[#202124] leading-tight">HikaruStore</span>
+                <span className="text-[10.5px] text-[#315C4C] font-bold leading-none">POS Terminal</span>
               </div>
             </Link>
 

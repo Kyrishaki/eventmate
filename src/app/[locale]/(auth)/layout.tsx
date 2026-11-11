@@ -7,17 +7,17 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="min-h-screen bg-[#F7F7F5] flex flex-col justify-between p-4 sm:p-6 lg:p-8">
       {/* Top Header */}
-      <header className="flex items-center justify-between max-w-5xl w-full mx-auto py-2">
+      <header className="flex items-center justify-between max-w-5xl w-full mx-auto py-3">
         <Link href="/login" className="flex items-center gap-3 text-[#202124] group">
-          <div className="h-11 sm:h-12 w-auto flex items-center justify-center shrink-0">
+          <div className="h-13 sm:h-15 w-auto flex items-center justify-center shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.png"
               alt="HikaruStore Logo"
-              className="h-11 sm:h-12 w-auto max-w-[100px] object-contain transition-transform group-hover:scale-105"
+              className="h-13 sm:h-15 w-auto max-w-[125px] object-contain transition-transform group-hover:scale-105"
             />
           </div>
-          <span className="font-bold text-lg sm:text-xl tracking-tight text-[#202124]">
+          <span className="font-black text-xl sm:text-2xl tracking-tight text-[#202124]">
             HikaruStore
           </span>
         </Link>

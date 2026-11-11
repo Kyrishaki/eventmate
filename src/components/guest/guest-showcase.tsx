@@ -220,27 +220,27 @@ export function GuestShowcase() {
 
       {/* Top Customer Header */}
       <header className="sticky top-[37px] z-40 bg-white dark:bg-neutral-900 border-b border-[#E8E8E5] dark:border-neutral-800 shadow-2xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-18 sm:h-20 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 sm:h-22 flex items-center justify-between gap-4">
           {/* Brand Logo & Showcase Badge */}
-          <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
-            <div className="h-10 sm:h-14 w-auto flex items-center justify-center shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
+            <div className="h-13 sm:h-16 w-auto flex items-center justify-center shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/logo.png"
                 alt="HikaruStore Logo"
-                className="h-10 sm:h-14 w-auto max-w-[85px] sm:max-w-[130px] object-contain drop-shadow-xs"
+                className="h-13 sm:h-16 w-auto max-w-[110px] sm:max-w-[145px] object-contain drop-shadow-sm"
               />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="font-bold text-base sm:text-xl tracking-tight text-[#202124] dark:text-neutral-100 truncate">
+                <span className="font-extrabold text-lg sm:text-2xl tracking-tight text-[#202124] dark:text-neutral-100 truncate">
                   {activeWorkspace?.name || 'HikaruStore'}
                 </span>
-                <span className="hidden xs:inline-block text-[9.5px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded bg-[#EAF4EE] dark:bg-emerald-950/60 text-[#2F7D55] dark:text-emerald-400 border border-[#CEE6D7] dark:border-emerald-800 shrink-0">
+                <span className="hidden xs:inline-block text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded bg-[#EAF4EE] dark:bg-emerald-950/60 text-[#2F7D55] dark:text-emerald-400 border border-[#CEE6D7] dark:border-emerald-800 shrink-0">
                   Khách xem
                 </span>
               </div>
-              <p className="text-[11px] sm:text-xs text-[#737373] dark:text-neutral-400 leading-none mt-0.5 sm:mt-1 truncate">
+              <p className="text-xs sm:text-sm text-[#737373] dark:text-neutral-400 leading-none mt-1 truncate">
                 Official Merchandise Catalog & Pre-order
               </p>
             </div>

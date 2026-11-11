@@ -339,16 +339,20 @@ export function FeedbackModal({ isOpen, onClose, defaultType = 'bug' }: Feedback
  * Floating Quick-Access Feedback Widget
  * Renders a compact floating button in the bottom-right corner of the screen
  */
-export function FloatingFeedbackWidget() {
+export function FloatingFeedbackWidget({ hasBottomNav = false }: { hasBottomNav?: boolean }) {
   const [isOpen, setIsOpen] = React.useState(false);
 
   return (
     <>
-      <div className="fixed bottom-5 right-5 z-40 print:hidden">
+      <div
+        className={`fixed right-3 sm:right-5 z-30 print:hidden ${
+          hasBottomNav ? 'bottom-[78px] md:bottom-5' : 'bottom-5'
+        }`}
+      >
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-2 bg-[#315C4C] text-white hover:bg-[#284A3D] px-3.5 py-2.5 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95 border border-white/20 text-xs font-semibold group cursor-pointer"
+          className="flex items-center gap-2 bg-[#315C4C] text-white hover:bg-[#284A3D] px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95 border border-white/20 text-xs font-semibold group cursor-pointer"
           title="Báo cáo lỗi hoặc đóng góp ý kiến cải thiện website"
         >
           <MessageSquarePlus className="w-4 h-4 text-[#F3B05C] group-hover:rotate-12 transition-transform" />

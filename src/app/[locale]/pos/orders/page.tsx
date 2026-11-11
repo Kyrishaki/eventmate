@@ -49,24 +49,31 @@ export default function PosOrdersPage() {
   return (
     <div className="min-h-screen bg-[#F7F7F5] flex flex-col">
       {/* Top Header */}
-      <header className="h-14 sm:h-16 bg-white border-b border-[#E8E8E5] px-4 flex items-center justify-between sticky top-0 z-30 shadow-2xs">
-        <div className="flex items-center gap-3">
+      <header className="h-14 sm:h-16 bg-white border-b border-[#E8E8E5] px-3 sm:px-4 flex items-center justify-between gap-2 sticky top-0 z-30 shadow-2xs">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link href="/pos">
-            <Button variant="outline" size="sm" className="h-8 px-2 text-xs gap-1">
+            <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs gap-1 font-semibold">
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Về POS</span>
             </Button>
           </Link>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 min-w-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="Logo" className="h-9 w-auto max-w-[80px] object-contain hidden sm:block" />
-            <h1 className="text-sm font-bold text-[#202124]">Lịch sử Đơn hàng tại Quầy</h1>
+            <img src="/logo.png" alt="Logo" className="h-8 w-auto max-w-[44px] object-contain hidden sm:block shrink-0" />
+            <h1 className="text-sm font-bold text-[#202124] truncate">Đơn hàng tại Quầy</h1>
           </div>
         </div>
 
-        <Badge variant="outline" className="text-xs font-mono">
-          {orders.length} đơn đã ghi nhận
-        </Badge>
+        <div className="flex items-center gap-2 shrink-0">
+          <Badge variant="outline" className="text-[11px] font-mono hidden sm:inline-flex">
+            {orders.length} đơn
+          </Badge>
+          <Link href="/dashboard">
+            <Button variant="ghost" size="sm" className="h-8 px-2.5 text-xs font-semibold text-[#315C4C]">
+              Quản lý
+            </Button>
+          </Link>
+        </div>
       </header>
 
       {/* Main Content */}

@@ -656,10 +656,10 @@ export default function PosTerminalPage() {
               </div>
             </Link>
 
-            <Link href="/dashboard">
-              <Button variant="ghost" size="sm" className="h-8 px-2 text-xs text-[#737373] hover:text-[#202124]">
-                <ArrowLeft className="w-4 h-4 mr-1" />
-                <span className="font-semibold hidden xs:inline">Quản lý</span>
+            <Link href="/dashboard" title="Về trang Quản lý">
+              <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs text-[#737373] hover:text-[#202124] gap-1">
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span className="font-semibold hidden sm:inline">Quản lý</span>
               </Button>
             </Link>
 
@@ -2229,6 +2229,16 @@ export default function PosTerminalPage() {
               <ThemeToggle />
             </div>
           </div>
+
+          {/* Back to Dashboard */}
+          <Link
+            href="/dashboard"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="w-full p-2.5 rounded-[6px] border border-[#E8E8E5] bg-white hover:bg-[#F7F7F5] text-[#202124] flex items-center justify-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4 text-[#315C4C]" />
+            <span>Quay lại Trang Quản lý (Dashboard)</span>
+          </Link>
 
           {/* Bug Report */}
           <button

@@ -72,7 +72,13 @@
     "feedback": "Feedback & Bug Reports",
     "analytics": "Revenue Analytics",
     "settings": "Workspace Settings",
-    "posTerminal": "Open POS Terminal"
+    "posTerminal": "Open POS Terminal",
+    "groupOperations": "Operations",
+    "groupCatalog": "Catalog & Stock",
+    "groupSystem": "Finance & System",
+    "moreMenu": "More",
+    "posShort": "POS",
+    "feedbackShort": "Feedback"
   },
   "dashboard": {
     "overviewTitle": "Sales Overview",

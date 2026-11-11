@@ -11,19 +11,28 @@ import { AlertCircle, Lock, User, Eye, EyeOff, UserCheck } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, loginAsGuest, logout, isAuthenticated, user } = useAuthStore();
+  const {
+    login,
+    loginAsGuest,
+    logout,
+    quickLoginAsAdmin,
+    exitGuestPreview,
+    isAuthenticated,
+    user,
+    isGuestPreview,
+  } = useAuthStore();
   const [identifier, setIdentifier] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [showPassword, setShowPassword] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
 
-  // If the user lands on login page with a Guest (viewer) session, reset it so they can log in freely
+  // If the user lands on login page with a Guest session, clear preview mode so they can log in freely
   React.useEffect(() => {
-    if (isAuthenticated && user?.role === 'viewer') {
+    if (isGuestPreview || user?.role === 'viewer') {
       logout();
     }
-  }, [isAuthenticated, user, logout]);
+  }, [isGuestPreview, user, logout]);
 
   function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -44,11 +53,7 @@ export default function LoginPage() {
       const res = login(identifier, password);
       if (res.success) {
         const currentUser = useAuthStore.getState().user;
-        if (currentUser?.role === 'cashier') {
-          router.push('/pos');
-        } else {
-          router.push('/dashboard');
-        }
+        window.location.href = currentUser?.role === 'cashier' ? '/pos' : '/dashboard';
       } else {
         setErrorMessage(res.message || 'Đăng nhập không thành công.');
       }
@@ -61,7 +66,7 @@ export default function LoginPage() {
 
   function handleGuestLogin() {
     loginAsGuest();
-    router.push('/dashboard');
+    window.location.href = '/dashboard';
   }
 
   const isAlreadyLoggedIn = isAuthenticated && user && user.role !== 'viewer';
@@ -98,8 +103,10 @@ export default function LoginPage() {
                 type="button"
                 variant="primary"
                 size="sm"
-                onClick={() => router.push(user.role === 'cashier' ? '/pos' : '/dashboard')}
-                className="w-full h-8 text-xs font-semibold"
+                onClick={() => {
+                  window.location.href = user.role === 'cashier' ? '/pos' : '/dashboard';
+                }}
+                className="w-full h-8 text-xs font-semibold cursor-pointer"
               >
                 Tiếp tục vào trang quản trị ({user.role === 'cashier' ? 'POS' : 'Dashboard'})
               </Button>
@@ -171,6 +178,20 @@ export default function LoginPage() {
           >
             Đăng nhập hệ thống
           </Button>
+
+          {/* Quick 1-click Admin Access Button */}
+          <div className="pt-0.5">
+            <button
+              type="button"
+              onClick={() => {
+                quickLoginAsAdmin();
+                window.location.href = '/dashboard';
+              }}
+              className="w-full py-2 px-3 text-xs font-bold text-[#315C4C] hover:text-[#254639] bg-[#EAF4EE] hover:bg-[#DDF0E4] rounded-[6px] border border-[#315C4C]/40 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+            >
+              <span>⚡ Vào nhanh tài khoản Admin (Không cần gõ mật khẩu)</span>
+            </button>
+          </div>
 
           {/* Account Credential Hints */}
           <div className="p-2.5 bg-[#FAFAF8] rounded-[6px] border border-[#E8E8E5] text-[11px] text-[#737373] space-y-1">

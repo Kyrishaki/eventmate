@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { DensityToggle } from '@/components/ui/density-toggle';
 import { Link } from '@/i18n/routing';
+import { useAuthStore } from '@/stores/auth-store';
 import {
   Package,
   Phone,
@@ -31,9 +32,11 @@ import {
   Truck,
   Users2,
   Bookmark,
+  ArrowLeft,
 } from 'lucide-react';
 
 export function GuestShowcase() {
+  const { isGuestPreview, previousUser, exitGuestPreview } = useAuthStore();
   const { products, variants, categories, events, booths, allocations, updateVariantPreorders } = useDataStore();
   const { activeWorkspace } = useWorkspaceStore();
   const { activeBankConfig } = useOrdersStore();
@@ -173,8 +176,36 @@ export function GuestShowcase() {
 
   return (
     <div className="min-h-screen bg-[#F7F7F5] dark:bg-neutral-950 text-[#202124] dark:text-neutral-100 flex flex-col font-sans transition-colors">
+      {/* Top Preview Banner with Instant 1-Click Return */}
+      <div className="bg-[#1E293B] text-white px-4 py-2 flex items-center justify-between text-xs sticky top-0 z-50 border-b border-slate-700 shadow-md">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="font-semibold text-slate-100">
+            {isGuestPreview || previousUser ? 'Chế độ xem trước:' : 'Khu vực khách:'} <b>Gian hàng Merchandise</b>
+          </span>
+          <span className="text-[11px] text-slate-300 hidden md:inline">
+            (Dành cho khách xem sản phẩm & đặt trước keep đồ)
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              exitGuestPreview();
+              window.location.href = '/dashboard';
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-[5px] bg-[#315C4C] hover:bg-[#284A3D] text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
+            title="Thoát giao diện khách và trở lại trang quản trị"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Thoát & Trở lại Quản trị</span>
+          </button>
+        </div>
+      </div>
+
       {/* Top Customer Header */}
-      <header className="sticky top-0 z-40 bg-white dark:bg-neutral-900 border-b border-[#E8E8E5] dark:border-neutral-800 shadow-2xs">
+      <header className="sticky top-[37px] z-40 bg-white dark:bg-neutral-900 border-b border-[#E8E8E5] dark:border-neutral-800 shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           {/* Brand Logo & Showcase Badge */}
           <div className="flex items-center gap-3">
@@ -226,19 +257,26 @@ export function GuestShowcase() {
             {/* Display Density Toggle */}
             <DensityToggle />
 
-            {/* Admin Login Switcher */}
-            <Link href="/login">
-              <Button
-                variant="primary"
-                size="sm"
-                className="h-8 text-xs font-semibold gap-1.5 bg-[#315C4C] hover:bg-[#254639] text-white"
-                title="Dành cho Quản trị viên và Thu ngân máy POS"
-              >
-                <Lock className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Đăng nhập Quản lý</span>
-                <span className="sm:hidden">Quản lý</span>
-              </Button>
-            </Link>
+            {/* Admin Return / Login Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (isGuestPreview || previousUser) {
+                  exitGuestPreview();
+                  window.location.href = '/dashboard';
+                } else {
+                  window.location.href = '/login';
+                }
+              }}
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[6px] text-xs font-bold bg-[#315C4C] hover:bg-[#284A3D] text-white transition-colors shadow-xs cursor-pointer shrink-0"
+              title="Quay lại giao diện quản trị"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">
+                {isGuestPreview || previousUser ? 'Trở lại Quản lý' : 'Đăng nhập Quản lý'}
+              </span>
+              <span className="sm:hidden">Quản lý</span>
+            </button>
           </div>
         </div>
       </header>
@@ -953,9 +991,20 @@ export function GuestShowcase() {
               Hotline: 0988.776.655
             </a>
             <span>•</span>
-            <Link href="/login" className="hover:text-[#315C4C] font-semibold">
-              Khu vực Quản trị / Thu ngân
-            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                if (isGuestPreview || previousUser) {
+                  exitGuestPreview();
+                  window.location.href = '/dashboard';
+                } else {
+                  window.location.href = '/login';
+                }
+              }}
+              className="hover:text-[#315C4C] font-semibold text-xs cursor-pointer text-[#315C4C] underline"
+            >
+              {isGuestPreview || previousUser ? '← Thoát xem thử & Trở lại Quản trị' : 'Khu vực Quản trị / Thu ngân'}
+            </button>
           </div>
         </div>
       </footer>

@@ -69,12 +69,17 @@ export const MASTER_ACCOUNTS: UserAccount[] = [
 
 interface AuthState {
   user: AuthUser | null;
+  previousUser: AuthUser | null;
+  isGuestPreview: boolean;
   isAuthenticated: boolean;
   accounts: UserAccount[];
 
   // Auth actions
   login: (identifier: string, password: string) => { success: boolean; message?: string };
   loginAsGuest: () => void;
+  enterGuestPreview: () => void;
+  exitGuestPreview: () => void;
+  quickLoginAsAdmin: () => void;
   setUser: (user: AuthUser | null) => void;
   logout: () => void;
 
@@ -103,6 +108,8 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       // NEW VISITORS START WITH NO ACTIVE SESSION (user is null, isAuthenticated is false)
       user: null,
+      previousUser: null,
+      isGuestPreview: false,
       isAuthenticated: false,
       accounts: MASTER_ACCOUNTS,
 
@@ -184,6 +191,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       loginAsGuest: () => {
+        const current = get().user;
         const guestUser: AuthUser = {
           id: 'guest-visitor',
           username: 'guest',
@@ -192,14 +200,76 @@ export const useAuthStore = create<AuthState>()(
         };
 
         set({
+          previousUser: current && current.role !== 'viewer' ? current : get().previousUser,
           user: guestUser,
           isAuthenticated: true,
+          isGuestPreview: true,
         });
       },
 
-      setUser: (user) => set({ user, isAuthenticated: !!user }),
+      enterGuestPreview: () => {
+        const current = get().user;
+        const guestUser: AuthUser = {
+          id: 'guest-visitor',
+          username: 'guest',
+          fullName: 'Khách xem (Chỉ đọc)',
+          role: 'viewer',
+        };
 
-      logout: () => set({ user: null, isAuthenticated: false }),
+        set({
+          previousUser: current && current.role !== 'viewer' ? current : get().previousUser,
+          user: guestUser,
+          isAuthenticated: true,
+          isGuestPreview: true,
+        });
+      },
+
+      exitGuestPreview: () => {
+        const prev = get().previousUser;
+        if (prev && prev.role !== 'viewer') {
+          set({
+            user: prev,
+            isAuthenticated: true,
+            isGuestPreview: false,
+            previousUser: null,
+          });
+        } else {
+          // Restore default master admin account
+          const masterAdmin = MASTER_ACCOUNTS[0];
+          set({
+            user: {
+              id: masterAdmin.id,
+              username: masterAdmin.username,
+              email: masterAdmin.email,
+              fullName: masterAdmin.fullName,
+              role: masterAdmin.role,
+            },
+            isAuthenticated: true,
+            isGuestPreview: false,
+            previousUser: null,
+          });
+        }
+      },
+
+      quickLoginAsAdmin: () => {
+        const masterAdmin = MASTER_ACCOUNTS[0];
+        set({
+          user: {
+            id: masterAdmin.id,
+            username: masterAdmin.username,
+            email: masterAdmin.email,
+            fullName: masterAdmin.fullName,
+            role: masterAdmin.role,
+          },
+          isAuthenticated: true,
+          isGuestPreview: false,
+          previousUser: null,
+        });
+      },
+
+      setUser: (user) => set({ user, isAuthenticated: !!user, isGuestPreview: false }),
+
+      logout: () => set({ user: null, isAuthenticated: false, isGuestPreview: false, previousUser: null }),
 
       createStaffAccount: (data) => {
         const cleanUsername = data.username.trim();

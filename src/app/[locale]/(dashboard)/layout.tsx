@@ -18,7 +18,7 @@ function useMounted() {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, isGuestPreview } = useAuthStore();
   const hasMounted = useMounted();
 
   if (!hasMounted) {
@@ -30,13 +30,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   // GUEST SESSION CHECK:
-  // If the user has role === 'viewer' OR has no active authenticated session:
+  // If the user is in preview mode, or has role === 'viewer', or has no active session:
   // Render the dedicated public Guest Showcase Layout.
-  // The guest is ONLY permitted to view available merchandise/products in the shop,
-  // contact to buy online, or place a hold ticket ("keep đồ") for event pickup.
-  // Internal operations (revenue metrics, financial charts, internal order logs,
-  // team accounts, POS cash drawer, settings) are completely shielded from guests.
-  const isGuest = !isAuthenticated || !user || isViewerOnly(user.role);
+  const isGuest = isGuestPreview || !isAuthenticated || !user || isViewerOnly(user.role);
 
   if (isGuest) {
     return (

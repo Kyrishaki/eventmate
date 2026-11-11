@@ -60,9 +60,9 @@ export function Topbar({ onToggleSidebar, title }: TopbarProps) {
         <button
           type="button"
           onClick={() => {
-            useAuthStore.getState().loginAsGuest();
+            useAuthStore.getState().enterGuestPreview();
           }}
-          className="hidden md:inline-flex items-center gap-1.5 h-8 px-2.5 rounded-[6px] text-xs font-semibold border border-[#315C4C]/30 text-[#315C4C] hover:bg-[#EBF1EE] transition-colors"
+          className="hidden md:inline-flex items-center gap-1.5 h-8 px-2.5 rounded-[6px] text-xs font-semibold border border-[#315C4C]/30 text-[#315C4C] hover:bg-[#EBF1EE] transition-colors cursor-pointer"
           title="Xem thử giao diện Gian hàng Khách xem (Chỉ xem sản phẩm & Keep đồ)"
         >
           <Eye className="w-3.5 h-3.5" />

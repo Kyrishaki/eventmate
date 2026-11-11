@@ -771,39 +771,34 @@ ${url}`;
                           </div>
                         </div>
 
-                        {/* Quick Restock Actions */}
-                        <div className="border-t border-[#F0F0ED] pt-3 mt-3 flex items-center justify-between">
-                          <span className="text-[11px] text-[#737373] font-medium">Bổ sung hàng:</span>
-                          <div className="flex items-center gap-1">
+                        {/* Quick Restock Actions with Direct Input */}
+                        <div className="border-t border-[#F0F0ED] dark:border-neutral-800 pt-3 mt-3 flex items-center justify-between gap-2">
+                          <span className="text-[11px] text-[#737373] dark:text-neutral-400 font-medium">Bổ sung hàng:</span>
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              id={`restock-qty-${variant!.id}`}
+                              type="number"
+                              min="1"
+                              placeholder="SL"
+                              defaultValue="10"
+                              className="w-16 h-7 text-xs font-bold text-center border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-800 rounded text-[#202124] dark:text-neutral-100 focus:outline-none focus:ring-1 focus:ring-[#315C4C]"
+                              title="Nhập trực tiếp số lượng bổ sung"
+                            />
                             <Button
                               type="button"
-                              variant="outline"
+                              variant="secondary"
                               size="sm"
-                              className="h-6 px-1.5 text-[11px]"
-                              onClick={() => handleQuickRestock(variant!.id, 5)}
-                              title="Bổ sung thêm 5 món"
+                              className="h-7 px-2 text-xs font-semibold gap-1 bg-[#EBF1EE] dark:bg-emerald-950/60 text-[#315C4C] dark:text-emerald-300 hover:bg-[#D5E2DC]"
+                              onClick={() => {
+                                const input = document.getElementById(`restock-qty-${variant!.id}`) as HTMLInputElement;
+                                const val = parseInt(input?.value || '0', 10);
+                                if (val > 0) {
+                                  handleQuickRestock(variant!.id, val);
+                                }
+                              }}
                             >
-                              +5
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="h-6 px-1.5 text-[11px]"
-                              onClick={() => handleQuickRestock(variant!.id, 10)}
-                              title="Bổ sung thêm 10 món"
-                            >
-                              +10
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="h-6 px-1.5 text-[11px]"
-                              onClick={() => handleQuickRestock(variant!.id, 50)}
-                              title="Bổ sung thêm 50 món"
-                            >
-                              +50
+                              <Plus className="w-3 h-3" />
+                              <span>Bổ sung</span>
                             </Button>
                           </div>
                         </div>
@@ -1076,9 +1071,22 @@ ${url}`;
                             >
                               <Minus className="w-3 h-3" />
                             </Button>
-                            <span className="text-xs font-bold text-[#202124] w-5 text-center">
-                              {item.quantity}
-                            </span>
+                            <input
+                              type="number"
+                              min={1}
+                              max={item.maxAvailable}
+                              value={item.quantity}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value, 10);
+                                if (isNaN(val) || val <= 0) {
+                                  updateQuantity(item.variantId, 1);
+                                } else {
+                                  updateQuantity(item.variantId, Math.min(val, item.maxAvailable));
+                                }
+                              }}
+                              className="w-10 h-6 text-center text-xs font-bold font-mono bg-white dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 text-[#202124] dark:text-neutral-100 focus:outline-none focus:ring-1 focus:ring-[#315C4C] rounded"
+                              title="Nhập trực tiếp số lượng"
+                            />
                             <Button
                               type="button"
                               variant="secondary"

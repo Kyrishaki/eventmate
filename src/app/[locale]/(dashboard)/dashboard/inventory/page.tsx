@@ -78,6 +78,55 @@ export default function InventoryPage() {
     });
   }
 
+  function handleDirectSetAllocation(variantId: string, variantName: string, targetAlloc: number) {
+    if (!selectedBooth || !selectedEvent) return;
+
+    const targetVariant = variants.find((v) => v.id === variantId);
+    const targetProduct = products.find((p) => p.id === targetVariant?.product_id);
+    if (!canManageProduct(user, targetProduct?.collab_partner)) {
+      alert('Bạn không có quyền điều chuyển hoặc thay đổi số lượng kho hàng của Admin.');
+      return;
+    }
+
+    const currentAlloc = allocations.find(
+      (a) => a.booth_id === selectedBooth.id && a.variant_id === variantId
+    );
+    const currentAllocQty = currentAlloc?.allocated_quantity || 0;
+    const currentSoldQty = currentAlloc?.sold_quantity || 0;
+
+    // Minimum limit cannot be less than already sold
+    const validAlloc = Math.max(currentSoldQty, targetAlloc);
+
+    // Maximum limit cannot exceed total_inventory minus other booths' allocations
+    const otherBoothsAlloc = allocations
+      .filter((a) => a.variant_id === variantId && a.booth_id !== selectedBooth.id)
+      .reduce((sum, a) => sum + a.allocated_quantity, 0);
+    const maxPossibleAlloc = Math.max(currentSoldQty, (targetVariant?.total_inventory || 0) - otherBoothsAlloc);
+    const clampedAlloc = Math.min(validAlloc, maxPossibleAlloc);
+
+    setAllocation(
+      activeWorkspace?.id || 'ws-default',
+      selectedEvent.id,
+      selectedBooth.id,
+      variantId,
+      clampedAlloc
+    );
+
+    logActivity({
+      actor_name: user?.fullName || 'Nhân viên kho',
+      actor_role: (user?.role as AuditActorRole) || 'inventory_staff',
+      action_type: 'stock_adjust',
+      entity_type: 'inventory',
+      entity_name: variantName,
+      booth_name: selectedBooth.name,
+      event_name: selectedEvent?.name,
+      description: `Nhập trực tiếp số lượng cấp cho quầy "${selectedBooth.name}": ${clampedAlloc} món "${variantName}" (Cũ: ${currentAllocQty}).`,
+      changes: [
+        { field: 'allocated_quantity', field_label: 'Số lượng phân bổ', old_value: currentAllocQty, new_value: clampedAlloc },
+      ],
+    });
+  }
+
   const workspaceEvents = events.filter(
     (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
   );
@@ -424,27 +473,36 @@ export default function InventoryPage() {
                       {/* Quick Adjustment Controls */}
                       <td className="py-3 px-4 text-center">
                         {canManage && canManageProduct(user, product?.collab_partner) ? (
-                          <div className="inline-flex items-center gap-1.5 bg-[#F0F0ED] dark:bg-neutral-800 p-1 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700">
+                          <div className="inline-flex items-center gap-1 bg-[#F0F0ED] dark:bg-neutral-800 p-1 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700">
                             <button
                               type="button"
                               className="h-6 w-6 rounded bg-white dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-600 text-neutral-800 dark:text-neutral-100 flex items-center justify-center font-bold text-xs shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                              title="Giảm 10 món về kho tổng"
+                              title="Giảm 1 món về kho tổng"
                               disabled={currentAllocQty <= currentSoldQty}
-                              onClick={() => handleStockTransfer(v.id, v.name, -10)}
+                              onClick={() => handleStockTransfer(v.id, v.name, -1)}
                             >
                               <Minus className="w-3 h-3" />
                             </button>
 
-                            <span className="px-2 text-xs font-bold text-neutral-800 dark:text-neutral-100 min-w-[24px] text-center font-mono">
-                              {currentAllocQty}
-                            </span>
+                            <input
+                              type="number"
+                              min={currentSoldQty}
+                              max={currentAllocQty + centralStorageRemaining}
+                              value={currentAllocQty}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value, 10);
+                                handleDirectSetAllocation(v.id, v.name, isNaN(val) ? 0 : val);
+                              }}
+                              className="w-14 h-6 text-center text-xs font-bold font-mono bg-white dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-700 rounded text-neutral-800 dark:text-neutral-100 focus:outline-none focus:ring-1 focus:ring-[#315C4C]"
+                              title="Nhập trực tiếp số lượng cấp cho quầy"
+                            />
 
                             <button
                               type="button"
                               className="h-6 w-6 rounded bg-white dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-600 text-neutral-800 dark:text-neutral-100 flex items-center justify-center font-bold text-xs shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                              title="Cấp thêm 10 món từ kho tổng"
-                              disabled={centralStorageRemaining < 10}
-                              onClick={() => handleStockTransfer(v.id, v.name, 10)}
+                              title="Cấp thêm 1 món từ kho tổng"
+                              disabled={centralStorageRemaining < 1}
+                              onClick={() => handleStockTransfer(v.id, v.name, 1)}
                             >
                               <Plus className="w-3 h-3" />
                             </button>
@@ -552,50 +610,39 @@ export default function InventoryPage() {
                         : 'Hạn mức kho:'}
                     </span>
                     {canManage && canManageProduct(user, product?.collab_partner) ? (
-                      <div className="flex items-center gap-1 bg-[#F0F0ED] dark:bg-neutral-800 p-1 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700">
-                        <Button
+                      <div className="flex items-center gap-1.5 bg-[#F0F0ED] dark:bg-neutral-800 p-1 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700">
+                        <button
                           type="button"
-                          variant="secondary"
-                          size="sm"
-                          className="h-8 px-2 text-xs font-bold bg-white dark:bg-neutral-700 hover:bg-[#E8E8E5] dark:hover:bg-neutral-600 text-[#202124] dark:text-neutral-100 shadow-2xs border border-[#E8E8E5] dark:border-neutral-600"
-                          disabled={currentAllocQty <= currentSoldQty}
-                          onClick={() => handleStockTransfer(v.id, v.name, -10)}
-                        >
-                          -10
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          className="h-8 px-2 text-xs font-bold bg-white dark:bg-neutral-700 hover:bg-[#E8E8E5] dark:hover:bg-neutral-600 text-[#202124] dark:text-neutral-100 shadow-2xs border border-[#E8E8E5] dark:border-neutral-600"
+                          className="h-8 w-8 rounded bg-white dark:bg-neutral-700 hover:bg-[#E8E8E5] dark:hover:bg-neutral-600 text-[#202124] dark:text-neutral-100 flex items-center justify-center font-bold text-xs shadow-2xs border border-[#E8E8E5] dark:border-neutral-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                           disabled={currentAllocQty <= currentSoldQty}
                           onClick={() => handleStockTransfer(v.id, v.name, -1)}
+                          title="Giảm 1 món"
                         >
-                          -1
-                        </Button>
-                        <span className="px-2 text-xs font-bold text-[#315C4C] dark:text-emerald-300">
-                          {currentAllocQty}
-                        </span>
-                        <Button
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+
+                        <input
+                          type="number"
+                          min={currentSoldQty}
+                          max={currentAllocQty + centralStorageRemaining}
+                          value={currentAllocQty}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            handleDirectSetAllocation(v.id, v.name, isNaN(val) ? 0 : val);
+                          }}
+                          className="w-16 h-8 text-center text-xs font-bold font-mono bg-white dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-700 rounded text-[#202124] dark:text-neutral-100 focus:outline-none focus:ring-1 focus:ring-[#315C4C]"
+                          title="Nhập trực tiếp số lượng cấp cho quầy"
+                        />
+
+                        <button
                           type="button"
-                          variant="secondary"
-                          size="sm"
-                          className="h-8 px-2 text-xs font-bold bg-white dark:bg-neutral-700 hover:bg-[#E8E8E5] dark:hover:bg-neutral-600 text-[#202124] dark:text-neutral-100 shadow-2xs border border-[#E8E8E5] dark:border-neutral-600"
+                          className="h-8 w-8 rounded bg-white dark:bg-neutral-700 hover:bg-[#E8E8E5] dark:hover:bg-neutral-600 text-[#202124] dark:text-neutral-100 flex items-center justify-center font-bold text-xs shadow-2xs border border-[#E8E8E5] dark:border-neutral-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                           disabled={centralStorageRemaining < 1}
                           onClick={() => handleStockTransfer(v.id, v.name, 1)}
+                          title="Cấp thêm 1 món"
                         >
-                          +1
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          className="h-8 px-2 text-xs font-bold bg-white dark:bg-neutral-700 hover:bg-[#E8E8E5] dark:hover:bg-neutral-600 text-[#202124] dark:text-neutral-100 shadow-2xs border border-[#E8E8E5] dark:border-neutral-600"
-                          disabled={centralStorageRemaining < 10}
-                          onClick={() => handleStockTransfer(v.id, v.name, 10)}
-                        >
-                          +10
-                        </Button>
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     ) : isPartner ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-[#737373] dark:text-neutral-400 bg-[#F0F0ED] dark:bg-neutral-800 rounded border border-[#E8E8E5] dark:border-neutral-700" title="Hàng kho Admin - Bạn không thể chỉnh sửa">

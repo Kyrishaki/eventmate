@@ -1062,21 +1062,38 @@ export default function PosTerminalPage() {
                     </p>
                   </div>
 
-                  {/* Quantity Stepper */}
-                  <div className="flex items-center gap-1.5 shrink-0 bg-white border border-[#E8E8E5] rounded p-0.5">
+                  {/* Quantity Stepper with Direct Input */}
+                  <div className="flex items-center gap-1 shrink-0 bg-white dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 rounded p-0.5">
                     <button
                       type="button"
                       onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
-                      className="p-1 hover:bg-[#F0F0ED] rounded text-[#202124]"
+                      className="p-1 hover:bg-[#F0F0ED] dark:hover:bg-neutral-700 rounded text-[#202124] dark:text-neutral-200 transition-colors"
+                      title="Giảm 1"
                     >
                       <Minus className="w-3 h-3" />
                     </button>
-                    <span className="w-6 text-center text-xs font-bold">{item.quantity}</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={item.quantity + getVariantAvailableStock(item.variantId)}
+                      value={item.quantity}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        if (isNaN(val) || val <= 0) {
+                          updateQuantity(item.variantId, 1);
+                        } else {
+                          const maxLimit = item.quantity + getVariantAvailableStock(item.variantId);
+                          updateQuantity(item.variantId, Math.min(val, Math.max(1, maxLimit)));
+                        }
+                      }}
+                      className="w-10 h-6 text-center text-xs font-bold font-mono bg-transparent border-0 text-[#202124] dark:text-neutral-100 focus:outline-none focus:ring-1 focus:ring-[#315C4C] rounded"
+                      title="Nhập trực tiếp số lượng mua"
+                    />
                     <button
                       type="button"
                       disabled={getVariantAvailableStock(item.variantId) <= 0}
                       onClick={() => handleIncrease(item.variantId)}
-                      className="p-1 hover:bg-[#F0F0ED] rounded text-[#202124] disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="p-1 hover:bg-[#F0F0ED] dark:hover:bg-neutral-700 rounded text-[#202124] dark:text-neutral-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       title={getVariantAvailableStock(item.variantId) <= 0 ? 'Đã đạt số lượng tồn khả dụng' : 'Thêm 1'}
                     >
                       <Plus className="w-3 h-3" />

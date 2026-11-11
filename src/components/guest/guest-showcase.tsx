@@ -37,6 +37,8 @@ import {
   MapPin,
   User,
   Building2,
+  Minus,
+  Plus,
 } from 'lucide-react';
 
 export function GuestShowcase() {
@@ -723,22 +725,44 @@ export function GuestShowcase() {
 
             {/* Quantity */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Số lượng muốn giữ:</Label>
+              <Label htmlFor="keep-quantity-input" className="text-xs font-semibold text-[#202124] dark:text-neutral-200">
+                Số lượng muốn giữ:
+              </Label>
               <div className="flex items-center gap-2">
-                {[1, 2, 3, 5].map((qty) => (
+                <div className="inline-flex items-center border border-[#E8E8E5] dark:border-neutral-700 rounded-[6px] bg-white dark:bg-neutral-800 p-0.5 shadow-2xs">
                   <button
-                    key={qty}
                     type="button"
-                    onClick={() => setKeepQuantity(qty)}
-                    className={`h-8 px-3 rounded-[6px] text-xs font-bold transition-colors ${
-                      keepQuantity === qty
-                        ? 'bg-[#315C4C] text-white'
-                        : 'bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] text-[#737373]'
-                    }`}
+                    onClick={() => setKeepQuantity(Math.max(1, keepQuantity - 1))}
+                    disabled={keepQuantity <= 1}
+                    className="h-8 w-8 flex items-center justify-center rounded hover:bg-[#F0F0ED] dark:hover:bg-neutral-700 text-[#202124] dark:text-neutral-200 font-bold disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    title="Giảm 1"
                   >
-                    {qty} cái
+                    <Minus className="w-3.5 h-3.5" />
                   </button>
-                ))}
+                  <input
+                    id="keep-quantity-input"
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={keepQuantity}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      setKeepQuantity(isNaN(val) ? 1 : Math.max(1, Math.min(100, val)));
+                    }}
+                    className="w-16 h-8 text-center text-sm font-bold bg-transparent text-[#202124] dark:text-neutral-100 focus:outline-none"
+                    placeholder="1"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setKeepQuantity(keepQuantity + 1)}
+                    disabled={keepQuantity >= 100}
+                    className="h-8 w-8 flex items-center justify-center rounded hover:bg-[#F0F0ED] dark:hover:bg-neutral-700 text-[#202124] dark:text-neutral-200 font-bold transition-colors"
+                    title="Tăng 1"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <span className="text-xs text-[#737373] dark:text-neutral-400 font-medium">sản phẩm</span>
               </div>
             </div>
 

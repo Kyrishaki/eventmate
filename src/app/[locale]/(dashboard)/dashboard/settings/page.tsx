@@ -32,6 +32,8 @@ import {
   CreditCard,
   Info,
   Check,
+  ExternalLink,
+  RefreshCw,
 } from 'lucide-react';
 import { EventItem, Workspace } from '@/types/database';
 import { ThemeSelector } from '@/components/ui/theme-toggle';
@@ -85,6 +87,29 @@ export default function SettingsPage() {
   const [backupSuccess, setBackupSuccess] = React.useState(false);
   const [restoreMessage, setRestoreMessage] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  // Google Gemini AI Connection test state
+  const [aiStatus, setAiStatus] = React.useState<'idle' | 'testing' | 'success' | 'error'>('idle');
+  const [aiMessage, setAiMessage] = React.useState<string | null>(null);
+
+  const handleTestAiConnection = async () => {
+    setAiStatus('testing');
+    setAiMessage(null);
+    try {
+      const res = await fetch('/api/ai/test');
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setAiStatus('success');
+        setAiMessage(json.message || 'Kết nối Google Gemini AI thành công!');
+      } else {
+        setAiStatus('error');
+        setAiMessage(json.error || 'Không thể kết nối tới Google Gemini API.');
+      }
+    } catch (err: any) {
+      setAiStatus('error');
+      setAiMessage(err.message || 'Lỗi kết nối kiểm tra AI.');
+    }
+  };
 
   // Sync state if active workspace changes
   const [prevWorkspaceId, setPrevWorkspaceId] = React.useState(activeWorkspace?.id);
@@ -580,6 +605,80 @@ export default function SettingsPage() {
               </p>
             </div>
             <ThemeSelector />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Google Gemini AI Configuration */}
+      <Card className="border-[#E8E8E5] dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs">
+        <CardHeader className="border-b border-[#F0F0ED] dark:border-neutral-800 pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-semibold text-[#202124] dark:text-neutral-100 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#315C4C] dark:text-emerald-400" />
+              Trí Tuệ Nhân Tạo (Google Gemini AI)
+            </CardTitle>
+            <Badge variant="success" className="text-[10px] font-mono">
+              gemini-2.5-flash
+            </Badge>
+          </div>
+          <CardDescription className="text-xs text-[#737373] dark:text-neutral-400">
+            Hệ thống AI thông minh hỗ trợ trích xuất tự động thông tin sự kiện từ ảnh poster, đọc dữ liệu và tối ưu hóa quản trị.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4 space-y-3.5">
+          <div className="p-3.5 bg-[#F7F7F5] dark:bg-neutral-800/60 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-700/60 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold text-[#202124] dark:text-neutral-200 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Trạng thái: <strong>Đã tự động cấu hình & Sẵn sàng hoạt động</strong></span>
+                </p>
+                <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-0.5">
+                  Khóa API: <code className="font-mono bg-white dark:bg-neutral-900 px-1.5 py-0.5 rounded border border-[#E8E8E5] dark:border-neutral-700 text-xs">AQ.Ab8RN6••••••••5w9Q</code> (Đã kích hoạt trong .env.local)
+                </p>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleTestAiConnection}
+                disabled={aiStatus === 'testing'}
+                className="gap-1.5 text-xs text-[#315C4C] dark:text-emerald-400 border-[#315C4C]/40 dark:border-emerald-600/40 hover:bg-[#EBF1EE] dark:hover:bg-emerald-950/40 shrink-0"
+              >
+                {aiStatus === 'testing' ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5" />
+                )}
+                <span>{aiStatus === 'testing' ? 'Đang kiểm tra...' : 'Kiểm tra kết nối AI'}</span>
+              </Button>
+            </div>
+
+            {aiStatus === 'success' && (
+              <div className="flex items-center gap-2 p-2.5 rounded bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                <span>{aiMessage || 'Kết nối máy chủ Google Gemini API thành công 100%!'}</span>
+              </div>
+            )}
+
+            {aiStatus === 'error' && (
+              <div className="flex items-center gap-2 p-2.5 rounded bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 text-xs">
+                <Info className="w-4 h-4 shrink-0 text-red-600 dark:text-red-400" />
+                <span>{aiMessage || 'Lỗi kết nối tới Google Gemini API.'}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="text-[11px] text-[#737373] dark:text-neutral-400 space-y-1">
+            <p className="font-semibold text-[#202124] dark:text-neutral-300">
+              💡 Hướng dẫn nếu bạn muốn tạo và lấy khóa API riêng từ tài khoản Google cá nhân:
+            </p>
+            <ol className="list-decimal list-inside pl-1 space-y-0.5">
+              <li>Truy cập <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="text-[#315C4C] dark:text-emerald-400 underline font-semibold inline-flex items-center gap-0.5">Google AI Studio (aistudio.google.com/apikey) <ExternalLink className="w-2.5 h-2.5" /></a> và đăng nhập bằng tài khoản Google của bạn.</li>
+              <li>Bấm nút <strong>&ldquo;Create API key&rdquo;</strong> để tạo khóa mới hoàn toàn miễn phí.</li>
+              <li>Sao chép mã khóa và cập nhật vào biến <code className="font-mono text-[10.5px] bg-neutral-100 dark:bg-neutral-800 px-1 rounded">GEMINI_API_KEY</code> trong tệp <code className="font-mono text-[10.5px]">.env.local</code>.</li>
+            </ol>
           </div>
         </CardContent>
       </Card>

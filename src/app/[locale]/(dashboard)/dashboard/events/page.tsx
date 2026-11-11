@@ -25,10 +25,13 @@ import {
   Boxes,
   Users2,
   Download,
+  Sparkles,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { useOrdersStore } from '@/stores/orders-store';
 import { exportEventToExcel } from '@/lib/export-excel';
+import { AiEventPosterModal } from '@/components/events/ai-event-poster-modal';
 
 export default function EventsPage() {
   const t = useTranslations('events');
@@ -39,6 +42,7 @@ export default function EventsPage() {
   const editable = canEditData();
 
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = React.useState(false);
   const [editingEvent, setEditingEvent] = React.useState<EventItem | null>(null);
 
   // Form states
@@ -48,6 +52,7 @@ export default function EventsPage() {
   const [startDate, setStartDate] = React.useState('');
   const [endDate, setEndDate] = React.useState('');
   const [status, setStatus] = React.useState<EventStatus>('upcoming');
+  const [bannerUrl, setBannerUrl] = React.useState<string | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
 
   const workspaceEvents = events.filter(
@@ -68,6 +73,7 @@ export default function EventsPage() {
     setStartDate(new Date().toISOString().substring(0, 16));
     setEndDate(new Date(Date.now() + 4 * 3600000).toISOString().substring(0, 16));
     setStatus('upcoming');
+    setBannerUrl(null);
     setIsModalOpen(true);
   }
 
@@ -79,6 +85,7 @@ export default function EventsPage() {
     setStartDate(new Date(event.start_date).toISOString().substring(0, 16));
     setEndDate(new Date(event.end_date).toISOString().substring(0, 16));
     setStatus(event.status);
+    setBannerUrl(event.banner_url || null);
     setIsModalOpen(true);
   }
 
@@ -98,6 +105,7 @@ export default function EventsPage() {
         start_date: new Date(startDate).toISOString(),
         end_date: new Date(endDate).toISOString(),
         status,
+        banner_url: bannerUrl,
       });
     } else {
       createEvent({
@@ -108,6 +116,7 @@ export default function EventsPage() {
         start_date: new Date(startDate).toISOString(),
         end_date: new Date(endDate).toISOString(),
         status,
+        banner_url: bannerUrl,
       });
     }
     setIsModalOpen(false);
@@ -160,10 +169,21 @@ export default function EventsPage() {
         </div>
 
         {editable ? (
-          <Button variant="primary" size="sm" className="gap-1.5" onClick={openCreateModal}>
-            <Plus className="w-3.5 h-3.5" />
-            <span>{t('createButton')}</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 border-[#315C4C]/40 text-[#315C4C] hover:bg-[#EAF4EE] font-semibold shadow-2xs"
+              onClick={() => setIsAiModalOpen(true)}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#315C4C]" />
+              <span>Quét ảnh Poster (AI)</span>
+            </Button>
+            <Button variant="primary" size="sm" className="gap-1.5" onClick={openCreateModal}>
+              <Plus className="w-3.5 h-3.5" />
+              <span>{t('createButton')}</span>
+            </Button>
+          </div>
         ) : (
           <Badge variant="outline" className="text-xs text-[#737373]">
             Chế độ Chỉ Xem (Khách)
@@ -190,10 +210,23 @@ export default function EventsPage() {
             <CalendarDays className="w-10 h-10 text-[#9E9E9C] mx-auto mb-3" />
             <h3 className="text-sm font-semibold text-[#202124]">{t('noEvents')}</h3>
             <p className="text-xs text-[#737373] mt-1 max-w-sm mx-auto">{t('noEventsDesc')}</p>
-            <Button variant="outline" size="sm" className="mt-4 gap-1" onClick={openCreateModal}>
-              <Plus className="w-3.5 h-3.5" />
-              <span>{t('createButton')}</span>
-            </Button>
+            <div className="mt-4 flex items-center justify-center gap-2">
+              {editable && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 border-[#315C4C]/40 text-[#315C4C] hover:bg-[#EAF4EE] font-semibold"
+                  onClick={() => setIsAiModalOpen(true)}
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[#315C4C]" />
+                  <span>Quét ảnh Poster (AI)</span>
+                </Button>
+              )}
+              <Button variant="outline" size="sm" className="gap-1" onClick={openCreateModal}>
+                <Plus className="w-3.5 h-3.5" />
+                <span>{t('createButton')}</span>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : (
@@ -203,8 +236,18 @@ export default function EventsPage() {
             return (
               <Card
                 key={evt.id}
-                className="border-[#E8E8E5] bg-white shadow-2xs hover:border-[#D6D6D2] transition-colors flex flex-col justify-between"
+                className="border-[#E8E8E5] bg-white shadow-2xs hover:border-[#D6D6D2] transition-colors flex flex-col justify-between overflow-hidden"
               >
+                {evt.banner_url && (
+                  <div className="relative w-full h-36 bg-[#121212] overflow-hidden border-b border-[#F0F0ED]">
+                    <img
+                      src={evt.banner_url}
+                      alt={evt.name}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                  </div>
+                )}
                 <div className="p-5">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <h3 className="text-sm font-bold text-[#202124] tracking-tight truncate">
@@ -314,6 +357,49 @@ export default function EventsPage() {
         description="Thông tin sự kiện được đồng bộ trực tiếp với các quầy POS và quản lý kho."
       >
         <form onSubmit={handleSave} className="space-y-4">
+          {/* Quick AI Fill banner in Create Mode */}
+          {!editingEvent && (
+            <div className="p-2.5 bg-[#FAFAF8] rounded-[6px] border border-dashed border-[#315C4C]/40 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-xs text-[#202124]">
+                <Sparkles className="w-4 h-4 text-[#315C4C] shrink-0" />
+                <span className="text-[11px] text-[#737373]">
+                  Có ảnh poster sự kiện? AI sẽ tự động tách tên, ngày tháng năm & địa điểm.
+                </span>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setIsAiModalOpen(true);
+                }}
+                className="h-7 text-xs gap-1 text-[#315C4C] border-[#315C4C]/40 hover:bg-[#EAF4EE] shrink-0 font-semibold"
+              >
+                <Sparkles className="w-3 h-3 text-[#315C4C]" />
+                <span>Nhập ảnh AI</span>
+              </Button>
+            </div>
+          )}
+
+          {/* Banner Preview if available */}
+          {bannerUrl && (
+            <div className="relative rounded-[6px] overflow-hidden border border-[#E8E8E5] max-h-36 bg-[#121212]">
+              <img
+                src={bannerUrl}
+                alt="Banner preview"
+                className="w-full h-28 object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => setBannerUrl(null)}
+                className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 hover:bg-black text-white text-[10px]"
+              >
+                Gỡ ảnh banner
+              </button>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <Label htmlFor="evt-name" required>
               {t('name')}
@@ -401,6 +487,12 @@ export default function EventsPage() {
           </div>
         </form>
       </Modal>
+
+      {/* AI Event Poster Import Modal */}
+      <AiEventPosterModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+      />
     </div>
   );
 }

@@ -81,6 +81,7 @@ export interface EventItem {
   end_date: string;
   status: EventStatus;
   event_type?: EventType;
+  banner_url?: string | null;
   is_test?: boolean;
   created_at: string;
   updated_at: string;

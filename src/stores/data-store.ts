@@ -41,7 +41,20 @@ export interface DataStoreState {
     product: Omit<Product, 'id' | 'created_at' | 'updated_at'>,
     variants: Array<Omit<ProductVariant, 'id' | 'workspace_id' | 'product_id' | 'created_at' | 'updated_at'>>
   ) => Product;
-  updateProduct: (id: string, updates: Partial<Product>) => void;
+  updateProduct: (
+    id: string,
+    updates: Partial<Product>,
+    variantUpdates?: Array<{
+      id?: string;
+      name: string;
+      sku: string;
+      price: number;
+      total_inventory: number;
+      reserved_quantity?: number;
+      online_preorder_quantity?: number;
+      barcode?: string | null;
+    }>
+  ) => void;
   deleteProduct: (id: string) => void;
   restoreProduct: (id: string) => void;
   toggleProductActive: (id: string) => void;
@@ -320,9 +333,9 @@ const defaultVariants: ProductVariant[] = [
     name: 'Don Quixote (#03)',
     price: 65000,
     barcode: '893602001001',
-    total_inventory: 120,
-    reserved_quantity: 10,
-    online_preorder_quantity: 20,
+    total_inventory: 0,
+    reserved_quantity: 0,
+    online_preorder_quantity: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -334,9 +347,9 @@ const defaultVariants: ProductVariant[] = [
     name: 'Faust (#02)',
     price: 65000,
     barcode: '893602001002',
-    total_inventory: 100,
-    reserved_quantity: 8,
-    online_preorder_quantity: 12,
+    total_inventory: 0,
+    reserved_quantity: 0,
+    online_preorder_quantity: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -348,9 +361,9 @@ const defaultVariants: ProductVariant[] = [
     name: 'Yi Sang (#01)',
     price: 65000,
     barcode: '893602001003',
-    total_inventory: 100,
-    reserved_quantity: 5,
-    online_preorder_quantity: 15,
+    total_inventory: 0,
+    reserved_quantity: 0,
+    online_preorder_quantity: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -362,9 +375,9 @@ const defaultVariants: ProductVariant[] = [
     name: 'Ishmael (#08)',
     price: 65000,
     barcode: '893602001004',
-    total_inventory: 90,
-    reserved_quantity: 5,
-    online_preorder_quantity: 15,
+    total_inventory: 0,
+    reserved_quantity: 0,
+    online_preorder_quantity: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -376,9 +389,9 @@ const defaultVariants: ProductVariant[] = [
     name: 'Sinclair (#11)',
     price: 65000,
     barcode: '893602001005',
-    total_inventory: 90,
-    reserved_quantity: 5,
-    online_preorder_quantity: 10,
+    total_inventory: 0,
+    reserved_quantity: 0,
+    online_preorder_quantity: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -392,9 +405,9 @@ const defaultVariants: ProductVariant[] = [
     name: 'Vergilius (The Red Gaze)',
     price: 145000,
     barcode: '893602002001',
-    total_inventory: 80,
-    reserved_quantity: 8,
-    online_preorder_quantity: 12,
+    total_inventory: 0,
+    reserved_quantity: 0,
+    online_preorder_quantity: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -406,9 +419,9 @@ const defaultVariants: ProductVariant[] = [
     name: 'Heathcliff (#07 - Wild Hunt ID)',
     price: 145000,
     barcode: '893602002002',
-    total_inventory: 90,
-    reserved_quantity: 10,
-    online_preorder_quantity: 15,
+    total_inventory: 0,
+    reserved_quantity: 0,
+    online_preorder_quantity: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -420,9 +433,9 @@ const defaultVariants: ProductVariant[] = [
     name: 'Hong Lu (#06 - Land of Illusion)',
     price: 135000,
     barcode: '893602002003',
-    total_inventory: 80,
-    reserved_quantity: 5,
-    online_preorder_quantity: 15,
+    total_inventory: 0,
+    reserved_quantity: 0,
+    online_preorder_quantity: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -434,9 +447,9 @@ const defaultVariants: ProductVariant[] = [
     name: 'Ryōshū (#04 - Red Eyes)',
     price: 135000,
     barcode: '893602002004',
-    total_inventory: 75,
-    reserved_quantity: 5,
-    online_preorder_quantity: 10,
+    total_inventory: 0,
+    reserved_quantity: 0,
+    online_preorder_quantity: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -450,9 +463,9 @@ const defaultVariants: ProductVariant[] = [
     name: 'Dante (Manager - Đầu Đồng Hồ Lửa)',
     price: 850000,
     barcode: '893602003001',
-    total_inventory: 40,
-    reserved_quantity: 5,
-    online_preorder_quantity: 10,
+    total_inventory: 0,
+    reserved_quantity: 0,
+    online_preorder_quantity: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -464,9 +477,9 @@ const defaultVariants: ProductVariant[] = [
     name: 'Don Quixote (La Manchaland Ver.)',
     price: 920000,
     barcode: '893602003002',
-    total_inventory: 35,
-    reserved_quantity: 5,
-    online_preorder_quantity: 10,
+    total_inventory: 0,
+    reserved_quantity: 0,
+    online_preorder_quantity: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -478,9 +491,9 @@ const defaultVariants: ProductVariant[] = [
     name: 'Faust (Zwei / Gesellschaft Ver.)',
     price: 890000,
     barcode: '893602003003',
-    total_inventory: 30,
-    reserved_quantity: 4,
-    online_preorder_quantity: 6,
+    total_inventory: 0,
+    reserved_quantity: 0,
+    online_preorder_quantity: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -494,9 +507,9 @@ const defaultVariants: ProductVariant[] = [
     name: 'Full Set Sa Bàn 3D (Kèm Charon & Mephi)',
     price: 280000,
     barcode: '893602004001',
-    total_inventory: 60,
-    reserved_quantity: 6,
-    online_preorder_quantity: 14,
+    total_inventory: 0,
+    reserved_quantity: 0,
+    online_preorder_quantity: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -510,9 +523,9 @@ const defaultVariants: ProductVariant[] = [
     name: 'Bình Enkephalin (Gregor, Outis, Meursault)',
     price: 95000,
     barcode: '893602005001',
-    total_inventory: 100,
-    reserved_quantity: 10,
-    online_preorder_quantity: 15,
+    total_inventory: 0,
+    reserved_quantity: 0,
+    online_preorder_quantity: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -524,9 +537,9 @@ const defaultVariants: ProductVariant[] = [
     name: 'Nhánh Golden Bough (Dante & Sinclair)',
     price: 95000,
     barcode: '893602005002',
-    total_inventory: 100,
-    reserved_quantity: 10,
-    online_preorder_quantity: 20,
+    total_inventory: 0,
+    reserved_quantity: 0,
+    online_preorder_quantity: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -540,9 +553,9 @@ const defaultVariants: ProductVariant[] = [
     name: 'Frieren (Sousou no Frieren - 18cm)',
     price: 950000,
     barcode: '893602006001',
-    total_inventory: 35,
-    reserved_quantity: 5,
-    online_preorder_quantity: 8,
+    total_inventory: 0,
+    reserved_quantity: 0,
+    online_preorder_quantity: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -554,9 +567,9 @@ const defaultVariants: ProductVariant[] = [
     name: 'Ai Hoshino (Oshi no Ko - 18cm)',
     price: 980000,
     barcode: '893602006002',
-    total_inventory: 30,
-    reserved_quantity: 4,
-    online_preorder_quantity: 6,
+    total_inventory: 0,
+    reserved_quantity: 0,
+    online_preorder_quantity: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -570,77 +583,77 @@ const defaultVariants: ProductVariant[] = [
     name: 'Combo Walpurgis (Outis, Gregor & Rodion)',
     price: 195000,
     barcode: '893602009001',
-    total_inventory: 80,
-    reserved_quantity: 5,
-    online_preorder_quantity: 15,
+    total_inventory: 0,
+    reserved_quantity: 0,
+    online_preorder_quantity: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
 ];
 
-// Default allocations for Hobby Horizon 2026 & Color Fiesta
+// Default allocations for Hobby Horizon 2026 & Color Fiesta (all default quantities = 0 until user enters)
 const defaultAllocations: InventoryAllocation[] = [
-  // Keychain Don Quixote: maxOffline 90 -> Booth A: 45, Booth B: 25, CF: 10
-  { id: 'alloc-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-kc-don', allocated_quantity: 45, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-2', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-kc-don', allocated_quantity: 25, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-cf-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-color-fiesta-2026', booth_id: 'booth-cf-1', variant_id: 'var-kc-don', allocated_quantity: 10, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  // Keychain Don Quixote
+  { id: 'alloc-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-kc-don', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-2', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-kc-don', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-cf-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-color-fiesta-2026', booth_id: 'booth-cf-1', variant_id: 'var-kc-don', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 
-  // Keychain Faust: maxOffline 80 -> Booth A: 40, Booth B: 20, CF: 10
-  { id: 'alloc-3', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-kc-faust', allocated_quantity: 40, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-4', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-kc-faust', allocated_quantity: 20, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-cf-2', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-color-fiesta-2026', booth_id: 'booth-cf-1', variant_id: 'var-kc-faust', allocated_quantity: 10, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  // Keychain Faust
+  { id: 'alloc-3', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-kc-faust', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-4', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-kc-faust', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-cf-2', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-color-fiesta-2026', booth_id: 'booth-cf-1', variant_id: 'var-kc-faust', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 
-  // Keychain Yi Sang: maxOffline 80 -> Booth A: 40, Booth B: 20, CF: 10
-  { id: 'alloc-5', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-kc-yisang', allocated_quantity: 40, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-6', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-kc-yisang', allocated_quantity: 20, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-cf-3', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-color-fiesta-2026', booth_id: 'booth-cf-1', variant_id: 'var-kc-yisang', allocated_quantity: 10, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  // Keychain Yi Sang
+  { id: 'alloc-5', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-kc-yisang', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-6', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-kc-yisang', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-cf-3', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-color-fiesta-2026', booth_id: 'booth-cf-1', variant_id: 'var-kc-yisang', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 
   // Keychain Ishmael & Sinclair
-  { id: 'alloc-7', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-kc-ishmael', allocated_quantity: 35, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-8', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-kc-ishmael', allocated_quantity: 20, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-9', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-kc-sinclair', allocated_quantity: 35, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-10', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-kc-sinclair', allocated_quantity: 20, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-7', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-kc-ishmael', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-8', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-kc-ishmael', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-9', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-kc-sinclair', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-10', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-kc-sinclair', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 
   // Standee E.G.O (Vergilius, Heathcliff, Hong Lu, Ryoshu)
-  { id: 'alloc-11', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-st-vergilius', allocated_quantity: 25, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-12', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-st-vergilius', allocated_quantity: 25, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-13', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-st-heathcliff', allocated_quantity: 30, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-14', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-st-heathcliff', allocated_quantity: 25, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-15', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-st-honglu', allocated_quantity: 25, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-16', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-st-honglu', allocated_quantity: 25, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-17', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-st-ryoshu', allocated_quantity: 25, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-18', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-st-ryoshu', allocated_quantity: 20, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-11', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-st-vergilius', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-12', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-st-vergilius', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-13', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-st-heathcliff', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-14', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-st-heathcliff', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-15', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-st-honglu', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-16', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-st-honglu', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-17', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-st-ryoshu', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-18', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-st-ryoshu', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 
   // Figure Chibi Limbus Company (Dante, Don Quixote, Faust)
-  { id: 'alloc-19', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-fig-dante', allocated_quantity: 10, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-20', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-fig-dante', allocated_quantity: 10, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-21', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-fig-don', allocated_quantity: 8, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-22', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-fig-don', allocated_quantity: 8, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-23', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-fig-faust', allocated_quantity: 8, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-24', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-fig-faust', allocated_quantity: 8, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-19', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-fig-dante', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-20', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-fig-dante', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-21', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-fig-don', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-22', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-fig-don', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-23', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-fig-faust', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-24', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-fig-faust', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 
   // Standee Diorama Mephistopheles & Shaker Keychains
-  { id: 'alloc-25', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-dio-mephi-full', allocated_quantity: 18, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-26', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-dio-mephi-full', allocated_quantity: 14, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-27', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-shk-enkephalin', allocated_quantity: 35, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-28', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-shk-enkephalin', allocated_quantity: 25, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-29', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-shk-bough', allocated_quantity: 35, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-30', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-shk-bough', allocated_quantity: 25, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-25', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-dio-mephi-full', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-26', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-dio-mephi-full', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-27', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-shk-enkephalin', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-28', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-shk-enkephalin', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-29', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-shk-bough', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-30', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-shk-bough', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 
   // Anime Scale Figures at Booth B
-  { id: 'alloc-31', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-fig-frieren', allocated_quantity: 15, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-32', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-fig-hoshino-ai', allocated_quantity: 14, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-31', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-fig-frieren', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-32', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-fig-hoshino-ai', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 
   // Test Event Allocations (Quầy Test POS 01)
-  { id: 'alloc-test-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-kc-don', allocated_quantity: 50, sold_quantity: 12, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-test-2', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-kc-faust', allocated_quantity: 50, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-test-3', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-st-vergilius', allocated_quantity: 40, sold_quantity: 1, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-test-4', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-fig-dante', allocated_quantity: 20, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-test-5', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-dio-mephi-full', allocated_quantity: 30, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-test-6', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-shk-enkephalin', allocated_quantity: 40, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-kc-don', allocated_quantity: 0, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-2', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-kc-faust', allocated_quantity: 0, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-3', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-st-vergilius', allocated_quantity: 0, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-4', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-fig-dante', allocated_quantity: 0, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-5', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-dio-mephi-full', allocated_quantity: 0, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-6', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-shk-enkephalin', allocated_quantity: 0, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 
   // Collab Booth Allocations
-  { id: 'alloc-collab-genz-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-collab-genz', variant_id: 'var-collab-genz-bag-std', allocated_quantity: 45, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-collab-genz-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-collab-genz', variant_id: 'var-collab-genz-bag-std', allocated_quantity: 0, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 ];
 
 const defaultMembers: WorkspaceMember[] = [
@@ -836,8 +849,10 @@ export const useDataStore = create<DataStoreState>()(
           id: `var-${Date.now()}-${idx}`,
           workspace_id: productData.workspace_id,
           product_id: productId,
-          reserved_quantity: Number(v.reserved_quantity) || 0,
-          online_preorder_quantity: Number(v.online_preorder_quantity) || 0,
+          price: Math.max(0, Number(v.price) || 0),
+          total_inventory: Math.max(0, Number(v.total_inventory) || 0),
+          reserved_quantity: Math.max(0, Number(v.reserved_quantity) || 0),
+          online_preorder_quantity: Math.max(0, Number(v.online_preorder_quantity) || 0),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }));
@@ -849,11 +864,43 @@ export const useDataStore = create<DataStoreState>()(
 
         return newProduct;
       },
-      updateProduct: (id, updates) => {
+      updateProduct: (id, updates, variantUpdates) => {
+        const nowIso = new Date().toISOString();
+        const existingProd = get().products.find((p) => p.id === id);
+        const wsId = existingProd?.workspace_id || 'ws-hac-cam-studio';
+
+        let nextVariants = get().variants;
+        if (variantUpdates && variantUpdates.length > 0) {
+          const otherVariants = nextVariants.filter((v) => v.product_id !== id);
+          const existingForProd = nextVariants.filter((v) => v.product_id === id);
+
+          const updatedForProd: ProductVariant[] = variantUpdates.map((vu, idx) => {
+            const matched =
+              (vu.id && existingForProd.find((ev) => ev.id === vu.id)) || existingForProd[idx];
+            return {
+              id: matched?.id || `var-${Date.now()}-${idx}`,
+              workspace_id: matched?.workspace_id || wsId,
+              product_id: id,
+              name: vu.name?.trim() || 'Tiêu chuẩn',
+              sku: vu.sku?.trim().toUpperCase() || matched?.sku || `SKU-${Date.now().toString().slice(-4)}`,
+              price: Math.max(0, Number(vu.price) || 0),
+              total_inventory: Math.max(0, Number(vu.total_inventory) || 0),
+              reserved_quantity: Math.max(0, Number(vu.reserved_quantity) || 0),
+              online_preorder_quantity: Math.max(0, Number(vu.online_preorder_quantity) || 0),
+              barcode: vu.barcode ?? matched?.barcode ?? null,
+              created_at: matched?.created_at || nowIso,
+              updated_at: nowIso,
+            };
+          });
+
+          nextVariants = [...updatedForProd, ...otherVariants];
+        }
+
         set({
           products: get().products.map((p) =>
-            p.id === id ? { ...p, ...updates, updated_at: new Date().toISOString() } : p
+            p.id === id ? { ...p, ...updates, updated_at: nowIso } : p
           ),
+          variants: nextVariants,
         });
       },
       deleteProduct: (id) => {
@@ -1277,11 +1324,12 @@ export const useDataStore = create<DataStoreState>()(
       },
     }),
     {
-      name: 'eventmate_core_data_v4',
+      name: 'eventmate_core_data_v5',
       onRehydrateStorage: () => (state) => {
         if (typeof window !== 'undefined') {
           try {
             localStorage.removeItem('eventmate_core_data_v3');
+            localStorage.removeItem('eventmate_core_data_v4');
             const savedEvt = localStorage.getItem('eventmate_pos_selected_event');
             if (savedEvt === 'evt-hanoi-2026' || savedEvt === 'evt-saigon-2026') {
               localStorage.setItem('eventmate_pos_selected_event', 'evt-hobby-horizon-2026');

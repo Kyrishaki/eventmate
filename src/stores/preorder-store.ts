@@ -5,104 +5,8 @@ import { useDataStore } from './data-store';
 import { useOrdersStore } from './orders-store';
 import { logActivity } from './audit-store';
 
-// Default sample pre-orders matching the Limbus Company & Hobby Horizon festival merch inventory
-const INITIAL_PREORDERS: PreorderReservation[] = [
-  {
-    id: 'pre-1001',
-    code: 'PRE-7821',
-    workspace_id: 'ws-hac-cam-studio',
-    event_id: 'evt-hobby-horizon-2026',
-    booth_id: 'booth-a',
-    customer_name: 'Nguyễn Thùy Linh (Fan Limbus VIP)',
-    customer_phone: '0912345678',
-    preorder_type: 'vip_hold',
-    status: 'pending_pickup',
-    items: [
-      {
-        variant_id: 'var-fig-don',
-        variant_name: 'Don Quixote (La Manchaland Ver.)',
-        product_name: 'Figure Chibi / Nendoroid Limbus Company - Bus Department',
-        quantity: 1,
-        unit_price: 920000,
-      },
-      {
-        variant_id: 'var-st-vergilius',
-        variant_name: 'Vergilius (The Red Gaze)',
-        product_name: 'Standee Acrylic Limbus Company - E.G.O & Walpurgisnacht (18cm)',
-        quantity: 1,
-        unit_price: 145000,
-      },
-    ],
-    total_amount: 1065000,
-    deposit_paid: 1065000,
-    remaining_amount: 0,
-    notes: 'Khách VIP đã cọc 100% qua chuyển khoản, hẹn nhận tại Gian A12 Hobby Horizon lúc 10:00 sáng.',
-    created_at: new Date(Date.now() - 3600000 * 5).toISOString(),
-    updated_at: new Date(Date.now() - 3600000 * 5).toISOString(),
-  },
-  {
-    id: 'pre-1002',
-    code: 'ONL-3419',
-    workspace_id: 'ws-hac-cam-studio',
-    event_id: 'evt-hobby-horizon-2026',
-    booth_id: 'booth-a',
-    customer_name: 'Trần Minh Quân (Đơn Keep Web)',
-    customer_phone: '0987654321',
-    preorder_type: 'online_preorder',
-    status: 'pending_pickup',
-    items: [
-      {
-        variant_id: 'var-kc-don',
-        variant_name: 'Don Quixote (#03)',
-        product_name: 'Keychain Acrylic 2 Lớp Limbus Company - 12 Sinners',
-        quantity: 2,
-        unit_price: 65000,
-      },
-      {
-        variant_id: 'var-shk-enkephalin',
-        variant_name: 'Bình Enkephalin (Gregor, Outis, Meursault)',
-        product_name: 'Keychain Shaker Cát Chảy Limbus Company - Enkephalin & Golden Bough',
-        quantity: 1,
-        unit_price: 95000,
-      },
-    ],
-    total_amount: 225000,
-    deposit_paid: 225000,
-    remaining_amount: 0,
-    notes: 'Đơn đặt trước trên Website HikaruStore, nhận hàng tại khu Artist Alley (SECC Q.7).',
-    created_at: new Date(Date.now() - 3600000 * 8).toISOString(),
-    updated_at: new Date(Date.now() - 3600000 * 8).toISOString(),
-  },
-  {
-    id: 'pre-1003',
-    code: 'COL-9012',
-    workspace_id: 'ws-hac-cam-studio',
-    event_id: 'evt-hobby-horizon-2026',
-    booth_id: 'booth-collab-genz',
-    customer_name: 'Lê Hoàng Yến',
-    customer_phone: '0903334455',
-    preorder_type: 'online_preorder',
-    status: 'picked_up',
-    items: [
-      {
-        variant_id: 'var-collab-genz-bag-std',
-        variant_name: 'Combo Walpurgis (Outis, Gregor & Rodion)',
-        product_name: 'Set Standee & Keychain Hologram Limbus Company x GenZ Studio',
-        quantity: 1,
-        unit_price: 195000,
-      },
-    ],
-    total_amount: 195000,
-    deposit_paid: 195000,
-    remaining_amount: 0,
-    notes: 'Đã nhận lúc 11:30 tại Gian Collab C08 (Hobby Horizon)',
-    proof_image_url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200"><rect width="300" height="200" fill="%23EBF1EE"/><text x="50%25" y="45%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="%23315C4C">ẢNH MINH CHỨNG NHẬN HÀNG</text><text x="50%25" y="60%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="11" fill="%23737373">Đã đối chiếu SĐT và nhận tại Hobby Horizon</text></svg>',
-    picked_up_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-    picked_up_by: 'Thu ngân Gian A12',
-    created_at: new Date(Date.now() - 3600000 * 12).toISOString(),
-    updated_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-  },
-];
+// Default pre-orders start empty (0 virtual pre-orders until user/guest creates them)
+const INITIAL_PREORDERS: PreorderReservation[] = [];
 
 interface FulfillPreorderParams {
   preorderId: string;
@@ -405,11 +309,12 @@ export const usePreorderStore = create<PreorderStoreState>()(
       },
     }),
     {
-      name: 'eventmate_preorders_v2',
+      name: 'eventmate_preorders_v3',
       onRehydrateStorage: () => () => {
         if (typeof window !== 'undefined') {
           try {
             localStorage.removeItem('eventmate_preorders_v1');
+            localStorage.removeItem('eventmate_preorders_v2');
           } catch {
             // ignore
           }

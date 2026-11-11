@@ -229,10 +229,10 @@ export default function ProductsPage() {
     {
       name: 'Tiêu chuẩn (Standard)',
       sku: '',
-      price: 250000,
-      total_inventory: 100,
-      reserved_quantity: 10,
-      online_preorder_quantity: 20,
+      price: 0,
+      total_inventory: 0,
+      reserved_quantity: 0,
+      online_preorder_quantity: 0,
       barcode: '',
     },
   ]);
@@ -241,12 +241,12 @@ export default function ProductsPage() {
     (p) => !activeWorkspace || p.workspace_id === activeWorkspace.id
   );
 
-  // Check if a product is completely sold out across all variants (offline available <= 0)
+  // Check if a product had stock (> 0) and is completely sold out across all variants (offline available <= 0)
   function isProductSoldOut(prodId: string): boolean {
     const prodVariants = variants.filter((v) => v.product_id === prodId);
-    if (prodVariants.length === 0) return true;
+    if (prodVariants.length === 0) return false;
     const summary = calculateProductStock(prodVariants, allocations);
-    return summary.offlineAvailable <= 0;
+    return summary.total > 0 && summary.offlineAvailable <= 0;
   }
 
   // Counts for Status Tabs & Top KPIs
@@ -324,11 +324,11 @@ export default function ProductsPage() {
     setFormVariants([
       {
         name: 'Tiêu chuẩn',
-        sku: isPartner ? `COL-${Date.now().toString().slice(-4)}` : 'TOUR-S',
-        price: 250000,
-        total_inventory: 80,
-        reserved_quantity: 5,
-        online_preorder_quantity: 10,
+        sku: isPartner ? `COL-${Date.now().toString().slice(-4)}` : '',
+        price: 0,
+        total_inventory: 0,
+        reserved_quantity: 0,
+        online_preorder_quantity: 0,
         barcode: '',
       },
     ]);
@@ -356,10 +356,11 @@ export default function ProductsPage() {
     if (prodVariants.length > 0) {
       setFormVariants(
         prodVariants.map((v) => ({
+          id: v.id,
           name: v.name,
           sku: v.sku,
-          price: v.price,
-          total_inventory: v.total_inventory,
+          price: v.price || 0,
+          total_inventory: v.total_inventory || 0,
           reserved_quantity: v.reserved_quantity || 0,
           online_preorder_quantity: v.online_preorder_quantity || 0,
           barcode: v.barcode || '',
@@ -370,8 +371,8 @@ export default function ProductsPage() {
         {
           name: 'Tiêu chuẩn',
           sku: '',
-          price: 200000,
-          total_inventory: 50,
+          price: 0,
+          total_inventory: 0,
           reserved_quantity: 0,
           online_preorder_quantity: 0,
           barcode: '',
@@ -387,8 +388,8 @@ export default function ProductsPage() {
       {
         name: '',
         sku: '',
-        price: 200000,
-        total_inventory: 50,
+        price: 0,
+        total_inventory: 0,
         reserved_quantity: 0,
         online_preorder_quantity: 0,
         barcode: '',
@@ -438,13 +439,26 @@ export default function ProductsPage() {
         return;
       }
 
-      updateProduct(editingProduct.id, {
-        name,
-        category_id: resolvedCategoryId,
-        description: description.trim() || null,
-        image_url: imageUrl.trim() || null,
-        collab_partner: effectiveCollabPartner || null,
-      });
+      updateProduct(
+        editingProduct.id,
+        {
+          name,
+          category_id: resolvedCategoryId,
+          description: description.trim() || null,
+          image_url: imageUrl.trim() || null,
+          collab_partner: effectiveCollabPartner || null,
+        },
+        formVariants.map((fv) => ({
+          id: fv.id,
+          name: fv.name || 'Standard',
+          sku: fv.sku.toUpperCase() || `SKU-${Date.now().toString().slice(-4)}`,
+          price: Math.max(0, Number(fv.price) || 0),
+          total_inventory: Math.max(0, Number(fv.total_inventory) || 0),
+          reserved_quantity: Math.max(0, Number(fv.reserved_quantity) || 0),
+          online_preorder_quantity: Math.max(0, Number(fv.online_preorder_quantity) || 0),
+          barcode: fv.barcode.trim() || null,
+        }))
+      );
 
       logActivity({
         actor_name: user?.fullName || 'Người dùng',
@@ -472,10 +486,10 @@ export default function ProductsPage() {
         formVariants.map((fv) => ({
           name: fv.name || 'Standard',
           sku: fv.sku.toUpperCase() || `SKU-${Date.now().toString().slice(-4)}`,
-          price: Number(fv.price) || 0,
-          total_inventory: Number(fv.total_inventory) || 0,
-          reserved_quantity: Number(fv.reserved_quantity) || 0,
-          online_preorder_quantity: Number(fv.online_preorder_quantity) || 0,
+          price: Math.max(0, Number(fv.price) || 0),
+          total_inventory: Math.max(0, Number(fv.total_inventory) || 0),
+          reserved_quantity: Math.max(0, Number(fv.reserved_quantity) || 0),
+          online_preorder_quantity: Math.max(0, Number(fv.online_preorder_quantity) || 0),
           barcode: fv.barcode.trim() || null,
         }))
       );
@@ -1715,11 +1729,10 @@ export default function ProductsPage() {
                           Mã loại:
                         </span>
                         <Input
-                          placeholder="Mã loại"
+                          placeholder="Tự động nếu để trống"
                           value={v.sku}
                           onChange={(e) => updateVariantField(idx, 'sku', e.target.value)}
                           className="h-8 text-xs bg-white font-mono uppercase"
-                          required
                         />
                       </div>
                       <div className="sm:col-span-3">
@@ -1728,11 +1741,17 @@ export default function ProductsPage() {
                         </span>
                         <Input
                           type="number"
-                          placeholder="Giá bán"
-                          value={v.price}
-                          onChange={(e) => updateVariantField(idx, 'price', Number(e.target.value))}
+                          min="0"
+                          placeholder="0"
+                          value={v.price === 0 ? '' : v.price}
+                          onChange={(e) =>
+                            updateVariantField(
+                              idx,
+                              'price',
+                              e.target.value === '' ? 0 : Math.max(0, Number(e.target.value) || 0)
+                            )
+                          }
                           className="h-8 text-xs bg-white"
-                          required
                         />
                       </div>
                       <div className="sm:col-span-1 flex justify-end sm:justify-center pt-1 sm:pt-4">
@@ -1756,13 +1775,16 @@ export default function ProductsPage() {
                         <Input
                           type="number"
                           min="0"
-                          placeholder="Tổng kho"
-                          value={v.total_inventory}
+                          placeholder="0"
+                          value={v.total_inventory === 0 ? '' : v.total_inventory}
                           onChange={(e) =>
-                            updateVariantField(idx, 'total_inventory', Number(e.target.value))
+                            updateVariantField(
+                              idx,
+                              'total_inventory',
+                              e.target.value === '' ? 0 : Math.max(0, Number(e.target.value) || 0)
+                            )
                           }
                           className="h-8 text-xs bg-white"
-                          required
                         />
                       </div>
                       <div>
@@ -1772,10 +1794,14 @@ export default function ProductsPage() {
                         <Input
                           type="number"
                           min="0"
-                          placeholder="Đặt trước"
-                          value={v.reserved_quantity}
+                          placeholder="0"
+                          value={v.reserved_quantity === 0 ? '' : v.reserved_quantity}
                           onChange={(e) =>
-                            updateVariantField(idx, 'reserved_quantity', Number(e.target.value))
+                            updateVariantField(
+                              idx,
+                              'reserved_quantity',
+                              e.target.value === '' ? 0 : Math.max(0, Number(e.target.value) || 0)
+                            )
                           }
                           className="h-8 text-xs bg-white border-[#B7791F]/40"
                         />
@@ -1787,10 +1813,14 @@ export default function ProductsPage() {
                         <Input
                           type="number"
                           min="0"
-                          placeholder="Đơn online"
-                          value={v.online_preorder_quantity}
+                          placeholder="0"
+                          value={v.online_preorder_quantity === 0 ? '' : v.online_preorder_quantity}
                           onChange={(e) =>
-                            updateVariantField(idx, 'online_preorder_quantity', Number(e.target.value))
+                            updateVariantField(
+                              idx,
+                              'online_preorder_quantity',
+                              e.target.value === '' ? 0 : Math.max(0, Number(e.target.value) || 0)
+                            )
                           }
                           className="h-8 text-xs bg-white border-[#3B82F6]/40"
                         />
@@ -1902,9 +1932,10 @@ export default function ProductsPage() {
                         <Input
                           type="number"
                           min="0"
-                          value={qv.total}
+                          placeholder="0"
+                          value={qv.total === 0 ? '' : qv.total}
                           onChange={(e) => {
-                            const val = Number(e.target.value) || 0;
+                            const val = e.target.value === '' ? 0 : Math.max(0, Number(e.target.value) || 0);
                             setQuickVariants((prev) =>
                               prev.map((item, i) => (i === idx ? { ...item, total: val } : item))
                             );
@@ -1921,9 +1952,10 @@ export default function ProductsPage() {
                         <Input
                           type="number"
                           min="0"
-                          value={qv.reserved}
+                          placeholder="0"
+                          value={qv.reserved === 0 ? '' : qv.reserved}
                           onChange={(e) => {
-                            const val = Number(e.target.value) || 0;
+                            const val = e.target.value === '' ? 0 : Math.max(0, Number(e.target.value) || 0);
                             setQuickVariants((prev) =>
                               prev.map((item, i) => (i === idx ? { ...item, reserved: val } : item))
                             );
@@ -1940,9 +1972,10 @@ export default function ProductsPage() {
                         <Input
                           type="number"
                           min="0"
-                          value={qv.online}
+                          placeholder="0"
+                          value={qv.online === 0 ? '' : qv.online}
                           onChange={(e) => {
-                            const val = Number(e.target.value) || 0;
+                            const val = e.target.value === '' ? 0 : Math.max(0, Number(e.target.value) || 0);
                             setQuickVariants((prev) =>
                               prev.map((item, i) => (i === idx ? { ...item, online: val } : item))
                             );

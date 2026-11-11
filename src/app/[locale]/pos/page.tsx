@@ -58,8 +58,10 @@ import {
   SlidersHorizontal,
   Copy,
   CopyCheck,
+  Volume2,
+  Radio,
 } from 'lucide-react';
-import { playSuccessChime } from '@/lib/sound';
+import { playSuccessChime, speakPaymentReceived } from '@/lib/sound';
 import { FeedbackModal } from '@/components/feedback/feedback-modal';
 
 function subscribeOnline(callback: () => void) {
@@ -377,8 +379,8 @@ export default function PosTerminalPage() {
   const cashShortage = Math.max(0, cartTotal - (tenderedCash || 0));
   const isCashUnderpaid = paymentMethod === 'cash' && cartTotal > 0 && (tenderedCash || 0) < cartTotal;
 
-  // Toggle to hide sold-out products on POS terminal (defaults to true as requested)
-  const [hideSoldOut, setHideSoldOut] = React.useState(true);
+  // Toggle to hide sold-out products on POS terminal (defaults to false so 0-stock items are still visible until stocked)
+  const [hideSoldOut, setHideSoldOut] = React.useState(false);
 
   // Calculate available stock for a variant at currently selected booth
   // (strictly respecting booth allocation, true offline remaining inventory, my current cart, and other cashiers' active carts in real time)
@@ -510,7 +512,7 @@ export default function PosTerminalPage() {
     return cart.find((item) => item.variantId === variantId)?.quantity || 0;
   }
 
-  async function handleCompleteOrder() {
+  async function handleCompleteOrder(autoVerifyNote?: string) {
     if (user?.role === 'viewer') {
       alert('Tài khoản của bạn là Khách xem (Chỉ đọc), không thể xác nhận thanh toán đơn hàng.');
       return;
@@ -523,6 +525,7 @@ export default function PosTerminalPage() {
     setIsSubmitting(true);
 
     try {
+      const mergedNote = [orderNotes.trim(), autoVerifyNote].filter(Boolean).join(' • ');
       const order = await submitOrder({
         workspaceId: selectedBooth.workspace_id,
         eventId: selectedEvent.id,
@@ -531,13 +534,16 @@ export default function PosTerminalPage() {
         paymentMethod,
         tenderedAmount: paymentMethod === 'cash' ? (tenderedCash || cartTotal) : undefined,
         changeAmount: paymentMethod === 'cash' ? cashChange : undefined,
-        notes: orderNotes.trim() || undefined,
+        notes: mergedNote || undefined,
         isOnline,
       });
 
       setConfirmedOrder(order);
       useShiftStore.getState().recordOrderInShift(paymentMethod, order.final_amount);
       playSuccessChime();
+      if (paymentMethod === 'qr_manual' && activeBankConfig.voiceAnnouncement !== false) {
+        speakPaymentReceived(order.final_amount);
+      }
       setIsCheckoutOpen(false);
       setIsMobileCartOpen(false);
       setQrCountdown(null);
@@ -549,6 +555,122 @@ export default function PosTerminalPage() {
       setIsSubmitting(false);
     }
   }
+
+  // Real-time Auto-Banking Verification (SePay / Casso / Webhook Polling)
+  const [isCheckingBankTx, setIsCheckingBankTx] = React.useState(false);
+  const [lastBankCheckTime, setLastBankCheckTime] = React.useState<string | null>(null);
+  const hasAutoCompletedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (isCheckoutOpen) {
+      hasAutoCompletedRef.current = false;
+    }
+  }, [isCheckoutOpen, qrSessionRef]);
+
+  const checkBankTransferNow = React.useCallback(async () => {
+    if (
+      !isCheckoutOpen ||
+      paymentMethod !== 'qr_manual' ||
+      !isOnline ||
+      isSubmitting ||
+      hasAutoCompletedRef.current ||
+      cartTotal <= 0
+    ) {
+      return;
+    }
+
+    setIsCheckingBankTx(true);
+    try {
+      const res = await fetch('/api/payments/check-qr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transferCode: `EM${qrSessionRef}`,
+          expectedAmount: cartTotal,
+          provider: activeBankConfig.provider || 'sepay',
+          apiToken: activeBankConfig.apiToken || '',
+          accountNo: activeBankConfig.accountNo || '',
+        }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setLastBankCheckTime(new Date().toLocaleTimeString('vi-VN'));
+
+      if (data?.matched && !hasAutoCompletedRef.current) {
+        hasAutoCompletedRef.current = true;
+        const txRef = data.transaction?.referenceCode || `EM${qrSessionRef}`;
+        await handleCompleteOrder(`[Tự động khớp CK: EM${qrSessionRef} - GD: ${txRef}]`);
+      }
+    } catch {
+      // Ignore transient network errors while polling
+    } finally {
+      setIsCheckingBankTx(false);
+    }
+  }, [
+    isCheckoutOpen,
+    paymentMethod,
+    isOnline,
+    isSubmitting,
+    cartTotal,
+    qrSessionRef,
+    activeBankConfig.provider,
+    activeBankConfig.apiToken,
+    activeBankConfig.accountNo,
+  ]);
+
+  // Poll /api/payments/check-qr every 2.5 seconds while VietQR modal is open
+  React.useEffect(() => {
+    if (
+      !isCheckoutOpen ||
+      paymentMethod !== 'qr_manual' ||
+      !isOnline ||
+      activeBankConfig.autoCheckEnabled === false
+    ) {
+      return;
+    }
+
+    const immediateTimer = setTimeout(() => {
+      checkBankTransferNow();
+    }, 800);
+
+    const pollTimer = setInterval(() => {
+      checkBankTransferNow();
+    }, 2500);
+
+    return () => {
+      clearTimeout(immediateTimer);
+      clearInterval(pollTimer);
+    };
+  }, [
+    isCheckoutOpen,
+    paymentMethod,
+    isOnline,
+    activeBankConfig.autoCheckEnabled,
+    checkBankTransferNow,
+  ]);
+
+  // Helper to simulate an incoming bank transfer webhook for the active QR code
+  const handleSimulateBankTransfer = async () => {
+    if (isSubmitting || cartTotal <= 0) return;
+    try {
+      await fetch('/api/payments/webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gateway: activeBankConfig.bankId,
+          accountNumber: activeBankConfig.accountNo,
+          transferType: 'in',
+          transferAmount: cartTotal,
+          content: `Khach chuyen khoan EM${qrSessionRef}`,
+          referenceCode: `FT${Date.now().toString().slice(-8)}`,
+          source: 'simulated',
+        }),
+      });
+      await checkBankTransferNow();
+    } catch {
+      handleCompleteOrder();
+    }
+  };
 
   // Simulation / Webhook Auto-Detection Countdown Timer
   React.useEffect(() => {
@@ -1551,24 +1673,24 @@ export default function PosTerminalPage() {
       >
         <div className="space-y-4">
           {/* Payment Method Selector Tabs */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => setPaymentMethod('qr_manual')}
-              className={`p-2.5 rounded-[6px] border text-xs font-bold flex flex-col items-center gap-1.5 transition-colors ${
+              className={`p-2.5 rounded-[6px] border text-xs font-bold flex flex-col items-center gap-1.5 transition-colors cursor-pointer ${
                 paymentMethod === 'qr_manual'
                   ? 'border-[#315C4C] bg-[#EBF1EE] text-[#315C4C]'
                   : 'border-[#E8E8E5] bg-white text-[#737373] hover:bg-[#F7F7F5]'
               }`}
             >
               <QrCode className="w-5 h-5" />
-              <span>VietQR</span>
+              <span>Chuyển khoản VietQR</span>
             </button>
 
             <button
               type="button"
               onClick={() => setPaymentMethod('cash')}
-              className={`p-2.5 rounded-[6px] border text-xs font-bold flex flex-col items-center gap-1.5 transition-colors ${
+              className={`p-2.5 rounded-[6px] border text-xs font-bold flex flex-col items-center gap-1.5 transition-colors cursor-pointer ${
                 paymentMethod === 'cash'
                   ? 'border-[#315C4C] bg-[#EBF1EE] text-[#315C4C]'
                   : 'border-[#E8E8E5] bg-white text-[#737373] hover:bg-[#F7F7F5]'
@@ -1576,19 +1698,6 @@ export default function PosTerminalPage() {
             >
               <Banknote className="w-5 h-5" />
               <span>Tiền mặt</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setPaymentMethod('gateway')}
-              className={`p-2.5 rounded-[6px] border text-xs font-bold flex flex-col items-center gap-1.5 transition-colors ${
-                paymentMethod === 'gateway'
-                  ? 'border-[#315C4C] bg-[#EBF1EE] text-[#315C4C]'
-                  : 'border-[#E8E8E5] bg-white text-[#737373] hover:bg-[#F7F7F5]'
-              }`}
-            >
-              <CreditCard className="w-5 h-5" />
-              <span>Thẻ POS</span>
             </button>
           </div>
 
@@ -1598,19 +1707,25 @@ export default function PosTerminalPage() {
               {/* Pulsating status badge */}
               <div
                 className={`flex items-center justify-center gap-2 text-xs font-semibold py-1.5 px-3 rounded-full mx-auto w-fit border ${
-                  autoConfirmQr
+                  autoConfirmQr || activeBankConfig.autoCheckEnabled !== false
                     ? 'text-[#2F7D55] bg-[#EAF4EE] border-[#2F7D55]/30'
                     : 'text-[#8C5D17] bg-[#FEF7EC] border-[#F5C27A]/50'
                 }`}
               >
                 <span
                   className={`w-2 h-2 rounded-full ${
-                    autoConfirmQr ? 'bg-[#2F7D55] animate-ping' : 'bg-[#B7791F]'
+                    autoConfirmQr || activeBankConfig.autoCheckEnabled !== false
+                      ? 'bg-[#2F7D55] animate-ping'
+                      : 'bg-[#B7791F]'
                   }`}
                 />
                 <span>
                   {autoConfirmQr && qrCountdown !== null && qrCountdown > 0
                     ? `⚡ Đang tự động khớp lệnh sau ${qrCountdown}s...`
+                    : activeBankConfig.autoCheckEnabled !== false
+                    ? `Đang tự động chờ tiền về mã EM${qrSessionRef}${
+                        lastBankCheckTime ? ` • Vừa quét lúc ${lastBankCheckTime}` : ''
+                      }`
                     : 'Đang hiển thị mã VietQR • Bấm nút xanh hoặc [Enter] khi đã nhận tiền'}
                 </span>
               </div>
@@ -1678,15 +1793,30 @@ export default function PosTerminalPage() {
                 </div>
               </div>
 
-              {/* Explanatory banner */}
-              <div className="p-2.5 rounded-[6px] bg-[#FEF7EC] border border-[#F5C27A]/40 text-[#8C5D17] text-[11px] leading-relaxed text-left flex items-start gap-2">
-                <Info className="w-4 h-4 shrink-0 mt-0.5 text-[#B7791F]" />
-                <div>
-                  <p className="font-semibold text-[#202124]">Vì sao sau khi chuyển tiền màn hình chưa tự nhảy?</p>
-                  <p className="text-[#685023] mt-0.5">
-                    Mã VietQR chuyển thẳng trực tiếp vào tài khoản ngân hàng của bạn. Khi điện thoại bạn nổ thông báo <strong>&quot;ting ting&quot;</strong>, hãy bấm nút <strong>&quot;✓ ĐÃ NHẬN TIỀN&quot;</strong> bên dưới (hoặc phím <strong>Enter</strong>) để máy lưu đơn và trừ kho. Hoặc bạn có thể tích chọn <strong>&quot;⚡ Tự động khớp sau 5s&quot;</strong> để máy tự động chuyển màn hình!
-                  </p>
+              {/* Auto-banking status & non-phone cashier notice */}
+              <div className="p-2.5 rounded-[6px] bg-[#EAF4EE] border border-[#CEE6D7] text-[#2F7D55] text-[11px] leading-relaxed text-left flex items-start justify-between gap-2">
+                <div className="flex items-start gap-2">
+                  <Radio className="w-4 h-4 shrink-0 mt-0.5 text-[#2F7D55] animate-pulse" />
+                  <div>
+                    <p className="font-bold text-[#202124]">
+                      Tự động nhận diện tiền về (Không cần cầm điện thoại)
+                    </p>
+                    <p className="text-[#2F7D55] mt-0.5">
+                      Hệ thống tự động quét biến động số dư mỗi 2 giây theo mã{' '}
+                      <strong>EM{qrSessionRef}</strong>. Ngay khi khách chuyển khoản xong và tiền vào tài khoản, web sẽ <strong>tự động đọc giọng nói báo tiền về</strong> và nhảy sang màn hình hoàn tất!
+                    </p>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={checkBankTransferNow}
+                  disabled={isCheckingBankTx || isSubmitting}
+                  className="shrink-0 px-2 py-1 rounded bg-white border border-[#CEE6D7] text-[10px] font-bold text-[#315C4C] hover:bg-[#F7F7F5] cursor-pointer flex items-center gap-1"
+                  title="Quét kiểm tra giao dịch ngay lập tức"
+                >
+                  <RefreshCw className={`w-3 h-3 ${isCheckingBankTx ? 'animate-spin' : ''}`} />
+                  <span>Quét ngay</span>
+                </button>
               </div>
 
               {/* Cashier direct confirmation action */}
@@ -1697,7 +1827,7 @@ export default function PosTerminalPage() {
                   size="md"
                   disabled={isSubmitting}
                   isLoading={isSubmitting}
-                  onClick={handleCompleteOrder}
+                  onClick={() => handleCompleteOrder()}
                   className="w-full gap-2 bg-[#2F7D55] hover:bg-[#256343] text-white font-extrabold text-xs py-3 shadow-sm transform active:scale-[0.99] transition-all"
                 >
                   <CheckCircle2 className="w-4 h-4 text-white" />
@@ -1709,13 +1839,13 @@ export default function PosTerminalPage() {
                 <div className="flex items-center justify-between gap-2">
                   <button
                     type="button"
-                    onClick={handleCompleteOrder}
+                    onClick={handleSimulateBankTransfer}
                     disabled={isSubmitting}
-                    className="flex-1 py-1.5 px-2.5 rounded-[6px] border border-[#D5D5D0] bg-white hover:bg-[#F0F0ED] text-[#202124] text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
-                    title="Bấm để hoàn tất đơn ngay lập tức khi test hoặc khi đã thấy biến động số dư"
+                    className="flex-1 py-1.5 px-2.5 rounded-[6px] border border-[#315C4C]/40 bg-[#EBF1EE] hover:bg-[#DCE7E2] text-[#315C4C] text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    title="Giả lập ngân hàng vừa báo nhận được tiền chuyển khoản mã EM này để xem web tự động nhảy và đọc loa"
                   >
                     <Zap className="w-3.5 h-3.5 text-[#315C4C]" />
-                    <span>Khớp lệnh nhanh (Tức thì)</span>
+                    <span>Giả lập tiền về (Test tự nhảy)</span>
                   </button>
 
                   <label className="flex items-center gap-1.5 text-[11px] font-medium text-[#494949] cursor-pointer select-none bg-white py-1.5 px-2.5 rounded-[6px] border border-[#D5D5D0] hover:bg-[#F7F7F5]">
@@ -1725,7 +1855,7 @@ export default function PosTerminalPage() {
                       onChange={(e) => handleToggleAutoConfirm(e.target.checked)}
                       className="w-3.5 h-3.5 rounded border-[#D5D5D0] text-[#315C4C] focus:ring-[#315C4C]"
                     />
-                    <span>⚡ Tự động khớp sau 5s</span>
+                    <span>⚡ Tự khớp sau 5s</span>
                   </label>
                 </div>
               </div>
@@ -1815,17 +1945,6 @@ export default function PosTerminalPage() {
             </div>
           )}
 
-          {/* Mode 3: Gateway */}
-          {paymentMethod === 'gateway' && (
-            <div className="p-4 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[6px] text-center text-xs space-y-2">
-              <CreditCard className="w-8 h-8 text-[#315C4C] mx-auto" />
-              <p className="font-semibold text-[#202124]">Thanh toán thẻ POS</p>
-              <p className="text-[11px] text-[#737373]">
-                Quẹt thẻ hoặc chạm thiết bị vào máy POS.
-              </p>
-            </div>
-          )}
-
           {/* Notes */}
           <div className="space-y-1">
             <Label htmlFor="order-note" className="text-xs">
@@ -1855,7 +1974,7 @@ export default function PosTerminalPage() {
               size="sm"
               disabled={isSubmitting || isCashUnderpaid}
               isLoading={isSubmitting}
-              onClick={handleCompleteOrder}
+              onClick={() => handleCompleteOrder()}
               className="gap-1.5"
             >
               <CheckCircle2 className="w-4 h-4" />

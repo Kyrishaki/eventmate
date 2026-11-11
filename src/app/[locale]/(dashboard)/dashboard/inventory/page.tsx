@@ -1772,9 +1772,10 @@ export default function InventoryPage() {
                         <Input
                           type="number"
                           min="0"
-                          value={mv.total}
+                          placeholder="0"
+                          value={mv.total === 0 ? '' : mv.total}
                           onChange={(e) => {
-                            const val = Number(e.target.value) || 0;
+                            const val = e.target.value === '' ? 0 : Math.max(0, Number(e.target.value) || 0);
                             setMasterEditVariants((prev) =>
                               prev.map((item, i) => (i === idx ? { ...item, total: val } : item))
                             );
@@ -1791,9 +1792,10 @@ export default function InventoryPage() {
                         <Input
                           type="number"
                           min="0"
-                          value={mv.reserved}
+                          placeholder="0"
+                          value={mv.reserved === 0 ? '' : mv.reserved}
                           onChange={(e) => {
-                            const val = Number(e.target.value) || 0;
+                            const val = e.target.value === '' ? 0 : Math.max(0, Number(e.target.value) || 0);
                             setMasterEditVariants((prev) =>
                               prev.map((item, i) =>
                                 i === idx ? { ...item, reserved: val } : item
@@ -1812,9 +1814,10 @@ export default function InventoryPage() {
                         <Input
                           type="number"
                           min="0"
-                          value={mv.online}
+                          placeholder="0"
+                          value={mv.online === 0 ? '' : mv.online}
                           onChange={(e) => {
-                            const val = Number(e.target.value) || 0;
+                            const val = e.target.value === '' ? 0 : Math.max(0, Number(e.target.value) || 0);
                             setMasterEditVariants((prev) =>
                               prev.map((item, i) => (i === idx ? { ...item, online: val } : item))
                             );

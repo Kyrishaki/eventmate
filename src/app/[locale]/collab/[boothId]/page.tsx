@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Modal } from '@/components/ui/modal';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { isNetRevenueOrder } from '@/lib/test-data-filter';
 import { Booth, EventItem, Product, ProductVariant, InventoryAllocation, Order, PaymentMethod } from '@/types/database';
 import {
   Store,
@@ -104,17 +105,17 @@ function CollabPartnerPortalContent() {
   // New Collab Product Modal
   const [isAddProductModalOpen, setIsAddProductModalOpen] = React.useState(false);
   const [productName, setProductName] = React.useState('');
-  const [productPrice, setProductPrice] = React.useState<number>(150000);
-  const [productQty, setProductQty] = React.useState<number>(50);
-  const [productReservedQty, setProductReservedQty] = React.useState<number>(5);
-  const [productOnlineQty, setProductOnlineQty] = React.useState<number>(10);
+  const [productPrice, setProductPrice] = React.useState<number>(0);
+  const [productQty, setProductQty] = React.useState<number>(0);
+  const [productReservedQty, setProductReservedQty] = React.useState<number>(0);
+  const [productOnlineQty, setProductOnlineQty] = React.useState<number>(0);
   const [productVariantName, setProductVariantName] = React.useState('Tiêu chuẩn (Free size)');
   const [productSku, setProductSku] = React.useState('');
   const [productImageUrl, setProductImageUrl] = React.useState('');
 
   // POS Checkout State
   const [posSearch, setPosSearch] = React.useState('');
-  const [hideSoldOut, setHideSoldOut] = React.useState(true);
+  const [hideSoldOut, setHideSoldOut] = React.useState(false);
   const [isPreorderPickupOpen, setIsPreorderPickupOpen] = React.useState(false);
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>('qr_manual');
   const [tenderedCash, setTenderedCash] = React.useState<number>(0);
@@ -209,8 +210,10 @@ function CollabPartnerPortalContent() {
   const partnerItems = boothVariants.filter((item) => item.isPartnerItem);
   const hostItems = boothVariants.filter((item) => !item.isPartnerItem);
 
-  // Orders for this booth
-  const boothOrders = orders.filter((o) => o.booth_id === boothId && o.payment_status === 'completed');
+  // Orders for this booth (exclude cancelled / refunded orders from gross sales)
+  const boothOrders = orders.filter(
+    (o) => o.booth_id === boothId && o.payment_status === 'completed' && isNetRevenueOrder(o)
+  );
 
   // Total Gross Sales
   const totalBoothRevenue = boothOrders.reduce((sum, o) => sum + o.final_amount, 0);
@@ -262,10 +265,10 @@ function CollabPartnerPortalContent() {
 
     setIsAddProductModalOpen(false);
     setProductName('');
-    setProductPrice(150000);
-    setProductQty(50);
-    setProductReservedQty(5);
-    setProductOnlineQty(10);
+    setProductPrice(0);
+    setProductQty(0);
+    setProductReservedQty(0);
+    setProductOnlineQty(0);
     setProductSku('');
     setProductImageUrl('');
   }
@@ -790,9 +793,9 @@ ${url}`;
                             <input
                               id={`restock-qty-${variant!.id}`}
                               type="number"
-                              min="1"
-                              placeholder="SL"
-                              defaultValue="10"
+                              min="0"
+                              placeholder="0"
+                              defaultValue=""
                               className="w-16 h-7 text-xs font-bold text-center border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-800 rounded text-[#202124] dark:text-neutral-100 focus:outline-none focus:ring-1 focus:ring-[#315C4C]"
                               title="Nhập trực tiếp số lượng bổ sung"
                             />
@@ -1550,7 +1553,7 @@ ${url}`;
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="collab-prod-price" required>
+              <Label htmlFor="collab-prod-price">
                 Giá bán niêm yết (VND)
               </Label>
               <Input
@@ -1558,23 +1561,23 @@ ${url}`;
                 type="number"
                 min="0"
                 step="1000"
-                required
-                value={productPrice}
-                onChange={(e) => setProductPrice(Number(e.target.value))}
+                placeholder="0"
+                value={productPrice === 0 ? '' : productPrice}
+                onChange={(e) => setProductPrice(e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)))}
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="collab-prod-qty" required>
+              <Label htmlFor="collab-prod-qty">
                 Tổng số lượng mang đến
               </Label>
               <Input
                 id="collab-prod-qty"
                 type="number"
-                min="1"
-                required
-                value={productQty}
-                onChange={(e) => setProductQty(Number(e.target.value))}
+                min="0"
+                placeholder="0"
+                value={productQty === 0 ? '' : productQty}
+                onChange={(e) => setProductQty(e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)))}
               />
             </div>
           </div>
@@ -1589,8 +1592,8 @@ ${url}`;
                 id="collab-prod-reserved"
                 type="number"
                 min="0"
-                value={productReservedQty}
-                onChange={(e) => setProductReservedQty(Math.max(0, Number(e.target.value)))}
+                value={productReservedQty === 0 ? '' : productReservedQty}
+                onChange={(e) => setProductReservedQty(e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)))}
                 placeholder="0"
                 className="h-8 text-xs bg-white"
               />
@@ -1606,8 +1609,8 @@ ${url}`;
                 id="collab-prod-online"
                 type="number"
                 min="0"
-                value={productOnlineQty}
-                onChange={(e) => setProductOnlineQty(Math.max(0, Number(e.target.value)))}
+                value={productOnlineQty === 0 ? '' : productOnlineQty}
+                onChange={(e) => setProductOnlineQty(e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)))}
                 placeholder="0"
                 className="h-8 text-xs bg-white"
               />

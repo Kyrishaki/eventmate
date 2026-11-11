@@ -38,7 +38,7 @@ export function ShiftModal({
   const { user } = useAuthStore();
   const { activeShift, openShift, closeShift, initShifts } = useShiftStore();
 
-  const [startingFloatStr, setStartingFloatStr] = React.useState('1000000');
+  const [startingFloatStr, setStartingFloatStr] = React.useState('0');
   const [closingCashStr, setClosingCashStr] = React.useState('');
   const [notes, setNotes] = React.useState('');
   const [lastClosedShift, setLastClosedShift] = React.useState<CashierShift | null>(null);

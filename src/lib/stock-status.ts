@@ -47,7 +47,11 @@ export function calculateVariantStock(
   let statusLabel = 'Sẵn sàng bán';
   let badgeVariant: 'success' | 'warning' | 'error' | 'outline' | 'neutral' = 'success';
 
-  if (sold >= total && total > 0) {
+  if (total <= 0) {
+    status = 'sold_out';
+    statusLabel = 'Chưa nhập kho (0)';
+    badgeVariant = 'outline';
+  } else if (sold >= total && total > 0) {
     status = 'sold_out';
     statusLabel = 'Đã bán hết';
     badgeVariant = 'neutral';

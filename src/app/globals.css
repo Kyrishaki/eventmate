@@ -295,8 +295,30 @@ html.dark .bg-\[\#FDF2E9\] {
   color: #F3B05C !important;
 }
 
-html.dark .text-\[\#B7791F\] {
+html.dark .text-\[\#B7791F\],
+html.dark .text-\[\#8C5D17\] {
   color: #F3B05C !important;
+}
+
+/* Blue/Info status cards (Online orders & links) */
+html.dark .bg-\[\#EFF6FF\] {
+  background-color: rgba(59, 130, 246, 0.14) !important;
+  color: #60A5FA !important;
+}
+
+html.dark .text-\[\#1D4ED8\] {
+  color: #60A5FA !important;
+}
+
+/* Purple Collab banners */
+html.dark .bg-\[\#FAF5FF\] {
+  background-color: rgba(168, 85, 247, 0.12) !important;
+  color: #C084FC !important;
+}
+
+html.dark .text-\[\#6B21A8\],
+html.dark .text-\[\#7E22CE\] {
+  color: #C084FC !important;
 }
 
 /* Red/Error status cards */

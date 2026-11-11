@@ -55,11 +55,15 @@ import {
   Bug,
   Zap,
   Info,
+  SlidersHorizontal,
+  Copy,
+  CopyCheck,
 } from 'lucide-react';
 import { playSuccessChime } from '@/lib/sound';
 import { FeedbackModal } from '@/components/feedback/feedback-modal';
 
 function subscribeOnline(callback: () => void) {
+  if (typeof window === 'undefined') return () => {};
   window.addEventListener('online', callback);
   window.addEventListener('offline', callback);
   return () => {
@@ -82,6 +86,7 @@ export default function PosTerminalPage() {
   const { user, isAuthenticated, loginAsGuest } = useAuthStore();
   const { events, booths, products, variants, allocations } = useDataStore();
   const {
+    orders,
     cart,
     addToCart,
     removeFromCart,
@@ -90,6 +95,8 @@ export default function PosTerminalPage() {
     discountAmount,
     setDiscountAmount,
     submitOrder,
+    syncPendingOrders,
+    hydrateOfflineDb,
     activeBankConfig,
   } = useOrdersStore();
 
@@ -156,8 +163,70 @@ export default function PosTerminalPage() {
     }
   }, [cart, selectedBoothId, broadcastMyCart]);
 
-  // Online / Offline State Listener via useSyncExternalStore
-  const isOnline = useOnlineStatus();
+  // Online / Offline State Listener with Simulated Offline Support
+  const isHardwareOnline = useOnlineStatus();
+  const [isSimulatedOffline, setIsSimulatedOffline] = React.useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('pos_simulated_offline') === 'true';
+    }
+    return false;
+  });
+  const isOnline = isHardwareOnline && !isSimulatedOffline;
+
+  const handleToggleOfflineMode = React.useCallback((offline: boolean) => {
+    setIsSimulatedOffline(offline);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pos_simulated_offline', offline ? 'true' : 'false');
+    }
+  }, []);
+
+  const [isOfflineModalOpen, setIsOfflineModalOpen] = React.useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [syncToast, setSyncToast] = React.useState<string | null>(null);
+  const [isSyncingNow, setIsSyncingNow] = React.useState(false);
+  const prevOnlineRef = React.useRef(isOnline);
+
+  const pendingOrdersCount = React.useMemo(
+    () => orders.filter((o) => o.sync_status === 'pending_sync').length,
+    [orders]
+  );
+
+  const triggerManualSync = React.useCallback(async () => {
+    if (!isOnline) {
+      alert('Không có kết nối mạng để đồng bộ. Vui lòng kết nối Internet trước.');
+      return;
+    }
+    setIsSyncingNow(true);
+    try {
+      const res = await syncPendingOrders();
+      if (res.successCount > 0) {
+        setSyncToast(`Đã đồng bộ thành công ${res.successCount} đơn hàng lên máy chủ!`);
+      } else {
+        setSyncToast('Tất cả đơn hàng đã ở trạng thái đồng bộ mới nhất.');
+      }
+    } catch {
+      setSyncToast('Lỗi đồng bộ dữ liệu. Vui lòng kiểm tra lại mạng.');
+    } finally {
+      setIsSyncingNow(false);
+      setTimeout(() => setSyncToast(null), 4000);
+    }
+  }, [isOnline, syncPendingOrders]);
+
+  // Re-hydrate local Dexie IndexedDB orders on mount
+  React.useEffect(() => {
+    if (hydrateOfflineDb) {
+      hydrateOfflineDb();
+    }
+  }, [hydrateOfflineDb]);
+
+  // Auto-sync when reconnecting (or turning off simulated offline)
+  React.useEffect(() => {
+    if (!prevOnlineRef.current && isOnline) {
+      triggerManualSync();
+    }
+    prevOnlineRef.current = isOnline;
+  }, [isOnline, triggerManualSync]);
+
   const [isFeedbackOpen, setIsFeedbackOpen] = React.useState(false);
   const [isShiftModalOpen, setIsShiftModalOpen] = React.useState(false);
   const [isReceiptModalOpen, setIsReceiptModalOpen] = React.useState(false);
@@ -624,19 +693,76 @@ export default function PosTerminalPage() {
             </div>
           </div>
 
-          {/* Right Status Actions */}
-          <div className="flex items-center gap-2">
-            {/* Real-time Connection Indicator */}
-            <div
-              className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium border ${
+          {/* Mobile Right Controls (< sm) */}
+          <div className="flex sm:hidden items-center gap-1.5 shrink-0">
+            {/* Online / Offline Status Badge */}
+            <button
+              type="button"
+              onClick={() => setIsOfflineModalOpen(true)}
+              className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold border transition-colors cursor-pointer ${
                 isOnline
                   ? 'bg-[#EAF4EE] text-[#2F7D55] border-[#CEE6D7]'
                   : 'bg-[#FEF7EC] text-[#B7791F] border-[#F8E3C3]'
               }`}
+              title="Xem trạng thái mạng & đồng bộ ngoại tuyến"
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-[#2F7D55]' : 'bg-[#B7791F]'}`} />
+              <span>{isOnline ? 'Online' : 'Offline'}</span>
+              {pendingOrdersCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-[#B7791F] text-white text-[9px] font-mono flex items-center justify-center">
+                  {pendingOrdersCount}
+                </span>
+              )}
+            </button>
+
+            {/* Mobile Quick Menu Button */}
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-1.5 rounded-[6px] border border-[#E8E8E5] bg-white text-[#737373] hover:text-[#202124] active:bg-[#F0F0ED] transition-colors cursor-pointer"
+              aria-label="Menu tác vụ POS"
+              title="Menu tác vụ POS"
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+            </button>
+
+            {/* Mobile Cart Button Toggle */}
+            <button
+              type="button"
+              onClick={() => setIsMobileCartOpen(true)}
+              className="relative p-2 rounded-[6px] bg-[#315C4C] text-white active:scale-95 transition-transform cursor-pointer"
+              aria-label="Giỏ hàng"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              {totalCartUnits > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#C44536] text-white text-[10px] font-bold flex items-center justify-center">
+                  {totalCartUnits}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* Desktop Right Actions (>= sm) */}
+          <div className="hidden sm:flex items-center gap-2">
+            {/* Real-time Connection Indicator */}
+            <button
+              type="button"
+              onClick={() => setIsOfflineModalOpen(true)}
+              className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium border cursor-pointer ${
+                isOnline
+                  ? 'bg-[#EAF4EE] text-[#2F7D55] border-[#CEE6D7]'
+                  : 'bg-[#FEF7EC] text-[#B7791F] border-[#F8E3C3]'
+              }`}
+              title="Trạng thái mạng & Đồng bộ dữ liệu ngoại tuyến"
             >
               <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-[#2F7D55]' : 'bg-[#B7791F]'}`} />
               <span className="text-[11px] font-semibold">{isOnline ? 'Online' : 'Offline'}</span>
-            </div>
+              {pendingOrdersCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#B7791F] text-white font-mono">
+                  {pendingOrdersCount} chờ đẩy
+                </span>
+              )}
+            </button>
 
             {/* Pre-order Pickup Button */}
             <Button
@@ -672,7 +798,7 @@ export default function PosTerminalPage() {
               }
             >
               <Banknote className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">
+              <span>
                 {activeShift && activeShift.status === 'open' ? 'Chốt ca' : 'Mở ca'}
               </span>
               {activeShift && activeShift.status === 'open' && (
@@ -683,7 +809,7 @@ export default function PosTerminalPage() {
             <Link href="/pos/orders">
               <Button variant="outline" size="sm" className="h-8 px-2 text-xs gap-1">
                 <History className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Lịch sử</span>
+                <span>Lịch sử</span>
               </Button>
             </Link>
 
@@ -695,28 +821,41 @@ export default function PosTerminalPage() {
               title="Góp ý hoặc báo lỗi hệ thống"
             >
               <Bug className="w-3.5 h-3.5 text-[#C44536]" />
-              <span className="hidden sm:inline">Góp ý</span>
+              <span>Góp ý</span>
             </Button>
 
             <ThemeToggle />
 
             <DensityToggle />
-
-            {/* Mobile Cart Button Toggle */}
-            <button
-              type="button"
-              onClick={() => setIsMobileCartOpen(true)}
-              className="lg:hidden relative p-2 rounded-[6px] bg-[#315C4C] text-white active:scale-95 transition-transform"
-            >
-              <ShoppingCart className="w-4 h-4" />
-              {totalCartUnits > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#C44536] text-white text-[10px] font-bold flex items-center justify-center">
-                  {totalCartUnits}
-                </span>
-              )}
-            </button>
           </div>
         </div>
+
+        {/* Offline Notice Banner */}
+        {!isOnline && (
+          <div className="bg-[#FEF7EC] border-t border-b border-[#F8E3C3] px-3 sm:px-5 py-1.5 text-xs text-[#8C5D17] flex items-center justify-between">
+            <div className="flex items-center gap-2 truncate">
+              <WifiOff className="w-3.5 h-3.5 shrink-0 text-[#B7791F]" />
+              <span className="font-medium truncate">
+                Đang ở chế độ Bán Hàng Ngoại Tuyến (Offline) — Đơn hàng sẽ được lưu vào thiết bị (IndexedDB).
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsOfflineModalOpen(true)}
+              className="font-bold underline shrink-0 text-[11px] hover:text-[#202124] ml-2 cursor-pointer"
+            >
+              Chi tiết ({pendingOrdersCount} đơn chờ)
+            </button>
+          </div>
+        )}
+
+        {/* Auto-Sync Reconnection Toast */}
+        {syncToast && (
+          <div className="bg-[#EAF4EE] border-t border-b border-[#CEE6D7] px-3 sm:px-5 py-1.5 text-xs text-[#2F7D55] flex items-center gap-2 animate-in slide-in-from-top-1">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span className="font-semibold">{syncToast}</span>
+          </div>
+        )}
 
         {/* Mobile Sub-bar: Event & Booth Pickers (large touch targets) */}
         <div className="sm:hidden px-3 py-2 bg-[#FAFAF8] border-t border-[#E8E8E5] grid grid-cols-2 gap-2">
@@ -1008,27 +1147,40 @@ export default function PosTerminalPage() {
                           </div>
                         )}
 
-                        {/* 5-State Stock Status Breakdown */}
+                        {/* Stock Summary: Mobile Compact vs Desktop Detailed */}
                         {stockBreakdown && (
-                          <div className="mt-2 p-1.5 bg-[#F7F7F5] rounded-[4px] border border-[#E8E8E5] text-[10px] space-y-0.5">
-                            <div className="flex items-center justify-between font-semibold">
-                              <span className="text-[#315C4C]">
-                                Tồn quầy: <strong>{availableStock}</strong>
+                          <>
+                            {/* Mobile Compact Stock Chip (saves 70px vertical space on phones) */}
+                            <div className="sm:hidden mt-1.5 px-2 py-1 bg-[#F7F7F5] rounded border border-[#E8E8E5] flex items-center justify-between text-[10px]">
+                              <span className="text-[#315C4C] font-bold">
+                                Quầy: {availableStock}
                               </span>
                               <span className="text-[#737373]">
-                                Số lượng: <strong>{stockBreakdown.total}</strong>
+                                Kho bán: <strong className="text-[#2F7D55]">{stockBreakdown.offlineAvailable}</strong>
                               </span>
                             </div>
-                            <div className="flex items-center justify-between text-[9px] text-[#737373]">
-                              <span>Onl: <strong className="text-[#202124]">{stockBreakdown.online}</strong></span>
-                              <span>Preord: <strong className="text-[#B7791F]">{stockBreakdown.preord}</strong></span>
-                              <span>Đã bán: <strong className="text-[#2F7D55]">{stockBreakdown.offlineSold}</strong></span>
+
+                            {/* Desktop 5-State Breakdown */}
+                            <div className="hidden sm:block mt-2 p-1.5 bg-[#F7F7F5] rounded-[4px] border border-[#E8E8E5] text-[10px] space-y-0.5">
+                              <div className="flex items-center justify-between font-semibold">
+                                <span className="text-[#315C4C]">
+                                  Tồn quầy: <strong>{availableStock}</strong>
+                                </span>
+                                <span className="text-[#737373]">
+                                  Số lượng: <strong>{stockBreakdown.total}</strong>
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between text-[9px] text-[#737373]">
+                                <span>Onl: <strong className="text-[#202124]">{stockBreakdown.online}</strong></span>
+                                <span>Preord: <strong className="text-[#B7791F]">{stockBreakdown.preord}</strong></span>
+                                <span>Đã bán: <strong className="text-[#2F7D55]">{stockBreakdown.offlineSold}</strong></span>
+                              </div>
+                              <div className="text-[9px] text-[#2F7D55] font-semibold pt-0.5 border-t border-[#E8E8E5]/60 flex justify-between">
+                                <span>Tồn bán offline:</span>
+                                <span>{stockBreakdown.offlineAvailable}</span>
+                              </div>
                             </div>
-                            <div className="text-[9px] text-[#2F7D55] font-semibold pt-0.5 border-t border-[#E8E8E5]/60 flex justify-between">
-                              <span>Tồn bán offline:</span>
-                              <span>{stockBreakdown.offlineAvailable}</span>
-                            </div>
-                          </div>
+                          </>
                         )}
                       </div>
                     </div>
@@ -1463,17 +1615,29 @@ export default function PosTerminalPage() {
                 </span>
               </div>
 
-              {/* Real dynamic VietQR image with instant amount embedding */}
-              <div className="w-52 h-52 mx-auto bg-white p-2.5 rounded-[10px] border-2 border-[#315C4C]/20 shadow-xs flex items-center justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`https://img.vietqr.io/image/${activeBankConfig.bankId}-${activeBankConfig.accountNo}-compact2.png?amount=${cartTotal}&addInfo=EM${qrSessionRef}&accountName=${encodeURIComponent(
-                    activeBankConfig.accountName
-                  )}`}
-                  alt="VietQR code"
-                  className="w-full h-full object-contain"
-                />
-              </div>
+              {/* Real dynamic VietQR image with offline fallback */}
+              {!isOnline ? (
+                <div className="p-4 bg-[#FEF7EC] border border-[#F8E3C3] rounded-[8px] text-left space-y-2">
+                  <div className="flex items-center gap-2 text-[#8C5D17] font-bold text-xs">
+                    <WifiOff className="w-4 h-4 shrink-0 text-[#B7791F]" />
+                    <span>Thiết bị đang ngoại tuyến (Offline)</span>
+                  </div>
+                  <p className="text-[11px] text-[#737373] leading-relaxed">
+                    Ảnh mã QR tự động từ máy chủ tạm thời không tải được do không có mạng Internet. Khách hàng có thể chuyển khoản bằng STK bên dưới hoặc quét mã QR in sẵn tại quầy:
+                  </p>
+                </div>
+              ) : (
+                <div className="w-48 h-48 sm:w-52 sm:h-52 mx-auto bg-white p-2.5 rounded-[10px] border-2 border-[#315C4C]/20 shadow-xs flex items-center justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://img.vietqr.io/image/${activeBankConfig.bankId}-${activeBankConfig.accountNo}-compact2.png?amount=${cartTotal}&addInfo=EM${qrSessionRef}&accountName=${encodeURIComponent(
+                      activeBankConfig.accountName
+                    )}`}
+                    alt="VietQR code"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              )}
 
               <div className="text-[11px] text-[#737373] space-y-1 bg-white p-2.5 rounded-[6px] border border-[#E8E8E5]">
                 <div className="flex items-center justify-between">
@@ -1482,7 +1646,19 @@ export default function PosTerminalPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Số tài khoản:</span>
-                  <span className="font-mono font-extrabold text-[#202124]">{activeBankConfig.accountNo}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (typeof navigator !== 'undefined') {
+                        navigator.clipboard.writeText(activeBankConfig.accountNo);
+                      }
+                    }}
+                    className="flex items-center gap-1 font-mono font-extrabold text-[#202124] hover:text-[#315C4C] cursor-pointer"
+                    title="Nhấn để sao chép"
+                  >
+                    <span>{activeBankConfig.accountNo}</span>
+                    <Copy className="w-3 h-3 text-[#737373]" />
+                  </button>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Chủ tài khoản:</span>
@@ -1820,6 +1996,254 @@ export default function PosTerminalPage() {
         onClose={() => setIsFeedbackOpen(false)}
         defaultType="bug"
       />
+
+      {/* Offline & Sync Control Center Modal */}
+      <Modal
+        isOpen={isOfflineModalOpen}
+        onClose={() => setIsOfflineModalOpen(false)}
+        title="Trung tâm Ngoại tuyến & Đồng bộ"
+        description="Kiểm soát trạng thái mạng và lưu trữ ngoại tuyến của máy POS."
+        maxWidth="md"
+      >
+        <div className="space-y-4">
+          {/* Connection Status Card */}
+          <div className="p-3.5 rounded-[8px] border border-[#E8E8E5] bg-[#F7F7F5] space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-[#737373]">Đường truyền mạng vật lý:</span>
+              <span
+                className={`text-xs font-bold flex items-center gap-1.5 ${
+                  isHardwareOnline ? 'text-[#2F7D55]' : 'text-[#C44536]'
+                }`}
+              >
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    isHardwareOnline ? 'bg-[#2F7D55]' : 'bg-[#C44536]'
+                  }`}
+                />
+                {isHardwareOnline ? 'Có kết nối Internet' : 'Mất kết nối Internet'}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-[#E8E8E5]">
+              <span className="text-xs text-[#737373]">Trạng thái hoạt động POS:</span>
+              <span
+                className={`text-xs font-bold px-2 py-0.5 rounded border ${
+                  isOnline
+                    ? 'bg-[#EAF4EE] text-[#2F7D55] border-[#CEE6D7]'
+                    : 'bg-[#FEF7EC] text-[#B7791F] border-[#F8E3C3]'
+                }`}
+              >
+                {isOnline ? '🟢 Online (Trực tuyến)' : '🟠 Offline (Lưu trữ cục bộ)'}
+              </span>
+            </div>
+          </div>
+
+          {/* Offline Testing Simulation Toggle */}
+          <div className="p-3.5 rounded-[8px] border border-[#E8E8E5] bg-white space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-[#202124]">Mô phỏng Chế độ Ngoại tuyến</p>
+                <p className="text-[11px] text-[#737373] mt-0.5">
+                  Thử nghiệm bán hàng khi mất mạng Internet.
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isSimulatedOffline}
+                  onChange={(e) => handleToggleOfflineMode(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-[#E8E8E5] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#B7791F]" />
+              </label>
+            </div>
+            {isSimulatedOffline && (
+              <p className="text-[11px] text-[#8C5D17] bg-[#FEF7EC] p-2 rounded border border-[#F8E3C3]">
+                ⚡ Đang bật mô phỏng ngoại tuyến. Các đơn hàng tạo mới sẽ được lưu trữ vào IndexedDB và chuyển sang hàng đợi đồng bộ.
+              </p>
+            )}
+          </div>
+
+          {/* Pending Sync Queue Card */}
+          <div className="p-3.5 rounded-[8px] border border-[#E8E8E5] bg-white space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold text-[#202124]">Đơn hàng chờ đồng bộ:</span>
+                <p className="text-[11px] text-[#737373]">Lưu trữ trong IndexedDB & LocalStorage</p>
+              </div>
+              <span className="text-lg font-mono font-bold text-[#315C4C]">
+                {pendingOrdersCount} đơn
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                disabled={!isOnline || isSyncingNow || pendingOrdersCount === 0}
+                isLoading={isSyncingNow}
+                onClick={triggerManualSync}
+                className="flex-1 text-xs font-bold gap-1.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Đồng bộ ngay bây giờ</span>
+              </Button>
+
+              <Link href="/pos/sync" className="shrink-0" onClick={() => setIsOfflineModalOpen(false)}>
+                <Button variant="outline" size="sm" className="text-xs">
+                  Xem chi tiết
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          <div className="text-[11px] text-[#737373] bg-[#F7F7F5] p-2.5 rounded border border-[#E8E8E5] space-y-1">
+            <p className="font-semibold text-[#202124]">Cơ chế lưu trữ Offline của HikaruStore:</p>
+            <ul className="list-disc list-inside space-y-0.5 text-[#555]">
+              <li>Hỗ trợ Service Worker (PWA) giúp tải lại trang ngay cả khi ngắt toàn bộ Wifi/4G.</li>
+              <li>Mọi đơn hàng tạo khi mất mạng được bảo toàn 100% bằng Idempotency Key.</li>
+              <li>Tự động đẩy dữ liệu lên máy chủ ngay khi thiết bị kết nối lại mạng.</li>
+            </ul>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Mobile Quick Action Drawer / Menu Modal */}
+      <Modal
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        title="Tác vụ nhanh POS"
+        description="Menu các chức năng hỗ trợ bán hàng tại sự kiện."
+        maxWidth="md"
+      >
+        <div className="space-y-3">
+          {/* Shift / Cash Float */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              setIsShiftModalOpen(true);
+            }}
+            className="w-full p-3 rounded-[8px] border border-[#E8E8E5] bg-white hover:bg-[#F7F7F5] flex items-center justify-between text-left transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-[#EAF4EE] text-[#2F7D55] flex items-center justify-center shrink-0">
+                <Banknote className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-[#202124]">
+                  {activeShift && activeShift.status === 'open' ? 'Quản lý ca bán hàng (Đang mở)' : 'Mở ca bán hàng'}
+                </p>
+                <p className="text-[11px] text-[#737373]">
+                  {activeShift && activeShift.status === 'open'
+                    ? `Két hiện tại: ${(activeShift.startingCashFloat + activeShift.totalCashSales).toLocaleString('vi-VN')} đ`
+                    : 'Nhập tiền lẻ đầu ca để quản lý két'}
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-semibold text-[#315C4C]">
+              {activeShift && activeShift.status === 'open' ? 'Chốt ca' : 'Mở ca'}
+            </span>
+          </button>
+
+          {/* Pre-order Pickup */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              setIsPreorderPickupOpen(true);
+            }}
+            className="w-full p-3 rounded-[8px] border border-[#E8E8E5] bg-white hover:bg-[#F7F7F5] flex items-center justify-between text-left transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-[#FEF7EC] text-[#B7791F] flex items-center justify-center shrink-0">
+                <Package className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-[#202124]">Trả hàng đặt trước (Pre-order)</p>
+                <p className="text-[11px] text-[#737373]">Xác nhận và chụp ảnh minh chứng nhận hàng</p>
+              </div>
+            </div>
+            {pendingPreordersCount > 0 ? (
+              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#B7791F] text-white">
+                {pendingPreordersCount} chờ nhận
+              </span>
+            ) : (
+              <span className="text-xs text-[#737373]">0</span>
+            )}
+          </button>
+
+          {/* Order History */}
+          <Link
+            href="/pos/orders"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="w-full p-3 rounded-[8px] border border-[#E8E8E5] bg-white hover:bg-[#F7F7F5] flex items-center justify-between text-left transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-[#F0F0ED] text-[#202124] flex items-center justify-center shrink-0">
+                <History className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-[#202124]">Lịch sử đơn hàng POS</p>
+                <p className="text-[11px] text-[#737373]">Xem lại tất cả hóa đơn đã bán tại quầy</p>
+              </div>
+            </div>
+            <span className="text-xs text-[#737373]">Xem &rarr;</span>
+          </Link>
+
+          {/* Offline & Sync Center */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              setIsOfflineModalOpen(true);
+            }}
+            className="w-full p-3 rounded-[8px] border border-[#E8E8E5] bg-white hover:bg-[#F7F7F5] flex items-center justify-between text-left transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-[#EBF1EE] text-[#315C4C] flex items-center justify-center shrink-0">
+                <Wifi className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-[#202124]">Trạng thái Ngoại tuyến & Đồng bộ</p>
+                <p className="text-[11px] text-[#737373]">
+                  {isOnline ? '🟢 Đang có mạng' : '🟠 Đang ngoại tuyến'} • {pendingOrdersCount} đơn chờ đẩy
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-semibold text-[#315C4C]">Cài đặt</span>
+          </button>
+
+          {/* Display & Preferences */}
+          <div className="p-3 rounded-[8px] border border-[#E8E8E5] bg-[#FAFAF8] space-y-2.5">
+            <p className="text-[11px] font-bold text-[#737373] uppercase tracking-wider">
+              Tùy chỉnh hiển thị & Giao diện
+            </p>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-[#202124]">Tỉ lệ màn hình:</span>
+              <DensityToggle />
+            </div>
+            <div className="flex items-center justify-between pt-1 border-t border-[#E8E8E5]">
+              <span className="text-xs text-[#202124]">Chế độ sáng / tối:</span>
+              <ThemeToggle />
+            </div>
+          </div>
+
+          {/* Bug Report */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              setIsFeedbackOpen(true);
+            }}
+            className="w-full p-2.5 rounded-[6px] border border-[#C44536]/30 text-[#C44536] hover:bg-[#FDF1F0] flex items-center justify-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
+          >
+            <Bug className="w-4 h-4" />
+            <span>Góp ý & Báo lỗi hệ thống</span>
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

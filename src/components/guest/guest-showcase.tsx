@@ -222,32 +222,32 @@ export function GuestShowcase() {
       <header className="sticky top-[37px] z-40 bg-white dark:bg-neutral-900 border-b border-[#E8E8E5] dark:border-neutral-800 shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-18 sm:h-20 flex items-center justify-between gap-4">
           {/* Brand Logo & Showcase Badge */}
-          <div className="flex items-center gap-3.5">
-            <div className="h-12 sm:h-14 w-auto flex items-center justify-center shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+            <div className="h-10 sm:h-14 w-auto flex items-center justify-center shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/logo.png"
                 alt="HikaruStore Logo"
-                className="h-12 sm:h-14 w-auto max-w-[110px] sm:max-w-[130px] object-contain drop-shadow-xs"
+                className="h-10 sm:h-14 w-auto max-w-[85px] sm:max-w-[130px] object-contain drop-shadow-xs"
               />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-lg sm:text-xl tracking-tight text-[#202124] dark:text-neutral-100">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="font-bold text-base sm:text-xl tracking-tight text-[#202124] dark:text-neutral-100 truncate">
                   {activeWorkspace?.name || 'HikaruStore'}
                 </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#EAF4EE] dark:bg-emerald-950/60 text-[#2F7D55] dark:text-emerald-400 border border-[#CEE6D7] dark:border-emerald-800">
-                  Gian Hàng Trưng Bày
+                <span className="hidden xs:inline-block text-[9.5px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded bg-[#EAF4EE] dark:bg-emerald-950/60 text-[#2F7D55] dark:text-emerald-400 border border-[#CEE6D7] dark:border-emerald-800 shrink-0">
+                  Khách xem
                 </span>
               </div>
-              <p className="text-xs text-[#737373] dark:text-neutral-400 leading-none mt-1">
+              <p className="text-[11px] sm:text-xs text-[#737373] dark:text-neutral-400 leading-none mt-0.5 sm:mt-1 truncate">
                 Official Merchandise Catalog & Pre-order
               </p>
             </div>
           </div>
 
           {/* Right Action Tools */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* Hotline Quick Call */}
             <a
               href={`tel:${(activeWorkspace?.phone || '0988.776.655').replace(/[^0-9]/g, '')}`}
@@ -264,10 +264,10 @@ export function GuestShowcase() {
                 variant="outline"
                 size="sm"
                 onClick={() => setMyReservationsOpen(true)}
-                className="h-8 gap-1.5 text-xs font-semibold border-[#B7791F]/40 text-[#8C5D17] dark:text-amber-400 bg-[#FEF7EC] dark:bg-amber-950/30"
+                className="h-8 gap-1 text-[11px] sm:text-xs font-semibold border-[#B7791F]/40 text-[#8C5D17] dark:text-amber-400 bg-[#FEF7EC] dark:bg-amber-950/30 px-2 sm:px-3"
               >
                 <Ticket className="w-3.5 h-3.5 text-[#B7791F]" />
-                <span>Vé giữ đồ ({myReservations.length})</span>
+                <span>Vé giữ ({myReservations.length})</span>
               </Button>
             )}
 
@@ -275,7 +275,9 @@ export function GuestShowcase() {
             <ThemeToggle />
 
             {/* Display Density Toggle */}
-            <DensityToggle />
+            <div className="hidden sm:inline-flex">
+              <DensityToggle />
+            </div>
 
             {/* Admin Return / Login Button */}
             <button

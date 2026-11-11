@@ -57,14 +57,15 @@ export function Topbar({ onToggleSidebar, title }: TopbarProps) {
       </div>
 
       {/* Right: Sync Status, Language, Theme, Scale, Profile & Logout */}
-      <div className="flex items-center gap-1.5 sm:gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
         <SyncStatusBadge status={syncState} pendingCount={unsyncedOrdersCount} />
 
-        <LanguageSwitcher />
+        <div className="hidden sm:flex items-center gap-2">
+          <LanguageSwitcher />
+          <DensityToggle />
+        </div>
 
         <ThemeToggle />
-
-        <DensityToggle />
 
         {/* View as Guest Button */}
         <button

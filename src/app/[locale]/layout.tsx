@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
+import { PwaRegister } from '@/components/pwa/pwa-register';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -84,6 +85,7 @@ export default async function LocaleLayout({
         />
       </head>
       <body className="bg-[#F7F7F5] text-[#202124] min-h-screen antialiased selection:bg-[#315C4C]/15 selection:text-[#315C4C]">
+        <PwaRegister />
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
         </NextIntlClientProvider>

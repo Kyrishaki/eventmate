@@ -119,6 +119,28 @@ html[data-density="ultra-compact"] {
 }
 
 /* ==========================================================================
+   Mobile Ergonomics & iOS Safari Optimization
+   - Prevents iOS auto-zoom on input focus (< 16px font-size)
+   - Eliminates tap delays
+   - Handles modern phone safe area bottom bars
+   ========================================================================== */
+@media screen and (max-width: 768px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  button, a, input, select {
+    touch-action: manipulation;
+  }
+}
+
+.safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* ==========================================================================
    Comprehensive Dark Mode Overrides for Swiss Merch & POS UI
    ========================================================================== */
 

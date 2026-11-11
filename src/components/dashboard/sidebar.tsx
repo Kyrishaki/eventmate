@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/stores/auth-store';
 import { cn } from '@/lib/utils';
 import { WorkspaceSwitcher } from './workspace-switcher';
+import { DensityToggle } from '@/components/ui/density-toggle';
+import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import {
   LayoutDashboard,
   CalendarDays,
@@ -144,8 +146,16 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </nav>
         </div>
 
-        {/* Bottom Section: POS Terminal Quick Access */}
-        <div className="p-3 border-t border-[#E8E8E5] bg-[#F7F7F5]">
+        {/* Bottom Section: POS Terminal Quick Access & Mobile Options */}
+        <div className="p-3 border-t border-[#E8E8E5] bg-[#F7F7F5] space-y-2">
+          <div className="flex sm:hidden items-center justify-between px-1">
+            <span className="text-[11px] text-[#737373] font-medium">Tùy chọn:</span>
+            <div className="flex items-center gap-1.5">
+              <DensityToggle />
+              <LanguageSwitcher />
+            </div>
+          </div>
+
           <Link
             href="/pos"
             className="flex items-center justify-between w-full p-2.5 rounded-[6px] bg-[#315C4C] text-white hover:bg-[#284A3D] transition-colors shadow-xs group"

@@ -61,6 +61,7 @@ interface OrdersStoreState {
   // Sync actions
   syncPendingOrders: () => Promise<{ successCount: number; failCount: number }>;
   retryOrderSync: (orderId: string) => Promise<boolean>;
+  hydrateOfflineDb: () => Promise<void>;
   mergeCollabOrders: (incomingOrders: Order[]) => void;
   clearTestOrders: () => void;
 }
@@ -358,13 +359,34 @@ export const useOrdersStore = create<OrdersStoreState>()(
 
         try {
           if (typeof window !== 'undefined' && localDb) {
+            for (const p of pending) {
+              await localDb.localOrders.update(p.id, { sync_status: 'synced', is_offline_only: false });
+            }
             await localDb.syncQueue.clear();
           }
         } catch (e) {
-          console.warn('Error clearing sync queue:', e);
+          console.warn('Error clearing sync queue in localDb:', e);
         }
 
         return { successCount: pending.length, failCount: 0 };
+      },
+
+      hydrateOfflineDb: async () => {
+        try {
+          if (typeof window !== 'undefined' && localDb) {
+            const dbOrders = await localDb.localOrders.toArray();
+            if (dbOrders && dbOrders.length > 0) {
+              const { orders } = get();
+              const existingIds = new Set(orders.map((o) => o.id));
+              const missing = dbOrders.filter((o) => !existingIds.has(o.id));
+              if (missing.length > 0) {
+                set({ orders: [...missing, ...orders] });
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Error hydrating from offline localDb:', e);
+        }
       },
 
       retryOrderSync: async (orderId: string) => {

@@ -5,24 +5,22 @@ import { useTranslations } from 'next-intl';
 import { useDataStore } from '@/stores/data-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useAuthStore, canManageProduct, isCollabPartner } from '@/stores/auth-store';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { formatCurrency } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
+import { Modal } from '@/components/ui/modal';
+import { formatCurrency, cn } from '@/lib/utils';
 import { calculateVariantStock } from '@/lib/stock-status';
 import { logActivity } from '@/stores/audit-store';
-import { AuditActorRole } from '@/types/database';
+import { Product, AuditActorRole } from '@/types/database';
 import {
   Boxes,
   Store,
   Calendar,
-  Layers,
-  ArrowRight,
   Plus,
   Minus,
-  AlertTriangle,
-  CheckCircle2,
   Package,
   Bookmark,
   Globe,
@@ -30,29 +28,64 @@ import {
   Lock,
   Users2,
   ClipboardCheck,
+  Search,
+  X,
+  SlidersHorizontal,
+  ArrowUpRight,
+  RotateCcw,
+  CheckCircle2,
+  AlertCircle,
+  LayoutList,
+  Table2,
+  ShoppingBag,
+  Sparkles,
 } from 'lucide-react';
 import { StocktakeModal } from '@/components/inventory/stocktake-modal';
 import {
   filterRealAllocations,
   filterRealEvents,
   isTestEvent,
-  isTestBooth,
-  isTestAllocation,
 } from '@/lib/test-data-filter';
 
 export default function InventoryPage() {
   const t = useTranslations('inventory');
-  const tCommon = useTranslations('common');
   const { activeWorkspace } = useWorkspaceStore();
-  const { events, booths, products, variants, allocations, setAllocation, quickTransferStock } =
-    useDataStore();
+  const {
+    events,
+    booths,
+    products,
+    variants,
+    allocations,
+    setAllocation,
+    quickTransferStock,
+    updateVariantPreorders,
+  } = useDataStore();
   const { canManageInventory, user } = useAuthStore();
   const canManage = canManageInventory();
   const isPartner = isCollabPartner(user?.role);
   const partnerName = user?.collabPartnerName;
 
-  // Local state to allow seamless manual quantity input typing
+  // Local state for manual quantity typing
   const [allocInputs, setAllocInputs] = React.useState<Record<string, string>>({});
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [stockFilter, setStockFilter] = React.useState<
+    'all' | 'allocated' | 'has_unallocated' | 'low_or_empty'
+  >('all');
+  const [viewMode, setViewMode] = React.useState<'grouped' | 'table'>('grouped');
+
+  // Quick Master Stock / Preorder Edit Modal right from Inventory page
+  const [masterEditProduct, setMasterEditProduct] = React.useState<Product | null>(null);
+  const [masterEditVariants, setMasterEditVariants] = React.useState<
+    Array<{
+      id: string;
+      name: string;
+      sku: string;
+      total: number;
+      reserved: number;
+      online: number;
+      offlineSold: number;
+    }>
+  >([]);
 
   function getProductThumbnail(product?: { name?: string; image_url?: string | null } | null) {
     if (product?.image_url) return product.image_url;
@@ -63,10 +96,87 @@ export default function InventoryPage() {
     return null;
   }
 
+  const workspaceEvents = events.filter(
+    (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
+  );
+  const realEvents = filterRealEvents(workspaceEvents);
+  const testEvents = workspaceEvents.filter((e) => isTestEvent(e));
+
+  const [selectedEventId, setSelectedEventId] = React.useState<string>(
+    realEvents[0]?.id || workspaceEvents[0]?.id || ''
+  );
+
+  const eventBooths = booths.filter((b) => b.event_id === selectedEventId);
+  const [selectedBoothId, setSelectedBoothId] = React.useState<string>(
+    eventBooths[0]?.id || ''
+  );
+  const [isStocktakeOpen, setIsStocktakeOpen] = React.useState(false);
+
+  const selectedEvent = events.find((e) => e.id === selectedEventId);
+  const selectedBooth = booths.find((b) => b.id === selectedBoothId);
+
+  function handleSelectEvent(eventId: string) {
+    setSelectedEventId(eventId);
+    const availableBooths = booths.filter((b) => b.event_id === eventId);
+    if (availableBooths.length > 0) {
+      setSelectedBoothId(availableBooths[0].id);
+    } else {
+      setSelectedBoothId('');
+    }
+  }
+
+  function openMasterStockModal(prod: Product) {
+    if (!canManageProduct(user, prod.collab_partner)) {
+      alert('Bạn chỉ có quyền điều chỉnh sản phẩm thuộc thương hiệu Collab của mình.');
+      return;
+    }
+    const prodVariants = variants.filter((v) => v.product_id === prod.id);
+    setMasterEditProduct(prod);
+    setMasterEditVariants(
+      prodVariants.map((v) => {
+        const vAllocs = allocations.filter((a) => a.variant_id === v.id && !a.is_test);
+        const soldOff = vAllocs.reduce((sum, a) => sum + (a.sold_quantity || 0), 0);
+        return {
+          id: v.id,
+          name: v.name,
+          sku: v.sku,
+          total: v.total_inventory,
+          reserved: v.reserved_quantity || 0,
+          online: v.online_preorder_quantity || 0,
+          offlineSold: soldOff,
+        };
+      })
+    );
+  }
+
+  function handleSaveMasterStock() {
+    masterEditVariants.forEach((mv) => {
+      updateVariantPreorders(mv.id, {
+        totalInventory: mv.total,
+        reservedQuantity: mv.reserved,
+        onlinePreorderQuantity: mv.online,
+      });
+    });
+
+    if (masterEditProduct) {
+      logActivity({
+        actor_name: user?.fullName || 'Nhân viên kho / Admin',
+        actor_role: (user?.role as AuditActorRole) || 'inventory_staff',
+        action_type: 'preorder_adjust',
+        entity_type: 'variant',
+        entity_name: masterEditProduct.name,
+        description: `Cập nhật kho gốc & giữ chỗ cho "${masterEditProduct.name}": ${masterEditVariants
+          .map((v) => `${v.name} (Tổng: ${v.total}, VIP: ${v.reserved}, Onl: ${v.online})`)
+          .join('; ')}.`,
+      });
+    }
+
+    setMasterEditProduct(null);
+  }
+
   function handleStockTransfer(variantId: string, variantName: string, amount: number) {
     if (!selectedBooth) return;
 
-    // Collab Partner guard: strictly cannot alter Admin master warehouse goods
     const targetVariant = variants.find((v) => v.id === variantId);
     const targetProduct = products.find((p) => p.id === targetVariant?.product_id);
     if (!canManageProduct(user, targetProduct?.collab_partner)) {
@@ -76,10 +186,11 @@ export default function InventoryPage() {
 
     if (!targetVariant) return;
 
-    // Offline cap: total minus online and pre-orders
     const maxOfflineLimit = Math.max(
       0,
-      targetVariant.total_inventory - (targetVariant.online_preorder_quantity || 0) - (targetVariant.reserved_quantity || 0)
+      targetVariant.total_inventory -
+        (targetVariant.online_preorder_quantity || 0) -
+        (targetVariant.reserved_quantity || 0)
     );
     const allAllocations = allocations.filter((a) => a.variant_id === variantId);
     const currentTotalAllocated = allAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
@@ -87,7 +198,7 @@ export default function InventoryPage() {
 
     if (amount > 0 && centralOfflineRemaining < amount) {
       alert(
-        `Không thể cấp thêm ${amount} sản phẩm!\nKho chỉ còn ${centralOfflineRemaining} sản phẩm khả dụng cho bán offline (Tổng nhập ${targetVariant.total_inventory} - Giữ Online ${targetVariant.online_preorder_quantity || 0} - Giữ Pre-order ${targetVariant.reserved_quantity || 0} - Đã cấp các quầy ${currentTotalAllocated}).`
+        `Không thể cấp thêm ${amount} sản phẩm!\nKho tổng chỉ còn ${centralOfflineRemaining} sản phẩm chưa cấp (Tổng nhập ${targetVariant.total_inventory} − Online ${targetVariant.online_preorder_quantity || 0} − Giữ VIP ${targetVariant.reserved_quantity || 0} − Đã cấp các quầy ${currentTotalAllocated}).`
       );
       return;
     }
@@ -109,7 +220,11 @@ export default function InventoryPage() {
         event_name: selectedEvent?.name,
         description: `Điều chỉnh phân bổ quầy "${selectedBooth.name}": ${amount > 0 ? `+${amount}` : amount} món "${variantName}".`,
         changes: [
-          { field: 'allocation_delta', field_label: 'Số lượng chuyển', new_value: amount > 0 ? `+${amount}` : String(amount) },
+          {
+            field: 'allocation_delta',
+            field_label: 'Số lượng chuyển',
+            new_value: amount > 0 ? `+${amount}` : String(amount),
+          },
         ],
       });
     }
@@ -133,13 +248,12 @@ export default function InventoryPage() {
     const currentAllocQty = currentAlloc?.allocated_quantity || 0;
     const currentSoldQty = currentAlloc?.sold_quantity || 0;
 
-    // Minimum limit cannot be less than already sold
     const minAlloc = currentSoldQty;
-
-    // Maximum limit cannot exceed total offline inventory minus other booths' allocations
     const maxOfflineLimit = Math.max(
       0,
-      targetVariant.total_inventory - (targetVariant.online_preorder_quantity || 0) - (targetVariant.reserved_quantity || 0)
+      targetVariant.total_inventory -
+        (targetVariant.online_preorder_quantity || 0) -
+        (targetVariant.reserved_quantity || 0)
     );
     const otherBoothsAlloc = allocations
       .filter((a) => a.variant_id === variantId && a.booth_id !== selectedBooth.id)
@@ -148,10 +262,16 @@ export default function InventoryPage() {
 
     let clampedAlloc = Math.max(minAlloc, targetAlloc);
     if (clampedAlloc > maxPossibleAlloc) {
-      alert(
-        `Không thể cấp ${targetAlloc} sản phẩm!\nKho chỉ còn tối đa ${maxPossibleAlloc} sản phẩm khả dụng cho quầy này (Tổng nhập: ${targetVariant.total_inventory}, Giữ Online: ${targetVariant.online_preorder_quantity || 0}, Giữ Pre-order: ${targetVariant.reserved_quantity || 0}, Các quầy khác: ${otherBoothsAlloc}).\nHệ thống đã tự động giới hạn ở mức ${maxPossibleAlloc}.`
-      );
       clampedAlloc = maxPossibleAlloc;
+    }
+
+    if (clampedAlloc === currentAllocQty) {
+      setAllocInputs((prev) => {
+        const next = { ...prev };
+        delete next[variantId];
+        return next;
+      });
+      return;
     }
 
     setAllocation(
@@ -176,82 +296,279 @@ export default function InventoryPage() {
       entity_name: variantName,
       booth_name: selectedBooth.name,
       event_name: selectedEvent?.name,
-      description: `Nhập trực tiếp số lượng cấp cho quầy "${selectedBooth.name}": ${clampedAlloc} món "${variantName}" (Cũ: ${currentAllocQty}).`,
+      description: `Cập nhật hạn mức cấp cho quầy "${selectedBooth.name}": ${clampedAlloc} món "${variantName}" (Cũ: ${currentAllocQty}).`,
       changes: [
-        { field: 'allocated_quantity', field_label: 'Số lượng phân bổ', old_value: currentAllocQty, new_value: clampedAlloc },
+        {
+          field: 'allocated_quantity',
+          field_label: 'Số lượng phân bổ',
+          old_value: currentAllocQty,
+          new_value: clampedAlloc,
+        },
       ],
     });
   }
 
-  const workspaceEvents = events.filter(
-    (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
-  );
-  const realEvents = filterRealEvents(workspaceEvents);
-  const testEvents = workspaceEvents.filter((e) => isTestEvent(e));
+  // Bulk allocate all remaining available central stock of a single product (or all products) to selectedBooth
+  function handleAllocateMaxForProduct(prod: Product) {
+    if (!selectedBooth || !selectedEvent) return;
+    if (!canManageProduct(user, prod.collab_partner)) return;
 
-  const [selectedEventId, setSelectedEventId] = React.useState<string>(
-    realEvents[0]?.id || workspaceEvents[0]?.id || ''
-  );
+    const prodVars = variants.filter((v) => v.product_id === prod.id);
+    let updatedCount = 0;
 
-  const eventBooths = booths.filter((b) => b.event_id === selectedEventId);
-  const [selectedBoothId, setSelectedBoothId] = React.useState<string>(
-    eventBooths[0]?.id || ''
-  );
-  const [isStocktakeOpen, setIsStocktakeOpen] = React.useState(false);
+    prodVars.forEach((v) => {
+      const allAllocs = allocations.filter((a) => a.variant_id === v.id);
+      const boothAlloc = allAllocs.find((a) => a.booth_id === selectedBooth.id);
+      const currentAllocQty = boothAlloc?.allocated_quantity || 0;
+      const currentSoldQty = boothAlloc?.sold_quantity || 0;
 
-  function handleSelectEvent(eventId: string) {
-    setSelectedEventId(eventId);
-    const availableBooths = booths.filter((b) => b.event_id === eventId);
-    if (availableBooths.length > 0) {
-      setSelectedBoothId(availableBooths[0].id);
-    } else {
-      setSelectedBoothId('');
+      const maxOfflineCap = Math.max(
+        0,
+        v.total_inventory - (v.online_preorder_quantity || 0) - (v.reserved_quantity || 0)
+      );
+      const otherBoothsAlloc = allAllocs
+        .filter((a) => a.booth_id !== selectedBooth.id)
+        .reduce((sum, a) => sum + a.allocated_quantity, 0);
+      const maxAllowed = Math.max(currentSoldQty, maxOfflineCap - otherBoothsAlloc);
+
+      if (maxAllowed > currentAllocQty) {
+        setAllocation(
+          activeWorkspace?.id || 'ws-default',
+          selectedEvent.id,
+          selectedBooth.id,
+          v.id,
+          maxAllowed
+        );
+        updatedCount += 1;
+      }
+    });
+
+    if (updatedCount > 0) {
+      logActivity({
+        actor_name: user?.fullName || 'Nhân viên kho',
+        actor_role: (user?.role as AuditActorRole) || 'inventory_staff',
+        action_type: 'stock_adjust',
+        entity_type: 'inventory',
+        entity_name: prod.name,
+        booth_name: selectedBooth.name,
+        event_name: selectedEvent?.name,
+        description: `Cấp tối đa tồn kho khả dụng của sản phẩm "${prod.name}" cho quầy "${selectedBooth.name}".`,
+      });
     }
   }
 
-  // Active variants of non-deleted products
-  const activeVariants = variants.filter((v) => {
-    const prod = products.find((p) => p.id === v.product_id);
-    return !prod?.is_deleted;
-  });
+  function handleAllocateMaxAllProducts() {
+    if (!selectedBooth || !selectedEvent) return;
+    let totalUpdated = 0;
 
-  // Overall Inventory Stats across active variants (strictly REAL allocations - test isolated)
+    activeVariants.forEach((v) => {
+      const prod = products.find((p) => p.id === v.product_id);
+      if (!canManageProduct(user, prod?.collab_partner)) return;
+
+      const allAllocs = allocations.filter((a) => a.variant_id === v.id);
+      const boothAlloc = allAllocs.find((a) => a.booth_id === selectedBooth.id);
+      const currentAllocQty = boothAlloc?.allocated_quantity || 0;
+      const currentSoldQty = boothAlloc?.sold_quantity || 0;
+
+      const maxOfflineCap = Math.max(
+        0,
+        v.total_inventory - (v.online_preorder_quantity || 0) - (v.reserved_quantity || 0)
+      );
+      const otherBoothsAlloc = allAllocs
+        .filter((a) => a.booth_id !== selectedBooth.id)
+        .reduce((sum, a) => sum + a.allocated_quantity, 0);
+      const maxAllowed = Math.max(currentSoldQty, maxOfflineCap - otherBoothsAlloc);
+
+      if (maxAllowed > currentAllocQty) {
+        setAllocation(
+          activeWorkspace?.id || 'ws-default',
+          selectedEvent.id,
+          selectedBooth.id,
+          v.id,
+          maxAllowed
+        );
+        totalUpdated += 1;
+      }
+    });
+
+    if (totalUpdated > 0) {
+      logActivity({
+        actor_name: user?.fullName || 'Nhân viên kho',
+        actor_role: (user?.role as AuditActorRole) || 'inventory_staff',
+        action_type: 'stock_adjust',
+        entity_type: 'inventory',
+        entity_name: selectedBooth.name,
+        booth_name: selectedBooth.name,
+        event_name: selectedEvent?.name,
+        description: `Cấp tối đa toàn bộ hàng khả dụng trong kho tổng (${totalUpdated} mã loại) ra quầy "${selectedBooth.name}".`,
+      });
+    }
+  }
+
+  // Active variants of non-deleted products in current workspace
+  const workspaceProducts = products.filter(
+    (p) => !p.is_deleted && (!activeWorkspace || p.workspace_id === activeWorkspace.id)
+  );
+  const workspaceProductIds = new Set(workspaceProducts.map((p) => p.id));
+  const activeVariants = variants.filter((v) => workspaceProductIds.has(v.product_id));
+
+  // Overall Inventory Stats across active variants
   const totalStockAll = activeVariants.reduce((sum, v) => sum + v.total_inventory, 0);
+  const totalHeldAll = activeVariants.reduce(
+    (sum, v) => sum + (v.online_preorder_quantity || 0) + (v.reserved_quantity || 0),
+    0
+  );
   const activeVariantIds = new Set(activeVariants.map((v) => v.id));
   const realAllocations = filterRealAllocations(allocations);
   const activeRealAllocations = realAllocations.filter((a) => activeVariantIds.has(a.variant_id));
-  const totalAllocatedAll = activeRealAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
   const totalSoldAll = activeRealAllocations.reduce((sum, a) => sum + a.sold_quantity, 0);
-  const storageStockAll = Math.max(0, totalStockAll - totalAllocatedAll);
 
-  const selectedEvent = events.find((e) => e.id === selectedEventId);
-  const selectedBooth = booths.find((b) => b.id === selectedBoothId);
+  // Enrich each variant with computed metrics for the selected booth
+  const enrichedVariants = activeVariants.map((v) => {
+    const product = products.find((p) => p.id === v.product_id);
+    const allAllocations = allocations.filter((a) => a.variant_id === v.id);
+    const realAllocationsForVar = allAllocations.filter((a) => !a.is_test);
+    const totalAllocated = allAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
+    const totalSoldOffline = realAllocationsForVar.reduce(
+      (sum, a) => sum + (a.sold_quantity || 0),
+      0
+    );
+
+    const maxOfflineCap = Math.max(
+      0,
+      v.total_inventory - (v.online_preorder_quantity || 0) - (v.reserved_quantity || 0)
+    );
+    const otherBoothsAlloc = selectedBooth
+      ? allAllocations
+          .filter((a) => a.booth_id !== selectedBooth.id)
+          .reduce((sum, a) => sum + a.allocated_quantity, 0)
+      : totalAllocated;
+
+    const boothAlloc = selectedBooth
+      ? allAllocations.find((a) => a.booth_id === selectedBooth.id)
+      : undefined;
+    const currentAllocQty = boothAlloc?.allocated_quantity || 0;
+    const currentSoldQty = boothAlloc?.sold_quantity || 0;
+    const availableToSell = Math.max(0, currentAllocQty - currentSoldQty);
+
+    const maxAllowedBoothAlloc = Math.max(currentSoldQty, maxOfflineCap - otherBoothsAlloc);
+    const centralStorageRemaining = Math.max(0, maxOfflineCap - totalAllocated);
+    const stock = calculateVariantStock(v, totalSoldOffline, totalAllocated);
+
+    return {
+      variant: v,
+      product,
+      totalAllocated,
+      totalSoldOffline,
+      maxOfflineCap,
+      otherBoothsAlloc,
+      currentAllocQty,
+      currentSoldQty,
+      availableToSell,
+      maxAllowedBoothAlloc,
+      centralStorageRemaining,
+      stock,
+    };
+  });
+
+  // Filter counts
+  const countAllocated = enrichedVariants.filter((item) => item.currentAllocQty > 0).length;
+  const countHasUnallocated = enrichedVariants.filter(
+    (item) => item.centralStorageRemaining > 0
+  ).length;
+  const countLowOrEmpty = enrichedVariants.filter(
+    (item) => item.availableToSell <= 5
+  ).length;
+
+  // Filtered variants based on search & stockFilter
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredEnrichedVariants = enrichedVariants.filter((item) => {
+    if (stockFilter === 'allocated' && item.currentAllocQty <= 0) return false;
+    if (stockFilter === 'has_unallocated' && item.centralStorageRemaining <= 0) return false;
+    if (stockFilter === 'low_or_empty' && item.availableToSell > 5) return false;
+
+    if (!normalizedQuery) return true;
+    const matchName = (item.product?.name || '').toLowerCase().includes(normalizedQuery);
+    const matchVar = item.variant.name.toLowerCase().includes(normalizedQuery);
+    const matchSku = item.variant.sku.toLowerCase().includes(normalizedQuery);
+    return matchName || matchVar || matchSku;
+  });
+
+  // Group filtered variants by Product for Grouped View
+  const groupedProductsMap = new Map<
+    string,
+    {
+      product: Product;
+      items: typeof filteredEnrichedVariants;
+    }
+  >();
+
+  filteredEnrichedVariants.forEach((item) => {
+    if (!item.product) return;
+    const existing = groupedProductsMap.get(item.product.id);
+    if (existing) {
+      existing.items.push(item);
+    } else {
+      groupedProductsMap.set(item.product.id, { product: item.product, items: [item] });
+    }
+  });
+
+  const groupedProducts = Array.from(groupedProductsMap.values());
+
+  // Selected Booth Aggregate Stats
+  const boothStats = enrichedVariants.reduce(
+    (acc, item) => {
+      acc.boothAllocated += item.currentAllocQty;
+      acc.boothSold += item.currentSoldQty;
+      acc.boothAvailable += item.availableToSell;
+      acc.unallocatedInWarehouse += item.centralStorageRemaining;
+      return acc;
+    },
+    { boothAllocated: 0, boothSold: 0, boothAvailable: 0, unallocatedInWarehouse: 0 }
+  );
+
+  const currency = activeWorkspace?.currency || 'VND';
 
   return (
-    <div className="space-y-6">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#E8E8E5] dark:border-neutral-800">
+    <div className="space-y-5">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-[#202124] dark:text-neutral-100">{t('title')}</h1>
-            <Badge variant="outline" className="text-[11px] font-mono">
-              {variants.length} mã loại
-            </Badge>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-xl font-bold tracking-tight text-[#202124]">{t('title')}</h1>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#EBF1EE] text-[#315C4C] border border-[#315C4C]/20">
+              {workspaceProducts.length} sản phẩm · {activeVariants.length} mã loại
+            </span>
           </div>
-          <p className="text-xs text-[#737373] dark:text-neutral-400 mt-0.5">{t('description')}</p>
+          <p className="text-xs text-[#737373] mt-0.5">{t('description')}</p>
         </div>
 
         {selectedBooth && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {canManage && boothStats.unallocatedInWarehouse > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAllocateMaxAllProducts}
+                className="gap-1.5 text-xs h-9 px-3 rounded-lg border-[#315C4C]/40 text-[#315C4C] hover:bg-[#EAF4EE] font-semibold shadow-2xs"
+                title="Cấp toàn bộ số lượng khả dụng còn trong kho tổng ra quầy đang chọn"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#315C4C]" />
+                <span>
+                  Cấp hết kho ra {selectedBooth.name} (+{boothStats.unallocatedInWarehouse})
+                </span>
+              </Button>
+            )}
+
             <Button
-              variant="outline"
+              variant="primary"
               size="sm"
               onClick={() => setIsStocktakeOpen(true)}
-              className="gap-1.5 text-xs text-[#315C4C] dark:text-emerald-400 border-[#315C4C]/40 dark:border-emerald-700/60 hover:bg-[#EAF4EE] dark:hover:bg-emerald-950/40 font-semibold h-8 shadow-2xs"
+              className="gap-1.5 text-xs h-9 px-3.5 rounded-lg font-semibold shadow-xs"
               title="Kiểm đếm số lượng thực tế tại quầy và cân bằng kho"
             >
-              <ClipboardCheck className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400" />
-              <span>Kiểm Kê Quầy</span>
+              <ClipboardCheck className="w-4 h-4" />
+              <span>Kiểm kê quầy ({selectedBooth.code})</span>
             </Button>
           </div>
         )}
@@ -259,60 +576,102 @@ export default function InventoryPage() {
 
       {/* Collab Partner Scoped Access Notification Banner */}
       {isPartner && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 rounded-[8px] bg-[#FAF5FF] dark:bg-purple-950/40 border border-[#A855F7]/30 dark:border-purple-800/60 text-xs text-[#6B21A8] dark:text-purple-300 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 rounded-xl bg-[#FAF5FF] border border-[#A855F7]/30 text-xs text-[#6B21A8] shadow-xs">
           <div className="flex items-start sm:items-center gap-2.5">
-            <Users2 className="w-4 h-4 text-[#9333EA] dark:text-purple-400 shrink-0 mt-0.5 sm:mt-0" />
+            <Users2 className="w-4 h-4 text-[#9333EA] shrink-0 mt-0.5 sm:mt-0" />
             <div>
-              <p className="font-bold text-[#6B21A8] dark:text-purple-200">
+              <p className="font-bold text-[#6B21A8]">
                 Kho Hàng Đối tác Collab: {partnerName || 'Đối tác'}
               </p>
-              <p className="text-[11px] text-[#7E22CE] dark:text-purple-300 mt-0.5">
-                Bạn có quyền điều phối hàng hóa cho gian hàng hợp tác của mình. Kho hàng của Admin được hiển thị ở chế độ <strong>Chỉ đọc (Read-only)</strong> để bảo vệ dữ liệu tổng.
+              <p className="text-[11px] text-[#7E22CE] mt-0.5">
+                Bạn có quyền điều phối hàng hóa cho gian hàng hợp tác của mình. Kho hàng của Admin
+                được hiển thị ở chế độ <strong>Chỉ đọc (Read-only)</strong>.
               </p>
             </div>
           </div>
-          <Badge variant="outline" className="text-xs border-[#A855F7] dark:border-purple-600 text-[#7E22CE] dark:text-purple-300 bg-[#A855F7]/10 dark:bg-purple-950/60 shrink-0 font-semibold">
+          <Badge
+            variant="outline"
+            className="text-xs border-[#A855F7] text-[#7E22CE] bg-[#A855F7]/10 shrink-0 font-semibold"
+          >
             Kho Độc Lập
           </Badge>
         </div>
       )}
 
-      {/* Master Overview KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <Card className="p-4 bg-white dark:bg-neutral-900 border-[#E8E8E5] dark:border-neutral-800 shadow-2xs">
-          <span className="text-xs text-[#737373] dark:text-neutral-400 font-medium">{t('totalStock')}</span>
-          <div className="text-xl font-bold text-[#202124] dark:text-neutral-100 mt-1">{totalStockAll} món</div>
-          <p className="text-[10px] text-[#737373] dark:text-neutral-400 mt-0.5">Tổng nhập</p>
-        </Card>
+      {/* 4 Clear Inventory KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
+          <div>
+            <p className="text-[11px] font-medium text-[#737373]">
+              Còn bán tại {selectedBooth ? selectedBooth.name : 'quầy'}
+            </p>
+            <p className="text-lg font-extrabold text-[#2F7D55] mt-0.5 font-mono">
+              {boothStats.boothAvailable.toLocaleString('vi-VN')}
+              <span className="text-xs font-normal text-[#737373] ml-1">
+                / {boothStats.boothAllocated} đã cấp
+              </span>
+            </p>
+          </div>
+          <div className="w-9 h-9 rounded-lg bg-[#EAF4EE] flex items-center justify-center text-[#2F7D55] shrink-0">
+            <Store className="w-4 h-4" />
+          </div>
+        </div>
 
-        <Card className="p-4 bg-white dark:bg-neutral-900 border-[#E8E8E5] dark:border-neutral-800 shadow-2xs">
-          <span className="text-xs text-[#737373] dark:text-neutral-400 font-medium">{t('allocatedStock')}</span>
-          <div className="text-xl font-bold text-[#315C4C] dark:text-emerald-400 mt-1">{totalAllocatedAll} món</div>
-          <p className="text-[10px] text-[#737373] dark:text-neutral-400 mt-0.5">Đã cấp cho quầy</p>
-        </Card>
+        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
+          <div>
+            <p className="text-[11px] font-medium text-[#737373]">Kho tổng còn chưa cấp</p>
+            <p className="text-lg font-extrabold text-[#B7791F] mt-0.5 font-mono">
+              {boothStats.unallocatedInWarehouse.toLocaleString('vi-VN')}
+              <span className="text-xs font-normal text-[#737373] ml-1">món khả dụng</span>
+            </p>
+          </div>
+          <div className="w-9 h-9 rounded-lg bg-[#FEF7EC] flex items-center justify-center text-[#B7791F] shrink-0">
+            <Boxes className="w-4 h-4" />
+          </div>
+        </div>
 
-        <Card className="p-4 bg-white dark:bg-neutral-900 border-[#E8E8E5] dark:border-neutral-800 shadow-2xs">
-          <span className="text-xs text-[#737373] dark:text-neutral-400 font-medium">{t('storageStock')}</span>
-          <div className="text-xl font-bold text-[#B7791F] dark:text-amber-400 mt-1">{storageStockAll} món</div>
-          <p className="text-[10px] text-[#737373] dark:text-neutral-400 mt-0.5">Còn tại kho tổng</p>
-        </Card>
+        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
+          <div>
+            <p className="text-[11px] font-medium text-[#737373]">Đã khóa (Online & VIP)</p>
+            <p className="text-lg font-extrabold text-[#1D4ED8] mt-0.5 font-mono">
+              {totalHeldAll.toLocaleString('vi-VN')}
+              <span className="text-xs font-normal text-[#737373] ml-1">
+                / {totalStockAll} tổng kho
+              </span>
+            </p>
+          </div>
+          <div className="w-9 h-9 rounded-lg bg-[#EFF6FF] flex items-center justify-center text-[#1D4ED8] shrink-0">
+            <Globe className="w-4 h-4" />
+          </div>
+        </div>
 
-        <Card className="p-4 bg-white dark:bg-neutral-900 border-[#E8E8E5] dark:border-neutral-800 shadow-2xs">
-          <span className="text-xs text-[#737373] dark:text-neutral-400 font-medium">{t('soldStock')}</span>
-          <div className="text-xl font-bold text-[#2F7D55] dark:text-emerald-300 mt-1">{totalSoldAll} món</div>
-          <p className="text-[10px] text-[#737373] dark:text-neutral-400 mt-0.5">Đã bán qua POS</p>
-        </Card>
+        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
+          <div>
+            <p className="text-[11px] font-medium text-[#737373]">Đã bán qua POS</p>
+            <p className="text-lg font-extrabold text-[#202124] mt-0.5 font-mono">
+              {totalSoldAll.toLocaleString('vi-VN')}
+              <span className="text-xs font-normal text-[#737373] ml-1">món đã xuất</span>
+            </p>
+          </div>
+          <div className="w-9 h-9 rounded-lg bg-[#F7F7F5] border border-[#E8E8E5] flex items-center justify-center text-[#737373] shrink-0">
+            <ShoppingBag className="w-4 h-4" />
+          </div>
+        </div>
       </div>
 
-      {/* Event and Booth Selector Bar */}
-      <Card className="p-4 border-[#E8E8E5] dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xs">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+      {/* Step 1: Event & Booth Selector Bar + Step 2: Search & Filter Toolbar */}
+      <div className="bg-white border border-[#E8E8E5] rounded-xl shadow-2xs overflow-hidden divide-y divide-[#F0F0ED]">
+        {/* Top Row: Event & Booth Selection */}
+        <div className="p-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
-            {/* Event Dropdown */}
+            {/* Event Selector */}
             <div className="flex items-center gap-2">
-              <Calendar className="w-3.5 h-3.5 text-[#9E9E9C] dark:text-neutral-400" />
+              <span className="text-[11px] font-semibold text-[#737373] flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-[#315C4C]" />
+                <span>Sự kiện:</span>
+              </span>
               <select
-                className="h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2.5 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C]"
+                className="h-8 rounded-lg border border-[#E8E8E5] bg-[#F7F7F5] px-2.5 text-xs font-bold text-[#202124] focus:outline-none focus:border-[#315C4C]"
                 value={selectedEventId}
                 onChange={(e) => handleSelectEvent(e.target.value)}
               >
@@ -335,26 +694,47 @@ export default function InventoryPage() {
               </select>
             </div>
 
-            {/* Booth Tabs */}
-            <div className="flex items-center gap-1.5 border-l border-[#E8E8E5] dark:border-neutral-700 pl-3">
-              <Store className="w-3.5 h-3.5 text-[#9E9E9C] dark:text-neutral-400 mr-1" />
+            <span className="hidden sm:inline text-[#E8E8E5]">|</span>
+
+            {/* Booth Selector Pills */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] font-semibold text-[#737373] flex items-center gap-1 mr-1">
+                <Store className="w-3.5 h-3.5 text-[#315C4C]" />
+                <span>Quầy nhận hàng:</span>
+              </span>
               {eventBooths.length === 0 ? (
-                <span className="text-xs text-[#737373] dark:text-neutral-400">Sự kiện chưa có quầy bán nào</span>
+                <span className="text-xs text-[#737373] italic">
+                  Sự kiện chưa có quầy bán nào
+                </span>
               ) : (
                 eventBooths.map((b) => {
                   const isSelected = b.id === selectedBoothId;
+                  const bAllocTotal = allocations
+                    .filter((a) => a.booth_id === b.id)
+                    .reduce((sum, a) => sum + a.allocated_quantity, 0);
                   return (
                     <button
                       key={b.id}
                       type="button"
                       onClick={() => setSelectedBoothId(b.id)}
-                      className={`px-3 py-1 text-xs rounded-[4px] font-bold transition-colors cursor-pointer ${
+                      className={cn(
+                        'px-3 py-1.5 text-xs rounded-lg font-bold transition-all flex items-center gap-1.5 cursor-pointer border',
                         isSelected
-                          ? 'bg-[#315C4C] text-white shadow-xs'
-                          : 'bg-[#F0F0ED] dark:bg-neutral-800 text-[#202124] dark:text-neutral-200 hover:bg-[#E8E8E5] dark:hover:bg-neutral-700'
-                      }`}
+                          ? 'bg-[#315C4C] text-white border-[#315C4C] shadow-xs'
+                          : 'bg-[#F7F7F5] text-[#202124] border-[#E8E8E5] hover:border-[#315C4C]/40'
+                      )}
                     >
-                      {b.name}
+                      <span>{b.name}</span>
+                      <span
+                        className={cn(
+                          'text-[10px] font-mono px-1.5 py-0.2 rounded',
+                          isSelected
+                            ? 'bg-white/20 text-white'
+                            : 'bg-white text-[#737373] border border-[#E8E8E5]'
+                        )}
+                      >
+                        {bAllocTotal} món
+                      </span>
                     </button>
                   );
                 })
@@ -362,113 +742,568 @@ export default function InventoryPage() {
             </div>
           </div>
 
-          <div className="text-xs text-[#737373] dark:text-neutral-400 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#2F7D55]" />
-            <span>{t('ruleNotice')}</span>
+          <div className="text-[11px] text-[#737373] flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#2F7D55] shrink-0" />
+            <span>Hàng Online & Giữ VIP được khóa tự động, không thể cấp nhầm ra quầy</span>
           </div>
         </div>
-      </Card>
+
+        {/* Bottom Row: Filter Tabs + Search Input + View Switcher */}
+        <div className="p-2.5 bg-[#F7F7F5]/60 flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
+          {/* Quick Filter Tabs */}
+          <div className="flex flex-wrap items-center gap-1 p-1 bg-[#F7F7F5] rounded-lg border border-[#E8E8E5] text-xs">
+            <button
+              type="button"
+              onClick={() => setStockFilter('all')}
+              className={cn(
+                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5',
+                stockFilter === 'all'
+                  ? 'bg-white text-[#202124] shadow-2xs'
+                  : 'text-[#737373] hover:text-[#202124]'
+              )}
+            >
+              <span>Tất cả</span>
+              <span className="text-[10px] font-mono px-1.5 rounded bg-[#E8E8E5] text-[#202124]">
+                {enrichedVariants.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStockFilter('allocated')}
+              className={cn(
+                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5',
+                stockFilter === 'allocated'
+                  ? 'bg-white text-[#315C4C] shadow-2xs'
+                  : 'text-[#737373] hover:text-[#202124]'
+              )}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#2F7D55]" />
+              <span>Đã cấp cho quầy</span>
+              <span className="text-[10px] font-mono px-1.5 rounded bg-[#EAF4EE] text-[#2F7D55]">
+                {countAllocated}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStockFilter('has_unallocated')}
+              className={cn(
+                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5',
+                stockFilter === 'has_unallocated'
+                  ? 'bg-white text-[#B7791F] shadow-2xs'
+                  : 'text-[#737373] hover:text-[#202124]'
+              )}
+            >
+              <Boxes className="w-3.5 h-3.5 text-[#B7791F]" />
+              <span>Kho còn dư chưa cấp</span>
+              <span className="text-[10px] font-mono px-1.5 rounded bg-[#FEF7EC] text-[#B7791F]">
+                {countHasUnallocated}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStockFilter('low_or_empty')}
+              className={cn(
+                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5',
+                stockFilter === 'low_or_empty'
+                  ? 'bg-white text-[#C44536] shadow-2xs'
+                  : 'text-[#737373] hover:text-[#202124]'
+              )}
+            >
+              <AlertCircle className="w-3.5 h-3.5 text-[#C44536]" />
+              <span>Sắp hết / Chưa cấp</span>
+              <span className="text-[10px] font-mono px-1.5 rounded bg-[#FDF1F0] text-[#C44536]">
+                {countLowOrEmpty}
+              </span>
+            </button>
+          </div>
+
+          {/* Right: Search + View Mode */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 sm:w-64">
+              <Search className="w-3.5 h-3.5 text-[#9E9E9C] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Input
+                placeholder="Tìm tên sản phẩm, size, mã loại..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-8 pl-8 pr-7 text-xs rounded-lg bg-white"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9E9E9C] hover:text-[#202124]"
+                  title="Xóa tìm kiếm"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center p-0.5 rounded-lg bg-[#F7F7F5] border border-[#E8E8E5] shrink-0">
+              <button
+                type="button"
+                onClick={() => setViewMode('grouped')}
+                className={cn(
+                  'px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 text-xs font-semibold',
+                  viewMode === 'grouped'
+                    ? 'bg-white text-[#315C4C] shadow-2xs'
+                    : 'text-[#737373] hover:text-[#202124]'
+                )}
+                title="Gom nhóm theo từng sản phẩm (Dễ nhìn & Dễ thao tác)"
+              >
+                <LayoutList className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-[11px]">Theo sản phẩm</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('table')}
+                className={cn(
+                  'px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 text-xs font-semibold',
+                  viewMode === 'table'
+                    ? 'bg-white text-[#315C4C] shadow-2xs'
+                    : 'text-[#737373] hover:text-[#202124]'
+                )}
+                title="Xem dạng bảng phẳng"
+              >
+                <Table2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-[11px]">Bảng gọn</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Sandbox Test Mode Notice Banner */}
       {isTestEvent(selectedEventId) && (
-        <div className="flex items-center gap-2 p-3 rounded-[6px] bg-[#FEF7EC] border border-[#B7791F]/30 text-xs text-[#B7791F] shadow-xs">
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-[#FEF7EC] border border-[#B7791F]/30 text-xs text-[#B7791F] shadow-xs">
           <FlaskConical className="w-4 h-4 shrink-0 text-[#B7791F]" />
           <span>
-            <strong>Quầy hàng thử nghiệm (Sandbox):</strong> Lượng hàng cấp và doanh số tại quầy test POS được cách ly độc lập, <strong>hoàn toàn không ảnh hưởng</strong> đến tồn kho tổng hay số liệu xuất kho thực tế của các show diễn.
+            <strong>Quầy hàng thử nghiệm (Sandbox):</strong> Lượng hàng cấp và doanh số tại quầy
+            test POS được cách ly độc lập, <strong>hoàn toàn không ảnh hưởng</strong> đến tồn kho
+            tổng thực tế.
           </span>
         </div>
       )}
 
-      {/* Allocation Management Table */}
+      {/* Main Inventory Content */}
       {!selectedBooth ? (
-        <Card className="border-[#E8E8E5] shadow-xs">
+        <Card className="border-[#E8E8E5] rounded-xl shadow-xs">
           <CardContent className="p-12 text-center">
             <Store className="w-10 h-10 text-[#9E9E9C] mx-auto mb-3" />
             <p className="text-xs text-[#737373]">{t('selectBoothPrompt')}</p>
           </CardContent>
         </Card>
-      ) : (
-        <Card className="border-[#E8E8E5] dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs overflow-hidden">
-          <CardHeader className="py-3.5 px-5 bg-[#FAFAF8] dark:bg-neutral-800/60 border-b border-[#E8E8E5] dark:border-neutral-800 flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-sm font-semibold text-[#202124] dark:text-neutral-100">
-                Phân bổ kho: {selectedBooth.name} ({selectedBooth.code})
-              </CardTitle>
-              <CardDescription className="text-xs text-[#737373] dark:text-neutral-400">
-                Sự kiện: {selectedEvent?.name}
-              </CardDescription>
-            </div>
-            <Badge variant="outline" className="text-xs font-mono font-bold">
-              {
-                allocations
-                  .filter((a) => a.booth_id === selectedBooth.id)
-                  .reduce((sum, a) => sum + a.allocated_quantity, 0)
-              }{' '}
-              món đã cấp
-            </Badge>
-          </CardHeader>
+      ) : filteredEnrichedVariants.length === 0 ? (
+        <Card className="border-[#E8E8E5] rounded-xl shadow-xs">
+          <CardContent className="p-12 text-center">
+            <Package className="w-10 h-10 text-[#9E9E9C] mx-auto mb-3" />
+            <h3 className="text-sm font-semibold text-[#202124]">
+              Không tìm thấy mã hàng phù hợp
+            </h3>
+            <p className="text-xs text-[#737373] mt-1">
+              Thử đổi bộ lọc trạng thái hoặc từ khóa tìm kiếm của bạn.
+            </p>
+            {(searchQuery || stockFilter !== 'all') && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3 text-xs"
+                onClick={() => {
+                  setSearchQuery('');
+                  setStockFilter('all');
+                }}
+              >
+                Xóa bộ lọc
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      ) : viewMode === 'grouped' ? (
+        /* =========================================================
+           GROUPED BY PRODUCT VIEW (Default - Clean & Ergonomic)
+           ========================================================= */
+        <div className="space-y-4">
+          {groupedProducts.map(({ product, items }) => {
+            const thumbUrl = getProductThumbnail(product);
+            const canEditThisProd = canManage && canManageProduct(user, product.collab_partner);
+            const prodTotalUnallocated = items.reduce(
+              (sum, i) => sum + i.centralStorageRemaining,
+              0
+            );
+            const prodTotalBoothAvail = items.reduce((sum, i) => sum + i.availableToSell, 0);
+            const prodTotalBoothAlloc = items.reduce((sum, i) => sum + i.currentAllocQty, 0);
 
-          {/* Desktop Table View */}
-          <div className="hidden md:block overflow-x-auto">
+            return (
+              <Card
+                key={product.id}
+                className="border-[#E8E8E5] bg-white rounded-xl shadow-2xs overflow-hidden"
+              >
+                {/* Product Group Header */}
+                <div className="p-4 bg-[#F7F7F5]/70 border-b border-[#E8E8E5] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="w-14 h-14 rounded-xl bg-white border border-[#E8E8E5] overflow-hidden shrink-0 flex items-center justify-center shadow-2xs">
+                      {thumbUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={thumbUrl}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Package className="w-6 h-6 text-[#9E9E9C]" />
+                      )}
+                    </div>
+
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-[15px] font-bold text-[#202124] truncate">
+                          {product.name}
+                        </h3>
+                        {product.collab_partner && (
+                          <Badge variant="warning" className="text-[10px] gap-1">
+                            <Users2 className="w-2.5 h-2.5" />
+                            <span>Collab: {product.collab_partner}</span>
+                          </Badge>
+                        )}
+                        <span className="text-[11px] text-[#737373] font-medium">
+                          ({items.length} phân loại)
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs">
+                        <span className="text-[#737373]">
+                          Đã cấp cho <strong>{selectedBooth.name}</strong>:{' '}
+                          <strong className="text-[#202124] font-mono">
+                            {prodTotalBoothAlloc}
+                          </strong>
+                        </span>
+                        <span className="text-[#E8E8E5]">•</span>
+                        <span className="text-[#2F7D55] font-semibold">
+                          Còn bán tại quầy:{' '}
+                          <strong className="font-mono">{prodTotalBoothAvail}</strong>
+                        </span>
+                        {prodTotalUnallocated > 0 && (
+                          <>
+                            <span className="text-[#E8E8E5]">•</span>
+                            <span className="text-[#B7791F] font-semibold">
+                              Kho tổng còn dư:{' '}
+                              <strong className="font-mono">+{prodTotalUnallocated}</strong>
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Product-Level Actions */}
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
+                    {canEditThisProd ? (
+                      <>
+                        {prodTotalUnallocated > 0 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleAllocateMaxForProduct(product)}
+                            className="h-8 px-3 text-xs gap-1.5 rounded-lg border-[#2F7D55]/40 text-[#2F7D55] hover:bg-[#EAF4EE] font-semibold bg-white"
+                            title="Cấp toàn bộ số lượng còn dư trong kho tổng của sản phẩm này ra quầy"
+                          >
+                            <ArrowUpRight className="w-3.5 h-3.5" />
+                            <span>Cấp hết kho (+{prodTotalUnallocated})</span>
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openMasterStockModal(product)}
+                          className="h-8 px-3 text-xs gap-1.5 rounded-lg bg-white font-semibold"
+                          title="Chỉnh sửa Tổng kho vật lý, số lượng Giữ VIP hoặc đơn Khách đặt Online"
+                        >
+                          <SlidersHorizontal className="w-3.5 h-3.5 text-[#B7791F]" />
+                          <span>Chỉnh kho gốc / Online</span>
+                        </Button>
+                      </>
+                    ) : isPartner ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-[#737373] bg-white rounded-lg border border-[#E8E8E5]">
+                        <Lock className="w-3 h-3 text-[#9E9E9C]" />
+                        <span>Kho Admin (Chỉ đọc)</span>
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+
+                {/* Variants Rows inside Product Card */}
+                <div className="divide-y divide-[#F0F0ED]">
+                  {items.map((item) => {
+                    const {
+                      variant: v,
+                      currentAllocQty,
+                      currentSoldQty,
+                      availableToSell,
+                      maxAllowedBoothAlloc,
+                      centralStorageRemaining,
+                      stock,
+                    } = item;
+
+                    const inputValue =
+                      allocInputs[v.id] !== undefined ? allocInputs[v.id] : String(currentAllocQty);
+
+                    return (
+                      <div
+                        key={v.id}
+                        className="p-4 hover:bg-[#F7F7F5]/40 transition-colors grid grid-cols-1 lg:grid-cols-12 gap-4 items-center"
+                      >
+                        {/* Col 1-3: Variant Name, SKU & Price */}
+                        <div className="lg:col-span-3 flex items-center justify-between lg:block">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-[#202124]">{v.name}</span>
+                              <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-[#F7F7F5] border border-[#E8E8E5] text-[#737373]">
+                                {v.sku}
+                              </span>
+                            </div>
+                            <span className="text-xs font-bold text-[#315C4C] font-mono mt-0.5 block">
+                              {formatCurrency(v.price, currency)}
+                            </span>
+                          </div>
+
+                          <Badge variant={stock.badgeVariant} className="lg:hidden text-[10px]">
+                            {stock.statusLabel}
+                          </Badge>
+                        </div>
+
+                        {/* Col 4-6: Central Warehouse Breakdown (Kho tổng) */}
+                        <div className="lg:col-span-4 bg-[#F7F7F5] border border-[#E8E8E5] rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-xs">
+                          <div>
+                            <span className="text-[10px] text-[#737373] block">Tổng kho nhập</span>
+                            <span className="font-bold text-[#202124] font-mono text-sm">
+                              {v.total_inventory}
+                            </span>
+                          </div>
+
+                          <div className="h-6 w-px bg-[#E8E8E5]" />
+
+                          <div>
+                            <span className="text-[10px] text-[#737373] block">
+                              Đã khóa (Onl / VIP)
+                            </span>
+                            <div className="flex items-center gap-1.5 font-mono text-xs">
+                              <span className="font-bold text-[#1D4ED8]">{stock.online} Onl</span>
+                              <span className="text-[#9E9E9C]">·</span>
+                              <span className="font-bold text-[#B7791F]">{stock.preord} VIP</span>
+                            </div>
+                          </div>
+
+                          <div className="h-6 w-px bg-[#E8E8E5]" />
+
+                          <div className="text-right">
+                            <span className="text-[10px] text-[#737373] block">Kho còn dư</span>
+                            <span
+                              className={cn(
+                                'font-extrabold font-mono text-sm',
+                                centralStorageRemaining > 0 ? 'text-[#B7791F]' : 'text-[#737373]'
+                              )}
+                            >
+                              {centralStorageRemaining > 0
+                                ? `+${centralStorageRemaining}`
+                                : '0 (Đã cấp hết)'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Col 7-8: Booth Current Status (Tại quầy đang chọn) */}
+                        <div className="lg:col-span-2 flex items-center justify-between lg:flex-col lg:items-start lg:justify-center gap-1">
+                          <div
+                            className={cn(
+                              'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border',
+                              availableToSell <= 0
+                                ? 'bg-[#FDF1F0] text-[#C44536] border-[#C44536]/20'
+                                : availableToSell <= 5
+                                ? 'bg-[#FEF7EC] text-[#B7791F] border-[#B7791F]/20'
+                                : 'bg-[#EAF4EE] text-[#2F7D55] border-[#2F7D55]/20'
+                            )}
+                          >
+                            <span>Còn bán tại quầy:</span>
+                            <span className="font-mono text-sm font-extrabold">
+                              {availableToSell}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-[#737373] pl-0.5">
+                            Đã bán tại quầy:{' '}
+                            <strong className="text-[#202124] font-mono">{currentSoldQty}</strong> /{' '}
+                            <span className="font-mono">{currentAllocQty}</span> đã cấp
+                          </span>
+                        </div>
+
+                        {/* Col 9-12: Direct Allocation Controls (Điều chỉnh cấp cho quầy) */}
+                        <div className="lg:col-span-3 flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end justify-end gap-1.5">
+                          {canEditThisProd ? (
+                            <>
+                              <div className="flex items-center justify-between sm:justify-end gap-1.5">
+                                {/* Direct Stepper + Manual Number Input */}
+                                <div className="inline-flex items-center gap-1 bg-[#F7F7F5] p-1 rounded-xl border border-[#E8E8E5]">
+                                  <button
+                                    type="button"
+                                    className="h-8 w-8 rounded-lg bg-white hover:bg-[#E8E8E5] text-[#202124] flex items-center justify-center font-bold text-xs border border-[#E8E8E5] disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
+                                    title={
+                                      currentAllocQty <= currentSoldQty
+                                        ? `Không thể giảm dưới số lượng đã bán (${currentSoldQty})`
+                                        : 'Thu hồi 1 món về kho tổng'
+                                    }
+                                    disabled={currentAllocQty <= currentSoldQty}
+                                    onClick={() => handleStockTransfer(v.id, v.name, -1)}
+                                  >
+                                    <Minus className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  <div className="relative">
+                                    <input
+                                      type="number"
+                                      min={currentSoldQty}
+                                      max={maxAllowedBoothAlloc}
+                                      value={inputValue}
+                                      onChange={(e) => {
+                                        setAllocInputs((prev) => ({
+                                          ...prev,
+                                          [v.id]: e.target.value,
+                                        }));
+                                      }}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          const val = parseInt(
+                                            allocInputs[v.id] ?? String(currentAllocQty),
+                                            10
+                                          );
+                                          handleDirectSetAllocation(
+                                            v.id,
+                                            v.name,
+                                            isNaN(val) ? currentAllocQty : val
+                                          );
+                                          (e.target as HTMLInputElement).blur();
+                                        }
+                                      }}
+                                      onBlur={() => {
+                                        if (allocInputs[v.id] !== undefined) {
+                                          const val = parseInt(allocInputs[v.id], 10);
+                                          handleDirectSetAllocation(
+                                            v.id,
+                                            v.name,
+                                            isNaN(val) ? currentAllocQty : val
+                                          );
+                                        }
+                                      }}
+                                      className="w-20 h-8 text-center text-sm font-extrabold font-mono bg-white border border-[#E8E8E5] rounded-lg text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                                      title={`Nhập trực tiếp tổng số lượng cấp cho quầy (Tối thiểu: ${currentSoldQty}, Tối đa: ${maxAllowedBoothAlloc})`}
+                                    />
+                                  </div>
+
+                                  <button
+                                    type="button"
+                                    className="h-8 w-8 rounded-lg bg-white hover:bg-[#E8E8E5] text-[#202124] flex items-center justify-center font-bold text-xs border border-[#E8E8E5] disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
+                                    title={
+                                      centralStorageRemaining < 1
+                                        ? 'Kho tổng đã cấp hết hàng khả dụng'
+                                        : 'Cấp thêm 1 món từ kho tổng'
+                                    }
+                                    disabled={centralStorageRemaining < 1}
+                                    onClick={() => handleStockTransfer(v.id, v.name, 1)}
+                                  >
+                                    <Plus className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+
+                                {/* 1-Click Quick Action Pill: Allocate Max or Recall Unsold */}
+                                {centralStorageRemaining > 0 ? (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleDirectSetAllocation(
+                                        v.id,
+                                        v.name,
+                                        maxAllowedBoothAlloc
+                                      )
+                                    }
+                                    className="h-8 px-2.5 rounded-lg text-[11px] font-bold bg-[#EAF4EE] text-[#2F7D55] border border-[#2F7D55]/30 hover:bg-[#2F7D55] hover:text-white transition-colors shrink-0 cursor-pointer"
+                                    title={`Cấp toàn bộ +${centralStorageRemaining} món còn dư trong kho cho quầy này (Lên mức tối đa ${maxAllowedBoothAlloc})`}
+                                  >
+                                    Tối đa ({maxAllowedBoothAlloc})
+                                  </button>
+                                ) : availableToSell > 0 ? (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleDirectSetAllocation(v.id, v.name, currentSoldQty)
+                                    }
+                                    className="h-8 px-2.5 rounded-lg text-[11px] font-semibold bg-[#F7F7F5] text-[#737373] border border-[#E8E8E5] hover:text-[#C44536] hover:border-[#C44536]/30 transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
+                                    title={`Thu hồi ${availableToSell} món chưa bán về lại kho tổng`}
+                                  >
+                                    <RotateCcw className="w-3 h-3" />
+                                    <span>Thu hồi dư</span>
+                                  </button>
+                                ) : null}
+                              </div>
+
+                              <span className="text-[10px] text-[#737373] font-mono text-right">
+                                Giới hạn cấp: {currentSoldQty} → {maxAllowedBoothAlloc} món
+                              </span>
+                            </>
+                          ) : (
+                            <span className="px-3 py-1.5 text-xs font-semibold text-[#737373] bg-[#F7F7F5] rounded-lg border border-[#E8E8E5]">
+                              Đã cấp: {currentAllocQty} (Chỉ xem)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        /* =========================================================
+           COMPACT TABLE VIEW (6 Clear Columns Instead of 10 Cluttered Columns)
+           ========================================================= */
+        <Card className="border-[#E8E8E5] bg-white rounded-xl shadow-2xs overflow-hidden">
+          <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="bg-[#F7F7F5] dark:bg-neutral-800 border-b border-[#E8E8E5] dark:border-neutral-700 text-[#737373] dark:text-neutral-300 uppercase text-[10.5px] font-bold tracking-wider">
+              <thead className="bg-[#F7F7F5] border-b border-[#E8E8E5] text-[#737373] uppercase text-[10.5px] font-bold tracking-wider">
                 <tr>
-                  <th className="py-3 px-4">Sản phẩm & Biến thể</th>
-                  <th className="py-3 px-4 font-mono">Mã loại</th>
-                  <th className="py-3 px-4 text-right">Tổng nhập</th>
-                  <th className="py-3 px-4 text-center">Giữ Online</th>
-                  <th className="py-3 px-4 text-center">Giữ Pre-order</th>
-                  <th className="py-3 px-4 text-right">Đã bán tại quầy</th>
-                  <th className="py-3 px-4 text-center text-emerald-700 dark:text-emerald-300">Tồn khả dụng bán</th>
-                  <th className="py-3 px-4 text-right text-[#315C4C] dark:text-emerald-300">
-                    Cấp quầy ({selectedBooth.code})
+                  <th className="py-3 px-4">Sản phẩm & Phân loại</th>
+                  <th className="py-3 px-4 text-center">Tổng kho & Đã khóa</th>
+                  <th className="py-3 px-4 text-center">Kho tổng còn dư</th>
+                  <th className="py-3 px-4 text-center">Đã bán tại quầy</th>
+                  <th className="py-3 px-4 text-center">Còn bán tại quầy</th>
+                  <th className="py-3 px-4 text-right">
+                    Hạn mức cấp quầy ({selectedBooth.code})
                   </th>
-                  <th className="py-3 px-4 text-center">Trạng thái</th>
-                  <th className="py-3 px-4 text-center">Điều chỉnh cấp kho</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F0F0ED] dark:divide-neutral-800">
-                {activeVariants.map((v) => {
-                  const product = products.find((p) => p.id === v.product_id);
-                  const allAllocations = allocations.filter((a) => a.variant_id === v.id);
-                  const realAllocationsForVar = allAllocations.filter((a) => !a.is_test);
-                  const totalAllocated = allAllocations.reduce(
-                    (sum, a) => sum + a.allocated_quantity,
-                    0
-                  );
-                  const totalSoldOffline = realAllocationsForVar.reduce(
-                    (sum, a) => sum + (a.sold_quantity || 0),
-                    0
-                  );
-
-                  // True Offline Cap: total inventory minus online preorder reservations and VIP preorders
-                  const maxOfflineCap = Math.max(
-                    0,
-                    v.total_inventory - (v.online_preorder_quantity || 0) - (v.reserved_quantity || 0)
-                  );
-                  const otherBoothsAlloc = allAllocations
-                    .filter((a) => a.booth_id !== selectedBooth.id)
-                    .reduce((sum, a) => sum + a.allocated_quantity, 0);
-
-                  const boothAlloc = allAllocations.find((a) => a.booth_id === selectedBooth.id);
-                  const currentAllocQty = boothAlloc?.allocated_quantity || 0;
-                  const currentSoldQty = boothAlloc?.sold_quantity || 0;
-                  const availableToSell = Math.max(0, currentAllocQty - currentSoldQty);
-
-                  // Maximum limit this booth can ever hold without exceeding offline available
-                  const maxAllowedBoothAlloc = Math.max(currentSoldQty, maxOfflineCap - otherBoothsAlloc);
-                  // Unallocated offline stock left in central warehouse
-                  const centralStorageRemaining = Math.max(0, maxOfflineCap - totalAllocated);
-
-                  const stock = calculateVariantStock(v, totalSoldOffline, totalAllocated);
+              <tbody className="divide-y divide-[#F0F0ED]">
+                {filteredEnrichedVariants.map((item) => {
+                  const {
+                    variant: v,
+                    product,
+                    currentAllocQty,
+                    currentSoldQty,
+                    availableToSell,
+                    maxAllowedBoothAlloc,
+                    centralStorageRemaining,
+                    stock,
+                  } = item;
                   const thumbUrl = getProductThumbnail(product);
+                  const canEditThis = canManage && canManageProduct(user, product?.collab_partner);
+                  const inputValue =
+                    allocInputs[v.id] !== undefined ? allocInputs[v.id] : String(currentAllocQty);
 
                   return (
-                    <tr key={v.id} className="hover:bg-[#FBFBFA] dark:hover:bg-neutral-800/40 transition-colors">
-                      <td className="py-3 px-4 font-medium text-[#202124] dark:text-neutral-100">
-                        <div className="flex items-center gap-2.5">
-                          {/* Product Image Thumbnail */}
-                          <div className="w-10 h-10 rounded-[6px] bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 overflow-hidden shrink-0 flex items-center justify-center shadow-2xs">
+                    <tr key={v.id} className="hover:bg-[#F7F7F5]/50 transition-colors">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-[#F7F7F5] border border-[#E8E8E5] overflow-hidden shrink-0 flex items-center justify-center">
                             {thumbUrl ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img
@@ -477,139 +1312,139 @@ export default function InventoryPage() {
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <Package className="w-5 h-5 text-[#9E9E9C] dark:text-neutral-500" />
+                              <Package className="w-4 h-4 text-[#9E9E9C]" />
                             )}
                           </div>
                           <div>
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <p className="font-bold text-xs text-[#202124] dark:text-neutral-100">{product?.name}</p>
-                              {product?.collab_partner && (
-                                <span className="inline-flex items-center gap-0.5 text-[9.5px] font-bold text-[#8C5D17] dark:text-amber-300 bg-[#FEF7EC] dark:bg-amber-950/60 px-1.5 py-0.2 rounded border border-[#B7791F]/30">
-                                  <Users2 className="w-2.5 h-2.5 text-[#B7791F]" />
-                                  <span>Collab: {product.collab_partner}</span>
-                                </span>
-                              )}
+                            <p className="font-bold text-xs text-[#202124]">{product?.name}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-[11px] font-semibold text-[#315C4C]">
+                                {v.name}
+                              </span>
+                              <span className="text-[10px] font-mono text-[#737373]">
+                                ({v.sku})
+                              </span>
                             </div>
-                            <p className="text-[11px] text-[#737373] dark:text-neutral-400 font-medium">{v.name}</p>
                           </div>
                         </div>
                       </td>
 
-                      <td className="py-3 px-4 font-mono text-[11px] text-[#737373] dark:text-neutral-400 font-semibold">
-                        {v.sku}
-                      </td>
-
-                      <td className="py-3 px-4 text-right font-bold text-xs text-[#202124] dark:text-neutral-100">
-                        {v.total_inventory}
+                      <td className="py-3 px-4 text-center">
+                        <span className="font-bold text-[#202124] font-mono text-xs">
+                          {v.total_inventory}
+                        </span>
+                        <span className="block text-[10px] text-[#737373] font-mono">
+                          Onl: <strong className="text-[#1D4ED8]">{stock.online}</strong> · VIP:{' '}
+                          <strong className="text-[#B7791F]">{stock.preord}</strong>
+                        </span>
                       </td>
 
                       <td className="py-3 px-4 text-center">
-                        {stock.online > 0 ? (
-                          <span className="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded text-xs font-bold text-blue-600 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 shadow-2xs">
-                            {stock.online}
-                          </span>
-                        ) : (
-                          <span className="text-neutral-400 dark:text-neutral-600 font-mono">—</span>
-                        )}
+                        <span
+                          className={cn(
+                            'inline-flex items-center px-2 py-0.5 rounded-md font-mono font-bold text-xs',
+                            centralStorageRemaining > 0
+                              ? 'bg-[#FEF7EC] text-[#B7791F]'
+                              : 'bg-[#F7F7F5] text-[#737373]'
+                          )}
+                        >
+                          {centralStorageRemaining > 0 ? `+${centralStorageRemaining}` : '0'}
+                        </span>
+                      </td>
+
+                      <td className="py-3 px-4 text-center font-mono font-bold text-xs text-[#202124]">
+                        {currentSoldQty}
                       </td>
 
                       <td className="py-3 px-4 text-center">
-                        {stock.preord > 0 ? (
-                          <span className="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 shadow-2xs">
-                            {stock.preord}
-                          </span>
-                        ) : (
-                          <span className="text-neutral-400 dark:text-neutral-600 font-mono">—</span>
-                        )}
-                      </td>
-
-                      <td className="py-3 px-4 text-right font-medium text-neutral-700 dark:text-neutral-300">
-                        <span className="text-xs font-semibold">{stock.offlineSold}</span>
-                        {currentSoldQty > 0 && (
-                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block font-bold">
-                            (Tại quầy: {currentSoldQty})
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="py-3 px-4 text-center">
-                        <span className="inline-flex items-center justify-center min-w-[36px] px-2.5 py-1 rounded-[6px] text-xs font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 shadow-2xs">
-                          {stock.offlineAvailable}
+                        <span
+                          className={cn(
+                            'inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 rounded-lg text-xs font-extrabold font-mono border',
+                            availableToSell <= 0
+                              ? 'bg-[#FDF1F0] text-[#C44536] border-[#C44536]/20'
+                              : 'bg-[#EAF4EE] text-[#2F7D55] border-[#2F7D55]/20'
+                          )}
+                        >
+                          {availableToSell}
                         </span>
                       </td>
 
                       <td className="py-3 px-4 text-right">
-                        <span className="text-sm font-extrabold text-[#315C4C] dark:text-emerald-400 block">
-                          {currentAllocQty}
-                        </span>
-                        <span className="text-[10px] text-neutral-500 dark:text-neutral-400 block font-medium">
-                          Còn bán: <strong className="text-neutral-800 dark:text-neutral-200">{availableToSell}</strong>
-                        </span>
-                      </td>
+                        {canEditThis ? (
+                          <div className="inline-flex items-center justify-end gap-1.5">
+                            <div className="inline-flex items-center gap-1 bg-[#F7F7F5] p-1 rounded-lg border border-[#E8E8E5]">
+                              <button
+                                type="button"
+                                className="h-7 w-7 rounded bg-white hover:bg-[#E8E8E5] text-[#202124] flex items-center justify-center font-bold text-xs border border-[#E8E8E5] disabled:opacity-35"
+                                disabled={currentAllocQty <= currentSoldQty}
+                                onClick={() => handleStockTransfer(v.id, v.name, -1)}
+                              >
+                                <Minus className="w-3 h-3" />
+                              </button>
 
-                      <td className="py-3 px-4 text-center">
-                        <Badge variant={stock.badgeVariant} className="text-[10px] font-bold">
-                          {stock.statusLabel}
-                        </Badge>
-                      </td>
-
-                      {/* Quick Adjustment Controls with Direct Manual Input */}
-                      <td className="py-3 px-4 text-center">
-                        {canManage && canManageProduct(user, product?.collab_partner) ? (
-                          <div className="inline-flex items-center gap-1 bg-[#F0F0ED] dark:bg-neutral-800 p-1 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 shadow-2xs">
-                            <button
-                              type="button"
-                              className="h-7 w-7 rounded bg-white dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-600 text-neutral-800 dark:text-neutral-100 flex items-center justify-center font-bold text-xs shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                              title={currentAllocQty <= currentSoldQty ? `Không thể giảm dưới số lượng đã bán (${currentSoldQty})` : 'Giảm 1 món về kho tổng'}
-                              disabled={currentAllocQty <= currentSoldQty}
-                              onClick={() => handleStockTransfer(v.id, v.name, -1)}
-                            >
-                              <Minus className="w-3.5 h-3.5" />
-                            </button>
-
-                            <input
-                              type="number"
-                              min={currentSoldQty}
-                              max={maxAllowedBoothAlloc}
-                              value={allocInputs[v.id] !== undefined ? allocInputs[v.id] : currentAllocQty}
-                              onChange={(e) => {
-                                setAllocInputs((prev) => ({ ...prev, [v.id]: e.target.value }));
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  const val = parseInt(allocInputs[v.id] ?? String(currentAllocQty), 10);
-                                  handleDirectSetAllocation(v.id, v.name, isNaN(val) ? currentAllocQty : val);
-                                  (e.target as HTMLInputElement).blur();
+                              <input
+                                type="number"
+                                min={currentSoldQty}
+                                max={maxAllowedBoothAlloc}
+                                value={inputValue}
+                                onChange={(e) =>
+                                  setAllocInputs((prev) => ({
+                                    ...prev,
+                                    [v.id]: e.target.value,
+                                  }))
                                 }
-                              }}
-                              onBlur={() => {
-                                if (allocInputs[v.id] !== undefined) {
-                                  const val = parseInt(allocInputs[v.id], 10);
-                                  handleDirectSetAllocation(v.id, v.name, isNaN(val) ? currentAllocQty : val);
-                                }
-                              }}
-                              className="w-16 h-7 text-center text-xs font-bold font-mono bg-white dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-700 rounded text-neutral-800 dark:text-neutral-100 focus:outline-none focus:ring-1 focus:ring-[#315C4C]"
-                              title={`Nhập trực tiếp số lượng cấp cho quầy (Tối thiểu: ${currentSoldQty}, Tối đa: ${maxAllowedBoothAlloc})`}
-                            />
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    const val = parseInt(
+                                      allocInputs[v.id] ?? String(currentAllocQty),
+                                      10
+                                    );
+                                    handleDirectSetAllocation(
+                                      v.id,
+                                      v.name,
+                                      isNaN(val) ? currentAllocQty : val
+                                    );
+                                    (e.target as HTMLInputElement).blur();
+                                  }
+                                }}
+                                onBlur={() => {
+                                  if (allocInputs[v.id] !== undefined) {
+                                    const val = parseInt(allocInputs[v.id], 10);
+                                    handleDirectSetAllocation(
+                                      v.id,
+                                      v.name,
+                                      isNaN(val) ? currentAllocQty : val
+                                    );
+                                  }
+                                }}
+                                className="w-16 h-7 text-center text-xs font-extrabold font-mono bg-white border border-[#E8E8E5] rounded text-[#202124]"
+                              />
 
-                            <button
-                              type="button"
-                              className="h-7 w-7 rounded bg-white dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-600 text-neutral-800 dark:text-neutral-100 flex items-center justify-center font-bold text-xs shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                              title={centralStorageRemaining < 1 ? `Kho tổng đã hết hàng khả dụng cho bán offline (Còn ${centralStorageRemaining})` : 'Cấp thêm 1 món từ kho tổng'}
-                              disabled={centralStorageRemaining < 1}
-                              onClick={() => handleStockTransfer(v.id, v.name, 1)}
-                            >
-                              <Plus className="w-3.5 h-3.5" />
-                            </button>
+                              <button
+                                type="button"
+                                className="h-7 w-7 rounded bg-white hover:bg-[#E8E8E5] text-[#202124] flex items-center justify-center font-bold text-xs border border-[#E8E8E5] disabled:opacity-35"
+                                disabled={centralStorageRemaining < 1}
+                                onClick={() => handleStockTransfer(v.id, v.name, 1)}
+                              >
+                                <Plus className="w-3 h-3" />
+                              </button>
+                            </div>
+
+                            {centralStorageRemaining > 0 && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDirectSetAllocation(v.id, v.name, maxAllowedBoothAlloc)
+                                }
+                                className="h-7 px-2 rounded text-[10px] font-bold bg-[#EAF4EE] text-[#2F7D55] border border-[#2F7D55]/30 hover:bg-[#2F7D55] hover:text-white transition-colors"
+                              >
+                                Max ({maxAllowedBoothAlloc})
+                              </button>
+                            )}
                           </div>
-                        ) : isPartner ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-[#737373] dark:text-neutral-400 bg-[#F0F0ED] dark:bg-neutral-800 rounded border border-[#E8E8E5] dark:border-neutral-700" title="Hàng kho Admin - Bạn không thể chỉnh sửa">
-                            <Lock className="w-3 h-3 text-[#9E9E9C]" />
-                            <span>{currentAllocQty} (Kho Admin)</span>
-                          </span>
                         ) : (
-                          <span className="px-2.5 py-1 text-xs font-semibold text-[#737373] dark:text-neutral-400 bg-[#F0F0ED] dark:bg-neutral-800 rounded">
-                            {currentAllocQty} (Chỉ xem)
+                          <span className="font-mono font-bold text-xs text-[#737373]">
+                            {currentAllocQty}
                           </span>
                         )}
                       </td>
@@ -619,189 +1454,138 @@ export default function InventoryPage() {
               </tbody>
             </table>
           </div>
-
-          {/* Mobile Responsive Cards View */}
-          <div className="md:hidden divide-y divide-[#F0F0ED] dark:divide-neutral-800">
-            {activeVariants.map((v) => {
-              const product = products.find((p) => p.id === v.product_id);
-              const allAllocations = allocations.filter((a) => a.variant_id === v.id);
-              const realAllocationsForVar = allAllocations.filter((a) => !a.is_test);
-              const totalAllocated = allAllocations.reduce(
-                (sum, a) => sum + a.allocated_quantity,
-                0
-              );
-              const totalSoldOffline = realAllocationsForVar.reduce(
-                (sum, a) => sum + (a.sold_quantity || 0),
-                0
-              );
-
-              // True Offline Cap: total inventory minus online preorder reservations and VIP preorders
-              const maxOfflineCap = Math.max(
-                0,
-                v.total_inventory - (v.online_preorder_quantity || 0) - (v.reserved_quantity || 0)
-              );
-              const otherBoothsAlloc = allAllocations
-                .filter((a) => a.booth_id !== selectedBooth.id)
-                .reduce((sum, a) => sum + a.allocated_quantity, 0);
-
-              const boothAlloc = allAllocations.find((a) => a.booth_id === selectedBooth.id);
-              const currentAllocQty = boothAlloc?.allocated_quantity || 0;
-              const currentSoldQty = boothAlloc?.sold_quantity || 0;
-              const availableToSell = Math.max(0, currentAllocQty - currentSoldQty);
-
-              // Maximum limit this booth can ever hold without exceeding offline available
-              const maxAllowedBoothAlloc = Math.max(currentSoldQty, maxOfflineCap - otherBoothsAlloc);
-              // Unallocated offline stock left in central warehouse
-              const centralStorageRemaining = Math.max(0, maxOfflineCap - totalAllocated);
-
-              const stock = calculateVariantStock(v, totalSoldOffline, totalAllocated);
-              const thumbUrl = getProductThumbnail(product);
-
-              return (
-                <div key={v.id} className="p-3.5 space-y-3">
-                  <div className="flex items-start justify-between gap-2.5">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      {/* Product Image Thumbnail */}
-                      <div className="w-11 h-11 rounded-[6px] bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 overflow-hidden shrink-0 flex items-center justify-center shadow-2xs">
-                        {thumbUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={thumbUrl}
-                            alt={product?.name || 'Sản phẩm'}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <Package className="w-5 h-5 text-[#9E9E9C] dark:text-neutral-500" />
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <h4 className="font-bold text-sm text-[#202124] dark:text-neutral-100 truncate">{product?.name}</h4>
-                          {product?.collab_partner && (
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/60">
-                              🤝 {product.collab_partner}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs font-semibold text-[#315C4C] dark:text-emerald-300 bg-[#EBF1EE] dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-[#D5E2DC] dark:border-emerald-800">
-                            {v.name}
-                          </span>
-                          <span className="text-[11px] font-mono text-[#737373] dark:text-neutral-400">{v.sku}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-1 shrink-0">
-                      <Badge variant={stock.badgeVariant} className="text-[10px]">
-                        {stock.statusLabel}
-                      </Badge>
-                      <Badge variant={currentAllocQty > 0 ? 'outline' : 'neutral'} className="text-[9px]">
-                        {currentAllocQty > 0 ? 'Đang cấp quầy' : 'Chưa cấp'}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  {/* 5 Stats Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-[#F7F7F5] dark:bg-neutral-800/70 p-2.5 rounded-[6px] text-xs border border-[#E8E8E5] dark:border-neutral-700/60">
-                    <div className="p-1.5 rounded bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800">
-                      <span className="text-[#737373] dark:text-neutral-400 text-[10px] block">Số lượng (Tổng nhập):</span>
-                      <span className="font-bold text-sm text-[#202124] dark:text-neutral-100">{v.total_inventory}</span>
-                    </div>
-                    <div className="p-1.5 rounded bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/50 dark:border-blue-900/60">
-                      <span className="text-blue-600 dark:text-blue-300 text-[10px] font-medium block">Giữ Online:</span>
-                      <span className="font-bold text-sm text-blue-700 dark:text-blue-300">{stock.online}</span>
-                    </div>
-                    <div className="p-1.5 rounded bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/50 dark:border-amber-900/60">
-                      <span className="text-amber-600 dark:text-amber-300 text-[10px] font-medium block">Preord / Giữ chỗ:</span>
-                      <span className="font-bold text-sm text-amber-700 dark:text-amber-300">{stock.preord}</span>
-                    </div>
-                    <div className="p-1.5 rounded bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800">
-                      <span className="text-[#737373] dark:text-neutral-400 text-[10px] block">Đã bán offline:</span>
-                      <span className="font-semibold text-xs text-emerald-700 dark:text-emerald-400">
-                        {stock.offlineSold} {currentSoldQty > 0 && `(Quầy: ${currentSoldQty})`}
-                      </span>
-                    </div>
-                    <div className="p-1.5 rounded bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300/70 dark:border-emerald-700">
-                      <span className="text-emerald-700 dark:text-emerald-300 text-[10px] font-bold block">Tồn bán offline:</span>
-                      <span className="font-black text-sm text-emerald-700 dark:text-emerald-300">{stock.offlineAvailable}</span>
-                    </div>
-                    <div className="p-1.5 rounded bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800">
-                      <span className="text-[#315C4C] dark:text-emerald-400 text-[10px] font-medium block">Hạn mức quầy:</span>
-                      <span className="font-bold text-sm text-[#315C4C] dark:text-emerald-300">{currentAllocQty}</span>
-                      <span className="text-[10px] text-[#737373] dark:text-neutral-400 ml-1">(Còn: {availableToSell})</span>
-                    </div>
-                  </div>
-
-                  {/* Quick Stepper Action */}
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="text-xs font-semibold text-[#737373] dark:text-neutral-400">
-                      {canManage && canManageProduct(user, product?.collab_partner)
-                        ? 'Điều chuyển số lượng:'
-                        : 'Hạn mức kho:'}
-                    </span>
-                    {canManage && canManageProduct(user, product?.collab_partner) ? (
-                      <div className="flex items-center gap-1.5 bg-[#F0F0ED] dark:bg-neutral-800 p-1 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 shadow-2xs">
-                        <button
-                          type="button"
-                          className="h-8 w-8 rounded bg-white dark:bg-neutral-700 hover:bg-[#E8E8E5] dark:hover:bg-neutral-600 text-[#202124] dark:text-neutral-100 flex items-center justify-center font-bold text-xs shadow-2xs border border-[#E8E8E5] dark:border-neutral-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                          disabled={currentAllocQty <= currentSoldQty}
-                          onClick={() => handleStockTransfer(v.id, v.name, -1)}
-                          title={currentAllocQty <= currentSoldQty ? `Không thể giảm dưới số lượng đã bán (${currentSoldQty})` : 'Giảm 1 món'}
-                        >
-                          <Minus className="w-3.5 h-3.5" />
-                        </button>
-
-                        <input
-                          type="number"
-                          min={currentSoldQty}
-                          max={maxAllowedBoothAlloc}
-                          value={allocInputs[v.id] !== undefined ? allocInputs[v.id] : currentAllocQty}
-                          onChange={(e) => {
-                            setAllocInputs((prev) => ({ ...prev, [v.id]: e.target.value }));
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              const val = parseInt(allocInputs[v.id] ?? String(currentAllocQty), 10);
-                              handleDirectSetAllocation(v.id, v.name, isNaN(val) ? currentAllocQty : val);
-                              (e.target as HTMLInputElement).blur();
-                            }
-                          }}
-                          onBlur={() => {
-                            if (allocInputs[v.id] !== undefined) {
-                              const val = parseInt(allocInputs[v.id], 10);
-                              handleDirectSetAllocation(v.id, v.name, isNaN(val) ? currentAllocQty : val);
-                            }
-                          }}
-                          className="w-16 h-8 text-center text-xs font-bold font-mono bg-white dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-700 rounded text-[#202124] dark:text-neutral-100 focus:outline-none focus:ring-1 focus:ring-[#315C4C]"
-                          title={`Nhập trực tiếp số lượng cấp cho quầy (Tối thiểu: ${currentSoldQty}, Tối đa: ${maxAllowedBoothAlloc})`}
-                        />
-
-                        <button
-                          type="button"
-                          className="h-8 w-8 rounded bg-white dark:bg-neutral-700 hover:bg-[#E8E8E5] dark:hover:bg-neutral-600 text-[#202124] dark:text-neutral-100 flex items-center justify-center font-bold text-xs shadow-2xs border border-[#E8E8E5] dark:border-neutral-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                          disabled={centralStorageRemaining < 1}
-                          onClick={() => handleStockTransfer(v.id, v.name, 1)}
-                          title={centralStorageRemaining < 1 ? `Kho tổng đã hết hàng khả dụng cho bán offline (Còn ${centralStorageRemaining})` : 'Cấp thêm 1 món'}
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ) : isPartner ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-[#737373] dark:text-neutral-400 bg-[#F0F0ED] dark:bg-neutral-800 rounded border border-[#E8E8E5] dark:border-neutral-700" title="Hàng kho Admin - Bạn không thể chỉnh sửa">
-                        <Lock className="w-3 h-3 text-[#9E9E9C] dark:text-neutral-400" />
-                        <span>{currentAllocQty} (Kho Admin)</span>
-                      </span>
-                    ) : (
-                      <span className="text-xs font-bold text-[#315C4C] dark:text-emerald-300 bg-[#F0F0ED] dark:bg-neutral-800 px-2.5 py-1 rounded border border-[#E8E8E5] dark:border-neutral-700">
-                        {currentAllocQty} (Chỉ xem)
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         </Card>
+      )}
+
+      {/* Quick Master Stock / Preorder Adjustment Modal right inside Inventory */}
+      {masterEditProduct && (
+        <Modal
+          isOpen={!!masterEditProduct}
+          onClose={() => setMasterEditProduct(null)}
+          title={`Chỉnh Kho Gốc & Đặt Trước — ${masterEditProduct.name}`}
+          description="Cập nhật tổng số lượng nhập kho, hàng giữ VIP và đơn khách đặt Online ngay tại trang Kho hàng."
+          maxWidth="lg"
+        >
+          <div className="space-y-4">
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+              {masterEditVariants.map((mv, idx) => {
+                const totalHeld = mv.reserved + mv.online;
+                const offlineAvailable = Math.max(
+                  0,
+                  mv.total - totalHeld - (mv.offlineSold || 0)
+                );
+
+                return (
+                  <div
+                    key={mv.id}
+                    className="p-3.5 bg-[#F7F7F5] rounded-xl border border-[#E8E8E5] space-y-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-bold text-xs text-[#202124]">{mv.name}</h4>
+                        <span className="font-mono text-[10px] text-[#737373]">
+                          Mã: {mv.sku} • Đã bán tại quầy: {mv.offlineSold || 0}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-[#737373] block">
+                          Khả dụng cấp cho quầy:
+                        </span>
+                        <span
+                          className={cn(
+                            'text-xs font-extrabold font-mono',
+                            offlineAvailable <= 0 ? 'text-[#C44536]' : 'text-[#2F7D55]'
+                          )}
+                        >
+                          {offlineAvailable} món
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-[11px] font-semibold text-[#202124]">
+                          Tổng số lượng nhập kho:
+                        </Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={mv.total}
+                          onChange={(e) => {
+                            const val = Number(e.target.value) || 0;
+                            setMasterEditVariants((prev) =>
+                              prev.map((item, i) => (i === idx ? { ...item, total: val } : item))
+                            );
+                          }}
+                          className="h-8 text-xs bg-white font-mono"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label className="text-[11px] font-semibold text-[#B7791F] flex items-center gap-1">
+                          <Bookmark className="w-3 h-3 text-[#B7791F]" />
+                          <span>Tự giữ / Đặt trước (VIP):</span>
+                        </Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={mv.reserved}
+                          onChange={(e) => {
+                            const val = Number(e.target.value) || 0;
+                            setMasterEditVariants((prev) =>
+                              prev.map((item, i) =>
+                                i === idx ? { ...item, reserved: val } : item
+                              )
+                            );
+                          }}
+                          className="h-8 text-xs bg-white border-[#B7791F]/40 font-mono"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label className="text-[11px] font-semibold text-[#1D4ED8] flex items-center gap-1">
+                          <Globe className="w-3 h-3 text-[#3B82F6]" />
+                          <span>Khách đặt mua Online:</span>
+                        </Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={mv.online}
+                          onChange={(e) => {
+                            const val = Number(e.target.value) || 0;
+                            setMasterEditVariants((prev) =>
+                              prev.map((item, i) => (i === idx ? { ...item, online: val } : item))
+                            );
+                          }}
+                          className="h-8 text-xs bg-white border-[#3B82F6]/40 font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F0ED]">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setMasterEditProduct(null)}
+              >
+                Hủy
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={handleSaveMasterStock}
+              >
+                Lưu Cập Nhật Kho Gốc
+              </Button>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {/* Physical Stocktake & Discrepancy Reconciliation Modal */}

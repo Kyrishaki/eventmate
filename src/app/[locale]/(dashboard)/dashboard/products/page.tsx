@@ -914,9 +914,9 @@ export default function ProductsPage() {
                         />
                       </div>
                       <div className="sm:col-span-3">
-                        <span className="text-[10px] text-[#737373] block mb-1 font-semibold">Mã SKU:</span>
+                        <span className="text-[10px] text-[#737373] block mb-1 font-semibold">Mã loại:</span>
                         <Input
-                          placeholder="Mã SKU"
+                          placeholder="Mã loại"
                           value={v.sku}
                           onChange={(e) => updateVariantField(idx, 'sku', e.target.value)}
                           className="h-8 text-xs bg-white font-mono uppercase"

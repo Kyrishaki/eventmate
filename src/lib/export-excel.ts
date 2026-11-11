@@ -264,7 +264,7 @@ export function exportEventToExcel({
   XLSX.utils.book_append_sheet(wb, wsBooths, 'Hiệu suất Quầy & Collab');
 
   // =========================================================================
-  // SHEET 4: 📦 BÁO CÁO TỒN KHO & PHÂN BỔ SKU
+  // SHEET 4: 📦 BÁO CÁO TỒN KHO & PHÂN BỔ MÃ LOẠI
   // =========================================================================
   const inventoryRows: Record<string, string | number>[] = [];
   let skuCounter = 1;
@@ -291,7 +291,7 @@ export function exportEventToExcel({
 
       inventoryRows.push({
         STT: skuCounter++,
-        'Mã SKU': v.sku,
+        'Mã loại': v.sku,
         'Mã vạch Barcode': v.barcode || '—',
         'Tên sản phẩm': prod.name,
         'Biến thể (Size/Màu)': v.name,
@@ -301,7 +301,7 @@ export function exportEventToExcel({
         'Đặt trước Online (Pre-order)': preorder,
         'Đã cấp cho quầy (Allocated)': allocatedQty,
         'Đã bán thành công (Sold)': soldQty,
-        'Doanh thu SKU (VND)': revenueFromSku,
+        'Doanh thu theo Mã loại (VND)': revenueFromSku,
         'Khả dụng tại quầy': remainingAtBooth,
         'Kho trung tâm còn lại': centralStorageRemaining,
         'Trạng thái':
@@ -332,7 +332,7 @@ export function exportEventToExcel({
     { wch: 18 },
     { wch: 18 },
   ];
-  XLSX.utils.book_append_sheet(wb, wsInventory, 'Tồn kho & Phân bổ SKU');
+  XLSX.utils.book_append_sheet(wb, wsInventory, 'Tồn kho & Phân bổ Mã loại');
 
   // =========================================================================
   // TRIGGER DOWNLOAD

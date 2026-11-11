@@ -179,7 +179,7 @@ export default function InventoryPage() {
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-[#202124] dark:text-neutral-100">{t('title')}</h1>
             <Badge variant="outline" className="text-[11px] font-mono">
-              {variants.length} mã SKU
+              {variants.length} mã loại
             </Badge>
           </div>
           <p className="text-xs text-[#737373] dark:text-neutral-400 mt-0.5">{t('description')}</p>
@@ -358,7 +358,7 @@ export default function InventoryPage() {
               <thead className="bg-[#F7F7F5] dark:bg-neutral-800 border-b border-[#E8E8E5] dark:border-neutral-700 text-[#737373] dark:text-neutral-300 uppercase text-[10.5px] font-bold tracking-wider">
                 <tr>
                   <th className="py-3 px-4">Sản phẩm & Biến thể</th>
-                  <th className="py-3 px-4 font-mono">SKU</th>
+                  <th className="py-3 px-4 font-mono">Mã loại</th>
                   <th className="py-3 px-4 text-right">Tổng nhập</th>
                   <th className="py-3 px-4 text-center">Giữ Online</th>
                   <th className="py-3 px-4 text-center">Giữ Pre-order</th>

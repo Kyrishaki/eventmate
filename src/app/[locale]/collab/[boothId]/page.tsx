@@ -910,7 +910,7 @@ ${url}`;
             <div className="lg:col-span-7 xl:col-span-8 space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-[8px] border border-[#E8E8E5]">
                 <Input
-                  placeholder="Tìm sản phẩm bán tại quầy (tên, mã SKU)..."
+                  placeholder="Tìm sản phẩm bán tại quầy (tên, mã loại)..."
                   value={posSearch}
                   onChange={(e) => setPosSearch(e.target.value)}
                   className="h-9 text-xs flex-1 max-w-md min-w-[200px]"
@@ -1646,7 +1646,7 @@ ${url}`;
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="collab-prod-sku">Mã SKU (tùy chọn)</Label>
+              <Label htmlFor="collab-prod-sku">Mã loại (tùy chọn)</Label>
               <Input
                 id="collab-prod-sku"
                 placeholder="VD: COL-TSHIRT-L"

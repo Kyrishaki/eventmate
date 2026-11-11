@@ -176,7 +176,7 @@ export function StocktakeModal({
                         <div>
                           <p className="font-bold text-[#202124]">{product?.name}</p>
                           <p className="text-[11px] text-[#737373]">
-                            Phân loại: <span className="font-semibold text-[#202124]">{variant?.name}</span> • SKU: {variant?.sku}
+                            Phân loại: <span className="font-semibold text-[#202124]">{variant?.name}</span> • Mã loại: {variant?.sku}
                           </p>
                         </div>
                         <div className="text-right">

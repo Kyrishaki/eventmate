@@ -696,7 +696,7 @@ export default function PosTerminalPage() {
             <div className="relative flex-1 max-w-md min-w-[200px]">
               <Search className="w-4 h-4 text-[#9E9E9C] absolute left-3 top-2.5" />
               <Input
-                placeholder="Tìm sản phẩm, SKU..."
+                placeholder="Tìm sản phẩm, mã loại..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9 h-9 text-xs bg-white"

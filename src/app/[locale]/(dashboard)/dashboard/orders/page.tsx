@@ -419,7 +419,7 @@ export default function DashboardOrdersPage() {
                           {product?.name || item.variant_id}
                         </p>
                         <p className="text-[11px] text-[#737373]">
-                          {variant?.name} • SKU: {variant?.sku}
+                          {variant?.name} • Mã loại: {variant?.sku}
                         </p>
                       </div>
                       <div className="text-right">

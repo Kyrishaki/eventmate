@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useDataStore } from '@/stores/data-store';
 import { useOrdersStore } from '@/stores/orders-store';
+import { useAuthStore } from '@/stores/auth-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -46,6 +47,8 @@ export default function DashboardOverviewPage() {
   const { activeWorkspace } = useWorkspaceStore();
   const { events, booths, variants, allocations } = useDataStore();
   const { orders, clearTestOrders } = useOrdersStore();
+  const { user } = useAuthStore();
+  const isCollab = user?.role === 'collab_partner';
 
   const workspaceEvents = events.filter(
     (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
@@ -160,13 +163,18 @@ export default function DashboardOverviewPage() {
       {/* Header with Title and Primary Action */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#E8E8E5]">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-bold tracking-tight text-[#202124]">
               {t('overviewTitle')}
             </h1>
             <Badge variant="outline" className="text-[11px] font-mono">
               {activeWorkspace?.name || 'Workspace'}
             </Badge>
+            {isCollab && (
+              <Badge variant="warning" className="text-[11px] bg-[#FAF5FF] text-[#6B21A8] border-[#A855F7]/30 font-semibold">
+                Đối tác: {user?.collabPartnerName || 'Collab Partner'}
+              </Badge>
+            )}
           </div>
           <p className="text-xs text-[#737373] mt-0.5">
             Theo dõi doanh thu, kho hàng và quầy bán.
@@ -198,6 +206,29 @@ export default function DashboardOverviewPage() {
           </Link>
         </div>
       </div>
+
+      {/* Collab Partner Notification Banner */}
+      {isCollab && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 rounded-[8px] bg-[#FAF5FF] border border-[#A855F7]/30 text-xs text-[#6B21A8] shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <Store className="w-4 h-4 text-[#9333EA] shrink-0" />
+            <div>
+              <p className="font-bold">
+                Bảng điều khiển Đối tác Collab: {user?.collabPartnerName}
+              </p>
+              <p className="text-[11px] text-[#7E22CE] mt-0.5">
+                Bạn có toàn quyền theo dõi doanh thu, mở POS bán hàng và quản trị sản phẩm của thương hiệu <strong>{user?.collabPartnerName}</strong>. Kho hàng trung tâm của Admin được bảo vệ an toàn (Chỉ đọc).
+              </p>
+            </div>
+          </div>
+          <Link href="/dashboard/products">
+            <Button variant="outline" size="sm" className="h-7 text-xs border-[#A855F7]/40 text-[#7E22CE] hover:bg-[#A855F7]/10 font-semibold gap-1">
+              <Boxes className="w-3.5 h-3.5" />
+              <span>Sản phẩm của tôi</span>
+            </Button>
+          </Link>
+        </div>
+      )}
 
       {/* Event Filter Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-[8px] border border-[#E8E8E5] shadow-xs">

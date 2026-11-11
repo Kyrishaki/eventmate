@@ -9,6 +9,8 @@ export interface AuthUser {
   fullName: string;
   role: WorkspaceRole;
   avatarUrl?: string | null;
+  collabPartnerName?: string;
+  collabBoothId?: string;
 }
 
 export interface UserAccount {
@@ -18,6 +20,8 @@ export interface UserAccount {
   password: string;
   fullName: string;
   role: WorkspaceRole;
+  collabPartnerName?: string;
+  collabBoothId?: string;
   createdAt: string;
 }
 
@@ -30,7 +34,7 @@ function secureHash(str: string): string {
   return (hash >>> 0).toString(16);
 }
 
-// Pre-configured Primary Admin Accounts (hashed credentials to prevent plaintext exposure)
+// Pre-configured Primary Admin & Demo Accounts (hashed credentials to prevent plaintext exposure)
 export const MASTER_ACCOUNTS: UserAccount[] = [
   {
     id: 'admin-tuan',
@@ -48,6 +52,17 @@ export const MASTER_ACCOUNTS: UserAccount[] = [
     password: 'hash:1a7415b5',
     fullName: 'HKT Super Admin',
     role: 'owner',
+    createdAt: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'collab-genz',
+    username: 'collab_genz',
+    email: 'genz@collab.eventmate.app',
+    password: 'hash:15fb0680', // Collab@123
+    fullName: 'Đại diện GenZ Studio (Đối tác Collab)',
+    role: 'collab_partner',
+    collabPartnerName: 'GenZ Studio',
+    collabBoothId: 'booth-collab-genz',
     createdAt: '2026-01-01T00:00:00Z',
   },
 ];
@@ -70,6 +85,8 @@ interface AuthState {
     fullName: string;
     role: WorkspaceRole;
     email?: string;
+    collabPartnerName?: string;
+    collabBoothId?: string;
   }) => { success: boolean; message?: string };
   deleteStaffAccount: (accountId: string) => void;
 
@@ -77,6 +94,7 @@ interface AuthState {
   canEditData: () => boolean;
   canManageTeam: () => boolean;
   canManageInventory: () => boolean;
+  isCollabPartner: () => boolean;
   isViewerOnly: () => boolean;
 }
 
@@ -119,6 +137,8 @@ export const useAuthStore = create<AuthState>()(
           email: found.email,
           fullName: found.fullName,
           role: found.role,
+          collabPartnerName: found.collabPartnerName,
+          collabBoothId: found.collabBoothId,
         };
 
         set({
@@ -172,6 +192,8 @@ export const useAuthStore = create<AuthState>()(
           password: `hash:${secureHash(data.password)}`,
           fullName: data.fullName.trim() || cleanUsername,
           role: data.role,
+          collabPartnerName: data.collabPartnerName?.trim() || undefined,
+          collabBoothId: data.collabBoothId?.trim() || undefined,
           createdAt: new Date().toISOString(),
         };
 
@@ -191,7 +213,7 @@ export const useAuthStore = create<AuthState>()(
 
       canEditData: () => {
         const role = get().user?.role;
-        return role === 'owner' || role === 'admin' || role === 'manager';
+        return role === 'owner' || role === 'admin' || role === 'manager' || role === 'collab_partner';
       },
 
       canManageTeam: () => {
@@ -205,8 +227,13 @@ export const useAuthStore = create<AuthState>()(
           role === 'owner' ||
           role === 'admin' ||
           role === 'manager' ||
-          role === 'inventory_staff'
+          role === 'inventory_staff' ||
+          role === 'collab_partner'
         );
+      },
+
+      isCollabPartner: () => {
+        return get().user?.role === 'collab_partner';
       },
 
       isViewerOnly: () => {
@@ -222,7 +249,13 @@ export const useAuthStore = create<AuthState>()(
         MASTER_ACCOUNTS.forEach((master) => {
           const idx = state.accounts.findIndex((a) => a.id === master.id || a.username.toLowerCase() === master.username.toLowerCase());
           if (idx >= 0) {
-            state.accounts[idx] = { ...state.accounts[idx], password: master.password };
+            state.accounts[idx] = {
+              ...state.accounts[idx],
+              password: master.password,
+              role: master.role,
+              collabPartnerName: master.collabPartnerName || state.accounts[idx].collabPartnerName,
+              collabBoothId: master.collabBoothId || state.accounts[idx].collabBoothId,
+            };
           } else {
             state.accounts.push(master);
           }
@@ -234,7 +267,7 @@ export const useAuthStore = create<AuthState>()(
 
 // Permission helper functions
 export function canEditData(role?: WorkspaceRole | null): boolean {
-  return role === 'owner' || role === 'admin' || role === 'manager';
+  return role === 'owner' || role === 'admin' || role === 'manager' || role === 'collab_partner';
 }
 
 export function canManageTeam(role?: WorkspaceRole | null): boolean {
@@ -242,9 +275,38 @@ export function canManageTeam(role?: WorkspaceRole | null): boolean {
 }
 
 export function canManageInventory(role?: WorkspaceRole | null): boolean {
-  return role === 'owner' || role === 'admin' || role === 'manager' || role === 'inventory_staff';
+  return (
+    role === 'owner' ||
+    role === 'admin' ||
+    role === 'manager' ||
+    role === 'inventory_staff' ||
+    role === 'collab_partner'
+  );
+}
+
+export function isCollabPartner(role?: WorkspaceRole | null): boolean {
+  return role === 'collab_partner';
 }
 
 export function isViewerOnly(role?: WorkspaceRole | null): boolean {
   return !role || role === 'viewer';
+}
+
+/**
+ * Checks whether a user can edit/manage a product.
+ * - Master Admin / Owner / Manager: full access across all products.
+ * - Collab Partner: strictly can ONLY manage their own brand products (prod.collab_partner matches user.collabPartnerName).
+ *   Master warehouse goods of Admin are strictly read-only.
+ */
+export function canManageProduct(
+  user: AuthUser | null,
+  productCollabPartner?: string | null
+): boolean {
+  if (!user) return false;
+  if (user.role === 'owner' || user.role === 'admin' || user.role === 'manager') return true;
+  if (user.role === 'collab_partner') {
+    if (!productCollabPartner || !user.collabPartnerName) return false;
+    return productCollabPartner.trim().toLowerCase() === user.collabPartnerName.trim().toLowerCase();
+  }
+  return false;
 }

@@ -198,6 +198,19 @@ const defaultBooths: Booth[] = [
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
+  {
+    id: 'booth-collab-genz',
+    workspace_id: 'ws-hac-cam-studio',
+    event_id: 'evt-hanoi-2026',
+    name: 'Quầy Collab — GenZ Studio',
+    code: 'BOOTH-COL-GENZ',
+    status: 'active',
+    booth_type: 'collab',
+    collab_partner: 'GenZ Studio',
+    revenue_share_ratio: 40,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
 ];
 
 const defaultProducts: Product[] = [
@@ -241,6 +254,18 @@ const defaultProducts: Product[] = [
     name: "Đĩa Than (Vinyl) - Album 'Khởi Hành'",
     description: 'Đĩa nhựa 180g mastered tại Abbey Road, phiên bản kỷ niệm có chữ ký tác quyền.',
     image_url: 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=500&auto=format&fit=crop&q=60',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'prod-collab-genz-bag',
+    workspace_id: 'ws-hac-cam-studio',
+    category_id: 'cat-accessories',
+    name: 'Túi Canvas Collab Hạc Cẩm x GenZ Studio',
+    description: 'Túi tote canvas cao cấp phiên bản giới hạn hợp tác cùng GenZ Studio.',
+    image_url: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=500&auto=format&fit=crop&q=60',
+    collab_partner: 'GenZ Studio',
     is_active: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -332,6 +357,20 @@ const defaultVariants: ProductVariant[] = [
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
+  {
+    id: 'var-collab-genz-bag-std',
+    workspace_id: 'ws-hac-cam-studio',
+    product_id: 'prod-collab-genz-bag',
+    sku: 'COL-GENZ-BAG-01',
+    name: 'Tiêu chuẩn (Standard)',
+    price: 290000,
+    barcode: '893601009001',
+    total_inventory: 80,
+    reserved_quantity: 5,
+    online_preorder_quantity: 15,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
 ];
 
 // Default allocations for Hanoi Concert
@@ -376,6 +415,9 @@ const defaultAllocations: InventoryAllocation[] = [
   { id: 'alloc-test-4', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-cap-blk', allocated_quantity: 30, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
   { id: 'alloc-test-5', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-lightstick-rgb', allocated_quantity: 50, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
   { id: 'alloc-test-6', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-vinyl-limited', allocated_quantity: 15, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+
+  // Collab Booth Allocations
+  { id: 'alloc-collab-genz-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hanoi-2026', booth_id: 'booth-collab-genz', variant_id: 'var-collab-genz-bag-std', allocated_quantity: 40, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 ];
 
 const defaultMembers: WorkspaceMember[] = [
@@ -943,6 +985,10 @@ export const useDataStore = create<DataStoreState>()(
             const testBooth = defaultBooths.find((b) => b.id === 'booth-test-1');
             if (testBooth) state.booths = [testBooth, ...state.booths];
           }
+          if (!state.booths.some((b) => b.id === 'booth-collab-genz')) {
+            const collabBooth = defaultBooths.find((b) => b.id === 'booth-collab-genz');
+            if (collabBooth) state.booths = [...state.booths, collabBooth];
+          }
           state.booths = state.booths.map((b) =>
             b.id === 'booth-test-1' || b.event_id === 'evt-test-pos' || b.code === 'BOOTH-TEST'
               ? { ...b, is_test: true }
@@ -958,14 +1004,29 @@ export const useDataStore = create<DataStoreState>()(
             const testAllocs = defaultAllocations.filter((a) => a.event_id === 'evt-test-pos');
             state.allocations = [...state.allocations, ...testAllocs];
           }
+          if (!state.allocations.some((a) => a.id === 'alloc-collab-genz-1')) {
+            const collabAlloc = defaultAllocations.find((a) => a.id === 'alloc-collab-genz-1');
+            if (collabAlloc) state.allocations = [...state.allocations, collabAlloc];
+          }
           state.allocations = state.allocations.map((a) =>
             a.event_id === 'evt-test-pos' || a.id.includes('test') ? { ...a, is_test: true } : a
           );
         }
 
         // Self-heal products, variants, categories
-        if (!state.products || state.products.length === 0) state.products = defaultProducts;
-        if (!state.variants || state.variants.length === 0) state.variants = defaultVariants;
+        if (!state.products || state.products.length === 0) {
+          state.products = defaultProducts;
+        } else if (!state.products.some((p) => p.id === 'prod-collab-genz-bag')) {
+          const collabProd = defaultProducts.find((p) => p.id === 'prod-collab-genz-bag');
+          if (collabProd) state.products = [...state.products, collabProd];
+        }
+
+        if (!state.variants || state.variants.length === 0) {
+          state.variants = defaultVariants;
+        } else if (!state.variants.some((v) => v.id === 'var-collab-genz-bag-std')) {
+          const collabVar = defaultVariants.find((v) => v.id === 'var-collab-genz-bag-std');
+          if (collabVar) state.variants = [...state.variants, collabVar];
+        }
         if (!state.categories || state.categories.length === 0) state.categories = defaultCategories;
         if (!state.members || state.members.length === 0) state.members = defaultMembers;
       },

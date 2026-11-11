@@ -76,9 +76,15 @@ export function Topbar({ onToggleSidebar, title }: TopbarProps) {
               {user?.fullName || 'Artist Tour Crew'}
             </p>
             <div className="flex items-center gap-1">
-              <Badge variant="neutral" className="text-[9px] px-1 py-0 capitalize">
-                {user?.role || 'owner'}
-              </Badge>
+              {user?.role === 'collab_partner' ? (
+                <Badge variant="warning" className="text-[9px] px-1 py-0 bg-[#FAF5FF] text-[#6B21A8] border-[#A855F7]/30 font-semibold">
+                  {user?.collabPartnerName ? `Collab: ${user.collabPartnerName}` : 'Collab Partner'}
+                </Badge>
+              ) : (
+                <Badge variant="neutral" className="text-[9px] px-1 py-0 capitalize">
+                  {user?.role || 'owner'}
+                </Badge>
+              )}
             </div>
           </div>
           <button

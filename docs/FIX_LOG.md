@@ -140,6 +140,16 @@
        - Tự động ghi nhận vào `preorder-store` để khi khách đến quầy, thu ngân trên máy bán hàng POS chỉ cần nhập số điện thoại hoặc mã vé là đối soát trả hàng ngay lập tức!
     5. **Chuyển đổi vai trò linh hoạt**: Tích hợp nút `[🔒 Đăng nhập Quản lý]` ở đầu trang và nút `[👁️ Gian hàng Khách]` trên Topbar của Admin để quản trị viên dễ dàng kiểm tra trải nghiệm khách hàng.
 
+### 1.12. Nâng cấp Hệ thống Cấp Tài khoản Đối tác Collab (Collab Partner Dedicated Accounts & Warehouse Scoping)
+- **ROLE-01 & ACC-01**:
+  - Chuyển đổi toàn diện cơ chế mời đối tác: Thay vì chỉ chia sẻ link web thông thường, Quản trị viên (Admin / Owner) có thể **trực tiếp cấp Tài khoản & Mật khẩu cho Đối tác Collab** (`role: 'collab_partner'`).
+  - Tích hợp nút `[Cấp Account Collab]` trực tiếp tại danh sách gian hàng liên danh (`dashboard/booths`) và trong modal tạo tài khoản nhân sự (`dashboard/team`).
+  - Cho phép gắn chặt tài khoản đối tác với tên thương hiệu (`collabPartnerName`) và gian hàng được phân công (`collabBoothId`).
+- **SCOPE-01 (Cách ly Kho hàng & Phân quyền Quản trị Tương tự Admin)**:
+  - **Quyền hạn của Đối tác Collab**: Có chức năng tương tự Admin đối với các sản phẩm và quầy bán của bản thân — tự tạo sản phẩm mới, cập nhật giá bán, tải ảnh chụp từ điện thoại, sửa hạn mức đặt trước / bán online, và điều phối phân bổ kho cho quầy liên danh của mình.
+  - **Nguyên tắc Bảo vệ Kho hàng Admin**: Đối tác Collab **HOÀN TOÀN KHÔNG THỂ can thiệp, sửa đổi hay điều chuyển kho hàng của Admin**. Trên trang Sản phẩm và Kho hàng, toàn bộ hàng hóa của Admin hiển thị ở chế độ **Chỉ đọc (Read-only)** kèm huy hiệu `🔒 Hàng kho Admin (Chỉ đọc)`. Nút sửa, xóa và nút điều chỉnh nhanh bị ẩn hoàn toàn để bảo toàn tuyệt đối số liệu trung tâm.
+- **DEMO-01**: Tích hợp sẵn tài khoản mẫu demo `collab_genz` (mật khẩu: `Collab@123`) trên màn hình đăng nhập `/login` để kiểm thử và so sánh ngay lập tức quyền hạn giữa Admin VIP Pro, Đối tác Collab và Khách xem.
+
 ---
 
 ## 3. KẾT QUẢ KIỂM THỬ THỰC TẾ (TEST EXECUTION & RESULTS)

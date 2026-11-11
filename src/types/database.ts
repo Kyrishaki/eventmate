@@ -4,7 +4,8 @@ export type WorkspaceRole =
   | 'manager'
   | 'cashier'
   | 'inventory_staff'
-  | 'viewer';
+  | 'viewer'
+  | 'collab_partner';
 
 export type EventStatus =
   | 'draft'

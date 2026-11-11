@@ -102,6 +102,10 @@ export default function PosTerminalPage() {
         if (b) return b.event_id;
       }
       if (qEvent) return qEvent;
+      if (user?.role === 'collab_partner' && user.collabBoothId) {
+        const cb = booths.find((b) => b.id === user.collabBoothId);
+        if (cb) return cb.event_id;
+      }
       const saved = localStorage.getItem('eventmate_pos_selected_event');
       if (saved && (workspaceEvents.some((e) => e.id === saved) || events.some((e) => e.id === saved))) {
         return saved;
@@ -119,6 +123,9 @@ export default function PosTerminalPage() {
       const qBooth = urlParams.get('booth');
       if (qBooth && booths.some((b) => b.id === qBooth)) {
         return qBooth;
+      }
+      if (user?.role === 'collab_partner' && user.collabBoothId && booths.some((b) => b.id === user.collabBoothId)) {
+        return user.collabBoothId;
       }
       const saved = localStorage.getItem('eventmate_pos_selected_booth');
       if (saved && booths.some((b) => b.id === saved)) {

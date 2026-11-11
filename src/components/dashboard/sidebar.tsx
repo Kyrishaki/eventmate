@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { usePathname, Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
+import { useAuthStore } from '@/stores/auth-store';
 import { cn } from '@/lib/utils';
 import { WorkspaceSwitcher } from './workspace-switcher';
 import {
@@ -30,6 +31,9 @@ interface SidebarProps {
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations('nav');
+  const { user } = useAuthStore();
+
+  const isCollab = user?.role === 'collab_partner';
 
   const navItems = [
     { href: '/dashboard', label: t('dashboard'), icon: LayoutDashboard },
@@ -39,11 +43,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { href: '/dashboard/inventory', label: t('inventory'), icon: Boxes },
     { href: '/dashboard/orders', label: t('orders'), icon: ShoppingCart },
     { href: '/dashboard/payments', label: t('payments'), icon: CreditCard },
-    { href: '/dashboard/team', label: t('team'), icon: Users },
-    { href: '/dashboard/logs', label: t('logs'), icon: History, badge: 'Admin' },
+    ...(!isCollab ? [{ href: '/dashboard/team', label: t('team'), icon: Users }] : []),
+    ...(!isCollab ? [{ href: '/dashboard/logs', label: t('logs'), icon: History, badge: 'Admin' }] : []),
     { href: '/dashboard/feedback', label: t('feedback'), icon: MessageSquarePlus },
     { href: '/dashboard/analytics', label: t('analytics'), icon: BarChart3 },
-    { href: '/dashboard/settings', label: t('settings'), icon: Settings },
+    ...(!isCollab ? [{ href: '/dashboard/settings', label: t('settings'), icon: Settings }] : []),
   ];
 
   return (

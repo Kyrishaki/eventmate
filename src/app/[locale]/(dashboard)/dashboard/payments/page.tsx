@@ -34,11 +34,14 @@ export default function PaymentsPage() {
 
   // Sync state if activeBankConfig is updated via cross-tab broadcast
   React.useEffect(() => {
-    if (activeBankConfig) {
-      setBankId(activeBankConfig.bankId || 'MB');
-      setAccountNo(activeBankConfig.accountNo || '');
-      setAccountName(activeBankConfig.accountName || '');
-    }
+    const timer = setTimeout(() => {
+      if (activeBankConfig) {
+        setBankId(activeBankConfig.bankId || 'MB');
+        setAccountNo(activeBankConfig.accountNo || '');
+        setAccountName(activeBankConfig.accountName || '');
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [activeBankConfig]);
 
   // Revenue breakdown by method (REAL PRODUCTION ONLY - test transactions quarantined)

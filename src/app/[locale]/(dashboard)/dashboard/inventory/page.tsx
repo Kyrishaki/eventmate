@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { useDataStore } from '@/stores/data-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuthStore, canManageProduct, isCollabPartner } from '@/stores/auth-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +27,8 @@ import {
   Bookmark,
   Globe,
   FlaskConical,
+  Lock,
+  Users2,
 } from 'lucide-react';
 import {
   filterRealAllocations,
@@ -44,9 +46,20 @@ export default function InventoryPage() {
     useDataStore();
   const { canManageInventory, user } = useAuthStore();
   const canManage = canManageInventory();
+  const isPartner = isCollabPartner(user?.role);
+  const partnerName = user?.collabPartnerName;
 
   function handleStockTransfer(variantId: string, variantName: string, amount: number) {
     if (!selectedBooth) return;
+
+    // Collab Partner guard: strictly cannot alter Admin master warehouse goods
+    const targetVariant = variants.find((v) => v.id === variantId);
+    const targetProduct = products.find((p) => p.id === targetVariant?.product_id);
+    if (!canManageProduct(user, targetProduct?.collab_partner)) {
+      alert('Bạn không có quyền điều chuyển hoặc thay đổi số lượng kho hàng của Admin.');
+      return;
+    }
+
     quickTransferStock(selectedBooth.id, variantId, amount);
     logActivity({
       actor_name: user?.fullName || 'Nhân viên kho',
@@ -120,6 +133,26 @@ export default function InventoryPage() {
           <p className="text-xs text-[#737373] mt-0.5">{t('description')}</p>
         </div>
       </div>
+
+      {/* Collab Partner Scoped Access Notification Banner */}
+      {isPartner && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 rounded-[8px] bg-[#FAF5FF] border border-[#A855F7]/30 text-xs text-[#6B21A8] shadow-xs">
+          <div className="flex items-start sm:items-center gap-2.5">
+            <Users2 className="w-4 h-4 text-[#9333EA] shrink-0 mt-0.5 sm:mt-0" />
+            <div>
+              <p className="font-bold text-[#6B21A8]">
+                Kho Hàng Đối tác Collab: {partnerName || 'Đối tác'}
+              </p>
+              <p className="text-[11px] text-[#7E22CE] mt-0.5">
+                Bạn có quyền điều phối hàng hóa cho gian hàng hợp tác của mình. Kho hàng của Admin được hiển thị ở chế độ <strong>Chỉ đọc (Read-only)</strong> để bảo vệ dữ liệu tổng.
+              </p>
+            </div>
+          </div>
+          <Badge variant="outline" className="text-xs border-[#A855F7] text-[#7E22CE] bg-[#A855F7]/10 shrink-0 font-semibold">
+            Kho Độc Lập
+          </Badge>
+        </div>
+      )}
 
       {/* Master Overview KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
@@ -348,7 +381,7 @@ export default function InventoryPage() {
 
                       {/* Quick Adjustment Controls */}
                       <td className="py-3 px-4 text-center">
-                        {canManage ? (
+                        {canManage && canManageProduct(user, product?.collab_partner) ? (
                           <div className="inline-flex items-center gap-1 bg-[#F0F0ED] p-1 rounded-[6px]">
                             <Button
                               type="button"
@@ -378,6 +411,11 @@ export default function InventoryPage() {
                               <Plus className="w-3 h-3" />
                             </Button>
                           </div>
+                        ) : isPartner ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-[#737373] bg-[#F0F0ED] rounded border border-[#E8E8E5]" title="Hàng kho Admin - Bạn không thể chỉnh sửa">
+                            <Lock className="w-3 h-3 text-[#9E9E9C]" />
+                            <span>{currentAllocQty} (Kho Admin)</span>
+                          </span>
                         ) : (
                           <span className="px-2.5 py-1 text-xs font-semibold text-[#737373] bg-[#F0F0ED] rounded">
                             {currentAllocQty} (Chỉ xem)
@@ -464,9 +502,11 @@ export default function InventoryPage() {
                   {/* Quick Stepper Action */}
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-xs font-semibold text-[#737373]">
-                      {canManage ? 'Điều chuyển số lượng:' : 'Hạn mức kho:'}
+                      {canManage && canManageProduct(user, product?.collab_partner)
+                        ? 'Điều chuyển số lượng:'
+                        : 'Hạn mức kho:'}
                     </span>
-                    {canManage ? (
+                    {canManage && canManageProduct(user, product?.collab_partner) ? (
                       <div className="flex items-center gap-1 bg-[#F0F0ED] p-1 rounded-[6px]">
                         <Button
                           type="button"
@@ -512,6 +552,11 @@ export default function InventoryPage() {
                           +10
                         </Button>
                       </div>
+                    ) : isPartner ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-[#737373] bg-[#F0F0ED] rounded border border-[#E8E8E5]" title="Hàng kho Admin - Bạn không thể chỉnh sửa">
+                        <Lock className="w-3 h-3 text-[#9E9E9C]" />
+                        <span>{currentAllocQty} (Kho Admin)</span>
+                      </span>
                     ) : (
                       <span className="text-xs font-bold text-[#315C4C] bg-[#F0F0ED] px-2.5 py-1 rounded">
                         {currentAllocQty} (Chỉ xem)

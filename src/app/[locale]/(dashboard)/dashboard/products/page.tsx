@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { useDataStore } from '@/stores/data-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuthStore, canManageProduct, isCollabPartner } from '@/stores/auth-store';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +36,7 @@ import {
   Eye,
   EyeOff,
   Camera,
+  Lock,
 } from 'lucide-react';
 
 interface VariantInput {
@@ -67,6 +68,8 @@ export default function ProductsPage() {
   } = useDataStore();
   const { canEditData, user } = useAuthStore();
   const editable = canEditData();
+  const isPartner = isCollabPartner(user?.role);
+  const partnerName = user?.collabPartnerName;
 
   const [statusFilter, setStatusFilter] = React.useState<'active' | 'all' | 'sold_out' | 'archived'>('active');
   const [selectedCategory, setSelectedCategory] = React.useState<string>('all');
@@ -89,6 +92,10 @@ export default function ProductsPage() {
   >([]);
 
   function openQuickAdjustModal(prod: Product) {
+    if (!canManageProduct(user, prod.collab_partner)) {
+      alert('Bạn chỉ có quyền điều chỉnh sản phẩm thuộc thương hiệu Collab của mình. Không thể can thiệp hàng kho Admin.');
+      return;
+    }
     const prodVariants = variants.filter((v) => v.product_id === prod.id);
     setQuickAdjustProduct(prod);
     setQuickVariants(
@@ -203,16 +210,18 @@ export default function ProductsPage() {
     setCategoryId(categories[0]?.id || '');
     setDescription('');
     setImageUrl('');
-    setCollabPartner('');
+    setCollabPartner(isPartner ? (partnerName || '') : '');
     setFormVariants([
-      { name: 'Size S', sku: 'TOUR-S', price: 300000, total_inventory: 80, reserved_quantity: 10, online_preorder_quantity: 15, barcode: '' },
-      { name: 'Size M', sku: 'TOUR-M', price: 300000, total_inventory: 100, reserved_quantity: 10, online_preorder_quantity: 20, barcode: '' },
-      { name: 'Size L', sku: 'TOUR-L', price: 300000, total_inventory: 100, reserved_quantity: 10, online_preorder_quantity: 20, barcode: '' },
+      { name: 'Tiêu chuẩn', sku: isPartner ? `COL-${Date.now().toString().slice(-4)}` : 'TOUR-S', price: 250000, total_inventory: 80, reserved_quantity: 5, online_preorder_quantity: 10, barcode: '' },
     ]);
     setIsModalOpen(true);
   }
 
   function openEditModal(prod: Product) {
+    if (!canManageProduct(user, prod.collab_partner)) {
+      alert('Bạn chỉ có quyền quản trị các sản phẩm thuộc thương hiệu Collab của mình. Không thể chỉnh sửa hàng kho của Admin.');
+      return;
+    }
     setEditingProduct(prod);
     setName(prod.name);
     setCategoryId(prod.category_id || categories[0]?.id || '');
@@ -267,13 +276,21 @@ export default function ProductsPage() {
     }
     if (!name.trim() || !activeWorkspace) return;
 
+    // Collab Partner restriction: cannot edit Admin products and products are automatically assigned to their partner name
+    const effectiveCollabPartner = isPartner ? (partnerName || 'Collab Partner') : collabPartner.trim();
+
     if (editingProduct) {
+      if (!canManageProduct(user, editingProduct.collab_partner)) {
+        alert('Bạn không có quyền chỉnh sửa sản phẩm thuộc kho hàng Admin.');
+        return;
+      }
+
       updateProduct(editingProduct.id, {
         name,
         category_id: categoryId || null,
         description: description.trim() || null,
         image_url: imageUrl.trim() || null,
-        collab_partner: collabPartner.trim() || null,
+        collab_partner: effectiveCollabPartner || null,
       });
 
       logActivity({
@@ -282,10 +299,10 @@ export default function ProductsPage() {
         action_type: 'update',
         entity_type: 'product',
         entity_name: name,
-        description: `Cập nhật thông tin sản phẩm "${name}" (${collabPartner ? `Collab: ${collabPartner}` : 'Hàng Host'}).`,
+        description: `Cập nhật thông tin sản phẩm "${name}" (${effectiveCollabPartner ? `Collab: ${effectiveCollabPartner}` : 'Hàng Host'}).`,
         changes: [
           { field: 'name', field_label: 'Tên sản phẩm', new_value: name },
-          { field: 'collab_partner', field_label: 'Đối tác', new_value: collabPartner || 'Không' },
+          { field: 'collab_partner', field_label: 'Đối tác', new_value: effectiveCollabPartner || 'Không' },
         ],
       });
     } else {
@@ -296,7 +313,7 @@ export default function ProductsPage() {
           name,
           description: description.trim() || null,
           image_url: imageUrl.trim() || null,
-          collab_partner: collabPartner.trim() || null,
+          collab_partner: effectiveCollabPartner || null,
           is_active: true,
         },
         formVariants.map((fv) => ({
@@ -316,7 +333,7 @@ export default function ProductsPage() {
         action_type: 'create',
         entity_type: 'product',
         entity_name: name,
-        description: `Tạo mới sản phẩm "${name}" (${collabPartner ? `Collab: ${collabPartner}` : 'Hàng Host'}) với ${formVariants.length} phân loại.`,
+        description: `Tạo mới sản phẩm "${name}" (${effectiveCollabPartner ? `Collab: ${effectiveCollabPartner}` : 'Hàng Host'}) với ${formVariants.length} phân loại.`,
       });
     }
     setIsModalOpen(false);
@@ -347,6 +364,26 @@ export default function ProductsPage() {
           </Badge>
         )}
       </div>
+
+      {/* Collab Partner Scoped Access Notification Banner */}
+      {isPartner && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 rounded-[8px] bg-[#FAF5FF] border border-[#A855F7]/30 text-xs text-[#6B21A8] shadow-xs">
+          <div className="flex items-start sm:items-center gap-2.5">
+            <Users2 className="w-4 h-4 text-[#9333EA] shrink-0 mt-0.5 sm:mt-0" />
+            <div>
+              <p className="font-bold text-[#6B21A8]">
+                Không gian Đối tác Collab: {partnerName || 'Đối tác'}
+              </p>
+              <p className="text-[11px] text-[#7E22CE] mt-0.5">
+                Bạn có toàn quyền quản lý, thêm mới, sửa ảnh và điều phối sản phẩm của thương hiệu <strong>{partnerName}</strong>. Hàng hóa kho tổng của Admin được bảo vệ ở chế độ <strong>Chỉ đọc (Read-only)</strong> để tránh can thiệp ngoài phạm vi.
+              </p>
+            </div>
+          </div>
+          <Badge variant="outline" className="text-xs border-[#A855F7] text-[#7E22CE] bg-[#A855F7]/10 shrink-0 font-semibold">
+            Quản trị Độc lập
+          </Badge>
+        </div>
+      )}
 
       {/* Status Filter Tabs (Active, Sold Out, Hidden/Archived, All) */}
       <div className="flex flex-wrap items-center gap-1.5 p-1 bg-[#F0F0ED] rounded-[8px] w-fit text-xs">
@@ -468,6 +505,7 @@ export default function ProductsPage() {
             const category = categories.find((c) => c.id === prod.category_id);
             const totalStock = productVariants.reduce((sum, v) => sum + v.total_inventory, 0);
             const prodSummary = calculateProductStock(productVariants, allocations);
+            const canManageThis = editable && canManageProduct(user, prod.collab_partner);
 
             return (
               <Card
@@ -478,11 +516,11 @@ export default function ProductsPage() {
                   {/* Left: Product Info */}
                   <div className="flex items-start gap-3.5 min-w-0">
                     <div
-                      onClick={() => editable && openEditModal(prod)}
+                      onClick={() => canManageThis && openEditModal(prod)}
                       className={`w-16 h-16 rounded-[6px] bg-[#F7F7F5] border border-[#E8E8E5] overflow-hidden shrink-0 flex items-center justify-center relative group ${
-                        editable ? 'cursor-pointer hover:border-[#315C4C]' : ''
+                        canManageThis ? 'cursor-pointer hover:border-[#315C4C]' : ''
                       }`}
-                      title={editable ? 'Bấm để đổi ảnh hoặc sửa thông tin sản phẩm' : undefined}
+                      title={canManageThis ? 'Bấm để đổi ảnh hoặc sửa thông tin sản phẩm' : undefined}
                     >
                       {prod.image_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -494,7 +532,7 @@ export default function ProductsPage() {
                       ) : (
                         <Package className="w-6 h-6 text-[#9E9E9C]" />
                       )}
-                      {editable && (
+                      {canManageThis && (
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[9px] font-semibold">
                           <Camera className="w-3.5 h-3.5 mb-0.5" />
                           <span>Đổi ảnh</span>
@@ -568,7 +606,7 @@ export default function ProductsPage() {
 
                   {/* Right: Actions */}
                   <div className="flex flex-wrap items-center gap-2 shrink-0 border-t lg:border-t-0 pt-2 lg:pt-0">
-                    {editable ? (
+                    {editable && canManageThis ? (
                       <>
                         <Button
                           variant="outline"
@@ -661,6 +699,11 @@ export default function ProductsPage() {
                           </>
                         )}
                       </>
+                    ) : editable && isPartner ? (
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#F7F7F5] border border-[#E8E8E5] text-xs text-[#737373] font-medium" title="Hàng kho Admin - Bạn không thể chỉnh sửa">
+                        <Lock className="w-3.5 h-3.5 text-[#9E9E9C]" />
+                        <span>Kho hàng Admin (Chỉ đọc)</span>
+                      </div>
                     ) : (
                       <span className="text-[11px] text-[#9E9E9C] italic">Chỉ xem</span>
                     )}
@@ -794,13 +837,27 @@ export default function ProductsPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="prod-collab">Đối tác Collab (nếu có)</Label>
-              <Input
-                id="prod-collab"
-                placeholder="VD: The Cassette, Cá Hồi Hoang..."
-                value={collabPartner}
-                onChange={(e) => setCollabPartner(e.target.value)}
-              />
+              <Label htmlFor="prod-collab">Đối tác Collab</Label>
+              {isPartner ? (
+                <div>
+                  <Input
+                    id="prod-collab"
+                    value={partnerName || 'Collab Partner'}
+                    disabled
+                    className="bg-[#F0F0ED] text-[#202124] font-semibold cursor-not-allowed"
+                  />
+                  <p className="text-[10px] text-[#737373] mt-1">
+                    🔒 Tự động gán cho tài khoản đối tác của bạn ({partnerName}).
+                  </p>
+                </div>
+              ) : (
+                <Input
+                  id="prod-collab"
+                  placeholder="VD: GenZ Studio, The Cassette..."
+                  value={collabPartner}
+                  onChange={(e) => setCollabPartner(e.target.value)}
+                />
+              )}
             </div>
           </div>
 

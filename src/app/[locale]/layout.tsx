@@ -20,11 +20,13 @@ const beVietnamPro = Be_Vietnam_Pro({
 });
 
 export const metadata: Metadata = {
-  title: 'EventMate — Event Merchandise & POS Platform',
-  description: 'Production-ready, offline-first event merchandise management and POS system for artists and touring crews.',
+  title: 'HikaruStore',
+  description: 'Hệ thống quản lý gian hàng merchandise, kiểm soát kho và bán hàng POS chuyên nghiệp HikaruStore.',
   manifest: '/manifest.json',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/icon.png',
+    shortcut: '/icon.png',
+    apple: '/icon.png',
   },
 };
 

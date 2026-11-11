@@ -70,7 +70,7 @@ export default function LoginPage() {
     <Card className="border-[#E8E8E5] bg-white shadow-xs">
       <CardHeader className="space-y-1 pb-4">
         <CardTitle className="text-xl font-bold tracking-tight text-[#202124]">
-          Đăng nhập EventMate
+          Đăng nhập HikaruStore
         </CardTitle>
         <CardDescription className="text-xs text-[#737373]">
           Nhập tài khoản Quản trị viên hoặc tài khoản Nhân viên được cấp để tiếp tục.

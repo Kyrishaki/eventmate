@@ -504,6 +504,14 @@ export default function PosTerminalPage() {
         {/* Main Bar */}
         <div className="h-13 sm:h-14 px-3 sm:px-5 flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
+            <Link href="/dashboard" className="flex items-center gap-1.5 shrink-0 group">
+              <div className="w-7 h-7 rounded-[5px] overflow-hidden flex items-center justify-center shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo.png" alt="HikaruStore Logo" className="w-full h-full object-contain" />
+              </div>
+              <span className="font-bold text-xs text-[#202124] hidden md:inline">HikaruStore POS</span>
+            </Link>
+
             <Link href="/dashboard">
               <Button variant="ghost" size="sm" className="h-8 px-2 text-xs text-[#737373] hover:text-[#202124]">
                 <ArrowLeft className="w-4 h-4 mr-1" />

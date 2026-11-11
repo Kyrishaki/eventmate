@@ -1,13 +1,18 @@
 {
-  "name": "EventMate — Event Merch & POS",
-  "short_name": "EventMate",
-  "description": "Offline-first merchandise sales and inventory management for artists and event crews",
+  "name": "HikaruStore — Quản lý Gian Hàng & Bán Hàng Sự Kiện",
+  "short_name": "HikaruStore",
+  "description": "Hệ thống quản lý gian hàng merchandise, kiểm soát kho và bán hàng POS chuyên nghiệp HikaruStore",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F7F7F5",
   "theme_color": "#315C4C",
   "orientation": "any",
   "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512 192x192 128x128",
+      "type": "image/png"
+    },
     {
       "src": "/favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",

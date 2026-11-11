@@ -178,12 +178,13 @@ export function GuestShowcase() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           {/* Brand Logo & Showcase Badge */}
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-[8px] bg-[#315C4C] text-white flex items-center justify-center font-black text-sm tracking-tighter shadow-xs">
-              EM
+            <div className="w-10 h-10 rounded-[8px] overflow-hidden flex items-center justify-center shrink-0 shadow-xs">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="HikaruStore Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-base tracking-tight">EventMate</span>
+                <span className="font-bold text-base tracking-tight">HikaruStore</span>
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#EAF4EE] dark:bg-emerald-950/60 text-[#2F7D55] dark:text-emerald-400 border border-[#CEE6D7] dark:border-emerald-800">
                   Gian Hàng Trưng Bày
                 </span>
@@ -945,7 +946,7 @@ export function GuestShowcase() {
       <footer className="bg-white dark:bg-neutral-900 border-t border-[#E8E8E5] dark:border-neutral-800 py-6 text-center text-xs text-[#737373] space-y-2">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p>
-            © 2026 EventMate Merchandise Platform. Hệ thống vận hành gian hàng concert & tour chuyên nghiệp.
+            © 2026 HikaruStore Merchandise Platform. Hệ thống vận hành gian hàng concert & tour chuyên nghiệp.
           </p>
           <div className="flex items-center gap-4 text-[11px]">
             <a href="tel:0988776655" className="hover:text-[#315C4C]">

@@ -70,11 +70,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="flex flex-col flex-1 min-h-0">
           {/* Header & Logo */}
           <div className="h-14 px-4 flex items-center justify-between border-b border-[#E8E8E5]">
-            <Link href="/dashboard" className="flex items-center gap-2 text-[#202124]">
-              <div className="w-7 h-7 rounded-[5px] bg-[#315C4C] text-white flex items-center justify-center font-bold text-xs tracking-wider">
-                EM
+            <Link href="/dashboard" className="flex items-center gap-2.5 text-[#202124]">
+              <div className="w-8 h-8 rounded-[6px] overflow-hidden flex items-center justify-center shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo.png" alt="HikaruStore Logo" className="w-full h-full object-contain" />
               </div>
-              <span className="font-semibold text-sm tracking-tight">EventMate</span>
+              <span className="font-bold text-sm tracking-tight text-[#202124]">HikaruStore</span>
               <span className="text-[10px] text-[#737373] border border-[#E8E8E5] px-1.5 py-0.2 rounded font-mono">
                 v1.0
               </span>

@@ -1702,7 +1702,7 @@ ${url}`;
       {/* Footer */}
       <footer className="border-t border-[#E8E8E5] py-4 bg-white mt-12 text-center text-xs text-[#737373]">
         <p>
-          EventMate Collab Partner Portal — Hệ thống quản lý và đồng bộ gian hàng sự kiện chuyên nghiệp.
+          HikaruStore Collab Partner Portal — Hệ thống quản lý và đồng bộ gian hàng sự kiện chuyên nghiệp.
         </p>
       </footer>
     </div>

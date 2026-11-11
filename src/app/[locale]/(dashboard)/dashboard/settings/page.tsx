@@ -14,11 +14,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   CheckCircle2,
-  Database,
   Save,
   Sparkles,
   Building2,
-  Trash2,
   Download,
   Upload,
   ShieldCheck,
@@ -31,7 +29,6 @@ import {
   QrCode,
   CreditCard,
   Info,
-  Check,
   ExternalLink,
   RefreshCw,
 } from 'lucide-react';
@@ -51,10 +48,8 @@ const POPULAR_BANKS = [
 
 export default function SettingsPage() {
   const t = useTranslations('settings');
-  const tCommon = useTranslations('common');
-  const { activeWorkspace, setActiveWorkspace, workspaces, setWorkspaces, resetWorkspaces } = useWorkspaceStore();
-  const { seedDemoTourData, clearAllData } = useDataStore();
-  const { clearOrders, activeBankConfig, setBankConfig } = useOrdersStore();
+  const { activeWorkspace, setActiveWorkspace, workspaces, setWorkspaces } = useWorkspaceStore();
+  const { activeBankConfig, setBankConfig } = useOrdersStore();
 
   // Store & Brand Identity
   const [name, setName] = React.useState(activeWorkspace?.name || 'HikaruStore');
@@ -82,8 +77,6 @@ export default function SettingsPage() {
   );
 
   const [saveSuccess, setSaveSuccess] = React.useState(false);
-  const [seedSuccess, setSeedSuccess] = React.useState(false);
-  const [resetSuccess, setResetSuccess] = React.useState(false);
   const [backupSuccess, setBackupSuccess] = React.useState(false);
   const [restoreMessage, setRestoreMessage] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -237,27 +230,6 @@ export default function SettingsPage() {
     reader.readAsText(file);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
-
-  function handleSeedDemo() {
-    if (!activeWorkspace) return;
-    seedDemoTourData(activeWorkspace.id);
-    setSeedSuccess(true);
-    setTimeout(() => setSeedSuccess(false), 3000);
-  }
-
-  function handleResetAll() {
-    if (
-      !confirm(
-        'Bạn có chắc chắn muốn xóa toàn bộ dữ liệu (sự kiện, gian hàng, sản phẩm, đơn hàng) để hệ thống hoàn toàn trắng không?'
-      )
-    )
-      return;
-    clearAllData();
-    clearOrders();
-    resetWorkspaces();
-    setResetSuccess(true);
-    setTimeout(() => setResetSuccess(false), 3000);
-  }
 
   return (
     <div className="space-y-6 max-w-4xl pb-12">
@@ -683,43 +655,6 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Demo Tour Data Seeder */}
-      <Card className="border-[#E8E8E5] bg-white shadow-xs">
-        <CardHeader className="border-b border-[#F0F0ED] pb-4">
-          <CardTitle className="text-sm font-semibold text-[#202124] flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#B7791F]" />
-            {t('demoSection')}
-          </CardTitle>
-          <CardDescription className="text-xs">{t('demoHelp')}</CardDescription>
-        </CardHeader>
-
-        <CardContent className="pt-4 space-y-3">
-          <p className="text-xs text-[#737373] leading-relaxed">
-            Dữ liệu bao gồm: 2 Sự kiện, 2 Gian hàng quầy vé, các sản phẩm merchandise mẫu và bảng phân bổ tồn kho hoàn chỉnh.
-          </p>
-
-          {seedSuccess && (
-            <div className="flex items-center gap-2 p-3 text-xs text-[#2F7D55] bg-[#EAF4EE] border border-[#CEE6D7] rounded-[6px]">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>{t('demoLoaded')}</span>
-            </div>
-          )}
-
-          <div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleSeedDemo}
-              className="gap-1.5 border-[#315C4C] text-[#315C4C] hover:bg-[#EBF1EE]"
-            >
-              <Database className="w-3.5 h-3.5" />
-              <span>{t('loadDemoData')}</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Full System Backup & Restore Section */}
       <Card className="border-[#E8E8E5] bg-white shadow-xs">
         <CardHeader className="border-b border-[#F0F0ED] pb-4">
@@ -779,41 +714,6 @@ export default function SettingsPage() {
                 <span>Khôi Phục từ File Backup</span>
               </Button>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Reset to Clean Data */}
-      <Card className="border-[#E8E8E5] bg-white shadow-xs">
-        <CardHeader className="border-b border-[#F0F0ED] pb-4">
-          <CardTitle className="text-sm font-semibold text-[#202124] flex items-center gap-2">
-            <Trash2 className="w-4 h-4 text-[#C44536]" />
-            Khởi tạo Hệ thống Trắng (Xóa sạch dữ liệu mẫu)
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Xóa toàn bộ các dữ liệu mẫu (sự kiện, gian hàng, đơn hàng, sản phẩm) để bắt đầu nhập dữ liệu kinh doanh thực tế.
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="pt-4 space-y-3">
-          {resetSuccess && (
-            <div className="flex items-center gap-2 p-3 text-xs text-[#2F7D55] bg-[#EAF4EE] border border-[#CEE6D7] rounded-[6px]">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>Đã xóa toàn bộ dữ liệu mẫu thành công. Hệ thống đang ở trạng thái trắng hoàn toàn.</span>
-            </div>
-          )}
-
-          <div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleResetAll}
-              className="gap-1.5 border-[#C44536] text-[#C44536] hover:bg-[#FDF1F0]"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Xóa sạch dữ liệu mẫu & Đặt lại về trắng</span>
-            </Button>
           </div>
         </CardContent>
       </Card>

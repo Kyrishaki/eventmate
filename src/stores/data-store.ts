@@ -36,6 +36,7 @@ export interface DataStoreState {
   deleteBooth: (id: string) => void;
 
   // Product & Variant Actions
+  addCategory: (name: string, workspaceId?: string) => ProductCategory;
   createProduct: (
     product: Omit<Product, 'id' | 'created_at' | 'updated_at'>,
     variants: Array<Omit<ProductVariant, 'id' | 'workspace_id' | 'product_id' | 'created_at' | 'updated_at'>>
@@ -581,6 +582,24 @@ export const useDataStore = create<DataStoreState>()(
       },
 
       // Products & Variants
+      addCategory: (name, workspaceId) => {
+        const trimmed = name.trim();
+        const existing = get().categories.find(
+          (c) => c.name.toLowerCase() === trimmed.toLowerCase()
+        );
+        if (existing) return existing;
+
+        const newCategory: ProductCategory = {
+          id: `cat-${Date.now()}`,
+          workspace_id: workspaceId || 'ws-hac-cam-studio',
+          name: trimmed,
+          sort_order: get().categories.length + 1,
+          created_at: new Date().toISOString(),
+        };
+
+        set({ categories: [...get().categories, newCategory] });
+        return newCategory;
+      },
       createProduct: (productData, variantDataList) => {
         const productId = `prod-${Date.now()}`;
         const newProduct: Product = {

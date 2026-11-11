@@ -37,6 +37,8 @@ import {
   EyeOff,
   Camera,
   Lock,
+  Check,
+  ChevronDown,
 } from 'lucide-react';
 
 interface VariantInput {
@@ -65,6 +67,7 @@ export default function ProductsPage() {
     restoreProduct,
     toggleProductActive,
     updateVariantPreorders,
+    addCategory,
   } = useDataStore();
   const { canEditData, user } = useAuthStore();
   const editable = canEditData();
@@ -146,6 +149,64 @@ export default function ProductsPage() {
   // Form states
   const [name, setName] = React.useState('');
   const [categoryId, setCategoryId] = React.useState('');
+  const [categoryInput, setCategoryInput] = React.useState('');
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = React.useState(false);
+  const categoryDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
+        setIsCategoryDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Aggregated categories: both predefined and created on other products
+  const allExistingCategories = React.useMemo(() => {
+    const map = new Map<string, { id: string; name: string; count: number }>();
+
+    // 1. Predefined categories from store
+    categories.forEach((cat) => {
+      const trimmed = cat.name.trim();
+      if (!trimmed) return;
+      const lower = trimmed.toLowerCase();
+      if (!map.has(lower)) {
+        map.set(lower, { id: cat.id, name: trimmed, count: 0 });
+      }
+    });
+
+    // 2. Scan all products to count usage and discover any custom categories created on other products
+    products.forEach((p) => {
+      if (p.is_deleted) return;
+      if (p.category_id) {
+        const found = categories.find((c) => c.id === p.category_id);
+        if (found) {
+          const item = map.get(found.name.trim().toLowerCase());
+          if (item) item.count += 1;
+        }
+      }
+      if (p.category?.name) {
+        const trimmed = p.category.name.trim();
+        const lower = trimmed.toLowerCase();
+        if (map.has(lower)) {
+          map.get(lower)!.count += 1;
+        } else {
+          map.set(lower, { id: p.category.id || `cat-${Date.now()}`, name: trimmed, count: 1 });
+        }
+      }
+    });
+
+    return Array.from(map.values()).sort((a, b) => b.count - a.count);
+  }, [categories, products]);
+
+  const filteredCategories = React.useMemo(() => {
+    const q = categoryInput.trim().toLowerCase();
+    if (!q) return allExistingCategories;
+    return allExistingCategories.filter((c) => c.name.toLowerCase().includes(q));
+  }, [allExistingCategories, categoryInput]);
+
   const [description, setDescription] = React.useState('');
   const [imageUrl, setImageUrl] = React.useState('');
   const [collabPartner, setCollabPartner] = React.useState('');
@@ -207,7 +268,10 @@ export default function ProductsPage() {
   function openCreateModal() {
     setEditingProduct(null);
     setName('');
-    setCategoryId(categories[0]?.id || '');
+    const defaultCat = allExistingCategories[0];
+    setCategoryId(defaultCat?.id || categories[0]?.id || '');
+    setCategoryInput(defaultCat?.name || categories[0]?.name || '');
+    setIsCategoryDropdownOpen(false);
     setDescription('');
     setImageUrl('');
     setCollabPartner(isPartner ? (partnerName || '') : '');
@@ -224,7 +288,12 @@ export default function ProductsPage() {
     }
     setEditingProduct(prod);
     setName(prod.name);
-    setCategoryId(prod.category_id || categories[0]?.id || '');
+    const prodCat =
+      allExistingCategories.find((c) => c.id === prod.category_id) ||
+      categories.find((c) => c.id === prod.category_id);
+    setCategoryId(prod.category_id || '');
+    setCategoryInput(prodCat?.name || prod.category?.name || '');
+    setIsCategoryDropdownOpen(false);
     setDescription(prod.description || '');
     setImageUrl(prod.image_url || '');
     setCollabPartner(prod.collab_partner || '');
@@ -279,6 +348,22 @@ export default function ProductsPage() {
     // Collab Partner restriction: cannot edit Admin products and products are automatically assigned to their partner name
     const effectiveCollabPartner = isPartner ? (partnerName || 'Collab Partner') : collabPartner.trim();
 
+    // Resolve Category: find existing or create new dynamically
+    let resolvedCategoryId: string | null = null;
+    const catName = categoryInput.trim();
+    if (catName) {
+      const match =
+        allExistingCategories.find((c) => c.name.toLowerCase() === catName.toLowerCase()) ||
+        categories.find((c) => c.name.toLowerCase() === catName.toLowerCase());
+
+      if (match) {
+        resolvedCategoryId = match.id;
+      } else {
+        const newCat = addCategory(catName, activeWorkspace.id);
+        resolvedCategoryId = newCat.id;
+      }
+    }
+
     if (editingProduct) {
       if (!canManageProduct(user, editingProduct.collab_partner)) {
         alert('Bạn không có quyền chỉnh sửa sản phẩm thuộc kho hàng Admin.');
@@ -287,7 +372,7 @@ export default function ProductsPage() {
 
       updateProduct(editingProduct.id, {
         name,
-        category_id: categoryId || null,
+        category_id: resolvedCategoryId,
         description: description.trim() || null,
         image_url: imageUrl.trim() || null,
         collab_partner: effectiveCollabPartner || null,
@@ -309,7 +394,7 @@ export default function ProductsPage() {
       createProduct(
         {
           workspace_id: activeWorkspace.id,
-          category_id: categoryId || null,
+          category_id: resolvedCategoryId,
           name,
           description: description.trim() || null,
           image_url: imageUrl.trim() || null,
@@ -474,9 +559,9 @@ export default function ProductsPage() {
             onChange={(e) => setSelectedCategory(e.target.value)}
           >
             <option value="all">{t('allCategories')}</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
+            {allExistingCategories.map((c) => (
+              <option key={c.id || c.name} value={c.id}>
+                {c.name} {c.count > 0 ? `(${c.count})` : ''}
               </option>
             ))}
           </select>
@@ -820,20 +905,134 @@ export default function ProductsPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="prod-cat">{t('categoryLabel')}</Label>
-              <select
-                id="prod-cat"
-                className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-sm text-[#202124] focus:outline-none focus:border-[#315C4C]"
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-              >
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
+            {/* Category Combobox: Manual Entry + Suggestions from All Products */}
+            <div className="space-y-1.5 relative" ref={categoryDropdownRef}>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="prod-cat">{t('categoryLabel')}</Label>
+                <span className="text-[10px] text-[#737373] dark:text-neutral-400">
+                  Nhập tự do hoặc chọn có sẵn
+                </span>
+              </div>
+
+              <div className="relative">
+                <Input
+                  id="prod-cat"
+                  type="text"
+                  placeholder="Gõ danh mục (VD: Móc khóa, Sticker...) hoặc bấm chọn"
+                  value={categoryInput}
+                  onChange={(e) => {
+                    setCategoryInput(e.target.value);
+                    setIsCategoryDropdownOpen(true);
+                  }}
+                  onFocus={() => setIsCategoryDropdownOpen(true)}
+                  className="pr-9 text-xs bg-white dark:bg-neutral-900 border-[#E8E8E5] dark:border-neutral-700 text-[#202124] dark:text-neutral-100 placeholder:text-neutral-400"
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors"
+                  title="Bấm để mở danh sách danh mục có sẵn"
+                >
+                  <ChevronDown
+                    className={cn(
+                      'w-4 h-4 transition-transform duration-200',
+                      isCategoryDropdownOpen ? 'rotate-180 text-[#315C4C]' : ''
+                    )}
+                  />
+                </button>
+              </div>
+
+              {/* Dropdown list of existing categories */}
+              {isCategoryDropdownOpen && (
+                <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-700 rounded-[6px] shadow-lg z-50 max-h-52 overflow-y-auto py-1 divide-y divide-[#F0F0ED] dark:divide-neutral-800">
+                  {/* Option to create new category if typed something new */}
+                  {categoryInput.trim() &&
+                    !allExistingCategories.some(
+                      (c) => c.name.toLowerCase() === categoryInput.trim().toLowerCase()
+                    ) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCategoryDropdownOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 text-xs font-semibold text-[#315C4C] dark:text-emerald-400 hover:bg-[#EBF1EE] dark:hover:bg-emerald-950/40 flex items-center gap-2 transition-colors"
+                      >
+                        <Plus className="w-3.5 h-3.5 shrink-0" />
+                        <span>
+                          Dùng danh mục mới: <strong>&ldquo;{categoryInput.trim()}&rdquo;</strong>
+                        </span>
+                      </button>
+                    )}
+
+                  {/* Existing categories */}
+                  {filteredCategories.length > 0 ? (
+                    filteredCategories.map((c) => {
+                      const isSelected =
+                        c.name.toLowerCase() === categoryInput.trim().toLowerCase();
+                      return (
+                        <button
+                          key={c.id || c.name}
+                          type="button"
+                          onClick={() => {
+                            setCategoryInput(c.name);
+                            setCategoryId(c.id);
+                            setIsCategoryDropdownOpen(false);
+                          }}
+                          className={cn(
+                            'w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-[#F7F7F5] dark:hover:bg-neutral-800 transition-colors',
+                            isSelected
+                              ? 'bg-[#EBF1EE]/60 dark:bg-emerald-950/40 font-bold text-[#315C4C] dark:text-emerald-300'
+                              : 'text-[#202124] dark:text-neutral-200'
+                          )}
+                        >
+                          <div className="flex items-center gap-2 truncate">
+                            <Tag className="w-3 h-3 text-[#9E9E9C] shrink-0" />
+                            <span className="truncate">{c.name}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                            {c.count > 0 && (
+                              <span className="text-[10px] text-[#737373] dark:text-neutral-400 font-mono">
+                                {c.count} SP
+                              </span>
+                            )}
+                            {isSelected && (
+                              <Check className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400" />
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <div className="px-3 py-2 text-xs text-[#737373] dark:text-neutral-400 italic">
+                      Không tìm thấy danh mục có sẵn. Danh mục mới sẽ được tạo khi lưu.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Quick suggestion chips */}
+              <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                <span className="text-[10px] text-[#737373] dark:text-neutral-400">Gợi ý nhanh:</span>
+                {allExistingCategories.slice(0, 5).map((c) => (
+                  <button
+                    key={c.id || c.name}
+                    type="button"
+                    onClick={() => {
+                      setCategoryInput(c.name);
+                      setCategoryId(c.id);
+                      setIsCategoryDropdownOpen(false);
+                    }}
+                    className={cn(
+                      'text-[10px] px-2 py-0.5 rounded-full border transition-all',
+                      categoryInput.trim().toLowerCase() === c.name.toLowerCase()
+                        ? 'bg-[#315C4C] text-white border-[#315C4C] font-semibold'
+                        : 'bg-[#F7F7F5] dark:bg-neutral-800 text-[#555] dark:text-neutral-300 border-[#E8E8E5] dark:border-neutral-700 hover:border-[#315C4C]'
+                    )}
+                  >
                     {c.name}
-                  </option>
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
 
             <div className="space-y-1.5">

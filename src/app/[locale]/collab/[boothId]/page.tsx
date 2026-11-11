@@ -1225,46 +1225,10 @@ ${url}`;
                             </div>
                           </div>
 
-                          {/* Quick Denomination Presets */}
-                          <div className="space-y-1">
-                            <div className="grid grid-cols-4 gap-1">
-                              {[cartTotal, 100000, 200000, 500000].map((preset, idx) => {
-                                const isSelected = tenderedCash === preset;
-                                return (
-                                  <button
-                                    key={idx}
-                                    type="button"
-                                    onClick={() => setTenderedCash(preset)}
-                                    className={`py-1 px-1 rounded text-center font-bold text-[10px] transition-colors border ${
-                                      isSelected
-                                        ? 'bg-[#315C4C] text-white border-[#315C4C]'
-                                        : 'bg-white text-[#202124] border-[#E8E8E5] hover:bg-[#F0F0ED]'
-                                    }`}
-                                  >
-                                    {preset === cartTotal ? 'Vừa đủ' : `${(preset / 1000).toLocaleString('vi-VN')}k`}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                            <div className="flex items-center gap-1 overflow-x-auto pb-0.5">
-                              <span className="text-[9px] text-[#737373] shrink-0">Thêm:</span>
-                              {[10000, 20000, 50000, 100000, 200000].map((amt) => (
-                                <button
-                                  key={amt}
-                                  type="button"
-                                  onClick={() => setTenderedCash((prev) => (prev || 0) + amt)}
-                                  className="px-1 py-0.5 rounded bg-white border border-[#E8E8E5] text-[9px] font-semibold text-[#315C4C] hover:bg-[#EBF1EE] shrink-0"
-                                >
-                                  +{(amt / 1000).toLocaleString('vi-VN')}k
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
                           {/* Result status */}
                           {tenderedCash === 0 ? (
                             <p className="text-[10px] text-center text-[#737373] italic">
-                              Bấm [Vừa đủ] hoặc nhập số tiền khách đưa
+                              Nhập số tiền khách đưa để tính tiền thối
                             </p>
                           ) : isCashUnderpaid ? (
                             <div className="p-2 bg-[#FDF2E9] border border-[#C5221F]/30 rounded text-[11px] text-[#C5221F] font-bold flex items-center justify-between">

@@ -1492,56 +1492,6 @@ export default function PosTerminalPage() {
                 </div>
               </div>
 
-              {/* Quick suggestions: Exact & Denominations */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-[11px] text-[#737373]">
-                  <span>Gợi ý:</span>
-                  <button
-                    type="button"
-                    onClick={() => setTenderedCash(cartTotal)}
-                    className={`font-bold hover:underline ${tenderedCash === cartTotal ? 'text-[#315C4C]' : 'text-[#202124]'}`}
-                  >
-                    Đưa vừa đủ
-                  </button>
-                </div>
-
-                {/* Banknotes presets */}
-                <div className="grid grid-cols-4 gap-1.5">
-                  {[cartTotal, 100000, 200000, 500000].map((preset, idx) => {
-                    const isSelected = tenderedCash === preset;
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setTenderedCash(preset)}
-                        className={`py-1.5 px-1 rounded text-center font-bold text-xs transition-colors border ${
-                          isSelected
-                            ? 'bg-[#315C4C] text-white border-[#315C4C]'
-                            : 'bg-white text-[#202124] border-[#E8E8E5] hover:bg-[#F0F0ED]'
-                        }`}
-                      >
-                        {preset === cartTotal ? 'Vừa đủ' : `${(preset / 1000).toLocaleString('vi-VN')}k`}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Additive quick buttons (+10k, +20k, +50k, +100k, +200k, +500k) */}
-                <div className="flex items-center gap-1 overflow-x-auto pb-0.5 pt-1">
-                  <span className="text-[10px] text-[#737373] shrink-0 font-medium mr-0.5">Thêm:</span>
-                  {[10000, 20000, 50000, 100000, 200000, 500000].map((addAmount) => (
-                    <button
-                      key={addAmount}
-                      type="button"
-                      onClick={() => setTenderedCash((prev) => (prev || 0) + addAmount)}
-                      className="px-1.5 py-0.5 rounded bg-white border border-[#E8E8E5] text-[10px] font-semibold text-[#315C4C] hover:bg-[#EBF1EE] shrink-0"
-                    >
-                      +{(addAmount / 1000).toLocaleString('vi-VN')}k
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Change / Shortage Status Display */}
               {tenderedCash === 0 ? (
                 <div className="p-2 rounded-[6px] bg-white border border-dashed border-[#D2D2CE] text-center text-[#737373] text-[11px]">

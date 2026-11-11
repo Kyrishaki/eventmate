@@ -44,9 +44,10 @@ export async function GET() {
       message: 'Kết nối Google Gemini AI thành công và sẵn sàng hoạt động!',
       reply: data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'OK',
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Lỗi kết nối tới Google Generative Language API';
     return NextResponse.json(
-      { success: false, error: err.message || 'Lỗi kết nối tới Google Generative Language API' },
+      { success: false, error: errorMsg },
       { status: 500 }
     );
   }

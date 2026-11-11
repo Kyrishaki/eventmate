@@ -110,8 +110,8 @@ Chỉ trả về JSON thuần túy theo định dạng:
           resultJson = JSON.parse(candidateText);
           break;
         }
-      } catch (err: any) {
-        lastError = err;
+      } catch (err: unknown) {
+        lastError = err instanceof Error ? err : new Error(String(err));
       }
     }
 
@@ -131,10 +131,11 @@ Chỉ trả về JSON thuần túy theo định dạng:
         description: resultJson.description || '',
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in /api/events/extract-poster:', error);
+    const errorMsg = error instanceof Error ? error.message : 'Lỗi xử lý trích xuất ảnh sự kiện';
     return NextResponse.json(
-      { error: error.message || 'Lỗi xử lý trích xuất ảnh sự kiện' },
+      { error: errorMsg },
       { status: 500 }
     );
   }

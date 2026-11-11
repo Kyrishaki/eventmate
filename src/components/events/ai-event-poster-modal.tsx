@@ -100,46 +100,25 @@ export function AiEventPosterModal({
   // Reset state when opening/closing
   React.useEffect(() => {
     if (!isOpen) {
-      setPreviewImage(null);
-      setIsAnalyzing(false);
-      setErrorMessage(null);
-      setExtractedData(null);
-      setName('');
-      setStartDate('');
-      setEndDate('');
-      setLocation('');
-      setDescription('');
-      setStatus('upcoming');
-      setUseAsBanner(true);
+      const timer = setTimeout(() => {
+        setPreviewImage(null);
+        setIsAnalyzing(false);
+        setErrorMessage(null);
+        setExtractedData(null);
+        setName('');
+        setStartDate('');
+        setEndDate('');
+        setLocation('');
+        setDescription('');
+        setStatus('upcoming');
+        setUseAsBanner(true);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
-  // Support paste from clipboard (Ctrl + V)
-  React.useEffect(() => {
-    if (!isOpen) return;
-
-    const handlePaste = (e: ClipboardEvent) => {
-      const items = e.clipboardData?.items;
-      if (!items) return;
-
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].type.startsWith('image/')) {
-          const file = items[i].getAsFile();
-          if (file) {
-            e.preventDefault();
-            processPosterFile(file);
-            break;
-          }
-        }
-      }
-    };
-
-    window.addEventListener('paste', handlePaste);
-    return () => window.removeEventListener('paste', handlePaste);
-  }, [isOpen]);
-
   // Handle file processing and AI call
-  const processPosterFile = async (file: File) => {
+  const processPosterFile = React.useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) {
       setErrorMessage('Vui lòng chọn tệp hình ảnh (PNG, JPG, WebP).');
       return;
@@ -173,13 +152,37 @@ export function AiEventPosterModal({
       setLocation(data.location || '');
       setDescription(data.description || '');
       setStatus('upcoming');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error analyzing poster:', err);
-      setErrorMessage(err.message || 'Lỗi phân tích ảnh poster.');
+      setErrorMessage(err instanceof Error ? err.message : 'Lỗi phân tích ảnh poster.');
     } finally {
       setIsAnalyzing(false);
     }
-  };
+  }, []);
+
+  // Support paste from clipboard (Ctrl + V)
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith('image/')) {
+          const file = items[i].getAsFile();
+          if (file) {
+            e.preventDefault();
+            processPosterFile(file);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [isOpen, processPosterFile]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

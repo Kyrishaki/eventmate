@@ -488,8 +488,10 @@ export default function PosTerminalPage() {
     }
 
     if (qrCountdown === null) {
-      setQrCountdown(5);
-      return;
+      const initTimer = setTimeout(() => {
+        setQrCountdown(5);
+      }, 0);
+      return () => clearTimeout(initTimer);
     }
 
     const timer = setInterval(() => {

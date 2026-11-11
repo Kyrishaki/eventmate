@@ -9,7 +9,7 @@ import { DensityToggle } from '@/components/ui/density-toggle';
 import { SyncStatusBadge } from '@/components/ui/sync-status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Menu, LogOut, User as UserIcon, Eye } from 'lucide-react';
-import { useRouter } from '@/i18n/routing';
+import { useRouter, Link } from '@/i18n/routing';
 
 interface TopbarProps {
   onToggleSidebar: () => void;
@@ -29,7 +29,7 @@ export function Topbar({ onToggleSidebar, title }: TopbarProps) {
   return (
     <header className="h-12 sm:h-14 border-b border-[#E8E8E5] bg-white px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30">
       {/* Left: Mobile Menu & Current Title */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         <button
           type="button"
           onClick={onToggleSidebar}
@@ -39,8 +39,18 @@ export function Topbar({ onToggleSidebar, title }: TopbarProps) {
           <Menu className="w-5 h-5" />
         </button>
 
+        <Link href="/dashboard" className="lg:hidden flex items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.png"
+            alt="HikaruStore Logo"
+            className="h-8 w-auto max-w-[75px] object-contain"
+          />
+          <span className="font-bold text-xs text-[#202124]">HikaruStore</span>
+        </Link>
+
         {title && (
-          <h1 className="text-sm font-semibold text-[#202124] tracking-tight truncate">
+          <h1 className="text-sm font-semibold text-[#202124] tracking-tight truncate hidden sm:block">
             {title}
           </h1>
         )}

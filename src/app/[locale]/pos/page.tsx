@@ -53,7 +53,10 @@ import {
   Coins,
   AlertCircle,
   Bug,
+  Zap,
+  Info,
 } from 'lucide-react';
+import { playSuccessChime } from '@/lib/sound';
 import { FeedbackModal } from '@/components/feedback/feedback-modal';
 
 function subscribeOnline(callback: () => void) {
@@ -252,12 +255,30 @@ export default function PosTerminalPage() {
   // Checkout Modal State
   const [isCheckoutOpen, setIsCheckoutOpen] = React.useState(false);
   const [qrSessionRef, setQrSessionRef] = React.useState('8899');
-  const [autoConfirmQr, setAutoConfirmQr] = React.useState(false);
+  const [autoConfirmQr, setAutoConfirmQr] = React.useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('pos_auto_confirm_qr') === 'true';
+    }
+    return false;
+  });
   const [qrCountdown, setQrCountdown] = React.useState<number | null>(null);
+
+  const handleToggleAutoConfirm = React.useCallback((checked: boolean) => {
+    setAutoConfirmQr(checked);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pos_auto_confirm_qr', checked ? 'true' : 'false');
+    }
+    if (checked) {
+      setQrCountdown(5);
+    } else {
+      setQrCountdown(null);
+    }
+  }, []);
 
   const openCheckoutModal = React.useCallback(() => {
     setQrSessionRef(Math.floor(1000 + Math.random() * 9000).toString());
-    setQrCountdown(null);
+    const isAuto = typeof window !== 'undefined' && localStorage.getItem('pos_auto_confirm_qr') === 'true';
+    setQrCountdown(isAuto ? 5 : null);
     setIsCheckoutOpen(true);
   }, []);
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>('qr_manual');
@@ -447,6 +468,7 @@ export default function PosTerminalPage() {
 
       setConfirmedOrder(order);
       useShiftStore.getState().recordOrderInShift(paymentMethod, order.final_amount);
+      playSuccessChime();
       setIsCheckoutOpen(false);
       setIsMobileCartOpen(false);
       setQrCountdown(null);
@@ -465,9 +487,14 @@ export default function PosTerminalPage() {
       return;
     }
 
+    if (qrCountdown === null) {
+      setQrCountdown(5);
+      return;
+    }
+
     const timer = setInterval(() => {
       setQrCountdown((prev) => {
-        if (prev === null) return 4;
+        if (prev === null) return 5;
         if (prev <= 1) {
           clearInterval(timer);
           handleCompleteOrder();
@@ -480,7 +507,26 @@ export default function PosTerminalPage() {
     return () => {
       clearInterval(timer);
     };
-  }, [isCheckoutOpen, paymentMethod, autoConfirmQr]);
+  }, [isCheckoutOpen, paymentMethod, autoConfirmQr, qrCountdown]);
+
+  // Keyboard Shortcut: Enter to confirm QR payment
+  React.useEffect(() => {
+    if (!isCheckoutOpen || paymentMethod !== 'qr_manual' || isSubmitting) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+        if (tag === 'textarea' || (tag === 'input' && (e.target as HTMLElement)?.id === 'order-note')) {
+          return;
+        }
+        e.preventDefault();
+        handleCompleteOrder();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCheckoutOpen, paymentMethod, isSubmitting]);
 
   if (!isAuthenticated || !user) {
     return (
@@ -522,14 +568,21 @@ export default function PosTerminalPage() {
       {/* POS Top Navigation Bar */}
       <header className="bg-white border-b border-[#E8E8E5] sticky top-0 z-30 shadow-2xs">
         {/* Main Bar */}
-        <div className="h-13 sm:h-14 px-3 sm:px-5 flex items-center justify-between">
+        <div className="h-14 sm:h-16 px-3 sm:px-5 flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
-            <Link href="/dashboard" className="flex items-center gap-1.5 shrink-0 group">
-              <div className="w-7 h-7 rounded-[5px] overflow-hidden flex items-center justify-center shrink-0">
+            <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0 group" title="Về trang quản lý">
+              <div className="h-9 sm:h-11 w-auto flex items-center justify-center shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo.png" alt="HikaruStore Logo" className="w-full h-full object-contain" />
+                <img
+                  src="/logo.png"
+                  alt="HikaruStore Logo"
+                  className="h-9 sm:h-11 w-auto max-w-[85px] sm:max-w-[95px] object-contain transition-transform group-hover:scale-105"
+                />
               </div>
-              <span className="font-bold text-xs text-[#202124] hidden md:inline">HikaruStore POS</span>
+              <div className="hidden md:flex flex-col">
+                <span className="font-bold text-sm text-[#202124] leading-tight">HikaruStore</span>
+                <span className="text-[10px] text-[#315C4C] font-semibold leading-none">POS Terminal</span>
+              </div>
             </Link>
 
             <Link href="/dashboard">
@@ -1387,19 +1440,29 @@ export default function PosTerminalPage() {
 
           {/* Mode 1: VietQR Dynamic Code Generator */}
           {paymentMethod === 'qr_manual' && (
-            <div className="p-4 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[6px] text-center space-y-3">
+            <div className="p-4 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[8px] text-center space-y-3.5">
               {/* Pulsating status badge */}
-              <div className="flex items-center justify-center gap-2 text-xs font-semibold text-[#2F7D55] bg-[#EAF4EE] py-1.5 px-3 rounded-full mx-auto w-fit border border-[#2F7D55]/30">
-                <span className="w-2 h-2 rounded-full bg-[#2F7D55] animate-ping" />
+              <div
+                className={`flex items-center justify-center gap-2 text-xs font-semibold py-1.5 px-3 rounded-full mx-auto w-fit border ${
+                  autoConfirmQr
+                    ? 'text-[#2F7D55] bg-[#EAF4EE] border-[#2F7D55]/30'
+                    : 'text-[#8C5D17] bg-[#FEF7EC] border-[#F5C27A]/50'
+                }`}
+              >
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    autoConfirmQr ? 'bg-[#2F7D55] animate-ping' : 'bg-[#B7791F]'
+                  }`}
+                />
                 <span>
-                  {qrCountdown !== null && qrCountdown > 0
-                    ? `Đang chờ ngân hàng báo có... Tự động khớp lệnh sau ${qrCountdown}s`
-                    : 'Đang chờ khách quét mã VietQR & chuyển tiền...'}
+                  {autoConfirmQr && qrCountdown !== null && qrCountdown > 0
+                    ? `⚡ Đang tự động khớp lệnh sau ${qrCountdown}s...`
+                    : 'Đang hiển thị mã VietQR • Bấm nút xanh hoặc [Enter] khi đã nhận tiền'}
                 </span>
               </div>
 
               {/* Real dynamic VietQR image with instant amount embedding */}
-              <div className="w-48 h-48 mx-auto bg-white p-2 rounded-[8px] border border-[#E8E8E5] shadow-xs flex items-center justify-center">
+              <div className="w-52 h-52 mx-auto bg-white p-2.5 rounded-[10px] border-2 border-[#315C4C]/20 shadow-xs flex items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`https://img.vietqr.io/image/${activeBankConfig.bankId}-${activeBankConfig.accountNo}-compact2.png?amount=${cartTotal}&addInfo=EM${qrSessionRef}&accountName=${encodeURIComponent(
@@ -1410,26 +1473,46 @@ export default function PosTerminalPage() {
                 />
               </div>
 
-              <div className="text-[11px] text-[#737373] space-y-0.5">
-                <p>
-                  Ngân hàng: <span className="font-semibold text-[#202124]">{activeBankConfig.bankId}</span>
-                </p>
-                <p>
-                  Số TK: <span className="font-mono font-bold text-[#202124]">{activeBankConfig.accountNo}</span>
-                </p>
-                <p>
-                  Chủ TK: <span className="font-semibold text-[#202124]">{activeBankConfig.accountName}</span>
-                </p>
-                <p className="font-bold text-[#315C4C] text-sm pt-1">
-                  Số tiền: {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}
-                </p>
-                <p className="font-mono text-[10px] text-[#8C5D17] bg-[#FEF7EC] px-2 py-0.5 rounded w-fit mx-auto border border-[#B7791F]/20">
-                  Nội dung CK: EM{qrSessionRef}
-                </p>
+              <div className="text-[11px] text-[#737373] space-y-1 bg-white p-2.5 rounded-[6px] border border-[#E8E8E5]">
+                <div className="flex items-center justify-between">
+                  <span>Ngân hàng:</span>
+                  <span className="font-bold text-[#202124]">{activeBankConfig.bankId}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Số tài khoản:</span>
+                  <span className="font-mono font-extrabold text-[#202124]">{activeBankConfig.accountNo}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Chủ tài khoản:</span>
+                  <span className="font-semibold text-[#202124]">{activeBankConfig.accountName}</span>
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-[#F0F0ED]">
+                  <span className="font-bold text-[#202124]">Số tiền cần CK:</span>
+                  <span className="font-extrabold text-[#2F7D55] text-sm">
+                    {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Nội dung chuyển:</span>
+                  <span className="font-mono font-bold text-[#8C5D17] bg-[#FEF7EC] px-1.5 py-0.5 rounded border border-[#B7791F]/20">
+                    EM{qrSessionRef}
+                  </span>
+                </div>
+              </div>
+
+              {/* Explanatory banner */}
+              <div className="p-2.5 rounded-[6px] bg-[#FEF7EC] border border-[#F5C27A]/40 text-[#8C5D17] text-[11px] leading-relaxed text-left flex items-start gap-2">
+                <Info className="w-4 h-4 shrink-0 mt-0.5 text-[#B7791F]" />
+                <div>
+                  <p className="font-semibold text-[#202124]">Vì sao sau khi chuyển tiền màn hình chưa tự nhảy?</p>
+                  <p className="text-[#685023] mt-0.5">
+                    Mã VietQR chuyển thẳng trực tiếp vào tài khoản ngân hàng của bạn. Khi điện thoại bạn nổ thông báo <strong>&quot;ting ting&quot;</strong>, hãy bấm nút <strong>&quot;✓ ĐÃ NHẬN TIỀN&quot;</strong> bên dưới (hoặc phím <strong>Enter</strong>) để máy lưu đơn và trừ kho. Hoặc bạn có thể tích chọn <strong>&quot;⚡ Tự động khớp sau 5s&quot;</strong> để máy tự động chuyển màn hình!
+                  </p>
+                </div>
               </div>
 
               {/* Cashier direct confirmation action */}
-              <div className="pt-2 space-y-2">
+              <div className="pt-1 space-y-2">
                 <Button
                   type="button"
                   variant="primary"
@@ -1437,24 +1520,36 @@ export default function PosTerminalPage() {
                   disabled={isSubmitting}
                   isLoading={isSubmitting}
                   onClick={handleCompleteOrder}
-                  className="w-full gap-2 bg-[#2F7D55] hover:bg-[#256343] text-white font-bold text-xs py-2.5 shadow-sm"
+                  className="w-full gap-2 bg-[#2F7D55] hover:bg-[#256343] text-white font-extrabold text-xs py-3 shadow-sm transform active:scale-[0.99] transition-all"
                 >
                   <CheckCircle2 className="w-4 h-4 text-white" />
                   <span>
-                    ✓ Khách đã chuyển tiền ({formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}) - Xác nhận & Trừ kho
+                    ✓ ĐÃ NHẬN TIỀN ({formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}) - HOÀN TẤT ĐƠN [ENTER]
                   </span>
                 </Button>
 
-                {/* Auto webhook simulator toggle */}
-                <label className="flex items-center justify-center gap-2 text-[11px] text-[#737373] cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={autoConfirmQr}
-                    onChange={(e) => setAutoConfirmQr(e.target.checked)}
-                    className="rounded border-[#D5D5D0] text-[#315C4C] focus:ring-[#315C4C]"
-                  />
-                  <span>⚡ Tự động khớp lệnh sau 4s (Demo/Tự động)</span>
-                </label>
+                <div className="flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCompleteOrder}
+                    disabled={isSubmitting}
+                    className="flex-1 py-1.5 px-2.5 rounded-[6px] border border-[#D5D5D0] bg-white hover:bg-[#F0F0ED] text-[#202124] text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                    title="Bấm để hoàn tất đơn ngay lập tức khi test hoặc khi đã thấy biến động số dư"
+                  >
+                    <Zap className="w-3.5 h-3.5 text-[#315C4C]" />
+                    <span>Khớp lệnh nhanh (Tức thì)</span>
+                  </button>
+
+                  <label className="flex items-center gap-1.5 text-[11px] font-medium text-[#494949] cursor-pointer select-none bg-white py-1.5 px-2.5 rounded-[6px] border border-[#D5D5D0] hover:bg-[#F7F7F5]">
+                    <input
+                      type="checkbox"
+                      checked={autoConfirmQr}
+                      onChange={(e) => handleToggleAutoConfirm(e.target.checked)}
+                      className="w-3.5 h-3.5 rounded border-[#D5D5D0] text-[#315C4C] focus:ring-[#315C4C]"
+                    />
+                    <span>⚡ Tự động khớp sau 5s</span>
+                  </label>
+                </div>
               </div>
             </div>
           )}

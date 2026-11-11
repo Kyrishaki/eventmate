@@ -105,9 +105,9 @@ export default function SettingsPage() {
         setAiStatus('error');
         setAiMessage(json.error || 'Không thể kết nối tới Google Gemini API.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setAiStatus('error');
-      setAiMessage(err.message || 'Lỗi kết nối kiểm tra AI.');
+      setAiMessage(err instanceof Error ? err.message : 'Lỗi kết nối kiểm tra AI.');
     }
   };
 
@@ -456,7 +456,7 @@ export default function SettingsPage() {
                   value={socialLink}
                   onChange={(e) => setSocialLink(e.target.value)}
                 />
-                <p className="text-[11px] text-[#737373]">Gắn vào nút "Nhắn Zalo đặt hàng ngay" ở gian hàng khách xem.</p>
+                <p className="text-[11px] text-[#737373]">Gắn vào nút &quot;Nhắn Zalo đặt hàng ngay&quot; ở gian hàng khách xem.</p>
               </div>
             </div>
 

@@ -147,6 +147,10 @@ export function ShiftModal({
             className="p-4 bg-[#FAFAF8] dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-800 rounded font-mono text-xs space-y-2 text-[#202124] dark:text-neutral-100"
           >
             <div className="text-center pb-2 border-b border-dashed border-[#D6D6D2] dark:border-neutral-700">
+              <div className="h-9 w-auto mx-auto mb-1 flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo.png" alt="HikaruStore Logo" className="h-9 w-auto max-w-[80px] object-contain mx-auto" />
+              </div>
               <p className="font-bold text-sm uppercase">BÁO CÁO CHỐT CA (Z-REPORT)</p>
               <p className="text-[10px] text-[#737373] dark:text-neutral-400">{lastClosedShift.eventName}</p>
               <p className="text-[11px] font-semibold text-[#315C4C]">{lastClosedShift.boothName}</p>

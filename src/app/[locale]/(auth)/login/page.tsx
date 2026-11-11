@@ -73,7 +73,15 @@ export default function LoginPage() {
 
   return (
     <Card className="border-[#E8E8E5] bg-white shadow-xs">
-      <CardHeader className="space-y-1 pb-4">
+      <CardHeader className="space-y-2 pb-4 text-center">
+        <div className="h-14 w-auto flex items-center justify-center mx-auto mb-1">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.png"
+            alt="HikaruStore Logo"
+            className="h-14 w-auto max-w-[120px] object-contain drop-shadow-xs"
+          />
+        </div>
         <CardTitle className="text-xl font-bold tracking-tight text-[#202124]">
           Đăng nhập HikaruStore
         </CardTitle>

@@ -220,21 +220,27 @@ export function GuestShowcase() {
 
       {/* Top Customer Header */}
       <header className="sticky top-[37px] z-40 bg-white dark:bg-neutral-900 border-b border-[#E8E8E5] dark:border-neutral-800 shadow-2xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-18 sm:h-20 flex items-center justify-between gap-4">
           {/* Brand Logo & Showcase Badge */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-[8px] overflow-hidden flex items-center justify-center shrink-0 shadow-xs">
+          <div className="flex items-center gap-3.5">
+            <div className="h-12 sm:h-14 w-auto flex items-center justify-center shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="HikaruStore Logo" className="w-full h-full object-contain" />
+              <img
+                src="/logo.png"
+                alt="HikaruStore Logo"
+                className="h-12 sm:h-14 w-auto max-w-[110px] sm:max-w-[130px] object-contain drop-shadow-xs"
+              />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-base tracking-tight">{activeWorkspace?.name || 'HikaruStore'}</span>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#EAF4EE] dark:bg-emerald-950/60 text-[#2F7D55] dark:text-emerald-400 border border-[#CEE6D7] dark:border-emerald-800">
+                <span className="font-bold text-lg sm:text-xl tracking-tight text-[#202124] dark:text-neutral-100">
+                  {activeWorkspace?.name || 'HikaruStore'}
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#EAF4EE] dark:bg-emerald-950/60 text-[#2F7D55] dark:text-emerald-400 border border-[#CEE6D7] dark:border-emerald-800">
                   Gian Hàng Trưng Bày
                 </span>
               </div>
-              <p className="text-[11px] text-[#737373] dark:text-neutral-400 leading-none mt-0.5">
+              <p className="text-xs text-[#737373] dark:text-neutral-400 leading-none mt-1">
                 Official Merchandise Catalog & Pre-order
               </p>
             </div>

@@ -193,7 +193,7 @@ export default function ProductsPage() {
         if (map.has(lower)) {
           map.get(lower)!.count += 1;
         } else {
-          map.set(lower, { id: p.category.id || `cat-${Date.now()}`, name: trimmed, count: 1 });
+          map.set(lower, { id: p.category.id || `cat-${lower}`, name: trimmed, count: 1 });
         }
       }
     });

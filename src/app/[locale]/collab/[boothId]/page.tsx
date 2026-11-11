@@ -50,7 +50,9 @@ import {
   EyeOff,
   Coins,
   AlertCircle,
+  Zap,
 } from 'lucide-react';
+import { playSuccessChime } from '@/lib/sound';
 import { calculateVariantStock } from '@/lib/stock-status';
 import { logActivity } from '@/stores/audit-store';
 import { PreorderPickupModal } from '@/components/pos/preorder-pickup-modal';
@@ -386,6 +388,7 @@ ${url}`;
       });
       setOrderSuccess(order);
       setTenderedCash(0);
+      playSuccessChime();
       clearCart();
 
       logActivity({
@@ -443,6 +446,15 @@ ${url}`;
               >
                 <ArrowLeft className="w-4 h-4" />
               </Link>
+
+              <div className="h-9 w-auto flex items-center justify-center shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/logo.png"
+                  alt="HikaruStore Logo"
+                  className="h-9 w-auto max-w-[80px] object-contain"
+                />
+              </div>
 
               <div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -1164,12 +1176,12 @@ ${url}`;
 
                       {/* QR Display if VietQR selected */}
                       {paymentMethod === 'qr_manual' && activeBankConfig.accountNo && (
-                        <div className="p-3 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5] text-center space-y-1.5">
+                        <div className="p-3 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5] text-center space-y-2">
                           <p className="text-[11px] font-semibold text-[#202124]">
                             Tài khoản nhận: {activeBankConfig.bankId} • {activeBankConfig.accountNo}
                           </p>
                           <p className="text-[10px] text-[#737373]">{activeBankConfig.accountName}</p>
-                          <div className="w-32 h-32 mx-auto bg-white p-1.5 rounded border border-[#E8E8E5] flex items-center justify-center">
+                          <div className="w-36 h-36 mx-auto bg-white p-2 rounded border border-[#E8E8E5] flex items-center justify-center">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={`https://img.vietqr.io/image/${activeBankConfig.bankId}-${activeBankConfig.accountNo}-compact2.png?amount=${cartTotal}&addInfo=Collab%20${currentBooth?.code || 'EM'}`}
@@ -1177,6 +1189,20 @@ ${url}`;
                               className="w-full h-full object-contain"
                             />
                           </div>
+                          <div className="p-2 rounded bg-[#FEF7EC] border border-[#F5C27A]/30 text-[10px] text-[#8C5D17] text-left">
+                            💡 Khi tài khoản báo <strong>&quot;ting ting&quot;</strong> có tiền, bấm nút bên dưới để hoàn tất đơn hàng và trừ kho ngay lập tức.
+                          </div>
+                          <Button
+                            type="button"
+                            variant="primary"
+                            size="sm"
+                            className="w-full text-xs font-bold bg-[#2F7D55] hover:bg-[#256343] text-white gap-1.5"
+                            disabled={isSubmittingOrder}
+                            onClick={handlePosCheckout}
+                          >
+                            <CheckCircle2 className="w-4 h-4 text-white" />
+                            <span>✓ Đã nhận tiền ({formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}) - Hoàn tất ngay</span>
+                          </Button>
                         </div>
                       )}
 

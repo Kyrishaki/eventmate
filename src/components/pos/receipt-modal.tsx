@@ -118,9 +118,9 @@ export function ReceiptModal({
           >
             {/* Header */}
             <div className="text-center pb-3 border-b border-dashed border-[#D6D6D2] dark:border-neutral-700 space-y-1">
-              <div className="w-9 h-9 mx-auto rounded-[6px] overflow-hidden flex items-center justify-center">
+              <div className="h-10 w-auto mx-auto flex items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+                <img src="/logo.png" alt="Logo" className="h-10 w-auto max-w-[85px] object-contain mx-auto" />
               </div>
               <p className="font-bold text-sm uppercase tracking-wider">{activeWorkspace?.name || 'HIKARUSTORE'}</p>
               {activeWorkspace?.owner_name && (

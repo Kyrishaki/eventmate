@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgAni" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E1B4B" />
+      <stop offset="50%" stop-color="#312E81" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="accentPink" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F472B6" />
+      <stop offset="100%" stop-color="#DB2777" />
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#bgAni)" />
+  <!-- Pop Up Parade Hexagonal Box & Pedestal -->
+  <polygon points="300,455 430,485 390,535 210,535 170,485" fill="#38BDF8" fill-opacity="0.35" stroke="#7DD3FC" stroke-width="4" />
+  <!-- Scale Figure Silhouette -->
+  <circle cx="300" cy="185" r="42" fill="#FDE68A" stroke="#F472B6" stroke-width="3" />
+  <path d="M250 232 L350 232 L385 470 L215 470 Z" fill="#E0E7FF" stroke="#818CF8" stroke-width="4" />
+  <!-- Staff / Magic Wand -->
+  <line x1="210" y1="125" x2="395" y2="475" stroke="#FBBF24" stroke-width="6" stroke-linecap="round" />
+  <circle cx="210" cy="125" r="18" fill="#EF4444" stroke="#FDE047" stroke-width="4" />
+  <!-- Banner Text -->
+  <rect x="130" y="385" width="340" height="44" rx="8" fill="url(#accentPink)" />
+  <text x="300" y="413" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="17" fill="#FFFFFF" letter-spacing="1.5">ANIME SCALE FIGURE 18CM</text>
+  <text x="300" y="568" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="14" fill="#BAE6FD" letter-spacing="1">HOBBY HORIZON EXCLUSIVE • POP UP PARADE</text>
+  <!-- Top Badge -->
+  <rect x="30" y="30" width="175" height="34" rx="17" fill="#EC4899" />
+  <text x="117" y="52" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="13" fill="#FFFFFF">GOOD SMILE COMPANY</text>
+</svg>

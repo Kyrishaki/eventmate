@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgShk" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#052E16" />
+      <stop offset="50%" stop-color="#064E3B" />
+      <stop offset="100%" stop-color="#022C22" />
+    </linearGradient>
+    <linearGradient id="enkeGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4ADE80" />
+      <stop offset="100%" stop-color="#10B981" />
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#bgShk)" />
+  <!-- Keychain Clasp -->
+  <circle cx="300" cy="85" r="24" fill="none" stroke="#FBBF24" stroke-width="8" />
+  <rect x="294" y="108" width="12" height="35" rx="6" fill="#FBBF24" />
+  <!-- Enkephalin Capsule / Shaker Body -->
+  <rect x="175" y="140" width="250" height="360" rx="34" fill="#065F46" stroke="#4ADE80" stroke-width="6" />
+  <rect x="195" y="165" width="210" height="295" rx="22" fill="#022C22" stroke="#34D399" stroke-width="3" />
+  <!-- Liquid Sand Wave -->
+  <path d="M198 320 Q250 300 300 320 T402 320 L402 440 Q402 458 384 458 L216 458 Q198 458 198 440 Z" fill="url(#enkeGlow)" opacity="0.65" />
+  <!-- Floating Mini Charms & Golden Bough -->
+  <path d="M300 200 L300 340 M300 240 L265 210 M300 265 L340 230 M300 295 L268 270" stroke="#FDE047" stroke-width="6" stroke-linecap="round" />
+  <circle cx="255" cy="375" r="20" fill="#FDE047" stroke="#B45309" stroke-width="3" />
+  <circle cx="345" cy="390" r="20" fill="#F87171" stroke="#991B1B" stroke-width="3" />
+  <!-- Label -->
+  <text x="300" y="485" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="15" fill="#A7F3D0" letter-spacing="1.5">ENKEPHALIN &amp; GOLDEN BOUGH</text>
+  <text x="300" y="542" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="16" fill="#FDE047" letter-spacing="1">LIQUID SHAKER KEYCHAIN</text>
+  <!-- Top Badge -->
+  <rect x="30" y="30" width="165" height="34" rx="17" fill="#10B981" />
+  <text x="112" y="52" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="13" fill="#022C22">SHAKER CÁT CHẢY</text>
+</svg>

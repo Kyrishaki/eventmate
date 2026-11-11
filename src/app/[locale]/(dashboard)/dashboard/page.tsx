@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useDataStore } from '@/stores/data-store';
 import { useOrdersStore } from '@/stores/orders-store';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuthStore, canManageSandboxData } from '@/stores/auth-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,7 @@ import {
   FlaskConical,
   RotateCcw,
   AlertTriangle,
-  Trash2,
+  Settings,
   Download,
 } from 'lucide-react';
 import {
@@ -37,6 +37,8 @@ import {
   filterRealBooths,
   filterRealOrders,
   filterRealAllocations,
+  getEffectiveOrderStatus,
+  isNetRevenueOrder,
 } from '@/lib/test-data-filter';
 import { exportEventToExcel } from '@/lib/export-excel';
 
@@ -46,9 +48,10 @@ export default function DashboardOverviewPage() {
   const tEvents = useTranslations('events');
   const { activeWorkspace } = useWorkspaceStore();
   const { events, booths, variants, allocations } = useDataStore();
-  const { orders, clearTestOrders } = useOrdersStore();
+  const { orders } = useOrdersStore();
   const { user } = useAuthStore();
   const isCollab = user?.role === 'collab_partner';
+  const isOwnerOrAdmin = canManageSandboxData(user?.role);
 
   const workspaceEvents = events.filter(
     (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
@@ -59,13 +62,18 @@ export default function DashboardOverviewPage() {
   // The "Upcoming Events" section should only list real performance events
   const effectiveEvents = realEvents.length > 0 ? realEvents : workspaceEvents;
 
-  const [selectedEventId, setSelectedEventId] = React.useState<string>(() => {
+  const [rawSelectedEventId, setSelectedEventId] = React.useState<string>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('eventmate_dashboard_selected_event');
       if (saved) return saved;
     }
     return 'all';
   });
+
+  const selectedEventId =
+    rawSelectedEventId === 'all' || workspaceEvents.some((e) => e.id === rawSelectedEventId)
+      ? rawSelectedEventId
+      : 'all';
 
   const handleEventChange = (eventId: string) => {
     setSelectedEventId(eventId);
@@ -106,8 +114,9 @@ export default function DashboardOverviewPage() {
     allocations.filter((a) => realEvents.some((e) => e.id === a.event_id))
   );
 
-  // Dynamic calculations
-  const totalRevenue = filteredOrders.reduce((sum, o) => sum + o.final_amount, 0);
+  // Dynamic calculations (exclude cancelled / refunded orders from recognized revenue)
+  const netOrders = filteredOrders.filter(isNetRevenueOrder);
+  const totalRevenue = netOrders.reduce((sum, o) => sum + o.final_amount, 0);
   const totalAllocated = filteredAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
   const totalSold = filteredAllocations.reduce((sum, a) => sum + a.sold_quantity, 0);
   const totalStock = variants.reduce((sum, v) => sum + v.total_inventory, 0);
@@ -119,12 +128,12 @@ export default function DashboardOverviewPage() {
     {
       title: t('metrics.totalRevenue'),
       value: formatCurrency(totalRevenue, activeWorkspace?.currency || 'VND'),
-      change: `${filteredOrders.length} đơn thành công`,
+      change: `${netOrders.length} đơn hợp lệ`,
       icon: DollarSign,
     },
     {
       title: t('metrics.ordersCount'),
-      value: `${filteredOrders.length} đơn`,
+      value: `${netOrders.length} đơn`,
       change: selectedEventId === 'all' ? 'Quầy POS thực tế' : `${filteredBooths.length} quầy`,
       icon: ShoppingCart,
     },
@@ -300,23 +309,22 @@ export default function DashboardOverviewPage() {
           <div className="flex items-start sm:items-center gap-2.5">
             <FlaskConical className="w-4 h-4 shrink-0 text-[#B7791F] mt-0.5 sm:mt-0" />
             <span>
-              <strong>Dữ liệu thử nghiệm (Sandbox):</strong> Doanh thu ({formatCurrency(totalRevenue, 'VND')}) và {filteredOrders.length} đơn hàng tại đây là số liệu TEST phát sinh khi chạy thử máy POS, <strong>hoàn toàn không được cộng vào tổng doanh thu thực tế</strong> của hệ thống.
+              <strong>Dữ liệu thử nghiệm (Sandbox):</strong> Doanh thu ({formatCurrency(totalRevenue, 'VND')}) và {netOrders.length} đơn hợp lệ tại đây là số liệu TEST phát sinh khi chạy thử máy POS, <strong>hoàn toàn không được cộng vào tổng doanh thu thực tế</strong> của hệ thống.
             </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                if (confirm('Bạn có muốn xóa toàn bộ các đơn hàng thử nghiệm để làm sạch dữ liệu test?')) {
-                  clearTestOrders();
-                }
-              }}
-              className="h-7 text-xs border-[#B7791F] text-[#B7791F] hover:bg-[#B7791F]/15 gap-1"
-            >
-              <Trash2 className="w-3 h-3" />
-              <span>Xóa đơn test</span>
-            </Button>
+            {isOwnerOrAdmin && (
+              <Link href="/dashboard/settings#sandbox-data">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs border-[#B7791F] text-[#B7791F] hover:bg-[#B7791F]/15 gap-1"
+                >
+                  <Settings className="w-3 h-3" />
+                  <span>Quản lý ở Cài đặt</span>
+                </Button>
+              </Link>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -618,20 +626,32 @@ export default function DashboardOverviewPage() {
               {filteredOrders.slice(0, 5).map((ord) => {
                 const event = events.find((e) => e.id === ord.event_id);
                 const booth = booths.find((b) => b.id === ord.booth_id);
+                const ordStatus = getEffectiveOrderStatus(ord);
+                const isVoidOrRefund = ordStatus !== 'completed';
 
                 return (
                   <div
                     key={ord.id}
-                    className="py-3 first:pt-0 last:pb-0 flex items-center justify-between text-xs"
+                    className={`py-3 first:pt-0 last:pb-0 flex items-center justify-between text-xs ${isVoidOrRefund ? 'opacity-65' : ''}`}
                   >
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-[#202124]">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`font-mono font-bold text-[#202124] ${ordStatus === 'cancelled' ? 'line-through' : ''}`}>
                           {ord.order_number}
                         </span>
                         <Badge variant="outline" className="text-[9px]">
                           {ord.payment_method === 'cash' ? 'Tiền mặt' : 'VietQR'}
                         </Badge>
+                        {ordStatus === 'cancelled' && (
+                          <Badge variant="error" className="text-[9px]">
+                            Đã hủy
+                          </Badge>
+                        )}
+                        {ordStatus === 'refunded' && (
+                          <Badge variant="warning" className="text-[9px]">
+                            Đã hoàn tiền
+                          </Badge>
+                        )}
                         {isTestOrder(ord) && (
                           <Badge variant="outline" className="text-[9px] border-[#B7791F] text-[#B7791F] bg-[#B7791F]/5">
                             Thử nghiệm (Sandbox)
@@ -643,7 +663,7 @@ export default function DashboardOverviewPage() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <span className="font-bold text-[#315C4C] text-sm block">
+                      <span className={`font-bold text-sm block ${isVoidOrRefund ? 'line-through text-[#737373]' : 'text-[#315C4C]'}`}>
                         {formatCurrency(ord.final_amount, activeWorkspace?.currency || 'VND')}
                       </span>
                       <span className="text-[10px] text-[#737373]">

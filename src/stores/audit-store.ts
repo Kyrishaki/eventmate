@@ -7,32 +7,32 @@ const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [
   {
     id: 'log-seed-1',
     timestamp: new Date(Date.now() - 1000 * 60 * 8).toISOString(), // 8 minutes ago
-    actor_name: 'Đối tác: GenZ Merch (Collab)',
+    actor_name: 'Đối tác: GenZ Studio (Collab)',
     actor_role: 'collab_partner',
     action_type: 'collab_contribute',
     entity_type: 'product',
-    entity_name: 'Áo Hoodie Collab Limited Edition (Size XL)',
-    booth_name: 'Gian hàng Collab Booth A',
-    event_name: 'Live Concert Vũ Trụ 2026',
-    description: 'Đối tác "GenZ Merch" vừa đóng góp 40 sản phẩm "Áo Hoodie Collab Limited Edition (Size XL)" vào gian hàng. Tự giữ chỗ: 8, Đã đặt online: 12, Khả dụng bán tại quầy: 20.',
+    entity_name: 'Set Standee & Keychain Hologram Limbus Company x GenZ Studio',
+    booth_name: 'Gian Collab C08 — GenZ Studio x Limbus',
+    event_name: 'Hobby Horizon 2026 - Anime & Game Festival',
+    description: 'Đối tác "GenZ Studio" vừa đóng góp 80 set "Set Standee & Keychain Hologram Limbus Company" vào gian hàng Hobby Horizon. Tự giữ chỗ: 5, Đã đặt online: 15, Phân bổ bán tại quầy: 45.',
     changes: [
-      { field: 'price', field_label: 'Giá niêm yết', new_value: '450.000 VND' },
-      { field: 'quantity', field_label: 'Tổng kho mang đến', new_value: 40 },
-      { field: 'reserved_quantity', field_label: 'Tự giữ trước (VIP)', new_value: 8 },
-      { field: 'online_preorder_quantity', field_label: 'Đơn đặt mua online', new_value: 12 },
+      { field: 'price', field_label: 'Giá niêm yết', new_value: '195.000 VND' },
+      { field: 'quantity', field_label: 'Tổng kho mang đến', new_value: 80 },
+      { field: 'reserved_quantity', field_label: 'Tự giữ trước (VIP)', new_value: 5 },
+      { field: 'online_preorder_quantity', field_label: 'Đơn đặt mua online', new_value: 15 },
     ],
   },
   {
     id: 'log-seed-2',
     timestamp: new Date(Date.now() - 1000 * 60 * 25).toISOString(), // 25 mins ago
-    actor_name: 'Đối tác: GenZ Merch (Collab)',
+    actor_name: 'Đối tác: GenZ Studio (Collab)',
     actor_role: 'collab_partner',
     action_type: 'stock_adjust',
     entity_type: 'inventory',
-    entity_name: 'Móc Khóa Mica Hologram',
-    booth_name: 'Gian hàng Collab Booth A',
-    event_name: 'Live Concert Vũ Trụ 2026',
-    description: 'Đối tác "GenZ Merch" bổ sung thêm +10 sản phẩm "Móc Khóa Mica Hologram" vào quầy bán chung.',
+    entity_name: 'Keychain Acrylic 2 Lớp Limbus Company - 12 Sinners',
+    booth_name: 'Gian Collab C08 — GenZ Studio x Limbus',
+    event_name: 'Hobby Horizon 2026 - Anime & Game Festival',
+    description: 'Đối tác "GenZ Studio" bổ sung thêm +10 sản phẩm "Keychain Acrylic 2 Lớp Limbus Company" vào quầy bán chung.',
     changes: [
       { field: 'restock_amount', field_label: 'Số lượng bổ sung', new_value: '+10' },
     ],
@@ -45,27 +45,27 @@ const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [
     actor_username: 'troly_tranthi',
     action_type: 'preorder_adjust',
     entity_type: 'variant',
-    entity_name: 'Áo Tour Official 2026 - Size L',
-    booth_name: 'Gian Hàng Merchandise Chính A1',
-    description: 'Nhân viên trợ lý cập nhật số lượng đặt trước: Giữ riêng VIP tăng từ 5 lên 10, Đơn online: 15.',
+    entity_name: 'Figure Chibi Limbus Company - Don Quixote',
+    booth_name: 'Gian A12 - HikaruStore Official (Artist Alley)',
+    description: 'Nhân viên trợ lý cập nhật số lượng đặt trước cho Hobby Horizon: Giữ riêng VIP 5 hộp, Đơn online: 10 hộp.',
     changes: [
-      { field: 'reserved_quantity', field_label: 'Tự giữ trước (VIP)', old_value: 5, new_value: 10 },
-      { field: 'online_preorder_quantity', field_label: 'Đơn online', old_value: 15, new_value: 15 },
+      { field: 'reserved_quantity', field_label: 'Tự giữ trước (VIP)', old_value: 3, new_value: 5 },
+      { field: 'online_preorder_quantity', field_label: 'Đơn online', old_value: 10, new_value: 10 },
     ],
   },
   {
     id: 'log-seed-4',
     timestamp: new Date(Date.now() - 1000 * 60 * 65).toISOString(), // 1 hour ago
-    actor_name: 'Thu ngân Quầy A1 (Cashier)',
+    actor_name: 'Thu ngân Gian A12 (Cashier)',
     actor_role: 'cashier',
     actor_username: 'cashier_a1',
     action_type: 'order_create',
     entity_type: 'order',
     entity_name: 'Đơn hàng #EM-7821',
-    booth_name: 'Gian Hàng Merchandise Chính A1',
-    description: 'Thu ngân quầy A1 tạo thành công đơn hàng #EM-7821 trị giá 350.000 VND (Phương thức: VietQR chuyển khoản). Giảm 1 món "Áo Tour 2026".',
+    booth_name: 'Gian A12 - HikaruStore Official (Artist Alley)',
+    description: 'Thu ngân Gian A12 tạo thành công đơn hàng #EM-7821 trị giá 210.000 VND (VietQR). Xuất 1x Standee Vergilius + 1x Keychain Don Quixote.',
     changes: [
-      { field: 'final_amount', field_label: 'Giá trị đơn', new_value: '350.000 VND' },
+      { field: 'final_amount', field_label: 'Giá trị đơn', new_value: '210.000 VND' },
       { field: 'payment_method', field_label: 'Thanh toán', new_value: 'VietQR' },
     ],
   },
@@ -78,7 +78,7 @@ const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [
     action_type: 'user_create',
     entity_type: 'team_member',
     entity_name: 'Tài khoản thu ngân: cashier_a1',
-    description: 'Admin cấp tài khoản mới "cashier_a1" với vai trò "Thu ngân (Cashier)" và cấp quyền truy cập máy POS.',
+    description: 'Admin cấp tài khoản mới "cashier_a1" với vai trò "Thu ngân (Cashier)" phục vụ kỳ lễ hội Hobby Horizon 2026.',
     changes: [
       { field: 'role', field_label: 'Vai trò cấp', new_value: 'cashier' },
       { field: 'username', field_label: 'Tên đăng nhập', new_value: 'cashier_a1' },
@@ -92,11 +92,11 @@ const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [
     actor_username: 'staff_nguyen',
     action_type: 'stock_adjust',
     entity_type: 'inventory',
-    entity_name: 'Nón Cap Hạc Cầm Signature',
+    entity_name: 'Standee Sa Bàn 3D Chuyến Xe Mephistopheles',
     booth_name: 'Kho Tổng Trung Tâm',
-    description: 'Nhân viên kho điều chỉnh định mức phân bổ: Cấp thêm +20 nón vào gian hàng Merchandise Phụ B2.',
+    description: 'Nhân viên kho điều chỉnh định mức phân bổ: Cấp 18 bộ Standee Sa Bàn Mephistopheles vào Gian A12 (Artist Alley).',
     changes: [
-      { field: 'allocated_quantity', field_label: 'Số lượng phân bổ', old_value: 30, new_value: 50 },
+      { field: 'allocated_quantity', field_label: 'Số lượng phân bổ', old_value: 10, new_value: 18 },
     ],
   },
   {
@@ -107,10 +107,10 @@ const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [
     actor_username: 'Tuanadminvippro666',
     action_type: 'update',
     entity_type: 'product',
-    entity_name: 'Lightstick Đổi Màu RGB',
-    description: 'Admin cập nhật giá bán niêm yết từ 250.000 VND lên 280.000 VND.',
+    entity_name: 'Standee Acrylic Limbus Company - E.G.O & Walpurgisnacht',
+    description: 'Admin cập nhật danh mục sản phẩm mới cho kỳ lễ hội Hobby Horizon 2026.',
     changes: [
-      { field: 'price', field_label: 'Giá niêm yết', old_value: '250.000 VND', new_value: '280.000 VND' },
+      { field: 'price', field_label: 'Giá niêm yết', old_value: '135.000 VND', new_value: '145.000 VND' },
     ],
   },
 ];
@@ -157,7 +157,16 @@ export const useAuditStore = create<AuditStoreState>()(
       },
     }),
     {
-      name: 'eventmate_audit_logs_v1',
+      name: 'eventmate_audit_logs_v2',
+      onRehydrateStorage: () => () => {
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.removeItem('eventmate_audit_logs_v1');
+          } catch {
+            // ignore
+          }
+        }
+      },
     }
   )
 );

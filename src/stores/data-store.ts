@@ -102,9 +102,9 @@ export interface DataStoreState {
 }
 
 const defaultCategories: ProductCategory[] = [
-  { id: 'cat-apparel', workspace_id: 'ws-hac-cam-studio', name: 'Áo thun & Trang phục', sort_order: 1, created_at: new Date().toISOString() },
-  { id: 'cat-accessories', workspace_id: 'ws-hac-cam-studio', name: 'Phụ kiện & Lightstick', sort_order: 2, created_at: new Date().toISOString() },
-  { id: 'cat-music', workspace_id: 'ws-hac-cam-studio', name: 'Đĩa Than (Vinyl) & CD', sort_order: 3, created_at: new Date().toISOString() },
+  { id: 'cat-keychain', workspace_id: 'ws-hac-cam-studio', name: 'Keychain & Móc khóa Acrylic', sort_order: 1, created_at: new Date().toISOString() },
+  { id: 'cat-standee', workspace_id: 'ws-hac-cam-studio', name: 'Standee Acrylic & Sa bàn 3D', sort_order: 2, created_at: new Date().toISOString() },
+  { id: 'cat-figure', workspace_id: 'ws-hac-cam-studio', name: 'Figure & Mô hình Anime/Game', sort_order: 3, created_at: new Date().toISOString() },
 ];
 
 const defaultEvents: EventItem[] = [
@@ -122,26 +122,41 @@ const defaultEvents: EventItem[] = [
     updated_at: new Date().toISOString(),
   },
   {
-    id: 'evt-hanoi-2026',
+    id: 'evt-hobby-horizon-2026',
     workspace_id: 'ws-hac-cam-studio',
-    name: 'Hạc Cầm Live Concert - Hà Nội',
-    description: 'Đêm diễn mở màn tour lưu diễn 2026 tại Hà Nội',
-    location: 'Trung tâm Hội nghị Quốc gia, Hà Nội',
-    start_date: '2026-11-20T18:00:00Z',
-    end_date: '2026-11-20T22:30:00Z',
-    status: 'upcoming',
+    name: 'Hobby Horizon 2026 - Anime & Game Festival',
+    description: 'Đại hội văn hóa Anime, Comic, Game & Creators lớn nhất Việt Nam. Quy tụ khu Artist Alley, Figure chính hãng và gian hàng fanwork Limbus Company (Project Moon).',
+    location: 'Trung tâm Hội chợ & Triển lãm Sài Gòn (SECC), Quận 7, TP.HCM',
+    start_date: '2026-11-21T08:30:00Z',
+    end_date: '2026-11-22T21:00:00Z',
+    status: 'active',
+    banner_url: '/products/banner-hobby-horizon.svg',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
-    id: 'evt-saigon-2026',
+    id: 'evt-color-fiesta-2026',
     workspace_id: 'ws-hac-cam-studio',
-    name: 'Hạc Cầm Tour - TP. Hồ Chí Minh',
-    description: 'Đêm nhạc sân vận động thứ hai',
-    location: 'Nhà thi đấu Phú Thọ, Quận 11, TP.HCM',
-    start_date: '2026-12-05T18:00:00Z',
-    end_date: '2026-12-05T22:30:00Z',
-    status: 'draft',
+    name: "Color Fiesta: Mephisto's Bus - Creator & Doujin Festival",
+    description: 'Lễ hội Artist Alley & Doujinshi quy mô lớn dành cho cộng đồng fan Limbus Company, Project Moon và Anime/Gacha Games tại TP.HCM.',
+    location: 'Nhà thi đấu Hồ Xuân Hương, Quận 3, TP.HCM',
+    start_date: '2026-12-12T08:30:00Z',
+    end_date: '2026-12-13T20:30:00Z',
+    status: 'upcoming',
+    banner_url: '/products/banner-color-fiesta.svg',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'evt-hobby-horizon-hn',
+    workspace_id: 'ws-hac-cam-studio',
+    name: 'Hobby Horizon Winter Matsuri - Hà Nội 2026',
+    description: 'Lễ hội mùa đông giao lưu Cosplay, Figure, Acrylic Standee & Keychain Anime/Game tại thủ đô Hà Nội.',
+    location: 'Cung Văn hóa Lao động Hữu nghị Việt Xô, Hoàn Kiếm, Hà Nội',
+    start_date: '2026-12-26T09:00:00Z',
+    end_date: '2026-12-27T21:00:00Z',
+    status: 'upcoming',
+    banner_url: '/products/banner-hobby-horizon-hn.svg',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -162,9 +177,9 @@ const defaultBooths: Booth[] = [
   {
     id: 'booth-a',
     workspace_id: 'ws-hac-cam-studio',
-    event_id: 'evt-hanoi-2026',
-    name: 'Quầy A - Cổng chính',
-    code: 'BOOTH-A',
+    event_id: 'evt-hobby-horizon-2026',
+    name: 'Gian A12 - HikaruStore Official (Artist Alley)',
+    code: 'BOOTH-HH-A12',
     status: 'active',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -172,29 +187,9 @@ const defaultBooths: Booth[] = [
   {
     id: 'booth-b',
     workspace_id: 'ws-hac-cam-studio',
-    event_id: 'evt-hanoi-2026',
-    name: 'Quầy B - Khu VIP & Sân trong',
-    code: 'BOOTH-B',
-    status: 'active',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'booth-sg-1',
-    workspace_id: 'ws-hac-cam-studio',
-    event_id: 'evt-saigon-2026',
-    name: 'Quầy 1 - Khu Vé & Check-in',
-    code: 'BOOTH-SG1',
-    status: 'active',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'booth-sg-2',
-    workspace_id: 'ws-hac-cam-studio',
-    event_id: 'evt-saigon-2026',
-    name: 'Quầy 2 - Sân khấu chính',
-    code: 'BOOTH-SG2',
+    event_id: 'evt-hobby-horizon-2026',
+    name: 'Gian B05 - Khu Figure & Standee Limbus',
+    code: 'BOOTH-HH-B05',
     status: 'active',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -202,8 +197,8 @@ const defaultBooths: Booth[] = [
   {
     id: 'booth-collab-genz',
     workspace_id: 'ws-hac-cam-studio',
-    event_id: 'evt-hanoi-2026',
-    name: 'Quầy Collab — GenZ Studio',
+    event_id: 'evt-hobby-horizon-2026',
+    name: 'Gian Collab C08 — GenZ Studio x Limbus',
     code: 'BOOTH-COL-GENZ',
     status: 'active',
     booth_type: 'collab',
@@ -212,49 +207,91 @@ const defaultBooths: Booth[] = [
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
+  {
+    id: 'booth-cf-1',
+    workspace_id: 'ws-hac-cam-studio',
+    event_id: 'evt-color-fiesta-2026',
+    name: 'Gian D01 - Khu Creator Zone (Color Fiesta)',
+    code: 'BOOTH-CF-D01',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'booth-hn-1',
+    workspace_id: 'ws-hac-cam-studio',
+    event_id: 'evt-hobby-horizon-hn',
+    name: 'Gian M03 - Sảnh Chính (Hobby Horizon HN)',
+    code: 'BOOTH-HN-M03',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
 ];
 
 const defaultProducts: Product[] = [
   {
-    id: 'prod-tshirt-tour',
+    id: 'prod-limbus-keychain-sinners',
     workspace_id: 'ws-hac-cam-studio',
-    category_id: 'cat-apparel',
-    name: 'Áo thun Tour Hạc Cầm 2026 (Black Edition)',
-    description: 'Chất liệu 100% cotton định lượng 250gsm, in lụa thủ công mặt trước và lịch tour mặt sau.',
-    image_url: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=500&auto=format&fit=crop&q=60',
+    category_id: 'cat-keychain',
+    name: 'Keychain Acrylic 2 Lớp Limbus Company - 12 Sinners',
+    description: 'Móc khóa mica 2 lớp in UV sắc nét kèm hiệu ứng ép kim tuyến Hologram, khoen cài hình bánh răng đồng hồ Dante (Project Moon).',
+    image_url: '/products/limbus-keychain-sinners.svg',
     is_active: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
-    id: 'prod-tour-cap',
+    id: 'prod-limbus-standee-ego',
     workspace_id: 'ws-hac-cam-studio',
-    category_id: 'cat-accessories',
-    name: 'Nón lưỡi trai Official Tour Cap',
-    description: 'Thêu nổi biểu tượng Hạc Cầm phía trước, khóa kim loại cao cấp tùy chỉnh.',
-    image_url: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=500&auto=format&fit=crop&q=60',
+    category_id: 'cat-standee',
+    name: 'Standee Acrylic Limbus Company - E.G.O & Walpurgisnacht (18cm)',
+    description: 'Standee Acrylic dày 4mm cắt laser viền bóng, đế in biểu tượng Lobotomy E.G.O và hiệu ứng ánh kim lấp lánh.',
+    image_url: '/products/limbus-standee-ego.svg',
     is_active: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
-    id: 'prod-lightstick',
+    id: 'prod-limbus-figure-chibi',
     workspace_id: 'ws-hac-cam-studio',
-    category_id: 'cat-accessories',
-    name: 'Lightstick Cổ vũ Hạc Cầm RGB',
-    description: 'Đèn phát sáng đồng bộ bluetooth theo nhịp điệu sân khấu, 15 chế độ màu sắc.',
-    image_url: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=60',
+    category_id: 'cat-figure',
+    name: 'Figure Chibi / Nendoroid Limbus Company - Bus Department',
+    description: 'Mô hình PVC/ABS cao 10cm chính hãng kèm 3 biểu cảm khuôn mặt thay thế và phụ kiện vũ khí đặc trưng của từng Sinner.',
+    image_url: '/products/limbus-figure-chibi.svg',
     is_active: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
-    id: 'prod-vinyl-album',
+    id: 'prod-limbus-diorama-mephi',
     workspace_id: 'ws-hac-cam-studio',
-    category_id: 'cat-music',
-    name: "Đĩa Than (Vinyl) - Album 'Khởi Hành'",
-    description: 'Đĩa nhựa 180g mastered tại Abbey Road, phiên bản kỷ niệm có chữ ký tác quyền.',
-    image_url: 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=500&auto=format&fit=crop&q=60',
+    category_id: 'cat-standee',
+    name: 'Standee Sa Bàn 3D Chuyến Xe Mephistopheles - Limbus Company',
+    description: 'Bộ Standee sa bàn 5 lớp lắp ghép 3D tái hiện nội thất xe buýt Mephistopheles cùng Charon, Dante và Vergilius.',
+    image_url: '/products/limbus-diorama-mephi.svg',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'prod-limbus-shaker-keychain',
+    workspace_id: 'ws-hac-cam-studio',
+    category_id: 'cat-keychain',
+    name: 'Keychain Shaker Cát Chảy Limbus Company - Enkephalin & Golden Bough',
+    description: 'Móc khóa Shaker chứa dầu lấp lánh màu xanh Enkephalin và nhánh cây vàng Golden Bough cùng charm mini các Sinners bên trong.',
+    image_url: '/products/limbus-shaker-keychain.svg',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'prod-anime-figure-popup',
+    workspace_id: 'ws-hac-cam-studio',
+    category_id: 'cat-figure',
+    name: 'Figure Anime Chính Hãng - Hobby Horizon Exclusive Pop Up Parade',
+    description: 'Dòng Figure PVC tỷ lệ chuẩn cao 18cm nhập khẩu Nhật Bản (Good Smile Company), hộp nguyên seal trưng bày tại Hobby Horizon.',
+    image_url: '/products/anime-figure-popup.svg',
     is_active: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -262,10 +299,10 @@ const defaultProducts: Product[] = [
   {
     id: 'prod-collab-genz-bag',
     workspace_id: 'ws-hac-cam-studio',
-    category_id: 'cat-accessories',
-    name: 'Túi Canvas Collab Hạc Cẩm x GenZ Studio',
-    description: 'Túi tote canvas cao cấp phiên bản giới hạn hợp tác cùng GenZ Studio.',
-    image_url: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=500&auto=format&fit=crop&q=60',
+    category_id: 'cat-standee',
+    name: 'Set Standee & Keychain Hologram Limbus Company x GenZ Studio',
+    description: 'Bộ sưu tập Fanart độc quyền hợp tác cùng GenZ Studio cho kỳ lễ hội Hobby Horizon: gồm 1 Standee 16cm + 1 Keychain Hologram + 2 Card bo góc.',
+    image_url: '/products/limbus-collab-set.svg',
     collab_partner: 'GenZ Studio',
     is_active: true,
     created_at: new Date().toISOString(),
@@ -274,98 +311,265 @@ const defaultProducts: Product[] = [
 ];
 
 const defaultVariants: ProductVariant[] = [
+  // 1. Keychain Acrylic 12 Sinners
   {
-    id: 'var-tshirt-s',
+    id: 'var-kc-don',
     workspace_id: 'ws-hac-cam-studio',
-    product_id: 'prod-tshirt-tour',
-    sku: 'HC-TSHIRT-BLK-S',
-    name: 'Size S',
-    price: 350000,
-    barcode: '893601001001',
-    total_inventory: 100,
-    reserved_quantity: 15, // Chủ shop tự giữ chỗ 15 cái cho VIP/Nội bộ
-    online_preorder_quantity: 20, // Khách đặt mua online nhận tại quầy 20 cái
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'var-tshirt-m',
-    workspace_id: 'ws-hac-cam-studio',
-    product_id: 'prod-tshirt-tour',
-    sku: 'HC-TSHIRT-BLK-M',
-    name: 'Size M',
-    price: 350000,
-    barcode: '893601001002',
-    total_inventory: 150,
-    reserved_quantity: 10,
-    online_preorder_quantity: 35,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'var-tshirt-l',
-    workspace_id: 'ws-hac-cam-studio',
-    product_id: 'prod-tshirt-tour',
-    sku: 'HC-TSHIRT-BLK-L',
-    name: 'Size L',
-    price: 350000,
-    barcode: '893601001003',
-    total_inventory: 150,
-    reserved_quantity: 10,
-    online_preorder_quantity: 25,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'var-cap-blk',
-    workspace_id: 'ws-hac-cam-studio',
-    product_id: 'prod-tour-cap',
-    sku: 'HC-CAP-BLK',
-    name: 'Freesize - Đen',
-    price: 220000,
-    barcode: '893601002001',
+    product_id: 'prod-limbus-keychain-sinners',
+    sku: 'LC-KC-DON-03',
+    name: 'Don Quixote (#03)',
+    price: 65000,
+    barcode: '893602001001',
     total_inventory: 120,
+    reserved_quantity: 10,
+    online_preorder_quantity: 20,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'var-kc-faust',
+    workspace_id: 'ws-hac-cam-studio',
+    product_id: 'prod-limbus-keychain-sinners',
+    sku: 'LC-KC-FAUST-02',
+    name: 'Faust (#02)',
+    price: 65000,
+    barcode: '893602001002',
+    total_inventory: 100,
+    reserved_quantity: 8,
+    online_preorder_quantity: 12,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'var-kc-yisang',
+    workspace_id: 'ws-hac-cam-studio',
+    product_id: 'prod-limbus-keychain-sinners',
+    sku: 'LC-KC-YISANG-01',
+    name: 'Yi Sang (#01)',
+    price: 65000,
+    barcode: '893602001003',
+    total_inventory: 100,
     reserved_quantity: 5,
     online_preorder_quantity: 15,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
-    id: 'var-lightstick-rgb',
+    id: 'var-kc-ishmael',
     workspace_id: 'ws-hac-cam-studio',
-    product_id: 'prod-lightstick',
-    sku: 'HC-LIGHTSTICK-RGB',
-    name: 'Phiên bản Chuẩn RGB',
-    price: 280000,
-    barcode: '893601003001',
-    total_inventory: 200,
-    reserved_quantity: 20,
-    online_preorder_quantity: 60,
+    product_id: 'prod-limbus-keychain-sinners',
+    sku: 'LC-KC-ISHMAEL-08',
+    name: 'Ishmael (#08)',
+    price: 65000,
+    barcode: '893602001004',
+    total_inventory: 90,
+    reserved_quantity: 5,
+    online_preorder_quantity: 15,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
-    id: 'var-vinyl-limited',
+    id: 'var-kc-sinclair',
     workspace_id: 'ws-hac-cam-studio',
-    product_id: 'prod-vinyl-album',
-    sku: 'HC-VINYL-LTD',
-    name: 'Bản chữ ký đặc biệt',
-    price: 850000,
-    barcode: '893601004001',
-    total_inventory: 50,
-    reserved_quantity: 15,
-    online_preorder_quantity: 30, // Chỉ còn 5 cái khả dụng bán tự do!
+    product_id: 'prod-limbus-keychain-sinners',
+    sku: 'LC-KC-SINCLAIR-11',
+    name: 'Sinclair (#11)',
+    price: 65000,
+    barcode: '893602001005',
+    total_inventory: 90,
+    reserved_quantity: 5,
+    online_preorder_quantity: 10,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
+
+  // 2. Standee Acrylic E.G.O & Walpurgisnacht
+  {
+    id: 'var-st-vergilius',
+    workspace_id: 'ws-hac-cam-studio',
+    product_id: 'prod-limbus-standee-ego',
+    sku: 'LC-ST-VERG-00',
+    name: 'Vergilius (The Red Gaze)',
+    price: 145000,
+    barcode: '893602002001',
+    total_inventory: 80,
+    reserved_quantity: 8,
+    online_preorder_quantity: 12,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'var-st-heathcliff',
+    workspace_id: 'ws-hac-cam-studio',
+    product_id: 'prod-limbus-standee-ego',
+    sku: 'LC-ST-HEATH-07',
+    name: 'Heathcliff (#07 - Wild Hunt ID)',
+    price: 145000,
+    barcode: '893602002002',
+    total_inventory: 90,
+    reserved_quantity: 10,
+    online_preorder_quantity: 15,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'var-st-honglu',
+    workspace_id: 'ws-hac-cam-studio',
+    product_id: 'prod-limbus-standee-ego',
+    sku: 'LC-ST-HONGLU-06',
+    name: 'Hong Lu (#06 - Land of Illusion)',
+    price: 135000,
+    barcode: '893602002003',
+    total_inventory: 80,
+    reserved_quantity: 5,
+    online_preorder_quantity: 15,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'var-st-ryoshu',
+    workspace_id: 'ws-hac-cam-studio',
+    product_id: 'prod-limbus-standee-ego',
+    sku: 'LC-ST-RYOSHU-04',
+    name: 'Ryōshū (#04 - Red Eyes)',
+    price: 135000,
+    barcode: '893602002004',
+    total_inventory: 75,
+    reserved_quantity: 5,
+    online_preorder_quantity: 10,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+
+  // 3. Figure Chibi / Nendoroid Limbus Company
+  {
+    id: 'var-fig-dante',
+    workspace_id: 'ws-hac-cam-studio',
+    product_id: 'prod-limbus-figure-chibi',
+    sku: 'LC-FIG-DANTE-10',
+    name: 'Dante (Manager - Đầu Đồng Hồ Lửa)',
+    price: 850000,
+    barcode: '893602003001',
+    total_inventory: 40,
+    reserved_quantity: 5,
+    online_preorder_quantity: 10,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'var-fig-don',
+    workspace_id: 'ws-hac-cam-studio',
+    product_id: 'prod-limbus-figure-chibi',
+    sku: 'LC-FIG-DON-03',
+    name: 'Don Quixote (La Manchaland Ver.)',
+    price: 920000,
+    barcode: '893602003002',
+    total_inventory: 35,
+    reserved_quantity: 5,
+    online_preorder_quantity: 10,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'var-fig-faust',
+    workspace_id: 'ws-hac-cam-studio',
+    product_id: 'prod-limbus-figure-chibi',
+    sku: 'LC-FIG-FAUST-02',
+    name: 'Faust (Zwei / Gesellschaft Ver.)',
+    price: 890000,
+    barcode: '893602003003',
+    total_inventory: 30,
+    reserved_quantity: 4,
+    online_preorder_quantity: 6,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+
+  // 4. Standee Sa Bàn 3D Mephistopheles
+  {
+    id: 'var-dio-mephi-full',
+    workspace_id: 'ws-hac-cam-studio',
+    product_id: 'prod-limbus-diorama-mephi',
+    sku: 'LC-DIO-MEPHI-SET',
+    name: 'Full Set Sa Bàn 3D (Kèm Charon & Mephi)',
+    price: 280000,
+    barcode: '893602004001',
+    total_inventory: 60,
+    reserved_quantity: 6,
+    online_preorder_quantity: 14,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+
+  // 5. Keychain Shaker Cát Chảy
+  {
+    id: 'var-shk-enkephalin',
+    workspace_id: 'ws-hac-cam-studio',
+    product_id: 'prod-limbus-shaker-keychain',
+    sku: 'LC-SHK-ENKE-01',
+    name: 'Bình Enkephalin (Gregor, Outis, Meursault)',
+    price: 95000,
+    barcode: '893602005001',
+    total_inventory: 100,
+    reserved_quantity: 10,
+    online_preorder_quantity: 15,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'var-shk-bough',
+    workspace_id: 'ws-hac-cam-studio',
+    product_id: 'prod-limbus-shaker-keychain',
+    sku: 'LC-SHK-BOUGH-02',
+    name: 'Nhánh Golden Bough (Dante & Sinclair)',
+    price: 95000,
+    barcode: '893602005002',
+    total_inventory: 100,
+    reserved_quantity: 10,
+    online_preorder_quantity: 20,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+
+  // 6. Figure Anime Pop Up Parade
+  {
+    id: 'var-fig-frieren',
+    workspace_id: 'ws-hac-cam-studio',
+    product_id: 'prod-anime-figure-popup',
+    sku: 'ANI-FIG-FRIEREN',
+    name: 'Frieren (Sousou no Frieren - 18cm)',
+    price: 950000,
+    barcode: '893602006001',
+    total_inventory: 35,
+    reserved_quantity: 5,
+    online_preorder_quantity: 8,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'var-fig-hoshino-ai',
+    workspace_id: 'ws-hac-cam-studio',
+    product_id: 'prod-anime-figure-popup',
+    sku: 'ANI-FIG-AI-01',
+    name: 'Ai Hoshino (Oshi no Ko - 18cm)',
+    price: 980000,
+    barcode: '893602006002',
+    total_inventory: 30,
+    reserved_quantity: 4,
+    online_preorder_quantity: 6,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+
+  // 7. Collab GenZ Studio x Limbus Company
   {
     id: 'var-collab-genz-bag-std',
     workspace_id: 'ws-hac-cam-studio',
     product_id: 'prod-collab-genz-bag',
-    sku: 'COL-GENZ-BAG-01',
-    name: 'Tiêu chuẩn (Standard)',
-    price: 290000,
-    barcode: '893601009001',
+    sku: 'COL-GENZ-LC-SET',
+    name: 'Combo Walpurgis (Outis, Gregor & Rodion)',
+    price: 195000,
+    barcode: '893602009001',
     total_inventory: 80,
     reserved_quantity: 5,
     online_preorder_quantity: 15,
@@ -374,51 +578,69 @@ const defaultVariants: ProductVariant[] = [
   },
 ];
 
-// Default allocations for Hanoi Concert
-// Exact Allocated Inventory model adhering to specifications
+// Default allocations for Hobby Horizon 2026 & Color Fiesta
 const defaultAllocations: InventoryAllocation[] = [
-  // T-Shirt S: Total 100 -> Booth A: 40, Booth B: 30, Storage: 30
-  { id: 'alloc-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hanoi-2026', booth_id: 'booth-a', variant_id: 'var-tshirt-s', allocated_quantity: 40, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-2', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hanoi-2026', booth_id: 'booth-b', variant_id: 'var-tshirt-s', allocated_quantity: 30, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  // Keychain Don Quixote: maxOffline 90 -> Booth A: 45, Booth B: 25, CF: 10
+  { id: 'alloc-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-kc-don', allocated_quantity: 45, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-2', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-kc-don', allocated_quantity: 25, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-cf-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-color-fiesta-2026', booth_id: 'booth-cf-1', variant_id: 'var-kc-don', allocated_quantity: 10, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 
-  // T-Shirt M: Total 150 -> Booth A: 60, Booth B: 50, Storage: 40
-  { id: 'alloc-3', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hanoi-2026', booth_id: 'booth-a', variant_id: 'var-tshirt-m', allocated_quantity: 60, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-4', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hanoi-2026', booth_id: 'booth-b', variant_id: 'var-tshirt-m', allocated_quantity: 50, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  // Keychain Faust: maxOffline 80 -> Booth A: 40, Booth B: 20, CF: 10
+  { id: 'alloc-3', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-kc-faust', allocated_quantity: 40, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-4', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-kc-faust', allocated_quantity: 20, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-cf-2', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-color-fiesta-2026', booth_id: 'booth-cf-1', variant_id: 'var-kc-faust', allocated_quantity: 10, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 
-  // T-Shirt L: Total 150 -> Booth A: 60, Booth B: 50, Storage: 40
-  { id: 'alloc-5', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hanoi-2026', booth_id: 'booth-a', variant_id: 'var-tshirt-l', allocated_quantity: 60, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-6', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hanoi-2026', booth_id: 'booth-b', variant_id: 'var-tshirt-l', allocated_quantity: 50, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  // Keychain Yi Sang: maxOffline 80 -> Booth A: 40, Booth B: 20, CF: 10
+  { id: 'alloc-5', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-kc-yisang', allocated_quantity: 40, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-6', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-kc-yisang', allocated_quantity: 20, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-cf-3', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-color-fiesta-2026', booth_id: 'booth-cf-1', variant_id: 'var-kc-yisang', allocated_quantity: 10, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 
-  // Cap: Total 120 -> Booth A: 50, Booth B: 40, Storage: 30
-  { id: 'alloc-7', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hanoi-2026', booth_id: 'booth-a', variant_id: 'var-cap-blk', allocated_quantity: 50, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-8', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hanoi-2026', booth_id: 'booth-b', variant_id: 'var-cap-blk', allocated_quantity: 40, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  // Keychain Ishmael & Sinclair
+  { id: 'alloc-7', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-kc-ishmael', allocated_quantity: 35, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-8', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-kc-ishmael', allocated_quantity: 20, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-9', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-kc-sinclair', allocated_quantity: 35, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-10', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-kc-sinclair', allocated_quantity: 20, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 
-  // Lightstick: Total 200 -> Booth A: 90, Booth B: 70, Storage: 40
-  { id: 'alloc-9', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hanoi-2026', booth_id: 'booth-a', variant_id: 'var-lightstick-rgb', allocated_quantity: 90, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-10', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hanoi-2026', booth_id: 'booth-b', variant_id: 'var-lightstick-rgb', allocated_quantity: 70, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  // Standee E.G.O (Vergilius, Heathcliff, Hong Lu, Ryoshu)
+  { id: 'alloc-11', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-st-vergilius', allocated_quantity: 25, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-12', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-st-vergilius', allocated_quantity: 25, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-13', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-st-heathcliff', allocated_quantity: 30, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-14', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-st-heathcliff', allocated_quantity: 25, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-15', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-st-honglu', allocated_quantity: 25, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-16', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-st-honglu', allocated_quantity: 25, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-17', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-st-ryoshu', allocated_quantity: 25, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-18', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-st-ryoshu', allocated_quantity: 20, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 
-  // Vinyl: Total 50 -> Booth A: 20, Booth B: 20, Storage: 10
-  { id: 'alloc-11', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hanoi-2026', booth_id: 'booth-a', variant_id: 'var-vinyl-limited', allocated_quantity: 20, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-12', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hanoi-2026', booth_id: 'booth-b', variant_id: 'var-vinyl-limited', allocated_quantity: 20, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  // Figure Chibi Limbus Company (Dante, Don Quixote, Faust)
+  { id: 'alloc-19', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-fig-dante', allocated_quantity: 10, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-20', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-fig-dante', allocated_quantity: 10, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-21', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-fig-don', allocated_quantity: 8, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-22', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-fig-don', allocated_quantity: 8, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-23', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-fig-faust', allocated_quantity: 8, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-24', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-fig-faust', allocated_quantity: 8, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 
-  // Saigon Event Allocations
-  { id: 'alloc-sg-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-saigon-2026', booth_id: 'booth-sg-1', variant_id: 'var-tshirt-s', allocated_quantity: 40, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-sg-2', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-saigon-2026', booth_id: 'booth-sg-1', variant_id: 'var-tshirt-m', allocated_quantity: 60, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-sg-3', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-saigon-2026', booth_id: 'booth-sg-1', variant_id: 'var-tshirt-l', allocated_quantity: 60, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-sg-4', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-saigon-2026', booth_id: 'booth-sg-1', variant_id: 'var-cap-blk', allocated_quantity: 50, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-sg-5', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-saigon-2026', booth_id: 'booth-sg-1', variant_id: 'var-lightstick-rgb', allocated_quantity: 90, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-sg-6', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-saigon-2026', booth_id: 'booth-sg-1', variant_id: 'var-vinyl-limited', allocated_quantity: 20, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  // Standee Diorama Mephistopheles & Shaker Keychains
+  { id: 'alloc-25', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-dio-mephi-full', allocated_quantity: 18, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-26', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-dio-mephi-full', allocated_quantity: 14, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-27', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-shk-enkephalin', allocated_quantity: 35, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-28', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-shk-enkephalin', allocated_quantity: 25, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-29', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-a', variant_id: 'var-shk-bough', allocated_quantity: 35, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-30', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-shk-bough', allocated_quantity: 25, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+
+  // Anime Scale Figures at Booth B
+  { id: 'alloc-31', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-fig-frieren', allocated_quantity: 15, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-32', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-b', variant_id: 'var-fig-hoshino-ai', allocated_quantity: 14, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 
   // Test Event Allocations (Quầy Test POS 01)
-  { id: 'alloc-test-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-tshirt-s', allocated_quantity: 50, sold_quantity: 31, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-test-2', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-tshirt-m', allocated_quantity: 50, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-test-3', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-tshirt-l', allocated_quantity: 50, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-test-4', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-cap-blk', allocated_quantity: 30, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-test-5', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-lightstick-rgb', allocated_quantity: 50, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'alloc-test-6', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-vinyl-limited', allocated_quantity: 15, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-kc-don', allocated_quantity: 50, sold_quantity: 12, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-2', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-kc-faust', allocated_quantity: 50, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-3', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-st-vergilius', allocated_quantity: 40, sold_quantity: 1, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-4', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-fig-dante', allocated_quantity: 20, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-5', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-dio-mephi-full', allocated_quantity: 30, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-test-6', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-test-pos', booth_id: 'booth-test-1', variant_id: 'var-shk-enkephalin', allocated_quantity: 40, sold_quantity: 0, is_test: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 
   // Collab Booth Allocations
-  { id: 'alloc-collab-genz-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hanoi-2026', booth_id: 'booth-collab-genz', variant_id: 'var-collab-genz-bag-std', allocated_quantity: 40, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'alloc-collab-genz-1', workspace_id: 'ws-hac-cam-studio', event_id: 'evt-hobby-horizon-2026', booth_id: 'booth-collab-genz', variant_id: 'var-collab-genz-bag-std', allocated_quantity: 45, sold_quantity: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 ];
 
 const defaultMembers: WorkspaceMember[] = [
@@ -1055,9 +1277,45 @@ export const useDataStore = create<DataStoreState>()(
       },
     }),
     {
-      name: 'eventmate_core_data_v3',
+      name: 'eventmate_core_data_v4',
       onRehydrateStorage: () => (state) => {
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.removeItem('eventmate_core_data_v3');
+            const savedEvt = localStorage.getItem('eventmate_pos_selected_event');
+            if (savedEvt === 'evt-hanoi-2026' || savedEvt === 'evt-saigon-2026') {
+              localStorage.setItem('eventmate_pos_selected_event', 'evt-hobby-horizon-2026');
+            }
+            const savedDashEvt = localStorage.getItem('eventmate_dashboard_selected_event');
+            if (savedDashEvt === 'evt-hanoi-2026' || savedDashEvt === 'evt-saigon-2026') {
+              localStorage.setItem('eventmate_dashboard_selected_event', 'all');
+            }
+          } catch {
+            // ignore storage errors
+          }
+        }
         if (!state) return;
+
+        // Purge any legacy Hạc Cầm Concert data if ever present
+        const legacyEventIds = new Set(['evt-hanoi-2026', 'evt-saigon-2026']);
+        const legacyProductIds = new Set([
+          'prod-tshirt-tour',
+          'prod-tour-cap',
+          'prod-lightstick',
+          'prod-vinyl-album',
+        ]);
+
+        if (state.events?.some((e) => legacyEventIds.has(e.id))) {
+          state.events = defaultEvents;
+        }
+        if (state.products?.some((p) => legacyProductIds.has(p.id))) {
+          state.products = defaultProducts;
+          state.variants = defaultVariants;
+          state.categories = defaultCategories;
+          state.booths = defaultBooths;
+          state.allocations = defaultAllocations;
+        }
+
         // Self-heal and ensure events exist
         if (!state.events || state.events.length === 0) {
           state.events = defaultEvents;

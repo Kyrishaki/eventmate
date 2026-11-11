@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgDio" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1C1917" />
+      <stop offset="50%" stop-color="#292524" />
+      <stop offset="100%" stop-color="#0C0A09" />
+    </linearGradient>
+    <linearGradient id="goldDio" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE68A" />
+      <stop offset="100%" stop-color="#B45309" />
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#bgDio)" />
+  <!-- 3D Diorama Base Plate -->
+  <polygon points="80,450 520,450 560,515 40,515" fill="#27272A" stroke="url(#goldDio)" stroke-width="4" />
+  <!-- Mephistopheles Bus Backdrop Layer -->
+  <rect x="110" y="150" width="380" height="300" rx="18" fill="#450A0A" stroke="url(#goldDio)" stroke-width="4" />
+  <!-- Bus Windows -->
+  <rect x="135" y="185" width="95" height="90" rx="8" fill="#1E293B" stroke="#F59E0B" stroke-width="2.5" />
+  <rect x="252" y="185" width="95" height="90" rx="8" fill="#1E293B" stroke="#F59E0B" stroke-width="2.5" />
+  <rect x="370" y="185" width="95" height="90" rx="8" fill="#1E293B" stroke="#F59E0B" stroke-width="2.5" />
+  <!-- Bus Signboard -->
+  <rect x="180" y="115" width="240" height="44" rx="8" fill="#18181B" stroke="url(#goldDio)" stroke-width="3" />
+  <text x="300" y="143" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="18" fill="#FDE68A" letter-spacing="2">MEPHISTOPHELES</text>
+  <!-- Wheels -->
+  <circle cx="195" cy="445" r="38" fill="#09090B" stroke="#F59E0B" stroke-width="5" />
+  <circle cx="195" cy="445" r="16" fill="#D97706" />
+  <circle cx="405" cy="445" r="38" fill="#09090B" stroke="#F59E0B" stroke-width="5" />
+  <circle cx="405" cy="445" r="16" fill="#D97706" />
+  <!-- Title on Diorama Base -->
+  <text x="300" y="488" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="16" fill="#FDE68A" letter-spacing="1.5">3D ACRYLIC DIORAMA — 5 LAYERS</text>
+  <!-- Top Badge -->
+  <rect x="30" y="30" width="160" height="34" rx="17" fill="#DC2626" />
+  <text x="110" y="52" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="13" fill="#FFFFFF">SA BÀN 3D 5 LỚP</text>
+</svg>

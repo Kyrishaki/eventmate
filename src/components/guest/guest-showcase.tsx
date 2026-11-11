@@ -148,8 +148,8 @@ export function GuestShowcase() {
       // 1. Create Preorder in store
       const newReservation = createPreorder({
         workspace_id: activeWorkspace?.id || 'ws-hac-cam-studio',
-        event_id: effectiveEvent?.id || 'evt-tour-2026',
-        booth_id: effectiveBooth?.id || 'bth-booth-a1',
+        event_id: effectiveEvent?.id || 'evt-hobby-horizon-2026',
+        booth_id: effectiveBooth?.id || 'booth-a',
         customer_name: guestName.trim(),
         customer_phone: guestPhone.trim(),
         preorder_type: 'online_preorder',
@@ -410,7 +410,7 @@ export function GuestShowcase() {
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Tìm tên áo, nón, lightstick, phụ kiện..."
+                placeholder="Tìm tên keychain, standee, figure Limbus Company, anime..."
                 className="pl-9 h-9 text-xs bg-[#F7F7F5] dark:bg-neutral-800"
               />
               {searchQuery && (

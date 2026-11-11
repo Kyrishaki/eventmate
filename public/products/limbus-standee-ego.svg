@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgSt" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="50%" stop-color="#1E1B4B" />
+      <stop offset="100%" stop-color="#2E1065" />
+    </linearGradient>
+    <linearGradient id="goldSt" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF08A" />
+      <stop offset="50%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#B45309" />
+    </linearGradient>
+    <linearGradient id="acrylicBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E0E7FF" stop-opacity="0.45" />
+      <stop offset="50%" stop-color="#818CF8" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#C084FC" stop-opacity="0.45" />
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#bgSt)" />
+  <!-- Background Walpurgis Moon -->
+  <circle cx="300" cy="230" r="150" fill="#FDE047" fill-opacity="0.12" stroke="#FACC15" stroke-width="1.5" stroke-opacity="0.3" />
+  <!-- Acrylic Standee Base -->
+  <ellipse cx="300" cy="510" rx="185" ry="42" fill="#1E293B" stroke="#818CF8" stroke-width="4" />
+  <ellipse cx="300" cy="504" rx="165" ry="32" fill="#0F172A" stroke="url(#goldSt)" stroke-width="2" />
+  <!-- Acrylic Standee Cutout Silhouette -->
+  <path d="M210 95 L390 95 L430 185 L415 495 L185 495 L170 185 Z" fill="url(#acrylicBorder)" stroke="#E0E7FF" stroke-width="4" />
+  <path d="M222 108 L378 108 L414 190 L400 485 L200 485 L186 190 Z" fill="#13112C" stroke="url(#goldSt)" stroke-width="2" />
+  <!-- Character Emblem / Weapon Motif -->
+  <polygon points="300,135 322,205 385,205 335,245 352,315 300,275 248,315 265,245 215,205 278,205" fill="url(#goldSt)" opacity="0.9" />
+  <line x1="300" y1="125" x2="300" y2="430" stroke="#EF4444" stroke-width="5" />
+  <circle cx="300" cy="235" r="26" fill="#7F1D1D" stroke="#FDE047" stroke-width="3" />
+  <!-- Standee Title Plate -->
+  <rect x="205" y="395" width="190" height="34" rx="6" fill="url(#goldSt)" />
+  <text x="300" y="417" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="15" fill="#0F172A" letter-spacing="1.2">E.G.O STANDEE 18CM</text>
+  <text x="300" y="460" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="13" fill="#E0E7FF" letter-spacing="1.5">WALPURGISNACHT EDITION</text>
+  <!-- Slot on base -->
+  <rect x="250" y="492" width="100" height="10" rx="4" fill="#F59E0B" />
+  <!-- Top Badge -->
+  <rect x="30" y="30" width="160" height="34" rx="17" fill="#6366F1" />
+  <text x="110" y="52" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="13" fill="#FFFFFF">ACRYLIC 4MM HD</text>
+</svg>

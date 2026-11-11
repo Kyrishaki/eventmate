@@ -193,19 +193,6 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* Account Credential Hints */}
-          <div className="p-2.5 bg-[#FAFAF8] rounded-[6px] border border-[#E8E8E5] text-[11px] text-[#737373] space-y-1">
-            <p className="font-semibold text-[#202124]">Gợi ý tài khoản quản trị hệ thống:</p>
-            <div className="flex flex-col gap-0.5">
-              <span>
-                • Admin: <code className="text-[#315C4C] font-semibold">Tuanadminvippro666</code> (hoặc <code className="text-[#315C4C]">admin</code>)
-              </span>
-              <span>
-                • Mật khẩu: <code className="text-[#315C4C] font-semibold">Tuanadminvippro666</code> (hoặc <code className="text-[#315C4C]">Tu@n1121314151</code> / <code className="text-[#315C4C]">123456</code>)
-              </span>
-            </div>
-          </div>
-
           {/* Guest Access Alternative */}
           <div className="pt-2 text-center">
             <div className="relative flex py-2 items-center">

@@ -230,6 +230,9 @@ export interface PreorderReservation {
   proof_image_url?: string;     // MANDATORY PHOTO PROOF (Base64 data or URL)
   picked_up_at?: string;
   picked_up_by?: string;        // Cashier name or Staff ID
+  cancelled_at?: string;
+  cancelled_by?: string;
+  cancellation_reason?: string;
   created_at: string;
   updated_at: string;
 }

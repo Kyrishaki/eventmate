@@ -29,6 +29,8 @@ import {
   Bookmark,
   Globe,
   Check,
+  Ban,
+  XCircle,
 } from 'lucide-react';
 
 interface PreorderPickupModalProps {
@@ -46,10 +48,10 @@ export function PreorderPickupModal({
 }: PreorderPickupModalProps) {
   const { user } = useAuthStore();
   const { activeWorkspace } = useWorkspaceStore();
-  const { preorders, fulfillPreorder } = usePreorderStore();
+  const { preorders, fulfillPreorder, cancelPreorder } = usePreorderStore();
 
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [filterTab, setFilterTab] = React.useState<'pending' | 'picked_up' | 'all'>('pending');
+  const [filterTab, setFilterTab] = React.useState<'pending' | 'picked_up' | 'cancelled' | 'all'>('pending');
 
   // Active Fulfill Dialog state
   const [selectedPreorder, setSelectedPreorder] = React.useState<PreorderReservation | null>(null);
@@ -57,6 +59,12 @@ export function PreorderPickupModal({
   const [cashierNotes, setCashierNotes] = React.useState('');
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  // Active Reject / Cancel Reservation Dialog state
+  const [rejectTarget, setRejectTarget] = React.useState<PreorderReservation | null>(null);
+  const [rejectReason, setRejectReason] = React.useState('Khách không đến nhận / Quá giờ hẹn');
+  const [customRejectReason, setCustomRejectReason] = React.useState('');
+  const [isRejecting, setIsRejecting] = React.useState(false);
 
   // View existing photo proof modal
   const [viewProofUrl, setViewProofUrl] = React.useState<string | null>(null);
@@ -76,6 +84,7 @@ export function PreorderPickupModal({
       // Filter by tab
       if (filterTab === 'pending' && p.status !== 'pending_pickup') return false;
       if (filterTab === 'picked_up' && p.status !== 'picked_up') return false;
+      if (filterTab === 'cancelled' && p.status !== 'cancelled') return false;
 
       // Filter by query
       if (searchQuery.trim()) {
@@ -92,6 +101,7 @@ export function PreorderPickupModal({
 
   const pendingCount = preorders.filter((p) => p.status === 'pending_pickup').length;
   const pickedUpCount = preorders.filter((p) => p.status === 'picked_up').length;
+  const cancelledCount = preorders.filter((p) => p.status === 'cancelled').length;
 
   // Handle Photo Capture / Upload to Base64
   function handleImageSelected(e: React.ChangeEvent<HTMLInputElement>) {
@@ -142,6 +152,34 @@ export function PreorderPickupModal({
     setErrorMessage(null);
   }
 
+  // Handle Confirm Reject / Cancel Reservation with reason & auto inventory release
+  function handleConfirmReject() {
+    if (!rejectTarget) return;
+
+    const finalReason =
+      rejectReason === 'Lý do khác...'
+        ? customRejectReason.trim() || 'Khác'
+        : rejectReason;
+
+    setIsRejecting(true);
+    cancelPreorder({
+      preorderId: rejectTarget.id,
+      reason: finalReason,
+      actorName: user?.fullName || 'Thu ngân POS',
+      actorRole: user?.role || 'cashier',
+    });
+
+    setIsRejecting(false);
+    setRejectTarget(null);
+    setCustomRejectReason('');
+
+    // If photo fulfill modal was open for this preorder, close it too
+    if (selectedPreorder?.id === rejectTarget.id) {
+      setSelectedPreorder(null);
+      setProofImage(null);
+    }
+  }
+
   return (
     <>
       <Modal
@@ -163,18 +201,18 @@ export function PreorderPickupModal({
               />
             </div>
 
-            <div className="flex items-center gap-1.5 p-1 bg-[#F0F0ED] rounded-[6px] text-xs">
+            <div className="flex items-center gap-1.5 p-1 bg-[#F0F0ED] dark:bg-neutral-800 rounded-[6px] text-xs">
               <button
                 type="button"
                 onClick={() => setFilterTab('pending')}
-                className={`flex-1 py-1 px-2.5 rounded-[4px] font-semibold transition-colors flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-1 px-2 rounded-[4px] font-semibold transition-colors flex items-center justify-center gap-1 ${
                   filterTab === 'pending'
-                    ? 'bg-white text-[#B7791F] shadow-2xs'
-                    : 'text-[#737373] hover:text-[#202124]'
+                    ? 'bg-white dark:bg-neutral-700 text-[#B7791F] dark:text-amber-300 shadow-2xs'
+                    : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124] dark:hover:text-neutral-200'
                 }`}
               >
                 <span>Chờ nhận</span>
-                <span className="text-[10px] bg-[#FEF7EC] px-1.5 py-0.2 rounded font-mono text-[#B7791F]">
+                <span className="text-[10px] bg-[#FEF7EC] dark:bg-amber-950/60 px-1.5 py-0.2 rounded font-mono text-[#B7791F] dark:text-amber-300">
                   {pendingCount}
                 </span>
               </button>
@@ -182,63 +220,79 @@ export function PreorderPickupModal({
               <button
                 type="button"
                 onClick={() => setFilterTab('picked_up')}
-                className={`flex-1 py-1 px-2.5 rounded-[4px] font-semibold transition-colors flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-1 px-2 rounded-[4px] font-semibold transition-colors flex items-center justify-center gap-1 ${
                   filterTab === 'picked_up'
-                    ? 'bg-white text-[#2F7D55] shadow-2xs'
-                    : 'text-[#737373] hover:text-[#202124]'
+                    ? 'bg-white dark:bg-neutral-700 text-[#2F7D55] dark:text-emerald-300 shadow-2xs'
+                    : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124] dark:hover:text-neutral-200'
                 }`}
               >
                 <span>Đã nhận</span>
-                <span className="text-[10px] bg-[#EBF1EE] px-1.5 py-0.2 rounded font-mono text-[#2F7D55]">
+                <span className="text-[10px] bg-[#EBF1EE] dark:bg-emerald-950/60 px-1.5 py-0.2 rounded font-mono text-[#2F7D55] dark:text-emerald-300">
                   {pickedUpCount}
                 </span>
               </button>
 
               <button
                 type="button"
-                onClick={() => setFilterTab('all')}
-                className={`py-1 px-3 rounded-[4px] font-medium transition-colors ${
-                  filterTab === 'all'
-                    ? 'bg-white text-[#202124] shadow-2xs font-semibold'
-                    : 'text-[#737373] hover:text-[#202124]'
+                onClick={() => setFilterTab('cancelled')}
+                className={`flex-1 py-1 px-2 rounded-[4px] font-semibold transition-colors flex items-center justify-center gap-1 ${
+                  filterTab === 'cancelled'
+                    ? 'bg-white dark:bg-neutral-700 text-red-600 dark:text-red-400 shadow-2xs'
+                    : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124] dark:hover:text-neutral-200'
                 }`}
               >
-                Tất cả
+                <span>Đã từ chối</span>
+                <span className="text-[10px] bg-red-50 dark:bg-red-950/60 px-1.5 py-0.2 rounded font-mono text-red-600 dark:text-red-300">
+                  {cancelledCount}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setFilterTab('all')}
+                className={`py-1 px-2.5 rounded-[4px] font-medium transition-colors ${
+                  filterTab === 'all'
+                    ? 'bg-white dark:bg-neutral-700 text-[#202124] dark:text-neutral-100 shadow-2xs font-semibold'
+                    : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124] dark:hover:text-neutral-200'
+                }`}
+              >
+                Tất cả ({preorders.length})
               </button>
             </div>
           </div>
 
           {/* Preorders List */}
-          <div className="max-h-[380px] overflow-y-auto divide-y divide-[#F0F0ED] border border-[#E8E8E5] rounded-[8px]">
+          <div className="max-h-[380px] overflow-y-auto divide-y divide-[#F0F0ED] dark:divide-neutral-800 border border-[#E8E8E5] dark:border-neutral-800 rounded-[8px]">
             {filteredPreorders.length === 0 ? (
-              <div className="p-8 text-center space-y-1.5 text-xs text-[#737373]">
-                <Package className="w-8 h-8 text-[#9E9E9C] mx-auto mb-1" />
-                <p className="font-semibold text-[#202124]">Không tìm thấy đơn đặt trước nào</p>
+              <div className="p-8 text-center space-y-1.5 text-xs text-[#737373] dark:text-neutral-400">
+                <Package className="w-8 h-8 text-[#9E9E9C] dark:text-neutral-500 mx-auto mb-1" />
+                <p className="font-semibold text-[#202124] dark:text-neutral-100">Không tìm thấy đơn đặt trước nào</p>
                 <p>Thử tìm theo tên khách hoặc mã đơn khác.</p>
               </div>
             ) : (
               filteredPreorders.map((po) => {
                 const isPickedUp = po.status === 'picked_up';
+                const isCancelled = po.status === 'cancelled';
 
                 return (
                   <div
                     key={po.id}
-                    className="p-3 hover:bg-[#FBFBFA] transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                    className="p-3 hover:bg-[#FBFBFA] dark:hover:bg-neutral-850 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
                   >
                     <div className="space-y-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="font-mono font-bold text-xs text-[#202124] bg-[#F0F0ED] px-1.5 py-0.5 rounded">
+                        <span className="font-mono font-bold text-xs text-[#202124] dark:text-neutral-200 bg-[#F0F0ED] dark:bg-neutral-800 px-1.5 py-0.5 rounded border border-[#E8E8E5] dark:border-neutral-700">
                           #{po.code}
                         </span>
 
                         {po.preorder_type === 'vip_hold' ? (
-                          <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#8C5D17] bg-[#FEF7EC] px-1.5 py-0.5 rounded border border-[#B7791F]/20">
-                            <Bookmark className="w-2.5 h-2.5 text-[#B7791F]" />
+                          <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#8C5D17] dark:text-amber-300 bg-[#FEF7EC] dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-[#B7791F]/20 dark:border-amber-800/60">
+                            <Bookmark className="w-2.5 h-2.5 text-[#B7791F] dark:text-amber-400" />
                             Giữ chỗ VIP
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#1D4ED8] bg-[#EFF6FF] px-1.5 py-0.5 rounded border border-[#3B82F6]/20">
-                            <Globe className="w-2.5 h-2.5 text-[#3B82F6]" />
+                          <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#1D4ED8] dark:text-blue-300 bg-[#EFF6FF] dark:bg-blue-950/60 px-1.5 py-0.5 rounded border border-[#3B82F6]/20 dark:border-blue-800/60">
+                            <Globe className="w-2.5 h-2.5 text-[#3B82F6] dark:text-blue-400" />
                             Đơn Đặt Online
                           </span>
                         )}
@@ -247,6 +301,11 @@ export function PreorderPickupModal({
                           <Badge variant="success" className="text-[10px] gap-1 font-bold">
                             <Check className="w-3 h-3" />
                             <span>Đã nhận hàng</span>
+                          </Badge>
+                        ) : isCancelled ? (
+                          <Badge variant="error" className="text-[10px] gap-1 font-bold">
+                            <XCircle className="w-3 h-3" />
+                            <span>Đã từ chối / Hủy</span>
                           </Badge>
                         ) : (
                           <Badge variant="warning" className="text-[10px] gap-1 font-bold">
@@ -257,37 +316,48 @@ export function PreorderPickupModal({
                       </div>
 
                       {/* Customer Info */}
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[#737373]">
-                        <span className="font-bold text-[#202124] flex items-center gap-1">
-                          <User className="w-3 h-3 text-[#9E9E9C]" />
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[#737373] dark:text-neutral-400">
+                        <span className="font-bold text-[#202124] dark:text-neutral-100 flex items-center gap-1">
+                          <User className="w-3 h-3 text-[#9E9E9C] dark:text-neutral-400" />
                           {po.customer_name}
                         </span>
                         {po.customer_phone && (
                           <span className="flex items-center gap-1">
-                            <Phone className="w-3 h-3 text-[#9E9E9C]" />
+                            <Phone className="w-3 h-3 text-[#9E9E9C] dark:text-neutral-400" />
                             {po.customer_phone}
                           </span>
                         )}
                       </div>
 
                       {/* Merch Items */}
-                      <div className="text-[11px] text-[#202124] font-medium pt-0.5">
+                      <div className="text-[11px] text-[#202124] dark:text-neutral-200 font-medium pt-0.5">
                         {po.items.map((i, idx) => (
                           <span key={idx} className="mr-2 inline-block">
-                            • <strong className="text-[#315C4C]">{i.quantity}x</strong> {i.product_name} ({i.variant_name})
+                            • <strong className="text-[#315C4C] dark:text-emerald-400">{i.quantity}x</strong> {i.product_name} ({i.variant_name})
                           </span>
                         ))}
                       </div>
 
                       {po.notes && (
-                        <p className="text-[10px] text-[#737373] italic">Ghi chú: {po.notes}</p>
+                        <p className="text-[10px] text-[#737373] dark:text-neutral-400 italic">Ghi chú: {po.notes}</p>
                       )}
 
                       {/* Picked up info */}
                       {isPickedUp && po.picked_up_at && (
-                        <div className="text-[10px] text-[#2F7D55] font-medium flex items-center gap-1 pt-0.5">
+                        <div className="text-[10px] text-[#2F7D55] dark:text-emerald-400 font-medium flex items-center gap-1 pt-0.5">
                           <CheckCircle2 className="w-3 h-3" />
                           <span>Đã giao lúc: {formatDate(po.picked_up_at)} ({po.picked_up_by})</span>
+                        </div>
+                      )}
+
+                      {/* Cancelled / Rejected info */}
+                      {isCancelled && (
+                        <div className="text-[10px] text-red-600 dark:text-red-400 font-medium flex items-center gap-1 pt-0.5">
+                          <Ban className="w-3 h-3 shrink-0" />
+                          <span>
+                            Từ chối: <strong>{po.cancellation_reason || 'Đã hủy giữ chỗ'}</strong>{' '}
+                            {po.cancelled_by ? `(Bởi: ${po.cancelled_by})` : ''}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -299,28 +369,50 @@ export function PreorderPickupModal({
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 text-xs gap-1 border-[#2F7D55]/30 text-[#2F7D55] hover:bg-[#EBF1EE]"
+                            className="h-8 text-xs gap-1 border-[#2F7D55]/30 dark:border-emerald-800 text-[#2F7D55] dark:text-emerald-400 hover:bg-[#EBF1EE] dark:hover:bg-emerald-950/40"
                             onClick={() => setViewProofUrl(po.proof_image_url!)}
                           >
                             <ImageIcon className="w-3.5 h-3.5" />
                             <span>Xem minh chứng</span>
                           </Button>
                         )
+                      ) : isCancelled ? (
+                        <span className="text-[11px] text-red-600 dark:text-red-400 font-semibold px-2 py-1 rounded bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900/60 inline-flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>Đã hoàn kho</span>
+                        </span>
                       ) : (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          className="h-8 text-xs gap-1.5 bg-[#B7791F] hover:bg-[#975F16] border-none text-white font-bold shadow-xs"
-                          onClick={() => {
-                            setSelectedPreorder(po);
-                            setProofImage(null);
-                            setCashierNotes('');
-                            setErrorMessage(null);
-                          }}
-                        >
-                          <Camera className="w-3.5 h-3.5" />
-                          <span>Xác nhận trả hàng</span>
-                        </Button>
+                        <div className="flex items-center gap-1.5">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs gap-1 border-red-200 dark:border-red-900/70 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 hover:text-red-700 font-semibold cursor-pointer"
+                            title="Từ chối trả hàng và hoàn lại số lượng về kho"
+                            onClick={() => {
+                              setRejectTarget(po);
+                              setRejectReason('Khách không đến nhận / Quá giờ hẹn');
+                              setCustomRejectReason('');
+                            }}
+                          >
+                            <Ban className="w-3.5 h-3.5" />
+                            <span>Từ chối</span>
+                          </Button>
+
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            className="h-8 text-xs gap-1.5 bg-[#B7791F] hover:bg-[#975F16] dark:bg-amber-600 dark:hover:bg-amber-700 border-none text-white font-bold shadow-xs cursor-pointer"
+                            onClick={() => {
+                              setSelectedPreorder(po);
+                              setProofImage(null);
+                              setCashierNotes('');
+                              setErrorMessage(null);
+                            }}
+                          >
+                            <Camera className="w-3.5 h-3.5" />
+                            <span>Xác nhận trả hàng</span>
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -354,19 +446,19 @@ export function PreorderPickupModal({
         {selectedPreorder && (
           <div className="space-y-4 text-xs">
             {/* Customer & Item Summary */}
-            <div className="p-3 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5] space-y-1.5">
-              <div className="flex items-center justify-between font-bold text-sm text-[#202124]">
+            <div className="p-3 bg-[#F7F7F5] dark:bg-neutral-800 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 space-y-1.5">
+              <div className="flex items-center justify-between font-bold text-sm text-[#202124] dark:text-neutral-100">
                 <span>Khách hàng: {selectedPreorder.customer_name}</span>
-                <span className="text-[#315C4C]">
+                <span className="text-[#315C4C] dark:text-emerald-400">
                   {formatCurrency(selectedPreorder.total_amount, activeWorkspace?.currency || 'VND')}
                 </span>
               </div>
-              <p className="text-[#737373]">
+              <p className="text-[#737373] dark:text-neutral-400">
                 Điện thoại: {selectedPreorder.customer_phone || 'Chưa cung cấp'}
               </p>
-              <div className="pt-1 border-t border-[#E8E8E5]">
-                <span className="font-semibold text-[#202124] block mb-1">Mặt hàng bàn giao:</span>
-                <ul className="space-y-0.5 list-disc pl-4 text-[#202124]">
+              <div className="pt-1 border-t border-[#E8E8E5] dark:border-neutral-700">
+                <span className="font-semibold text-[#202124] dark:text-neutral-100 block mb-1">Mặt hàng bàn giao:</span>
+                <ul className="space-y-0.5 list-disc pl-4 text-[#202124] dark:text-neutral-200">
                   {selectedPreorder.items.map((i, idx) => (
                     <li key={idx}>
                       <strong>{i.quantity} món</strong> — {i.product_name} ({i.variant_name})
@@ -378,7 +470,7 @@ export function PreorderPickupModal({
 
             {/* MANDATORY PROOF CAPTURE SECTION */}
             <div className="space-y-2">
-              <Label required className="text-xs font-bold text-[#202124] flex items-center gap-1.5">
+              <Label required className="text-xs font-bold text-[#202124] dark:text-neutral-100 flex items-center gap-1.5">
                 <Camera className="w-4 h-4 text-[#C44536]" />
                 <span>Ảnh Minh Chứng Nhận Hàng (BẮT BUỘC)</span>
               </Label>
@@ -402,8 +494,8 @@ export function PreorderPickupModal({
 
               {proofImage ? (
                 /* Photo Preview */
-                <div className="relative rounded-[8px] border-2 border-[#2F7D55] p-2 bg-[#EBF1EE]/40 text-center space-y-2">
-                  <div className="relative max-h-48 overflow-hidden rounded-[6px] flex items-center justify-center bg-black/5">
+                <div className="relative rounded-[8px] border-2 border-[#2F7D55] dark:border-emerald-600 p-2 bg-[#EBF1EE]/40 dark:bg-emerald-950/20 text-center space-y-2">
+                  <div className="relative max-h-48 overflow-hidden rounded-[6px] flex items-center justify-center bg-black/5 dark:bg-black/40">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={proofImage}
@@ -420,7 +512,7 @@ export function PreorderPickupModal({
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-center gap-1.5 text-[#2F7D55] font-bold text-xs">
+                  <div className="flex items-center justify-center gap-1.5 text-[#2F7D55] dark:text-emerald-300 font-bold text-xs">
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Đã ghi nhận ảnh minh chứng hợp lệ!</span>
                   </div>
@@ -438,16 +530,16 @@ export function PreorderPickupModal({
                 </div>
               ) : (
                 /* Photo Capture Buttons */
-                <div className="p-4 border-2 border-dashed border-[#B7791F]/40 rounded-[8px] bg-[#FEF7EC]/50 text-center space-y-3">
-                  <div className="w-10 h-10 rounded-full bg-[#FEF7EC] text-[#B7791F] flex items-center justify-center mx-auto">
+                <div className="p-4 border-2 border-dashed border-[#B7791F]/40 dark:border-amber-800/60 rounded-[8px] bg-[#FEF7EC]/50 dark:bg-amber-950/20 text-center space-y-3">
+                  <div className="w-10 h-10 rounded-full bg-[#FEF7EC] dark:bg-amber-950/60 text-[#B7791F] dark:text-amber-400 flex items-center justify-center mx-auto">
                     <Camera className="w-5 h-5" />
                   </div>
 
                   <div>
-                    <p className="font-bold text-[#8C5D17] text-xs">
+                    <p className="font-bold text-[#8C5D17] dark:text-amber-300 text-xs">
                       Chụp ảnh khách nhận hàng / Biên lai đối chiếu
                     </p>
-                    <p className="text-[11px] text-[#737373] mt-0.5 max-w-xs mx-auto">
+                    <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-0.5 max-w-xs mx-auto">
                       Để tránh khiếu nại hoặc mất mát, hệ thống yêu cầu ảnh minh chứng trước khi kích hoạt nút xác nhận.
                     </p>
                   </div>
@@ -457,7 +549,7 @@ export function PreorderPickupModal({
                       type="button"
                       variant="primary"
                       size="sm"
-                      className="w-full sm:w-auto text-xs gap-1.5 bg-[#B7791F] hover:bg-[#975F16] border-none text-white font-bold"
+                      className="w-full sm:w-auto text-xs gap-1.5 bg-[#B7791F] hover:bg-[#975F16] dark:bg-amber-600 dark:hover:bg-amber-700 border-none text-white font-bold"
                       onClick={() => cameraInputRef.current?.click()}
                     >
                       <Camera className="w-3.5 h-3.5" />
@@ -468,7 +560,7 @@ export function PreorderPickupModal({
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="w-full sm:w-auto text-xs gap-1.5 bg-white"
+                      className="w-full sm:w-auto text-xs gap-1.5 bg-white dark:bg-neutral-800"
                       onClick={() => fileInputRef.current?.click()}
                     >
                       <Upload className="w-3.5 h-3.5" />
@@ -500,37 +592,167 @@ export function PreorderPickupModal({
             </div>
 
             {/* Modal Actions */}
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F0ED]">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-[#F0F0ED] dark:border-neutral-800">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
+                className="text-xs gap-1 border-red-300 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40"
                 onClick={() => {
-                  setSelectedPreorder(null);
-                  setProofImage(null);
+                  setRejectTarget(selectedPreorder);
+                  setRejectReason('Thông tin đối chiếu không khớp (Nghi vấn giả mạo)');
+                  setCustomRejectReason('');
                 }}
               >
-                Hủy
+                <Ban className="w-3.5 h-3.5" />
+                <span>Từ chối đơn này</span>
               </Button>
 
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedPreorder(null);
+                    setProofImage(null);
+                  }}
+                >
+                  Đóng
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  disabled={!proofImage || isSubmitting}
+                  className={`font-bold text-xs gap-1.5 ${
+                    proofImage
+                      ? 'bg-[#2F7D55] hover:bg-[#256344] text-white'
+                      : 'bg-[#E8E8E5] dark:bg-neutral-800 text-[#9E9E9C] dark:text-neutral-500 cursor-not-allowed'
+                  }`}
+                  onClick={handleConfirmPickup}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>
+                    {proofImage
+                      ? 'Xác Nhận Đã Nhận Hàng'
+                      : 'Chụp ảnh minh chứng để kích hoạt nút'}
+                  </span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ===================================================================== */}
+      {/* STEP 3: REJECT / CANCEL PREORDER CONFIRMATION MODAL */}
+      {/* ===================================================================== */}
+      <Modal
+        isOpen={Boolean(rejectTarget)}
+        onClose={() => setRejectTarget(null)}
+        title={`Từ Chối Trả Hàng #${rejectTarget?.code}`}
+        description="Xác nhận từ chối bàn giao hoặc hủy giữ chỗ đơn đặt trước này."
+      >
+        {rejectTarget && (
+          <div className="space-y-4 text-xs">
+            {/* Target Customer Info */}
+            <div className="p-3 bg-red-50/60 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 rounded-[8px] space-y-1.5">
+              <div className="flex items-center justify-between font-bold text-sm text-red-900 dark:text-red-200">
+                <span>Khách hàng: {rejectTarget.customer_name}</span>
+                <span>{formatCurrency(rejectTarget.total_amount, activeWorkspace?.currency || 'VND')}</span>
+              </div>
+              <p className="text-red-700 dark:text-red-300">
+                SĐT: {rejectTarget.customer_phone || 'Chưa cung cấp'}
+              </p>
+              <div className="pt-1 border-t border-red-200/60 dark:border-red-800/60 text-neutral-800 dark:text-neutral-200">
+                <span className="font-semibold block mb-0.5">Sản phẩm đang giữ chỗ:</span>
+                <ul className="list-disc pl-4 space-y-0.5">
+                  {rejectTarget.items.map((i, idx) => (
+                    <li key={idx}>
+                      <strong>{i.quantity}x</strong> {i.product_name} ({i.variant_name})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Warning Alert */}
+            <div className="flex items-start gap-2 p-2.5 rounded-[6px] bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <p className="text-[11px] leading-relaxed">
+                <strong>Lưu ý:</strong> Khi xác nhận từ chối, toàn bộ số lượng sản phẩm trên sẽ được <strong>tự động hoàn trả về kho khả dụng</strong> ngay lập tức để tiếp tục bán tại quầy hoặc cho khách khác.
+              </p>
+            </div>
+
+            {/* Reason Selection */}
+            <div className="space-y-2">
+              <Label className="font-bold text-neutral-800 dark:text-neutral-200">
+                Lý do từ chối bàn giao / hủy giữ chỗ:
+              </Label>
+              <div className="space-y-1.5">
+                {[
+                  'Khách không đến nhận / Quá thời gian quy định',
+                  'Thông tin đối chiếu không khớp (Nghi vấn giả mạo)',
+                  'Khách chủ động yêu cầu hủy nhận hàng',
+                  'Hàng hóa bị lỗi / Không đủ điều kiện bàn giao',
+                  'Lý do khác...',
+                ].map((r) => (
+                  <label
+                    key={r}
+                    className={`flex items-center gap-2 p-2 rounded-[6px] border cursor-pointer transition-colors ${
+                      rejectReason === r
+                        ? 'border-red-500 bg-red-50/50 dark:bg-red-950/40 text-red-900 dark:text-red-200 font-semibold'
+                        : 'border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 text-neutral-700 dark:text-neutral-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="reject-reason"
+                      checked={rejectReason === r}
+                      onChange={() => setRejectReason(r)}
+                      className="text-red-600 focus:ring-red-500"
+                    />
+                    <span className="text-xs">{r}</span>
+                  </label>
+                ))}
+              </div>
+
+              {rejectReason === 'Lý do khác...' && (
+                <div className="pt-1">
+                  <Input
+                    placeholder="Nhập chi tiết lý do từ chối..."
+                    value={customRejectReason}
+                    onChange={(e) => setCustomRejectReason(e.target.value)}
+                    className="text-xs h-9"
+                    autoFocus
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-200 dark:border-neutral-800">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setRejectTarget(null)}
+                disabled={isRejecting}
+              >
+                Hủy bỏ
+              </Button>
               <Button
                 type="button"
                 variant="primary"
                 size="sm"
-                disabled={!proofImage || isSubmitting}
-                className={`font-bold text-xs gap-1.5 ${
-                  proofImage
-                    ? 'bg-[#2F7D55] hover:bg-[#256344] text-white'
-                    : 'bg-[#E8E8E5] text-[#9E9E9C] cursor-not-allowed'
-                }`}
-                onClick={handleConfirmPickup}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs gap-1.5 cursor-pointer"
+                onClick={handleConfirmReject}
+                isLoading={isRejecting}
               >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>
-                  {proofImage
-                    ? 'Xác Nhận Đã Nhận Hàng'
-                    : 'Chụp ảnh minh chứng để kích hoạt nút'}
-                </span>
+                <Ban className="w-3.5 h-3.5" />
+                <span>Xác Nhận Từ Chối & Hoàn Kho</span>
               </Button>
             </div>
           </div>
@@ -548,7 +770,7 @@ export function PreorderPickupModal({
       >
         {viewProofUrl && (
           <div className="space-y-3 text-center">
-            <div className="max-h-[450px] overflow-hidden rounded-[8px] border border-[#E8E8E5] bg-[#F7F7F5] flex items-center justify-center p-2">
+            <div className="max-h-[450px] overflow-hidden rounded-[8px] border border-[#E8E8E5] dark:border-neutral-800 bg-[#F7F7F5] dark:bg-neutral-900 flex items-center justify-center p-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={viewProofUrl}

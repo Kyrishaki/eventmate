@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { PreorderReservation, PaymentMethod } from '@/types/database';
+import { PreorderReservation, PaymentMethod, AuditActorRole } from '@/types/database';
 import { useDataStore } from './data-store';
 import { useOrdersStore } from './orders-store';
 import { logActivity } from './audit-store';
@@ -112,6 +112,13 @@ interface FulfillPreorderParams {
   paymentMethod?: PaymentMethod;
 }
 
+export interface CancelPreorderParams {
+  preorderId: string;
+  reason: string;
+  actorName?: string;
+  actorRole?: string;
+}
+
 interface PreorderStoreState {
   preorders: PreorderReservation[];
 
@@ -121,8 +128,8 @@ interface PreorderStoreState {
   // Create new reservation
   createPreorder: (data: Omit<PreorderReservation, 'id' | 'code' | 'created_at' | 'updated_at'>) => PreorderReservation;
 
-  // Cancel reservation
-  cancelPreorder: (preorderId: string) => void;
+  // Cancel / Reject reservation and release held stock back to available warehouse
+  cancelPreorder: (params: string | CancelPreorderParams) => { success: boolean; message?: string };
 
   // Reset demo
   resetDefaultPreorders: () => void;
@@ -305,13 +312,92 @@ export const usePreorderStore = create<PreorderStoreState>()(
         return newPreorder;
       },
 
-      cancelPreorder: (preorderId) => {
+      cancelPreorder: (params) => {
+        const preorderId = typeof params === 'string' ? params : params.preorderId;
+        const reason = typeof params === 'string' ? 'Khách hoặc thu ngân hủy giữ chỗ' : params.reason;
+        const actorName = typeof params === 'string' ? 'Thu ngân quầy' : params.actorName || 'Thu ngân quầy';
+        const actorRole = (typeof params === 'string' ? 'cashier' : params.actorRole || 'cashier') as AuditActorRole;
+
         const { preorders } = get();
-        set({
-          preorders: preorders.map((p) =>
-            p.id === preorderId ? { ...p, status: 'cancelled' as const, updated_at: new Date().toISOString() } : p
-          ),
+        const preorder = preorders.find((p) => p.id === preorderId);
+
+        if (!preorder) {
+          return { success: false, message: 'Không tìm thấy đơn đặt trước.' };
+        }
+
+        if (preorder.status === 'cancelled') {
+          return { success: false, message: 'Đơn đặt trước này đã bị từ chối / hủy trước đó.' };
+        }
+
+        const wasPending = preorder.status === 'pending_pickup';
+        const nowIso = new Date().toISOString();
+
+        // 1. Update preorder status
+        const updatedPreorders = preorders.map((p) => {
+          if (p.id === preorderId) {
+            return {
+              ...p,
+              status: 'cancelled' as const,
+              cancelled_at: nowIso,
+              cancelled_by: actorName,
+              cancellation_reason: reason,
+              notes: p.notes ? `${p.notes} | [ĐÃ TỪ CHỐI/HỦY: ${reason}]` : `[ĐÃ TỪ CHỐI/HỦY: ${reason}]`,
+              updated_at: nowIso,
+            };
+          }
+          return p;
         });
+
+        set({ preorders: updatedPreorders });
+
+        // 2. Release reserved stock back into available warehouse!
+        if (wasPending) {
+          try {
+            const dataStore = useDataStore.getState();
+            const variants = dataStore.variants;
+
+            const updatedVariants = variants.map((v) => {
+              const item = preorder.items.find((i) => i.variant_id === v.id);
+              if (item) {
+                if (preorder.preorder_type === 'vip_hold') {
+                  return {
+                    ...v,
+                    reserved_quantity: Math.max(0, (v.reserved_quantity || 0) - item.quantity),
+                    updated_at: nowIso,
+                  };
+                } else {
+                  return {
+                    ...v,
+                    online_preorder_quantity: Math.max(0, (v.online_preorder_quantity || 0) - item.quantity),
+                    updated_at: nowIso,
+                  };
+                }
+              }
+              return v;
+            });
+
+            useDataStore.setState({ variants: updatedVariants });
+          } catch (err) {
+            console.warn('Error releasing inventory upon preorder cancellation:', err);
+          }
+        }
+
+        // 3. Record Audit Log for tracking
+        logActivity({
+          actor_name: actorName,
+          actor_role: actorRole,
+          action_type: 'stock_adjust',
+          entity_type: 'order',
+          entity_name: `Từ chối đơn #${preorder.code}`,
+          booth_name: preorder.booth_id,
+          description: `Thu ngân/Quản lý đã từ chối trả hàng / hủy giữ chỗ đơn #${preorder.code} của khách "${preorder.customer_name}". Lý do: "${reason}". Đã hoàn trả lại ${preorder.items.map((i) => `${i.quantity}x ${i.product_name}`).join(', ')} về kho khả dụng.`,
+          changes: [
+            { field: 'status', field_label: 'Trạng thái', old_value: preorder.status, new_value: 'cancelled' },
+            { field: 'cancellation_reason', field_label: 'Lý do từ chối', new_value: reason },
+          ],
+        });
+
+        return { success: true };
       },
 
       resetDefaultPreorders: () => {

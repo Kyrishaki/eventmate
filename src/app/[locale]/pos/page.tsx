@@ -19,6 +19,7 @@ import { PaymentMethod, Product, ProductVariant, Order } from '@/types/database'
 import { calculateVariantStock } from '@/lib/stock-status';
 import { PreorderPickupModal } from '@/components/pos/preorder-pickup-modal';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { DensityToggle } from '@/components/ui/density-toggle';
 import { usePreorderStore } from '@/stores/preorder-store';
 import { useRealtimeCartSync } from '@/stores/realtime-cart-sync';
 import {
@@ -580,6 +581,8 @@ export default function PosTerminalPage() {
 
             <ThemeToggle />
 
+            <DensityToggle />
+
             {/* Mobile Cart Button Toggle */}
             <button
               type="button"
@@ -724,7 +727,7 @@ export default function PosTerminalPage() {
             </div>
           ) : (
             /* Product Cards Touch Grid */
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
               {filteredProducts.map((prod) => {
                 const prodVariants = variants.filter((v) => v.product_id === prod.id);
                 const activeVarId = selectedVariantMap[prod.id] || prodVariants[0]?.id;
@@ -758,7 +761,7 @@ export default function PosTerminalPage() {
                   >
                     <div>
                       {/* Product Image */}
-                      <div className="relative h-28 sm:h-36 bg-[#F7F7F5] overflow-hidden flex items-center justify-center">
+                      <div className="relative h-24 sm:h-36 bg-[#F7F7F5] overflow-hidden flex items-center justify-center">
                         {prod.image_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img

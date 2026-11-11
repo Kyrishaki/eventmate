@@ -161,10 +161,10 @@ export default function DashboardOverviewPage() {
   return (
     <div className="space-y-6">
       {/* Header with Title and Primary Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#E8E8E5]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-2 border-b border-[#E8E8E5]">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-bold tracking-tight text-[#202124]">
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[#202124]">
               {t('overviewTitle')}
             </h1>
             <Badge variant="outline" className="text-[11px] font-mono">
@@ -181,7 +181,7 @@ export default function DashboardOverviewPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
           <Button
             variant="outline"
             size="sm"
@@ -330,18 +330,18 @@ export default function DashboardOverviewPage() {
       )}
 
       {/* KPI Business Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {metrics.map((metric, idx) => {
           const Icon = metric.icon;
           return (
-            <Card key={idx} className="p-3 sm:p-4 bg-white border-[#E8E8E5] shadow-xs">
-              <div className="flex items-center justify-between text-[#737373] mb-1.5">
+            <Card key={idx} className="p-2.5 sm:p-4 bg-white border-[#E8E8E5] shadow-xs">
+              <div className="flex items-center justify-between text-[#737373] mb-1">
                 <span className="text-[11px] sm:text-xs font-medium truncate pr-1">{metric.title}</span>
                 <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-[4px] bg-[#F7F7F5] border border-[#E8E8E5] flex items-center justify-center text-[#315C4C] shrink-0">
                   <Icon className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <div className="text-lg sm:text-2xl font-bold tracking-tight text-[#202124] truncate">
+              <div className="text-base sm:text-2xl font-bold tracking-tight text-[#202124] truncate">
                 {metric.value}
               </div>
               <p className="text-[10px] sm:text-[11px] text-[#737373] mt-0.5 truncate">{metric.change}</p>
@@ -351,7 +351,7 @@ export default function DashboardOverviewPage() {
       </div>
 
       {/* Two Column Layout: Events & Stock Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Events / Booths Overview Card */}
         <Card className="border-[#E8E8E5] shadow-xs bg-white">
           <CardHeader className="flex flex-row items-center justify-between py-4 border-b border-[#F0F0ED]">

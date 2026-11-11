@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { DensityToggle } from '@/components/ui/density-toggle';
 import { SyncStatusBadge } from '@/components/ui/sync-status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Menu, LogOut, User as UserIcon, Eye } from 'lucide-react';
@@ -26,7 +27,7 @@ export function Topbar({ onToggleSidebar, title }: TopbarProps) {
   }
 
   return (
-    <header className="h-14 border-b border-[#E8E8E5] bg-white px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
+    <header className="h-12 sm:h-14 border-b border-[#E8E8E5] bg-white px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30">
       {/* Left: Mobile Menu & Current Title */}
       <div className="flex items-center gap-3">
         <button
@@ -45,13 +46,15 @@ export function Topbar({ onToggleSidebar, title }: TopbarProps) {
         )}
       </div>
 
-      {/* Right: Sync Status, Language, Theme, Profile & Logout */}
-      <div className="flex items-center gap-2.5 sm:gap-3.5">
+      {/* Right: Sync Status, Language, Theme, Scale, Profile & Logout */}
+      <div className="flex items-center gap-1.5 sm:gap-3">
         <SyncStatusBadge status={syncState} pendingCount={unsyncedOrdersCount} />
 
         <LanguageSwitcher />
 
         <ThemeToggle />
+
+        <DensityToggle />
 
         {/* View as Guest Button */}
         <button

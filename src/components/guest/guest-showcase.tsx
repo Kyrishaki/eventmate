@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { DensityToggle } from '@/components/ui/density-toggle';
 import { Link } from '@/i18n/routing';
 import {
   Package,
@@ -220,6 +221,9 @@ export function GuestShowcase() {
 
             {/* Dark / Light Toggle */}
             <ThemeToggle />
+
+            {/* Display Density Toggle */}
+            <DensityToggle />
 
             {/* Admin Login Switcher */}
             <Link href="/login">

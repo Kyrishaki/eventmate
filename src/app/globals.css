@@ -78,6 +78,47 @@ body {
 }
 
 /* ==========================================================================
+   Mobile Display Density & Screen Scaling Controls
+   Scales UI down by ~10% to ~20% on smartphones to maximize interaction space
+   ========================================================================== */
+
+/* Default mobile font-size scaling: 14px on < 640px (~87.5% scale) */
+@media (max-width: 640px) {
+  html:not([data-density="comfortable"]) {
+    font-size: 14px;
+    -webkit-text-size-adjust: 100%;
+  }
+}
+
+/* Explicit data-density overrides */
+html[data-density="comfortable"] {
+  font-size: 16px;
+}
+@media (max-width: 640px) {
+  html[data-density="comfortable"] {
+    font-size: 15px;
+  }
+}
+
+html[data-density="compact"] {
+  font-size: 14px;
+}
+@media (max-width: 640px) {
+  html[data-density="compact"] {
+    font-size: 13.5px;
+  }
+}
+
+html[data-density="ultra-compact"] {
+  font-size: 12.5px;
+}
+@media (max-width: 640px) {
+  html[data-density="ultra-compact"] {
+    font-size: 12px;
+  }
+}
+
+/* ==========================================================================
    Comprehensive Dark Mode Overrides for Swiss Merch & POS UI
    ========================================================================== */
 

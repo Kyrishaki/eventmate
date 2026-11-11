@@ -26,12 +26,12 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/icon-32.png', type: 'image/png', sizes: '32x32' },
-      { url: '/icon.png', type: 'image/png', sizes: '512x512' },
+      { url: '/favicon.ico?v=2', sizes: 'any' },
+      { url: '/icon-32.png?v=2', type: 'image/png', sizes: '32x32' },
+      { url: '/icon.png?v=2', type: 'image/png', sizes: '512x512' },
     ],
-    shortcut: '/favicon.ico',
-    apple: '/icon.png',
+    shortcut: '/favicon.ico?v=2',
+    apple: '/icon.png?v=2',
   },
 };
 

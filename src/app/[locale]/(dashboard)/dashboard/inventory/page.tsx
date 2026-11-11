@@ -29,7 +29,9 @@ import {
   FlaskConical,
   Lock,
   Users2,
+  ClipboardCheck,
 } from 'lucide-react';
+import { StocktakeModal } from '@/components/inventory/stocktake-modal';
 import {
   filterRealAllocations,
   filterRealEvents,
@@ -90,6 +92,7 @@ export default function InventoryPage() {
   const [selectedBoothId, setSelectedBoothId] = React.useState<string>(
     eventBooths[0]?.id || ''
   );
+  const [isStocktakeOpen, setIsStocktakeOpen] = React.useState(false);
 
   function handleSelectEvent(eventId: string) {
     setSelectedEventId(eventId);
@@ -132,6 +135,21 @@ export default function InventoryPage() {
           </div>
           <p className="text-xs text-[#737373] mt-0.5">{t('description')}</p>
         </div>
+
+        {selectedBooth && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsStocktakeOpen(true)}
+              className="gap-1.5 text-xs text-[#315C4C] border-[#315C4C]/40 hover:bg-[#EAF4EE] font-semibold h-8 shadow-2xs"
+              title="Kiểm đếm số lượng thực tế tại quầy và cân bằng kho"
+            >
+              <ClipboardCheck className="w-3.5 h-3.5 text-[#315C4C]" />
+              <span>Kiểm Kê Quầy</span>
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Collab Partner Scoped Access Notification Banner */}
@@ -569,6 +587,14 @@ export default function InventoryPage() {
           </div>
         </Card>
       )}
+
+      {/* Physical Stocktake & Discrepancy Reconciliation Modal */}
+      <StocktakeModal
+        isOpen={isStocktakeOpen}
+        onClose={() => setIsStocktakeOpen(false)}
+        booth={selectedBooth || null}
+        event={selectedEvent || null}
+      />
     </div>
   );
 }

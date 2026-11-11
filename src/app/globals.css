@@ -308,3 +308,41 @@ html.dark ::-webkit-scrollbar-thumb {
 html.dark ::-webkit-scrollbar-track {
   background-color: #15171B;
 }
+
+/* ==========================================================================
+   Thermal Receipt Print Media Styles (58mm / 80mm POS Bluetooth Printers)
+   ========================================================================== */
+@media print {
+  body {
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  /* Hide everything except thermal receipt */
+  body * {
+    visibility: hidden;
+  }
+
+  #thermal-receipt,
+  #thermal-receipt * {
+    visibility: visible;
+  }
+
+  #thermal-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 80mm !important;
+    margin: 0 !important;
+    padding: 2mm 3mm !important;
+    box-shadow: none !important;
+    border: none !important;
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+  }
+}

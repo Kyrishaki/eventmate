@@ -18,6 +18,9 @@ import { formatCurrency } from '@/lib/utils';
 import { PaymentMethod, Product, ProductVariant, Order } from '@/types/database';
 import { calculateVariantStock } from '@/lib/stock-status';
 import { PreorderPickupModal } from '@/components/pos/preorder-pickup-modal';
+import { ShiftModal } from '@/components/pos/shift-modal';
+import { ReceiptModal } from '@/components/pos/receipt-modal';
+import { useShiftStore } from '@/stores/shift-store';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { DensityToggle } from '@/components/ui/density-toggle';
 import { usePreorderStore } from '@/stores/preorder-store';
@@ -153,6 +156,13 @@ export default function PosTerminalPage() {
   // Online / Offline State Listener via useSyncExternalStore
   const isOnline = useOnlineStatus();
   const [isFeedbackOpen, setIsFeedbackOpen] = React.useState(false);
+  const [isShiftModalOpen, setIsShiftModalOpen] = React.useState(false);
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = React.useState(false);
+  const { activeShift, initShifts } = useShiftStore();
+
+  React.useEffect(() => {
+    initShifts();
+  }, [initShifts]);
 
   // Ensure valid event and booth are ALWAYS selected (anti-flicker & F5 reload recovery)
   React.useEffect(() => {
@@ -416,6 +426,7 @@ export default function PosTerminalPage() {
       });
 
       setConfirmedOrder(order);
+      useShiftStore.getState().recordOrderInShift(paymentMethod, order.final_amount);
       setIsCheckoutOpen(false);
       setIsMobileCartOpen(false);
       setQrCountdown(null);
@@ -558,6 +569,31 @@ export default function PosTerminalPage() {
                 <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#B7791F] text-white font-mono">
                   {pendingPreordersCount}
                 </span>
+              )}
+            </Button>
+
+            {/* Shift & Cash Drawer Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsShiftModalOpen(true)}
+              className={`h-8 px-2 sm:px-2.5 text-xs gap-1.5 font-semibold shadow-2xs ${
+                activeShift && activeShift.status === 'open'
+                  ? 'border-[#2F7D55]/40 text-[#2F7D55] bg-[#EAF4EE] hover:bg-[#D8EDE0]'
+                  : 'border-[#B7791F]/40 text-[#8C5D17] bg-[#FEF7EC] hover:bg-[#FDF2E9]'
+              }`}
+              title={
+                activeShift && activeShift.status === 'open'
+                  ? `Ca đang mở (Két: ${(activeShift.startingCashFloat + activeShift.totalCashSales).toLocaleString('vi-VN')} đ) — Nhấn để Chốt ca / Bàn giao`
+                  : 'Chưa mở ca — Nhấn để nhập tiền đầu ca'
+              }
+            >
+              <Banknote className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">
+                {activeShift && activeShift.status === 'open' ? 'Chốt ca' : 'Mở ca'}
+              </span>
+              {activeShift && activeShift.status === 'open' && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#2F7D55] animate-pulse" />
               )}
             </Button>
 
@@ -1584,17 +1620,17 @@ export default function PosTerminalPage() {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="flex-1 text-xs gap-1"
-                onClick={() => window.print()}
+                className="flex-1 text-xs gap-1 border-[#315C4C]/40 text-[#315C4C] hover:bg-[#EAF4EE]"
+                onClick={() => setIsReceiptModalOpen(true)}
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span>In hóa đơn</span>
+                <span>Xem & In hóa đơn</span>
               </Button>
               <Button
                 type="button"
                 variant="primary"
                 size="sm"
-                className="flex-1 text-xs font-bold"
+                className="flex-1 text-xs font-bold bg-[#315C4C] text-white"
                 onClick={() => setConfirmedOrder(null)}
               >
                 Tạo đơn tiếp theo
@@ -1603,6 +1639,25 @@ export default function PosTerminalPage() {
           </div>
         )}
       </Modal>
+
+      {/* Cashier Shift & Z-Report Modal */}
+      <ShiftModal
+        isOpen={isShiftModalOpen}
+        onClose={() => setIsShiftModalOpen(false)}
+        boothId={selectedBoothId}
+        boothName={selectedBooth?.name || 'Quầy POS'}
+        eventId={selectedEventId}
+        eventName={selectedEvent?.name || 'Sự kiện'}
+      />
+
+      {/* Thermal & Digital Receipt Modal */}
+      <ReceiptModal
+        order={confirmedOrder}
+        isOpen={isReceiptModalOpen}
+        onClose={() => setIsReceiptModalOpen(false)}
+        eventName={selectedEvent?.name}
+        boothName={selectedBooth?.name}
+      />
 
       {/* Preorder Pickup Modal with Mandatory Photo Proof */}
       <PreorderPickupModal

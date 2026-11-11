@@ -5,12 +5,26 @@ import { useTranslations } from 'next-intl';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useDataStore } from '@/stores/data-store';
 import { useOrdersStore } from '@/stores/orders-store';
+import { usePreorderStore } from '@/stores/preorder-store';
+import { useAuditStore } from '@/stores/audit-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, Database, Save, Sparkles, Building2, Trash2, Palette } from 'lucide-react';
+import {
+  CheckCircle2,
+  Database,
+  Save,
+  Sparkles,
+  Building2,
+  Trash2,
+  Download,
+  Upload,
+  ShieldCheck,
+  Palette,
+} from 'lucide-react';
+import { EventItem } from '@/types/database';
 import { ThemeSelector } from '@/components/ui/theme-toggle';
 
 export default function SettingsPage() {
@@ -26,6 +40,80 @@ export default function SettingsPage() {
   const [saveSuccess, setSaveSuccess] = React.useState(false);
   const [seedSuccess, setSeedSuccess] = React.useState(false);
   const [resetSuccess, setResetSuccess] = React.useState(false);
+  const [backupSuccess, setBackupSuccess] = React.useState(false);
+  const [restoreMessage, setRestoreMessage] = React.useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const handleExportBackup = () => {
+    const backupData = {
+      version: '1.0.0',
+      timestamp: new Date().toISOString(),
+      appName: 'EventMate',
+      workspace: activeWorkspace,
+      workspaces,
+      events: useDataStore.getState().events,
+      booths: useDataStore.getState().booths,
+      products: useDataStore.getState().products,
+      variants: useDataStore.getState().variants,
+      categories: useDataStore.getState().categories,
+      allocations: useDataStore.getState().allocations,
+      orders: useOrdersStore.getState().orders,
+      preorders: usePreorderStore.getState().preorders,
+      auditLogs: useAuditStore.getState().logs,
+    };
+
+    const jsonStr = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `EventMate_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    setBackupSuccess(true);
+    setTimeout(() => setBackupSuccess(false), 3000);
+  };
+
+  const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const data = JSON.parse(text);
+
+        if (!data || data.appName !== 'EventMate') {
+          alert('File sao lưu không hợp lệ hoặc không phải từ hệ thống EventMate.');
+          return;
+        }
+
+        // Restore workspaces
+        if (data.workspaces && Array.isArray(data.workspaces)) {
+          setWorkspaces(data.workspaces);
+        }
+        if (data.workspace) {
+          setActiveWorkspace(data.workspace);
+        }
+
+        // Restore data-store items
+        if (data.events && Array.isArray(data.events)) {
+          data.events.forEach((evt: EventItem) => useDataStore.getState().createEvent(evt));
+        }
+
+        setRestoreMessage(`Khôi phục thành công dữ liệu từ file sao lưu (${file.name})!`);
+        setTimeout(() => setRestoreMessage(null), 4000);
+      } catch (err) {
+        alert('Có lỗi xảy ra khi đọc file sao lưu JSON. Vui lòng kiểm tra định dạng file.');
+      }
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   // Sync state if active workspace changes
   const [prevWorkspaceId, setPrevWorkspaceId] = React.useState(activeWorkspace?.id);
@@ -209,6 +297,69 @@ export default function SettingsPage() {
               <Database className="w-3.5 h-3.5" />
               <span>{t('loadDemoData')}</span>
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Full System Backup & Restore Section */}
+      <Card className="border-[#E8E8E5] bg-white shadow-xs">
+        <CardHeader className="border-b border-[#F0F0ED] pb-4">
+          <CardTitle className="text-sm font-semibold text-[#202124] flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-[#315C4C]" />
+            Sao Lưu & Khôi Phục Dữ Liệu Ngoại Tuyến (Backup / Restore)
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Xuất file sao lưu toàn bộ kho hàng, sự kiện, đơn hàng và nhật ký ra file JSON để lưu trữ hoặc chuyển sang máy khác mà không phụ thuộc Internet.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="pt-4 space-y-3">
+          {backupSuccess && (
+            <div className="flex items-center gap-2 p-3 text-xs text-[#2F7D55] bg-[#EAF4EE] border border-[#CEE6D7] rounded-[6px]">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>Đã xuất thành công file sao lưu hệ thống toàn vẹn (.json)!</span>
+            </div>
+          )}
+
+          {restoreMessage && (
+            <div className="flex items-center gap-2 p-3 text-xs text-[#2F7D55] bg-[#EAF4EE] border border-[#CEE6D7] rounded-[6px]">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>{restoreMessage}</span>
+            </div>
+          )}
+
+          <div className="flex items-center gap-3 flex-wrap">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleExportBackup}
+              className="gap-1.5 border-[#315C4C]/40 text-[#315C4C] hover:bg-[#EAF4EE] font-semibold h-8.5"
+            >
+              <Download className="w-3.5 h-3.5 text-[#315C4C]" />
+              <span>Tải File Sao Lưu (.json)</span>
+            </Button>
+
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleImportBackup}
+                className="hidden"
+                id="restore-file-input"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                className="gap-1.5 border-[#737373]/40 text-[#202124] hover:bg-[#F0F0ED] font-semibold h-8.5"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>Khôi Phục từ File Backup</span>
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -29,7 +29,9 @@ import {
   FlaskConical,
   Trash2,
   Download,
+  Printer,
 } from 'lucide-react';
+import { ReceiptModal } from '@/components/pos/receipt-modal';
 import {
   isTestEvent,
   isTestOrder,
@@ -48,6 +50,7 @@ export default function DashboardOrdersPage() {
   const [filterEvent, setFilterEvent] = React.useState('all');
   const [filterPayment, setFilterPayment] = React.useState('all');
   const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
+  const [isReceiptOpen, setIsReceiptOpen] = React.useState(false);
 
   const workspaceEvents = events.filter(
     (e) => !activeWorkspace || e.workspace_id === activeWorkspace.id
@@ -475,7 +478,18 @@ export default function DashboardOrdersPage() {
               </div>
             )}
 
-            <div className="pt-2 text-right">
+            <div className="pt-2 flex items-center justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsReceiptOpen(true)}
+                className="gap-1.5 text-xs text-[#315C4C] border-[#315C4C]/40 hover:bg-[#EAF4EE]"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Xem & In Hóa Đơn Nhiệt</span>
+              </Button>
+
               <Button
                 type="button"
                 variant="outline"
@@ -488,6 +502,13 @@ export default function DashboardOrdersPage() {
           </div>
         )}
       </Modal>
+
+      {/* Printable Thermal Receipt Modal */}
+      <ReceiptModal
+        order={selectedOrder}
+        isOpen={isReceiptOpen}
+        onClose={() => setIsReceiptOpen(false)}
+      />
     </div>
   );
 }

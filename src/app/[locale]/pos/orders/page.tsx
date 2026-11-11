@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Order } from '@/types/database';
+import { ReceiptModal } from '@/components/pos/receipt-modal';
 import {
   ArrowLeft,
   Search,
@@ -166,17 +167,30 @@ export default function PosOrdersPage() {
                         </span>
                       </div>
 
-                      {ord.sync_status === 'pending_sync' && (
+                      <div className="flex items-center gap-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-8 text-xs gap-1"
-                          onClick={() => retryOrderSync(ord.id)}
+                          className="h-8 text-xs gap-1 border-[#315C4C]/40 text-[#315C4C] hover:bg-[#EAF4EE]"
+                          onClick={() => setSelectedOrder(ord)}
+                          title="Xem biên nhận và in hóa đơn nhiệt"
                         >
-                          <RefreshCw className="w-3 h-3" />
-                          <span>Đồng bộ</span>
+                          <Printer className="w-3.5 h-3.5" />
+                          <span>Hóa đơn</span>
                         </Button>
-                      )}
+
+                        {ord.sync_status === 'pending_sync' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs gap-1"
+                            onClick={() => retryOrderSync(ord.id)}
+                          >
+                            <RefreshCw className="w-3 h-3" />
+                            <span>Đồng bộ</span>
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </Card>
@@ -185,6 +199,13 @@ export default function PosOrdersPage() {
           </div>
         )}
       </main>
+
+      {/* Printable Thermal Receipt Modal */}
+      <ReceiptModal
+        order={selectedOrder}
+        isOpen={!!selectedOrder}
+        onClose={() => setSelectedOrder(null)}
+      />
     </div>
   );
 }

@@ -291,7 +291,7 @@ export default function PosTerminalPage() {
   const [hideSoldOut, setHideSoldOut] = React.useState(true);
 
   // Calculate available stock for a variant at currently selected booth
-  // (strictly respecting booth allocation, my current cart, and other cashiers' active carts in real time)
+  // (strictly respecting booth allocation, true offline remaining inventory, my current cart, and other cashiers' active carts in real time)
   function getVariantAvailableStock(variantId: string) {
     const effectiveBoothId = selectedBoothId || effectiveBooths[0]?.id || booths[0]?.id;
     if (!effectiveBoothId) return 0;
@@ -301,7 +301,23 @@ export default function PosTerminalPage() {
     if (!alloc) return 0;
     const inCart = cart.find((c) => c.variantId === variantId)?.quantity || 0;
     const remoteHeld = getRemoteHeldQty(effectiveBoothId, variantId);
-    return Math.max(0, alloc.allocated_quantity - alloc.sold_quantity - inCart - remoteHeld);
+
+    // Safeguard: strictly clamp against warehouse true offline availability (excluding Online orders & VIP preorders)
+    const variant = variants.find((v) => v.id === variantId);
+    let maxOfflineAvailable = 999999;
+    if (variant) {
+      const maxOfflineLimit = Math.max(
+        0,
+        variant.total_inventory - (variant.online_preorder_quantity || 0) - (variant.reserved_quantity || 0)
+      );
+      const totalSoldOffline = allocations
+        .filter((a) => a.variant_id === variantId)
+        .reduce((sum, a) => sum + (a.sold_quantity || 0), 0);
+      maxOfflineAvailable = Math.max(0, maxOfflineLimit - totalSoldOffline);
+    }
+
+    const boothAvailable = Math.max(0, alloc.allocated_quantity - alloc.sold_quantity - inCart - remoteHeld);
+    return Math.min(boothAvailable, Math.max(0, maxOfflineAvailable - inCart - remoteHeld));
   }
 
   function getVariantRemoteHeldQty(variantId: string) {

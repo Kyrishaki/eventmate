@@ -51,6 +51,18 @@ export default function InventoryPage() {
   const isPartner = isCollabPartner(user?.role);
   const partnerName = user?.collabPartnerName;
 
+  // Local state to allow seamless manual quantity input typing
+  const [allocInputs, setAllocInputs] = React.useState<Record<string, string>>({});
+
+  function getProductThumbnail(product?: { name?: string; image_url?: string | null } | null) {
+    if (product?.image_url) return product.image_url;
+    const lower = (product?.name || '').toLowerCase();
+    if (lower.includes('keychain') || lower.includes('móc khóa')) {
+      return 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60';
+    }
+    return null;
+  }
+
   function handleStockTransfer(variantId: string, variantName: string, amount: number) {
     if (!selectedBooth) return;
 
@@ -62,20 +74,45 @@ export default function InventoryPage() {
       return;
     }
 
-    quickTransferStock(selectedBooth.id, variantId, amount);
-    logActivity({
-      actor_name: user?.fullName || 'Nhân viên kho',
-      actor_role: (user?.role as AuditActorRole) || 'inventory_staff',
-      action_type: 'stock_adjust',
-      entity_type: 'inventory',
-      entity_name: variantName,
-      booth_name: selectedBooth.name,
-      event_name: selectedEvent?.name,
-      description: `Điều chỉnh phân bổ quầy "${selectedBooth.name}": ${amount > 0 ? `+${amount}` : amount} món "${variantName}".`,
-      changes: [
-        { field: 'allocation_delta', field_label: 'Số lượng chuyển', new_value: amount > 0 ? `+${amount}` : String(amount) },
-      ],
-    });
+    if (!targetVariant) return;
+
+    // Offline cap: total minus online and pre-orders
+    const maxOfflineLimit = Math.max(
+      0,
+      targetVariant.total_inventory - (targetVariant.online_preorder_quantity || 0) - (targetVariant.reserved_quantity || 0)
+    );
+    const allAllocations = allocations.filter((a) => a.variant_id === variantId);
+    const currentTotalAllocated = allAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
+    const centralOfflineRemaining = Math.max(0, maxOfflineLimit - currentTotalAllocated);
+
+    if (amount > 0 && centralOfflineRemaining < amount) {
+      alert(
+        `Không thể cấp thêm ${amount} sản phẩm!\nKho chỉ còn ${centralOfflineRemaining} sản phẩm khả dụng cho bán offline (Tổng nhập ${targetVariant.total_inventory} - Giữ Online ${targetVariant.online_preorder_quantity || 0} - Giữ Pre-order ${targetVariant.reserved_quantity || 0} - Đã cấp các quầy ${currentTotalAllocated}).`
+      );
+      return;
+    }
+
+    const success = quickTransferStock(selectedBooth.id, variantId, amount);
+    if (success) {
+      setAllocInputs((prev) => {
+        const next = { ...prev };
+        delete next[variantId];
+        return next;
+      });
+      logActivity({
+        actor_name: user?.fullName || 'Nhân viên kho',
+        actor_role: (user?.role as AuditActorRole) || 'inventory_staff',
+        action_type: 'stock_adjust',
+        entity_type: 'inventory',
+        entity_name: variantName,
+        booth_name: selectedBooth.name,
+        event_name: selectedEvent?.name,
+        description: `Điều chỉnh phân bổ quầy "${selectedBooth.name}": ${amount > 0 ? `+${amount}` : amount} món "${variantName}".`,
+        changes: [
+          { field: 'allocation_delta', field_label: 'Số lượng chuyển', new_value: amount > 0 ? `+${amount}` : String(amount) },
+        ],
+      });
+    }
   }
 
   function handleDirectSetAllocation(variantId: string, variantName: string, targetAlloc: number) {
@@ -88,6 +125,8 @@ export default function InventoryPage() {
       return;
     }
 
+    if (!targetVariant) return;
+
     const currentAlloc = allocations.find(
       (a) => a.booth_id === selectedBooth.id && a.variant_id === variantId
     );
@@ -95,14 +134,25 @@ export default function InventoryPage() {
     const currentSoldQty = currentAlloc?.sold_quantity || 0;
 
     // Minimum limit cannot be less than already sold
-    const validAlloc = Math.max(currentSoldQty, targetAlloc);
+    const minAlloc = currentSoldQty;
 
-    // Maximum limit cannot exceed total_inventory minus other booths' allocations
+    // Maximum limit cannot exceed total offline inventory minus other booths' allocations
+    const maxOfflineLimit = Math.max(
+      0,
+      targetVariant.total_inventory - (targetVariant.online_preorder_quantity || 0) - (targetVariant.reserved_quantity || 0)
+    );
     const otherBoothsAlloc = allocations
       .filter((a) => a.variant_id === variantId && a.booth_id !== selectedBooth.id)
       .reduce((sum, a) => sum + a.allocated_quantity, 0);
-    const maxPossibleAlloc = Math.max(currentSoldQty, (targetVariant?.total_inventory || 0) - otherBoothsAlloc);
-    const clampedAlloc = Math.min(validAlloc, maxPossibleAlloc);
+    const maxPossibleAlloc = Math.max(minAlloc, maxOfflineLimit - otherBoothsAlloc);
+
+    let clampedAlloc = Math.max(minAlloc, targetAlloc);
+    if (clampedAlloc > maxPossibleAlloc) {
+      alert(
+        `Không thể cấp ${targetAlloc} sản phẩm!\nKho chỉ còn tối đa ${maxPossibleAlloc} sản phẩm khả dụng cho quầy này (Tổng nhập: ${targetVariant.total_inventory}, Giữ Online: ${targetVariant.online_preorder_quantity || 0}, Giữ Pre-order: ${targetVariant.reserved_quantity || 0}, Các quầy khác: ${otherBoothsAlloc}).\nHệ thống đã tự động giới hạn ở mức ${maxPossibleAlloc}.`
+      );
+      clampedAlloc = maxPossibleAlloc;
+    }
 
     setAllocation(
       activeWorkspace?.id || 'ws-default',
@@ -111,6 +161,12 @@ export default function InventoryPage() {
       variantId,
       clampedAlloc
     );
+
+    setAllocInputs((prev) => {
+      const next = { ...prev };
+      delete next[variantId];
+      return next;
+    });
 
     logActivity({
       actor_name: user?.fullName || 'Nhân viên kho',
@@ -384,19 +440,46 @@ export default function InventoryPage() {
                     (sum, a) => sum + (a.sold_quantity || 0),
                     0
                   );
-                  const centralStorageRemaining = Math.max(0, v.total_inventory - totalAllocated);
+
+                  // True Offline Cap: total inventory minus online preorder reservations and VIP preorders
+                  const maxOfflineCap = Math.max(
+                    0,
+                    v.total_inventory - (v.online_preorder_quantity || 0) - (v.reserved_quantity || 0)
+                  );
+                  const otherBoothsAlloc = allAllocations
+                    .filter((a) => a.booth_id !== selectedBooth.id)
+                    .reduce((sum, a) => sum + a.allocated_quantity, 0);
 
                   const boothAlloc = allAllocations.find((a) => a.booth_id === selectedBooth.id);
                   const currentAllocQty = boothAlloc?.allocated_quantity || 0;
                   const currentSoldQty = boothAlloc?.sold_quantity || 0;
                   const availableToSell = Math.max(0, currentAllocQty - currentSoldQty);
+
+                  // Maximum limit this booth can ever hold without exceeding offline available
+                  const maxAllowedBoothAlloc = Math.max(currentSoldQty, maxOfflineCap - otherBoothsAlloc);
+                  // Unallocated offline stock left in central warehouse
+                  const centralStorageRemaining = Math.max(0, maxOfflineCap - totalAllocated);
+
                   const stock = calculateVariantStock(v, totalSoldOffline, totalAllocated);
+                  const thumbUrl = getProductThumbnail(product);
 
                   return (
                     <tr key={v.id} className="hover:bg-[#FBFBFA] dark:hover:bg-neutral-800/40 transition-colors">
                       <td className="py-3 px-4 font-medium text-[#202124] dark:text-neutral-100">
-                        <div className="flex items-center gap-2">
-                          <Package className="w-3.5 h-3.5 text-[#9E9E9C] dark:text-neutral-400 shrink-0" />
+                        <div className="flex items-center gap-2.5">
+                          {/* Product Image Thumbnail */}
+                          <div className="w-10 h-10 rounded-[6px] bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 overflow-hidden shrink-0 flex items-center justify-center shadow-2xs">
+                            {thumbUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={thumbUrl}
+                                alt={product?.name || 'Sản phẩm'}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <Package className="w-5 h-5 text-[#9E9E9C] dark:text-neutral-500" />
+                            )}
+                          </div>
                           <div>
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <p className="font-bold text-xs text-[#202124] dark:text-neutral-100">{product?.name}</p>
@@ -470,41 +553,53 @@ export default function InventoryPage() {
                         </Badge>
                       </td>
 
-                      {/* Quick Adjustment Controls */}
+                      {/* Quick Adjustment Controls with Direct Manual Input */}
                       <td className="py-3 px-4 text-center">
                         {canManage && canManageProduct(user, product?.collab_partner) ? (
-                          <div className="inline-flex items-center gap-1 bg-[#F0F0ED] dark:bg-neutral-800 p-1 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700">
+                          <div className="inline-flex items-center gap-1 bg-[#F0F0ED] dark:bg-neutral-800 p-1 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 shadow-2xs">
                             <button
                               type="button"
-                              className="h-6 w-6 rounded bg-white dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-600 text-neutral-800 dark:text-neutral-100 flex items-center justify-center font-bold text-xs shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                              title="Giảm 1 món về kho tổng"
+                              className="h-7 w-7 rounded bg-white dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-600 text-neutral-800 dark:text-neutral-100 flex items-center justify-center font-bold text-xs shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                              title={currentAllocQty <= currentSoldQty ? `Không thể giảm dưới số lượng đã bán (${currentSoldQty})` : 'Giảm 1 món về kho tổng'}
                               disabled={currentAllocQty <= currentSoldQty}
                               onClick={() => handleStockTransfer(v.id, v.name, -1)}
                             >
-                              <Minus className="w-3 h-3" />
+                              <Minus className="w-3.5 h-3.5" />
                             </button>
 
                             <input
                               type="number"
                               min={currentSoldQty}
-                              max={currentAllocQty + centralStorageRemaining}
-                              value={currentAllocQty}
+                              max={maxAllowedBoothAlloc}
+                              value={allocInputs[v.id] !== undefined ? allocInputs[v.id] : currentAllocQty}
                               onChange={(e) => {
-                                const val = parseInt(e.target.value, 10);
-                                handleDirectSetAllocation(v.id, v.name, isNaN(val) ? 0 : val);
+                                setAllocInputs((prev) => ({ ...prev, [v.id]: e.target.value }));
                               }}
-                              className="w-14 h-6 text-center text-xs font-bold font-mono bg-white dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-700 rounded text-neutral-800 dark:text-neutral-100 focus:outline-none focus:ring-1 focus:ring-[#315C4C]"
-                              title="Nhập trực tiếp số lượng cấp cho quầy"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  const val = parseInt(allocInputs[v.id] ?? String(currentAllocQty), 10);
+                                  handleDirectSetAllocation(v.id, v.name, isNaN(val) ? currentAllocQty : val);
+                                  (e.target as HTMLInputElement).blur();
+                                }
+                              }}
+                              onBlur={() => {
+                                if (allocInputs[v.id] !== undefined) {
+                                  const val = parseInt(allocInputs[v.id], 10);
+                                  handleDirectSetAllocation(v.id, v.name, isNaN(val) ? currentAllocQty : val);
+                                }
+                              }}
+                              className="w-16 h-7 text-center text-xs font-bold font-mono bg-white dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-700 rounded text-neutral-800 dark:text-neutral-100 focus:outline-none focus:ring-1 focus:ring-[#315C4C]"
+                              title={`Nhập trực tiếp số lượng cấp cho quầy (Tối thiểu: ${currentSoldQty}, Tối đa: ${maxAllowedBoothAlloc})`}
                             />
 
                             <button
                               type="button"
-                              className="h-6 w-6 rounded bg-white dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-600 text-neutral-800 dark:text-neutral-100 flex items-center justify-center font-bold text-xs shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                              title="Cấp thêm 1 món từ kho tổng"
+                              className="h-7 w-7 rounded bg-white dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-600 text-neutral-800 dark:text-neutral-100 flex items-center justify-center font-bold text-xs shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                              title={centralStorageRemaining < 1 ? `Kho tổng đã hết hàng khả dụng cho bán offline (Còn ${centralStorageRemaining})` : 'Cấp thêm 1 món từ kho tổng'}
                               disabled={centralStorageRemaining < 1}
                               onClick={() => handleStockTransfer(v.id, v.name, 1)}
                             >
-                              <Plus className="w-3 h-3" />
+                              <Plus className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         ) : isPartner ? (
@@ -530,35 +625,70 @@ export default function InventoryPage() {
             {activeVariants.map((v) => {
               const product = products.find((p) => p.id === v.product_id);
               const allAllocations = allocations.filter((a) => a.variant_id === v.id);
+              const realAllocationsForVar = allAllocations.filter((a) => !a.is_test);
               const totalAllocated = allAllocations.reduce(
                 (sum, a) => sum + a.allocated_quantity,
                 0
               );
-              const centralStorageRemaining = Math.max(0, v.total_inventory - totalAllocated);
+              const totalSoldOffline = realAllocationsForVar.reduce(
+                (sum, a) => sum + (a.sold_quantity || 0),
+                0
+              );
+
+              // True Offline Cap: total inventory minus online preorder reservations and VIP preorders
+              const maxOfflineCap = Math.max(
+                0,
+                v.total_inventory - (v.online_preorder_quantity || 0) - (v.reserved_quantity || 0)
+              );
+              const otherBoothsAlloc = allAllocations
+                .filter((a) => a.booth_id !== selectedBooth.id)
+                .reduce((sum, a) => sum + a.allocated_quantity, 0);
 
               const boothAlloc = allAllocations.find((a) => a.booth_id === selectedBooth.id);
               const currentAllocQty = boothAlloc?.allocated_quantity || 0;
               const currentSoldQty = boothAlloc?.sold_quantity || 0;
               const availableToSell = Math.max(0, currentAllocQty - currentSoldQty);
-              const stock = calculateVariantStock(v, currentSoldQty, currentAllocQty);
+
+              // Maximum limit this booth can ever hold without exceeding offline available
+              const maxAllowedBoothAlloc = Math.max(currentSoldQty, maxOfflineCap - otherBoothsAlloc);
+              // Unallocated offline stock left in central warehouse
+              const centralStorageRemaining = Math.max(0, maxOfflineCap - totalAllocated);
+
+              const stock = calculateVariantStock(v, totalSoldOffline, totalAllocated);
+              const thumbUrl = getProductThumbnail(product);
 
               return (
                 <div key={v.id} className="p-3.5 space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <h4 className="font-bold text-sm text-[#202124] dark:text-neutral-100 truncate">{product?.name}</h4>
-                        {product?.collab_partner && (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/60">
-                            🤝 {product.collab_partner}
-                          </span>
+                  <div className="flex items-start justify-between gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {/* Product Image Thumbnail */}
+                      <div className="w-11 h-11 rounded-[6px] bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 overflow-hidden shrink-0 flex items-center justify-center shadow-2xs">
+                        {thumbUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={thumbUrl}
+                            alt={product?.name || 'Sản phẩm'}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Package className="w-5 h-5 text-[#9E9E9C] dark:text-neutral-500" />
                         )}
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs font-semibold text-[#315C4C] dark:text-emerald-300 bg-[#EBF1EE] dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-[#D5E2DC] dark:border-emerald-800">
-                          {v.name}
-                        </span>
-                        <span className="text-[11px] font-mono text-[#737373] dark:text-neutral-400">{v.sku}</span>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h4 className="font-bold text-sm text-[#202124] dark:text-neutral-100 truncate">{product?.name}</h4>
+                          {product?.collab_partner && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/60">
+                              🤝 {product.collab_partner}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs font-semibold text-[#315C4C] dark:text-emerald-300 bg-[#EBF1EE] dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-[#D5E2DC] dark:border-emerald-800">
+                            {v.name}
+                          </span>
+                          <span className="text-[11px] font-mono text-[#737373] dark:text-neutral-400">{v.sku}</span>
+                        </div>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1 shrink-0">
@@ -610,13 +740,13 @@ export default function InventoryPage() {
                         : 'Hạn mức kho:'}
                     </span>
                     {canManage && canManageProduct(user, product?.collab_partner) ? (
-                      <div className="flex items-center gap-1.5 bg-[#F0F0ED] dark:bg-neutral-800 p-1 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700">
+                      <div className="flex items-center gap-1.5 bg-[#F0F0ED] dark:bg-neutral-800 p-1 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 shadow-2xs">
                         <button
                           type="button"
                           className="h-8 w-8 rounded bg-white dark:bg-neutral-700 hover:bg-[#E8E8E5] dark:hover:bg-neutral-600 text-[#202124] dark:text-neutral-100 flex items-center justify-center font-bold text-xs shadow-2xs border border-[#E8E8E5] dark:border-neutral-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                           disabled={currentAllocQty <= currentSoldQty}
                           onClick={() => handleStockTransfer(v.id, v.name, -1)}
-                          title="Giảm 1 món"
+                          title={currentAllocQty <= currentSoldQty ? `Không thể giảm dưới số lượng đã bán (${currentSoldQty})` : 'Giảm 1 món'}
                         >
                           <Minus className="w-3.5 h-3.5" />
                         </button>
@@ -624,14 +754,26 @@ export default function InventoryPage() {
                         <input
                           type="number"
                           min={currentSoldQty}
-                          max={currentAllocQty + centralStorageRemaining}
-                          value={currentAllocQty}
+                          max={maxAllowedBoothAlloc}
+                          value={allocInputs[v.id] !== undefined ? allocInputs[v.id] : currentAllocQty}
                           onChange={(e) => {
-                            const val = parseInt(e.target.value, 10);
-                            handleDirectSetAllocation(v.id, v.name, isNaN(val) ? 0 : val);
+                            setAllocInputs((prev) => ({ ...prev, [v.id]: e.target.value }));
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const val = parseInt(allocInputs[v.id] ?? String(currentAllocQty), 10);
+                              handleDirectSetAllocation(v.id, v.name, isNaN(val) ? currentAllocQty : val);
+                              (e.target as HTMLInputElement).blur();
+                            }
+                          }}
+                          onBlur={() => {
+                            if (allocInputs[v.id] !== undefined) {
+                              const val = parseInt(allocInputs[v.id], 10);
+                              handleDirectSetAllocation(v.id, v.name, isNaN(val) ? currentAllocQty : val);
+                            }
                           }}
                           className="w-16 h-8 text-center text-xs font-bold font-mono bg-white dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-700 rounded text-[#202124] dark:text-neutral-100 focus:outline-none focus:ring-1 focus:ring-[#315C4C]"
-                          title="Nhập trực tiếp số lượng cấp cho quầy"
+                          title={`Nhập trực tiếp số lượng cấp cho quầy (Tối thiểu: ${currentSoldQty}, Tối đa: ${maxAllowedBoothAlloc})`}
                         />
 
                         <button
@@ -639,7 +781,7 @@ export default function InventoryPage() {
                           className="h-8 w-8 rounded bg-white dark:bg-neutral-700 hover:bg-[#E8E8E5] dark:hover:bg-neutral-600 text-[#202124] dark:text-neutral-100 flex items-center justify-center font-bold text-xs shadow-2xs border border-[#E8E8E5] dark:border-neutral-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                           disabled={centralStorageRemaining < 1}
                           onClick={() => handleStockTransfer(v.id, v.name, 1)}
-                          title="Cấp thêm 1 món"
+                          title={centralStorageRemaining < 1 ? `Kho tổng đã hết hàng khả dụng cho bán offline (Còn ${centralStorageRemaining})` : 'Cấp thêm 1 món'}
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </button>

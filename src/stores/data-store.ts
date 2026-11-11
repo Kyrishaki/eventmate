@@ -680,17 +680,33 @@ export const useDataStore = create<DataStoreState>()(
       // Allocations
       setAllocations: (allocations) => set({ allocations }),
       setAllocation: (workspaceId, eventId, boothId, variantId, allocatedQuantity) => {
-        const existing = get().allocations.find(
+        const { variants, allocations } = get();
+        const variant = variants.find((v) => v.id === variantId);
+        const existing = allocations.find(
           (a) => a.booth_id === boothId && a.variant_id === variantId
         );
+        const currentSold = existing?.sold_quantity || 0;
+
+        let finalQty = Math.max(currentSold, allocatedQuantity);
+        if (variant) {
+          const maxOfflineLimit = Math.max(
+            0,
+            variant.total_inventory - (variant.online_preorder_quantity || 0) - (variant.reserved_quantity || 0)
+          );
+          const otherBoothsAlloc = allocations
+            .filter((a) => a.variant_id === variantId && a.booth_id !== boothId)
+            .reduce((sum, a) => sum + a.allocated_quantity, 0);
+          const maxAllowed = Math.max(currentSold, maxOfflineLimit - otherBoothsAlloc);
+          finalQty = Math.min(finalQty, maxAllowed);
+        }
 
         if (existing) {
           set({
-            allocations: get().allocations.map((a) =>
+            allocations: allocations.map((a) =>
               a.id === existing.id
                 ? {
                     ...a,
-                    allocated_quantity: Math.max(a.sold_quantity, allocatedQuantity),
+                    allocated_quantity: finalQty,
                     updated_at: new Date().toISOString(),
                   }
                 : a
@@ -703,12 +719,12 @@ export const useDataStore = create<DataStoreState>()(
             event_id: eventId,
             booth_id: boothId,
             variant_id: variantId,
-            allocated_quantity: Math.max(0, allocatedQuantity),
+            allocated_quantity: finalQty,
             sold_quantity: 0,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           };
-          set({ allocations: [...get().allocations, newAlloc] });
+          set({ allocations: [...allocations, newAlloc] });
         }
       },
       quickTransferStock: (boothId, variantId, delta) => {
@@ -716,18 +732,24 @@ export const useDataStore = create<DataStoreState>()(
         const variant = variants.find((v) => v.id === variantId);
         if (!variant) return false;
 
+        // Maximum stock available for offline allocation (excluding online orders & VIP preorders)
+        const maxOfflineLimit = Math.max(
+          0,
+          variant.total_inventory - (variant.online_preorder_quantity || 0) - (variant.reserved_quantity || 0)
+        );
+
         // Calculate total allocated across all booths
         const allVariantAllocations = allocations.filter((a) => a.variant_id === variantId);
         const currentTotalAllocated = allVariantAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
-        const centralStorage = variant.total_inventory - currentTotalAllocated;
+        const centralOfflineRemaining = Math.max(0, maxOfflineLimit - currentTotalAllocated);
 
         const currentBoothAlloc = allVariantAllocations.find((a) => a.booth_id === boothId);
         const currentQty = currentBoothAlloc ? currentBoothAlloc.allocated_quantity : 0;
         const targetQty = currentQty + delta;
 
-        // Validation: cannot drop below sold quantity, cannot exceed remaining storage
-        if (delta > 0 && delta > centralStorage) {
-          return false; // Not enough stock in central storage
+        // Validation: cannot drop below sold quantity, cannot exceed remaining offline storage
+        if (delta > 0 && delta > centralOfflineRemaining) {
+          return false; // Not enough offline stock in central storage
         }
         if (targetQty < (currentBoothAlloc?.sold_quantity || 0)) {
           return false; // Cannot de-allocate already sold stock
@@ -847,13 +869,18 @@ export const useDataStore = create<DataStoreState>()(
           updated_at: new Date().toISOString(),
         };
 
+        const initialAllocQty = Math.max(
+          0,
+          (Number(quantity) || 0) - (Number(reservedQuantity) || 0) - (Number(onlinePreorderQuantity) || 0)
+        );
+
         const newAlloc: InventoryAllocation = {
           id: allocId,
           workspace_id: workspaceId,
           event_id: eventId,
           booth_id: boothId,
           variant_id: varId,
-          allocated_quantity: Number(quantity) || 0,
+          allocated_quantity: initialAllocQty,
           sold_quantity: 0,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),

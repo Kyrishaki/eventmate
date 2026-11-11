@@ -137,36 +137,6 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Quick Demo Logins for Fast Role Testing */}
-          <div className="p-2.5 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5] space-y-1.5">
-            <span className="text-[11px] font-semibold text-[#737373] block">
-              ⚡ Đăng nhập nhanh kiểm tra vai trò:
-            </span>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setIdentifier('Tuanadminvippro666');
-                  setPassword('Tuanadminvippro666');
-                }}
-                className="px-2 py-1.5 rounded-[4px] bg-white border border-[#E8E8E5] text-[11px] font-semibold text-[#202124] hover:border-[#315C4C] hover:bg-[#EAF4EE] text-left transition-colors cursor-pointer"
-              >
-                👑 Admin VIP Pro
-                <span className="text-[9px] text-[#737373] block font-normal">Toàn quyền kho tổng</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIdentifier('collab_genz');
-                  setPassword('Collab@123');
-                }}
-                className="px-2 py-1.5 rounded-[4px] bg-white border border-[#A855F7]/30 text-[11px] font-semibold text-[#6B21A8] hover:border-[#9333EA] hover:bg-[#FAF5FF] text-left transition-colors cursor-pointer"
-              >
-                🤝 Đối tác Collab
-                <span className="text-[9px] text-[#7E22CE] block font-normal">Chỉ chỉnh hàng của mình</span>
-              </button>
-            </div>
-          </div>
 
           <Button
             type="submit"

@@ -45,6 +45,15 @@ export interface Workspace {
   currency: string;
   description?: string;
   is_collab?: boolean;
+  owner_name?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  social_link?: string;
+  slogan?: string;
+  bank_name?: string;
+  bank_account_no?: string;
+  bank_account_name?: string;
   created_at: string;
   updated_at: string;
 }

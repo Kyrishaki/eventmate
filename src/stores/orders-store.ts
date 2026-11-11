@@ -27,7 +27,7 @@ export interface BankConfig {
 export const DEFAULT_BANK_CONFIG: BankConfig = {
   bankId: 'MB',
   accountNo: '0988776655',
-  accountName: 'NGUYEN VAN A - EVENTMATE',
+  accountName: 'NGUYEN VAN TUAN - HIKARUSTORE',
 };
 
 interface OrdersStoreState {

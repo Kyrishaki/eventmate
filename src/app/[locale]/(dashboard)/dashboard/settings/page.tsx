@@ -23,26 +23,127 @@ import {
   Upload,
   ShieldCheck,
   Palette,
+  User,
+  Phone,
+  Mail,
+  MapPin,
+  Share2,
+  QrCode,
+  CreditCard,
+  Info,
+  Check,
 } from 'lucide-react';
-import { EventItem } from '@/types/database';
+import { EventItem, Workspace } from '@/types/database';
 import { ThemeSelector } from '@/components/ui/theme-toggle';
+
+const POPULAR_BANKS = [
+  { id: 'MB', name: 'MBBank (Ngân hàng Quân Đội)' },
+  { id: 'VCB', name: 'Vietcombank (Ngoại thương Việt Nam)' },
+  { id: 'ACB', name: 'ACB (Á Châu)' },
+  { id: 'TCB', name: 'Techcombank (Kỹ Thương)' },
+  { id: 'VPB', name: 'VPBank (Việt Nam Thịnh Vượng)' },
+  { id: 'BIDV', name: 'BIDV (Đầu tư và Phát triển VN)' },
+  { id: 'VIB', name: 'VIB (Quốc tế)' },
+  { id: 'TPB', name: 'TPBank (Tiên Phong)' },
+];
 
 export default function SettingsPage() {
   const t = useTranslations('settings');
   const tCommon = useTranslations('common');
   const { activeWorkspace, setActiveWorkspace, workspaces, setWorkspaces, resetWorkspaces } = useWorkspaceStore();
   const { seedDemoTourData, clearAllData } = useDataStore();
-  const { clearOrders } = useOrdersStore();
+  const { clearOrders, activeBankConfig, setBankConfig } = useOrdersStore();
 
-  const [name, setName] = React.useState(activeWorkspace?.name || '');
-  const [slug, setSlug] = React.useState(activeWorkspace?.slug || '');
+  // Store & Brand Identity
+  const [name, setName] = React.useState(activeWorkspace?.name || 'HikaruStore');
+  const [slug, setSlug] = React.useState(activeWorkspace?.slug || 'hikarustore');
   const [currency, setCurrency] = React.useState(activeWorkspace?.currency || 'VND');
+  const [description, setDescription] = React.useState(activeWorkspace?.description || 'Không gian bán hàng và phân phối merchandise chính hãng');
+  const [slogan, setSlogan] = React.useState(
+    activeWorkspace?.slogan || 'Chuyên cung cấp merchandise & phụ kiện concert anime chính hãng'
+  );
+
+  // Personal / Representative Profile & Contacts
+  const [ownerName, setOwnerName] = React.useState(activeWorkspace?.owner_name || 'Nguyễn Văn Tuấn');
+  const [phone, setPhone] = React.useState(activeWorkspace?.phone || '0988.776.655');
+  const [email, setEmail] = React.useState(activeWorkspace?.email || 'contact@hikarustore.vn');
+  const [address, setAddress] = React.useState(
+    activeWorkspace?.address || 'Gian Hàng HikaruStore, Khu phức hợp Sự kiện, Q.1, TP. Hồ Chí Minh'
+  );
+  const [socialLink, setSocialLink] = React.useState(activeWorkspace?.social_link || 'https://zalo.me/0988776655');
+
+  // Bank & VietQR Payment Settings
+  const [bankId, setBankId] = React.useState(activeWorkspace?.bank_name || activeBankConfig?.bankId || 'MB');
+  const [accountNo, setAccountNo] = React.useState(activeWorkspace?.bank_account_no || activeBankConfig?.accountNo || '0988776655');
+  const [accountName, setAccountName] = React.useState(
+    activeWorkspace?.bank_account_name || activeBankConfig?.accountName || 'NGUYEN VAN TUAN'
+  );
+
   const [saveSuccess, setSaveSuccess] = React.useState(false);
   const [seedSuccess, setSeedSuccess] = React.useState(false);
   const [resetSuccess, setResetSuccess] = React.useState(false);
   const [backupSuccess, setBackupSuccess] = React.useState(false);
   const [restoreMessage, setRestoreMessage] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  // Sync state if active workspace changes
+  const [prevWorkspaceId, setPrevWorkspaceId] = React.useState(activeWorkspace?.id);
+  if (activeWorkspace && activeWorkspace.id !== prevWorkspaceId) {
+    setPrevWorkspaceId(activeWorkspace.id);
+    setName(activeWorkspace.name || 'HikaruStore');
+    setSlug(activeWorkspace.slug || 'hikarustore');
+    setCurrency(activeWorkspace.currency || 'VND');
+    setDescription(activeWorkspace.description || '');
+    setSlogan(activeWorkspace.slogan || 'Chuyên cung cấp merchandise & phụ kiện concert anime chính hãng');
+    setOwnerName(activeWorkspace.owner_name || 'Nguyễn Văn Tuấn');
+    setPhone(activeWorkspace.phone || '0988.776.655');
+    setEmail(activeWorkspace.email || 'contact@hikarustore.vn');
+    setAddress(activeWorkspace.address || 'Gian Hàng HikaruStore, Khu phức hợp Sự kiện, Q.1, TP. Hồ Chí Minh');
+    setSocialLink(activeWorkspace.social_link || 'https://zalo.me/0988776655');
+    setBankId(activeWorkspace.bank_name || activeBankConfig.bankId || 'MB');
+    setAccountNo(activeWorkspace.bank_account_no || activeBankConfig.accountNo || '0988776655');
+    setAccountName(activeWorkspace.bank_account_name || activeBankConfig.accountName || 'NGUYEN VAN TUAN');
+  }
+
+  function handleSaveAll(e: React.FormEvent) {
+    e.preventDefault();
+    if (!activeWorkspace) return;
+
+    const cleanBankId = bankId.toUpperCase();
+    const cleanAccountNo = accountNo.trim();
+    const cleanAccountName = accountName.trim().toUpperCase();
+
+    const updated: Workspace = {
+      ...activeWorkspace,
+      name: name.trim() || 'HikaruStore',
+      slug: slug.trim() || 'hikarustore',
+      currency,
+      description: description.trim(),
+      slogan: slogan.trim(),
+      owner_name: ownerName.trim(),
+      phone: phone.trim(),
+      email: email.trim(),
+      address: address.trim(),
+      social_link: socialLink.trim(),
+      bank_name: cleanBankId,
+      bank_account_no: cleanAccountNo,
+      bank_account_name: cleanAccountName,
+      updated_at: new Date().toISOString(),
+    };
+
+    setActiveWorkspace(updated);
+    setWorkspaces(workspaces.map((w) => (w.id === updated.id ? updated : w)));
+
+    // Sync bank config to orders store (for POS & VietQR)
+    setBankConfig({
+      bankId: cleanBankId,
+      accountNo: cleanAccountNo,
+      accountName: cleanAccountName,
+    });
+
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 3500);
+  }
 
   const handleExportBackup = () => {
     const backupData = {
@@ -67,7 +168,7 @@ export default function SettingsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `EventMate_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `HikaruStore_Backup_${new Date().toISOString().slice(0, 10)}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -92,15 +193,12 @@ export default function SettingsPage() {
           return;
         }
 
-        // Restore workspaces
         if (data.workspaces && Array.isArray(data.workspaces)) {
           setWorkspaces(data.workspaces);
         }
         if (data.workspace) {
           setActiveWorkspace(data.workspace);
         }
-
-        // Restore data-store items
         if (data.events && Array.isArray(data.events)) {
           data.events.forEach((evt: EventItem) => useDataStore.getState().createEvent(evt));
         }
@@ -115,33 +213,6 @@ export default function SettingsPage() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Sync state if active workspace changes
-  const [prevWorkspaceId, setPrevWorkspaceId] = React.useState(activeWorkspace?.id);
-  if (activeWorkspace && activeWorkspace.id !== prevWorkspaceId) {
-    setPrevWorkspaceId(activeWorkspace.id);
-    setName(activeWorkspace.name);
-    setSlug(activeWorkspace.slug);
-    setCurrency(activeWorkspace.currency);
-  }
-
-  function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    if (!activeWorkspace) return;
-
-    const updated = {
-      ...activeWorkspace,
-      name,
-      slug,
-      currency,
-      updated_at: new Date().toISOString(),
-    };
-
-    setActiveWorkspace(updated);
-    setWorkspaces(workspaces.map((w) => (w.id === updated.id ? updated : w)));
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
-  }
-
   function handleSeedDemo() {
     if (!activeWorkspace) return;
     seedDemoTourData(activeWorkspace.id);
@@ -150,7 +221,12 @@ export default function SettingsPage() {
   }
 
   function handleResetAll() {
-    if (!confirm('Bạn có chắc chắn muốn xóa toàn bộ dữ liệu (sự kiện, gian hàng, sản phẩm, đơn hàng) để hệ thống hoàn toàn trắng không?')) return;
+    if (
+      !confirm(
+        'Bạn có chắc chắn muốn xóa toàn bộ dữ liệu (sự kiện, gian hàng, sản phẩm, đơn hàng) để hệ thống hoàn toàn trắng không?'
+      )
+    )
+      return;
     clearAllData();
     clearOrders();
     resetWorkspaces();
@@ -159,60 +235,102 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 max-w-4xl pb-12">
       {/* Top Header */}
       <div className="flex items-center justify-between pb-2 border-b border-[#E8E8E5]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-[#202124]">{t('title')}</h1>
+            <h1 className="text-xl font-bold tracking-tight text-[#202124]">Cài Đặt Hệ Thống & Thông Tin Gian Hàng</h1>
             <Badge variant="outline" className="text-[11px] font-mono">
               {activeWorkspace?.currency || 'VND'}
             </Badge>
           </div>
-          <p className="text-xs text-[#737373] mt-0.5">{t('description')}</p>
+          <p className="text-xs text-[#737373] mt-0.5">
+            Cấu hình đồng bộ thông tin cá nhân, gian hàng, hotline, địa chỉ và mã VietQR cho toàn bộ hệ thống.
+          </p>
+        </div>
+      </div>
+
+      {/* Auto-Sync Explanation Banner */}
+      <div className="flex items-start gap-3 p-3.5 bg-[#EBF1EE] dark:bg-emerald-950/30 border border-[#315C4C]/30 rounded-[8px] text-xs text-[#202124] dark:text-neutral-200">
+        <Info className="w-5 h-5 text-[#315C4C] dark:text-emerald-400 shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <p className="font-bold text-[#315C4C] dark:text-emerald-400">
+            Trung tâm Đồng bộ Tự động — Điền 1 lần, hiển thị toàn diện:
+          </p>
+          <p className="text-[#404040] dark:text-neutral-300 leading-relaxed text-[11px]">
+            Mọi thông tin cá nhân và tài khoản bạn chỉnh sửa bên dưới sẽ được tự động đồng bộ ngay lập tức sang:
+            <strong> (1) Gian hàng cho Khách xem</strong> (Hotline, Zalo, địa chỉ, số tài khoản thanh toán online),
+            <strong> (2) Màn hình Bán hàng POS & Mã VietQR</strong>, và
+            <strong> (3) Hóa đơn in nhiệt / Phiếu xuất hàng</strong>. Bạn không cần phải chỉnh thủ công ở bất kỳ chỗ nào khác!
+          </p>
         </div>
       </div>
 
       {saveSuccess && (
-        <div className="flex items-center gap-2 p-3 text-xs text-[#2F7D55] bg-[#EAF4EE] border border-[#CEE6D7] rounded-[6px]">
-          <CheckCircle2 className="w-4 h-4 shrink-0" />
-          <span>Đã lưu thành công các thay đổi của Không gian làm việc.</span>
+        <div className="flex items-center gap-2.5 p-3.5 text-xs text-[#2F7D55] bg-[#EAF4EE] border border-[#CEE6D7] rounded-[8px] shadow-xs">
+          <CheckCircle2 className="w-5 h-5 shrink-0 text-[#2F7D55]" />
+          <div>
+            <p className="font-bold">Đã lưu và đồng bộ toàn bộ thông tin thành công!</p>
+            <p className="text-[11px] text-[#2F7D55]/90">
+              Gian hàng khách xem, hóa đơn in nhiệt và mã VietQR tại quầy POS đã nhận dữ liệu mới nhất.
+            </p>
+          </div>
         </div>
       )}
 
-      {/* Workspace Profile Form */}
-      <Card className="border-[#E8E8E5] bg-white shadow-xs">
-        <CardHeader className="border-b border-[#F0F0ED] pb-4">
-          <CardTitle className="text-sm font-semibold text-[#202124] flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-[#315C4C]" />
-            {t('workspaceInfo')}
-          </CardTitle>
-          <CardDescription className="text-xs">{t('description')}</CardDescription>
-        </CardHeader>
+      {/* Main Consolidated Profile Form */}
+      <form onSubmit={handleSaveAll} className="space-y-6">
+        {/* Section 1: Store & Brand Profile */}
+        <Card className="border-[#E8E8E5] bg-white shadow-xs">
+          <CardHeader className="border-b border-[#F0F0ED] pb-4">
+            <CardTitle className="text-sm font-semibold text-[#202124] flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-[#315C4C]" />
+              1. Thông Tin Gian Hàng & Thương Hiệu
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Tên cửa hàng, định danh đường dẫn, tiền tệ và slogan hiển thị trên tiêu đề và hóa đơn.
+            </CardDescription>
+          </CardHeader>
 
-        <form onSubmit={handleSave}>
           <CardContent className="space-y-4 pt-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="ws-name" required>
-                {t('name')}
-              </Label>
-              <Input
-                id="ws-name"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="ws-name" required>
+                  Tên Gian Hàng / Cửa Hàng
+                </Label>
+                <Input
+                  id="ws-name"
+                  required
+                  placeholder="VD: HikaruStore"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+                <p className="text-[11px] text-[#737373]">Tên xuất hiện trên tiêu đề web, bill in nhiệt và banner khách xem.</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="ws-slug">Định danh URL (Slug)</Label>
+                <Input
+                  id="ws-slug"
+                  className="font-mono text-xs"
+                  placeholder="hikarustore"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="ws-slug">{t('slug')}</Label>
+                <Label htmlFor="ws-slogan">Slogan / Thông Điệp Gian Hàng</Label>
                 <Input
-                  id="ws-slug"
-                  className="font-mono text-xs"
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
+                  id="ws-slogan"
+                  placeholder="VD: Chuyên cung cấp merchandise & phụ kiện concert anime chính hãng"
+                  value={slogan}
+                  onChange={(e) => setSlogan(e.target.value)}
                 />
+                <p className="text-[11px] text-[#737373]">Hiển thị tại đầu trang gian hàng khách và chân hóa đơn.</p>
               </div>
 
               <div className="space-y-1.5">
@@ -226,19 +344,221 @@ export default function SettingsPage() {
                   <option value="VND">VND (Việt Nam Đồng - ₫)</option>
                   <option value="USD">USD (US Dollar - $)</option>
                 </select>
-                <p className="text-[11px] text-[#737373]">{t('currencyHelp')}</p>
               </div>
             </div>
 
-            <div className="pt-2">
-              <Button type="submit" variant="primary" size="sm" className="gap-1.5">
-                <Save className="w-3.5 h-3.5" />
-                <span>{t('saveChanges')}</span>
-              </Button>
+            <div className="space-y-1.5">
+              <Label htmlFor="ws-desc">Mô tả Giới thiệu ngắn về Gian hàng</Label>
+              <textarea
+                id="ws-desc"
+                rows={2}
+                className="w-full rounded-[6px] border border-[#E8E8E5] bg-white p-2.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                placeholder="Giới thiệu về gian hàng, tour diễn và các sản phẩm độc quyền..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
             </div>
           </CardContent>
-        </form>
-      </Card>
+        </Card>
+
+        {/* Section 2: Owner & Public Contact Info */}
+        <Card className="border-[#E8E8E5] bg-white shadow-xs">
+          <CardHeader className="border-b border-[#F0F0ED] pb-4">
+            <CardTitle className="text-sm font-semibold text-[#202124] flex items-center gap-2">
+              <User className="w-4 h-4 text-[#315C4C]" />
+              2. Thông Tin Chủ Quầy & Kênh Liên Hệ Khách Hàng
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Thông tin liên hệ của bạn để khách gọi chốt đơn, chat Zalo, đặt cọc giữ đồ và hiển thị trên biên nhận.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="space-y-4 pt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="owner-name" required className="flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-[#737373]" />
+                  <span>Họ và Tên Chủ quầy / Người đại diện</span>
+                </Label>
+                <Input
+                  id="owner-name"
+                  required
+                  placeholder="VD: Nguyễn Văn Tuấn"
+                  value={ownerName}
+                  onChange={(e) => setOwnerName(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="owner-phone" required className="flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-[#737373]" />
+                  <span>Số Điện Thoại / Hotline Tư Vấn & Đặt Hàng</span>
+                </Label>
+                <Input
+                  id="owner-phone"
+                  required
+                  placeholder="VD: 0988.776.655"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+                <p className="text-[11px] text-[#737373]">Khách bấm vào nút Hotline ở gian hàng sẽ gọi thẳng tới số này.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="owner-email" className="flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-[#737373]" />
+                  <span>Địa chỉ Email Hỗ trợ / Hợp tác</span>
+                </Label>
+                <Input
+                  id="owner-email"
+                  type="email"
+                  placeholder="contact@hikarustore.vn"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="owner-social" className="flex items-center gap-1.5">
+                  <Share2 className="w-3.5 h-3.5 text-[#737373]" />
+                  <span>Link Chat Zalo / Facebook Tư Vấn Nhanh</span>
+                </Label>
+                <Input
+                  id="owner-social"
+                  placeholder="https://zalo.me/0988776655"
+                  value={socialLink}
+                  onChange={(e) => setSocialLink(e.target.value)}
+                />
+                <p className="text-[11px] text-[#737373]">Gắn vào nút "Nhắn Zalo đặt hàng ngay" ở gian hàng khách xem.</p>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="owner-address" className="flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-[#737373]" />
+                <span>Địa Chỉ Quầy Bán / Trụ Sở Gian Hàng</span>
+              </Label>
+              <Input
+                id="owner-address"
+                placeholder="VD: Gian Hàng HikaruStore, Khu phức hợp Sự kiện, Q.1, TP. Hồ Chí Minh"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
+              <p className="text-[11px] text-[#737373]">In trên chân hóa đơn bán hàng và thông tin liên hệ của trang web.</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Section 3: Bank & VietQR Payment Configuration */}
+        <Card className="border-[#E8E8E5] bg-white shadow-xs">
+          <CardHeader className="border-b border-[#F0F0ED] pb-4">
+            <CardTitle className="text-sm font-semibold text-[#202124] flex items-center gap-2">
+              <QrCode className="w-4 h-4 text-[#315C4C]" />
+              3. Cấu Hình Tài Khoản Ngân Hàng & Mã VietQR Nhận Tiền
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Mã VietQR động tự chèn số tiền và mã đơn trên máy POS và hỗ trợ khách chuyển khoản đặt cọc online.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="space-y-4 pt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="bank-select" required>
+                  Ngân Hàng Thụ Hưởng
+                </Label>
+                <select
+                  id="bank-select"
+                  className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                  value={bankId}
+                  onChange={(e) => setBankId(e.target.value)}
+                >
+                  {POPULAR_BANKS.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="acc-no" required>
+                  Số Tài Khoản Nhận Tiền
+                </Label>
+                <Input
+                  id="acc-no"
+                  required
+                  className="font-mono text-xs"
+                  placeholder="VD: 0988776655"
+                  value={accountNo}
+                  onChange={(e) => setAccountNo(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="acc-name" required>
+                  Tên Chủ Tài Khoản (Không Dấu)
+                </Label>
+                <Input
+                  id="acc-name"
+                  required
+                  className="uppercase font-mono text-xs"
+                  placeholder="VD: NGUYEN VAN TUAN"
+                  value={accountName}
+                  onChange={(e) => setAccountName(e.target.value.toUpperCase())}
+                />
+              </div>
+            </div>
+
+            {/* Live VietQR Preview Box */}
+            <div className="p-3 bg-[#F7F7F5] dark:bg-neutral-800 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-700 flex flex-col sm:flex-row items-center gap-4">
+              <div className="w-24 h-24 bg-white p-1 rounded border border-[#E8E8E5] shrink-0 flex items-center justify-center">
+                {accountNo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={`https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=0&addInfo=TESTQR&accountName=${encodeURIComponent(
+                      accountName
+                    )}`}
+                    alt="VietQR Preview"
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <QrCode className="w-10 h-10 text-[#9E9E9C]" />
+                )}
+              </div>
+              <div className="text-xs space-y-1 flex-1">
+                <p className="font-bold text-[#202124] dark:text-neutral-100 flex items-center gap-1.5">
+                  <CreditCard className="w-3.5 h-3.5 text-[#315C4C]" />
+                  <span>Mã QR Xem Trước Của Bạn</span>
+                </p>
+                <p className="text-[11px] text-[#737373] dark:text-neutral-400">
+                  Ngân hàng: <strong>{bankId}</strong> • Số TK:{' '}
+                  <strong className="font-mono text-[#202124] dark:text-neutral-200">{accountNo || '(Chưa nhập)'}</strong>
+                </p>
+                <p className="text-[11px] text-[#737373] dark:text-neutral-400">
+                  Chủ TK: <strong className="uppercase">{accountName || '(Chưa nhập)'}</strong>
+                </p>
+                <p className="text-[10px] text-[#2F7D55] font-semibold mt-1">
+                  ✓ Sẵn sàng quét nhận tiền qua tất cả ứng dụng ngân hàng và ví điện tử tại Việt Nam.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Save Button Bar */}
+        <div className="sticky bottom-4 bg-white/95 dark:bg-neutral-900/95 backdrop-blur p-4 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-800 shadow-lg flex items-center justify-between">
+          <p className="text-xs text-[#737373]">
+            Lưu một lần — Tự động áp dụng cho Gian hàng khách xem, Hóa đơn và Màn hình POS.
+          </p>
+          <Button type="submit" variant="primary" size="md" className="gap-2 bg-[#315C4C] hover:bg-[#254639] text-white">
+            <Save className="w-4 h-4" />
+            <span className="font-bold">Lưu Toàn Bộ Cài Đặt</span>
+          </Button>
+        </div>
+      </form>
 
       {/* Theme & Appearance Settings */}
       <Card className="border-[#E8E8E5] bg-white shadow-xs">
@@ -256,7 +576,7 @@ export default function SettingsPage() {
             <div>
               <p className="text-xs font-semibold text-[#202124]">Lựa chọn chủ đề:</p>
               <p className="text-[11px] text-[#737373] mt-0.5">
-                Chế độ Tối (Dark mode) giúp bảo vệ mắt khi bán hàng ban đêm tại các tour lưu diễn hoặc sân khấu âm nhạc.
+                Chế độ Tối (Dark mode) giúp bảo vệ mắt khi bán hàng ban đêm tại các sự kiện hoặc sân khấu âm nhạc.
               </p>
             </div>
             <ThemeSelector />
@@ -276,7 +596,7 @@ export default function SettingsPage() {
 
         <CardContent className="pt-4 space-y-3">
           <p className="text-xs text-[#737373] leading-relaxed">
-            Dữ liệu bao gồm: 2 Sự kiện diễn tại Hà Nội & TP.HCM, 2 Gian hàng quầy vé, 4 Sản phẩm merchandise (Áo thun, nón, lightstick, đĩa vinyl) và bảng phân bổ tồn kho hoàn chỉnh đúng theo mô hình kinh doanh.
+            Dữ liệu bao gồm: 2 Sự kiện, 2 Gian hàng quầy vé, các sản phẩm merchandise mẫu và bảng phân bổ tồn kho hoàn chỉnh.
           </p>
 
           {seedSuccess && (
@@ -309,7 +629,7 @@ export default function SettingsPage() {
             Sao Lưu & Khôi Phục Dữ Liệu Ngoại Tuyến (Backup / Restore)
           </CardTitle>
           <CardDescription className="text-xs">
-            Xuất file sao lưu toàn bộ kho hàng, sự kiện, đơn hàng và nhật ký ra file JSON để lưu trữ hoặc chuyển sang máy khác mà không phụ thuộc Internet.
+            Xuất file sao lưu toàn bộ kho hàng, sự kiện, đơn hàng và nhật ký ra file JSON để lưu trữ hoặc chuyển sang máy khác.
           </CardDescription>
         </CardHeader>
 
@@ -372,7 +692,7 @@ export default function SettingsPage() {
             Khởi tạo Hệ thống Trắng (Xóa sạch dữ liệu mẫu)
           </CardTitle>
           <CardDescription className="text-xs">
-            Xóa toàn bộ các dữ liệu mẫu (sự kiện, gian hàng, đơn hàng, sản phẩm) để bắt đầu nhập dữ liệu kinh doanh thực tế của bạn.
+            Xóa toàn bộ các dữ liệu mẫu (sự kiện, gian hàng, đơn hàng, sản phẩm) để bắt đầu nhập dữ liệu kinh doanh thực tế.
           </CardDescription>
         </CardHeader>
 

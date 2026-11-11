@@ -33,6 +33,10 @@ import {
   Users2,
   Bookmark,
   ArrowLeft,
+  Layers,
+  MapPin,
+  User,
+  Building2,
 } from 'lucide-react';
 
 export function GuestShowcase() {
@@ -46,6 +50,7 @@ export function GuestShowcase() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedCategoryId, setSelectedCategoryId] = React.useState<string>('all');
   const [selectedEventId, setSelectedEventId] = React.useState<string>('all');
+  const [sourceFilter, setSourceFilter] = React.useState<'all' | 'store' | 'collab'>('all');
   const [selectedVariantMap, setSelectedVariantMap] = React.useState<Record<string, string>>({});
 
   // Modals
@@ -83,10 +88,17 @@ export function GuestShowcase() {
     );
   }, [preorders, guestPhone]);
 
-  // Active products (not deleted, is_active)
+  // Active products & origin counts
+  const allActiveProducts = React.useMemo(() => products.filter((p) => !p.is_deleted && p.is_active), [products]);
+  const storeProdsCount = React.useMemo(() => allActiveProducts.filter((p) => !p.collab_partner).length, [allActiveProducts]);
+  const collabProdsCount = React.useMemo(() => allActiveProducts.filter((p) => !!p.collab_partner).length, [allActiveProducts]);
+
+  // Active products (filtered by category, event, search & origin source)
   const visibleProducts = React.useMemo(() => {
     return products.filter((p) => {
       if (p.is_deleted || !p.is_active) return false;
+      if (sourceFilter === 'store' && p.collab_partner) return false;
+      if (sourceFilter === 'collab' && !p.collab_partner) return false;
       if (selectedCategoryId !== 'all' && p.category_id !== selectedCategoryId) return false;
       if (selectedEventId !== 'all') {
         const prodVariants = variants.filter((v) => v.product_id === p.id);
@@ -104,7 +116,7 @@ export function GuestShowcase() {
       }
       return true;
     });
-  }, [products, variants, allocations, selectedCategoryId, selectedEventId, searchQuery]);
+  }, [products, variants, allocations, selectedCategoryId, selectedEventId, searchQuery, sourceFilter]);
 
   // Open Keep Item Modal
   const handleOpenKeepModal = (product: Product, variant: ProductVariant) => {
@@ -215,7 +227,7 @@ export function GuestShowcase() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-base tracking-tight">HikaruStore</span>
+                <span className="font-bold text-base tracking-tight">{activeWorkspace?.name || 'HikaruStore'}</span>
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#EAF4EE] dark:bg-emerald-950/60 text-[#2F7D55] dark:text-emerald-400 border border-[#CEE6D7] dark:border-emerald-800">
                   Gian Hàng Trưng Bày
                 </span>
@@ -230,12 +242,12 @@ export function GuestShowcase() {
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Hotline Quick Call */}
             <a
-              href="tel:0988776655"
+              href={`tel:${(activeWorkspace?.phone || '0988.776.655').replace(/[^0-9]/g, '')}`}
               className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-[6px] bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 hover:border-[#315C4C] text-[#315C4C] dark:text-emerald-400 transition-colors"
               title="Hotline tư vấn và chốt đơn giao hàng tận nơi"
             >
               <Phone className="w-3.5 h-3.5" />
-              <span>Hotline: 0988.776.655</span>
+              <span>Hotline: {activeWorkspace?.phone || '0988.776.655'}</span>
             </a>
 
             {/* My Held Items Button */}
@@ -288,10 +300,10 @@ export function GuestShowcase() {
             <div className="max-w-2xl space-y-2">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EBF1EE] dark:bg-emerald-950/40 text-[#315C4C] dark:text-emerald-400 text-xs font-semibold">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Gian Hàng Merchandise Chính Thức — Tour 2026</span>
+                <span>Gian Hàng Merchandise Chính Thức — {activeWorkspace?.name || 'HikaruStore'}</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#202124] dark:text-neutral-100">
-                Bộ Sưu Tập Merchandise & Giữ Đồ Tại Sự Kiện
+                {activeWorkspace?.slogan || 'Bộ Sưu Tập Merchandise & Giữ Đồ Tại Sự Kiện'}
               </h1>
               <p className="text-xs sm:text-sm text-[#737373] dark:text-neutral-400 leading-relaxed">
                 Khám phá đầy đủ trang phục, phụ kiện và quà tặng chính thức. Bạn có thể{' '}
@@ -332,7 +344,54 @@ export function GuestShowcase() {
 
       {/* Main Catalog Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 w-full space-y-6">
-        {/* Search & Filter Bar */}
+        {/* Origin Source Filter Tabs: All vs Store Exclusive vs Collab Partner */}
+        <div className="flex flex-wrap items-center gap-2 p-2.5 bg-white dark:bg-neutral-900 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-800 shadow-2xs">
+          <span className="text-xs font-semibold text-[#737373] dark:text-neutral-400 px-2 flex items-center gap-1.5 shrink-0">
+            <Layers className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400" />
+            <span>Phân loại hàng:</span>
+          </span>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSourceFilter('all')}
+              className={`px-3 py-1.5 rounded-[6px] text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                sourceFilter === 'all'
+                  ? 'bg-[#202124] text-white shadow-xs'
+                  : 'bg-[#F7F7F5] dark:bg-neutral-800 text-[#737373] hover:text-[#202124] dark:hover:text-neutral-100 border border-[#E8E8E5] dark:border-neutral-700'
+              }`}
+            >
+              <span>✨ Tất cả ({allActiveProducts.length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSourceFilter('store')}
+              className={`px-3 py-1.5 rounded-[6px] text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                sourceFilter === 'store'
+                  ? 'bg-[#2F7D55] text-white shadow-xs ring-2 ring-[#2F7D55]/30'
+                  : 'bg-[#EAF4EE] dark:bg-emerald-950/40 text-[#2F7D55] dark:text-emerald-300 border border-[#2F7D55]/30 hover:bg-[#D8ECDF]'
+              }`}
+            >
+              <span>👑 Độc quyền {activeWorkspace?.name || 'HikaruStore'} ({storeProdsCount})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSourceFilter('collab')}
+              className={`px-3 py-1.5 rounded-[6px] text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                sourceFilter === 'collab'
+                  ? 'bg-[#B7791F] text-white shadow-xs ring-2 ring-[#B7791F]/30'
+                  : 'bg-[#FEF7EC] dark:bg-amber-950/40 text-[#8C5D17] dark:text-amber-300 border border-[#B7791F]/30 hover:bg-[#FDEED3]'
+              }`}
+            >
+              <Users2 className="w-3.5 h-3.5" />
+              <span>🤝 Hàng Đối tác Collab ({collabProdsCount})</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Search & Category Filter Bar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-white dark:bg-neutral-900 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-800 shadow-2xs">
           {/* Search Box & Event Selector */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 max-w-lg w-full">
@@ -413,9 +472,17 @@ export function GuestShowcase() {
               Không tìm thấy sản phẩm phù hợp
             </h3>
             <p className="text-xs text-[#737373]">
-              Thử xóa từ khóa tìm kiếm hoặc chọn danh mục khác.
+              Thử xóa từ khóa tìm kiếm hoặc chọn nguồn hàng khác.
             </p>
-            <Button variant="outline" size="sm" onClick={() => { setSearchQuery(''); setSelectedCategoryId('all'); }}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedCategoryId('all');
+                setSourceFilter('all');
+              }}
+            >
               Xem toàn bộ sản phẩm
             </Button>
           </div>
@@ -459,7 +526,21 @@ export function GuestShowcase() {
                         <Package className="w-10 h-10 text-[#9E9E9C]" />
                       )}
 
-                      {/* Stock Badge Overlay */}
+                      {/* Origin Source Badge Overlay (Top Left) */}
+                      <div className="absolute top-2.5 left-2.5">
+                        {prod.collab_partner ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-[#FEF7EC]/95 dark:bg-amber-950/90 text-[#8C5D17] dark:text-amber-300 border border-[#B7791F]/40 shadow-xs backdrop-blur-[2px]">
+                            <Users2 className="w-3 h-3 text-[#B7791F]" />
+                            <span>Collab: {prod.collab_partner}</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-[#EAF4EE]/95 dark:bg-emerald-950/90 text-[#2F7D55] dark:text-emerald-300 border border-[#2F7D55]/30 shadow-xs backdrop-blur-[2px]">
+                            <span>👑 {activeWorkspace?.name || 'HikaruStore'}</span>
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Stock Badge Overlay (Top Right) */}
                       <div className="absolute top-2.5 right-2.5">
                         {isAvailable ? (
                           <span
@@ -494,10 +575,15 @@ export function GuestShowcase() {
 
                     {/* Content */}
                     <div className="p-3.5 space-y-2">
-                      {prod.collab_partner && (
-                        <div className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#8C5D17] bg-[#FEF7EC] dark:bg-amber-950/40 px-1.5 py-0.2 rounded border border-[#B7791F]/30">
-                          <Users2 className="w-3 h-3 text-[#B7791F]" />
-                          <span>Collab: {prod.collab_partner}</span>
+                      {/* Product Origin Label */}
+                      {prod.collab_partner ? (
+                        <div className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-[#8C5D17] dark:text-amber-300 bg-[#FEF7EC] dark:bg-amber-950/40 px-2 py-0.5 rounded border border-[#B7791F]/30">
+                          <Users2 className="w-3.5 h-3.5 text-[#B7791F] shrink-0" />
+                          <span>Hàng Collab: <strong>{prod.collab_partner}</strong></span>
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-[#2F7D55] dark:text-emerald-300 bg-[#EAF4EE] dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-[#2F7D55]/30">
+                          <span>👑 Độc quyền <strong>{activeWorkspace?.name || 'HikaruStore'}</strong></span>
                         </div>
                       )}
 
@@ -615,6 +701,18 @@ export function GuestShowcase() {
                 )}
               </div>
               <div className="min-w-0 flex-1">
+                <div className="mb-1">
+                  {keepModalProduct.product.collab_partner ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#8C5D17] bg-[#FEF7EC] dark:bg-amber-950/40 px-1.5 py-0.2 rounded border border-[#B7791F]/30">
+                      <Users2 className="w-3 h-3 text-[#B7791F]" />
+                      <span>Hàng Collab: {keepModalProduct.product.collab_partner}</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#2F7D55] bg-[#EAF4EE] dark:bg-emerald-950/40 px-1.5 py-0.2 rounded border border-[#2F7D55]/30">
+                      <span>👑 Chính hãng {activeWorkspace?.name || 'HikaruStore'}</span>
+                    </span>
+                  )}
+                </div>
                 <h4 className="font-bold text-xs truncate">{keepModalProduct.product.name}</h4>
                 <p className="text-[11px] text-[#737373] mt-0.5">
                   Biến thể: <strong className="text-[#315C4C]">{keepModalProduct.variant.name}</strong> • Giá:{' '}
@@ -840,10 +938,22 @@ export function GuestShowcase() {
           maxWidth="md"
         >
           <div className="space-y-4 text-xs">
+            {/* Product Origin Verification */}
+            {onlineModalProduct.collab_partner ? (
+              <div className="p-2.5 rounded-[6px] bg-[#FEF7EC] dark:bg-amber-950/40 border border-[#B7791F]/30 text-[#8C5D17] dark:text-amber-300 flex items-center gap-2">
+                <Users2 className="w-4 h-4 text-[#B7791F] shrink-0" />
+                <span>Nguồn hàng: Phối hợp phát hành cùng Đối tác Collab <strong>{onlineModalProduct.collab_partner}</strong></span>
+              </div>
+            ) : (
+              <div className="p-2.5 rounded-[6px] bg-[#EAF4EE] dark:bg-emerald-950/40 border border-[#2F7D55]/30 text-[#2F7D55] dark:text-emerald-300 flex items-center gap-2">
+                <span>👑 Nguồn hàng: <strong>Sản phẩm độc quyền chính hãng {activeWorkspace?.name || 'HikaruStore'}</strong></span>
+              </div>
+            )}
+
             {/* Contact Channels */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <a
-                href="tel:0988776655"
+                href={`tel:${(activeWorkspace?.phone || '0988.776.655').replace(/[^0-9]/g, '')}`}
                 className="p-3.5 rounded-[8px] border border-[#315C4C]/40 bg-[#EBF1EE] dark:bg-emerald-950/30 flex items-center gap-3 hover:border-[#315C4C] transition-colors"
               >
                 <div className="w-10 h-10 rounded-full bg-[#315C4C] text-white flex items-center justify-center shrink-0">
@@ -851,13 +961,17 @@ export function GuestShowcase() {
                 </div>
                 <div>
                   <p className="text-[10px] text-[#737373] uppercase font-bold">Gọi Hotline đặt hàng</p>
-                  <p className="text-sm font-extrabold text-[#315C4C] dark:text-emerald-400">0988.776.655</p>
-                  <p className="text-[10px] text-[#737373]">Hỗ trợ 8h - 22h hàng ngày</p>
+                  <p className="text-sm font-extrabold text-[#315C4C] dark:text-emerald-400">
+                    {activeWorkspace?.phone || '0988.776.655'}
+                  </p>
+                  <p className="text-[10px] text-[#737373]">
+                    {activeWorkspace?.owner_name ? `Đại diện: ${activeWorkspace.owner_name}` : 'Hỗ trợ 8h - 22h hàng ngày'}
+                  </p>
                 </div>
               </a>
 
               <a
-                href="https://zalo.me/0988776655"
+                href={activeWorkspace?.social_link || 'https://zalo.me/0988776655'}
                 target="_blank"
                 rel="noreferrer"
                 className="p-3.5 rounded-[8px] border border-[#1D4ED8]/40 bg-[#EFF6FF] dark:bg-blue-950/30 flex items-center gap-3 hover:border-[#1D4ED8] transition-colors"
@@ -867,7 +981,9 @@ export function GuestShowcase() {
                 </div>
                 <div>
                   <p className="text-[10px] text-[#737373] uppercase font-bold">Nhắn tin Zalo Official</p>
-                  <p className="text-sm font-extrabold text-[#1D4ED8] dark:text-blue-400">Zalo: 0988.776.655</p>
+                  <p className="text-sm font-extrabold text-[#1D4ED8] dark:text-blue-400">
+                    Zalo: {activeWorkspace?.phone || '0988.776.655'}
+                  </p>
                   <p className="text-[10px] text-[#737373]">Gửi ảnh & chốt đơn nhanh</p>
                 </div>
               </a>
@@ -981,14 +1097,24 @@ export function GuestShowcase() {
       )}
 
       {/* Customer Footer */}
-      <footer className="bg-white dark:bg-neutral-900 border-t border-[#E8E8E5] dark:border-neutral-800 py-6 text-center text-xs text-[#737373] space-y-2">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p>
-            © 2026 HikaruStore Merchandise Platform. Hệ thống vận hành gian hàng concert & tour chuyên nghiệp.
-          </p>
-          <div className="flex items-center gap-4 text-[11px]">
-            <a href="tel:0988776655" className="hover:text-[#315C4C]">
-              Hotline: 0988.776.655
+      <footer className="bg-white dark:bg-neutral-900 border-t border-[#E8E8E5] dark:border-neutral-800 py-6 text-xs text-[#737373] space-y-2">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+          <div>
+            <p className="font-semibold text-[#202124] dark:text-neutral-200">
+              © 2026 {activeWorkspace?.name || 'HikaruStore'} Merchandise Platform.
+            </p>
+            <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-0.5">
+              {activeWorkspace?.owner_name ? `Đại diện: ${activeWorkspace.owner_name}` : ''}
+              {activeWorkspace?.owner_name && activeWorkspace?.address ? ' • ' : ''}
+              {activeWorkspace?.address ? `Địa chỉ: ${activeWorkspace.address}` : ''}
+            </p>
+          </div>
+          <div className="flex items-center gap-4 text-[11px] justify-center sm:justify-end">
+            <a
+              href={`tel:${(activeWorkspace?.phone || '0988.776.655').replace(/[^0-9]/g, '')}`}
+              className="hover:text-[#315C4C] font-semibold text-[#315C4C] dark:text-emerald-400"
+            >
+              Hotline: {activeWorkspace?.phone || '0988.776.655'}
             </a>
             <span>•</span>
             <button
@@ -1001,7 +1127,7 @@ export function GuestShowcase() {
                   window.location.href = '/login';
                 }
               }}
-              className="hover:text-[#315C4C] font-semibold text-xs cursor-pointer text-[#315C4C] underline"
+              className="hover:text-[#315C4C] font-semibold text-xs cursor-pointer text-[#315C4C] dark:text-emerald-400 underline"
             >
               {isGuestPreview || previousUser ? '← Thoát xem thử & Trở lại Quản trị' : 'Khu vực Quản trị / Thu ngân'}
             </button>

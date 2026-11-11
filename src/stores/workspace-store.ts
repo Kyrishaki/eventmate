@@ -10,6 +10,7 @@ interface WorkspaceState {
   unsyncedOrdersCount: number;
   setActiveWorkspace: (workspace: Workspace) => void;
   setWorkspaces: (workspaces: Workspace[]) => void;
+  updateWorkspaceProfile: (updates: Partial<Workspace>) => void;
   createWorkspace: (name: string, currency: string, isCollab?: boolean, description?: string) => Workspace;
   resetWorkspaces: () => void;
   setSyncState: (state: SyncState) => void;
@@ -19,12 +20,21 @@ interface WorkspaceState {
 const defaultWorkspaces: Workspace[] = [
   {
     id: 'ws-hac-cam-studio',
-    name: 'Gian hàng của tôi',
-    slug: 'gian-hang-chinh',
+    name: 'HikaruStore',
+    slug: 'hikarustore',
     owner_id: 'user-artist-demo',
     currency: 'VND',
-    description: 'Không gian quản lý bán hàng và sự kiện chính',
+    description: 'Không gian bán hàng và phân phối merchandise chính hãng HikaruStore',
     is_collab: false,
+    owner_name: 'Nguyễn Văn Tuấn',
+    phone: '0988.776.655',
+    email: 'contact@hikarustore.vn',
+    address: 'Gian Hàng HikaruStore, Khu phức hợp Sự kiện, Q.1, TP. Hồ Chí Minh',
+    social_link: 'https://zalo.me/0988776655',
+    slogan: 'Chuyên cung cấp merchandise & phụ kiện concert anime chính hãng',
+    bank_name: 'MB',
+    bank_account_no: '0988776655',
+    bank_account_name: 'NGUYEN VAN TUAN',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -39,6 +49,20 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       unsyncedOrdersCount: 0,
       setActiveWorkspace: (workspace) => set({ activeWorkspace: workspace }),
       setWorkspaces: (workspaces) => set({ workspaces }),
+      updateWorkspaceProfile: (updates: Partial<Workspace>) => {
+        const current = get().activeWorkspace;
+        if (!current) return;
+        const updated: Workspace = {
+          ...current,
+          ...updates,
+          updated_at: new Date().toISOString(),
+        };
+        const all = get().workspaces.map((w) => (w.id === updated.id ? updated : w));
+        set({
+          activeWorkspace: updated,
+          workspaces: all,
+        });
+      },
       createWorkspace: (name, currency = 'VND', isCollab = false, description = '') => {
         const newWs: Workspace = {
           id: `ws-${Date.now()}`,
@@ -48,6 +72,15 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           currency,
           is_collab: isCollab,
           description: description || (isCollab ? 'Dự án Collab / Gian hàng hợp tác' : 'Không gian làm việc riêng'),
+          owner_name: get().activeWorkspace?.owner_name || 'Nguyễn Văn Tuấn',
+          phone: get().activeWorkspace?.phone || '0988.776.655',
+          email: get().activeWorkspace?.email || 'contact@hikarustore.vn',
+          address: get().activeWorkspace?.address || 'Khu phức hợp Sự kiện, Q.1, TP. Hồ Chí Minh',
+          social_link: get().activeWorkspace?.social_link || 'https://zalo.me/0988776655',
+          slogan: get().activeWorkspace?.slogan || 'Chuyên cung cấp merchandise & phụ kiện concert anime chính hãng',
+          bank_name: get().activeWorkspace?.bank_name || 'MB',
+          bank_account_no: get().activeWorkspace?.bank_account_no || '0988776655',
+          bank_account_name: get().activeWorkspace?.bank_account_name || 'NGUYEN VAN TUAN',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
@@ -78,6 +111,24 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           state.workspaces = state.workspaces.map((w) =>
             w.id === 'ws-default' ? { ...w, id: 'ws-hac-cam-studio' } : w
           );
+        }
+        // Ensure default store profile details are populated if missing or old
+        const defaultProfile = defaultWorkspaces[0];
+        if (state.activeWorkspace) {
+          state.activeWorkspace = {
+            ...defaultProfile,
+            ...state.activeWorkspace,
+            name: state.activeWorkspace.name === 'Gian hàng của tôi' ? defaultProfile.name : state.activeWorkspace.name,
+            owner_name: state.activeWorkspace.owner_name || defaultProfile.owner_name,
+            phone: state.activeWorkspace.phone || defaultProfile.phone,
+            email: state.activeWorkspace.email || defaultProfile.email,
+            address: state.activeWorkspace.address || defaultProfile.address,
+            social_link: state.activeWorkspace.social_link || defaultProfile.social_link,
+            slogan: state.activeWorkspace.slogan || defaultProfile.slogan,
+            bank_name: state.activeWorkspace.bank_name || defaultProfile.bank_name,
+            bank_account_no: state.activeWorkspace.bank_account_no || defaultProfile.bank_account_no,
+            bank_account_name: state.activeWorkspace.bank_account_name || defaultProfile.bank_account_name,
+          };
         }
       },
     }

@@ -244,6 +244,7 @@ export default function PosTerminalPage() {
   // Search & Category Filtering
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedCategory, setSelectedCategory] = React.useState('all');
+  const [posSourceFilter, setPosSourceFilter] = React.useState<'all' | 'store' | 'collab'>('all');
 
   // Selected Variant state per Product
   const [selectedVariantMap, setSelectedVariantMap] = React.useState<Record<string, string>>({});
@@ -321,6 +322,9 @@ export default function PosTerminalPage() {
   }).length;
 
   const filteredProducts = activeProducts.filter((p) => {
+    if (posSourceFilter === 'store' && p.collab_partner) return false;
+    if (posSourceFilter === 'collab' && !p.collab_partner) return false;
+
     const prodVariants = variants.filter((v) => v.product_id === p.id);
 
     // If hideSoldOut is true, automatically hide products with 0 stock
@@ -700,6 +704,43 @@ export default function PosTerminalPage() {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              {/* Origin Source Filter Pills */}
+              <div className="flex items-center gap-1 bg-[#E8E8E5] dark:bg-neutral-800 p-0.5 rounded-[6px]">
+                <button
+                  type="button"
+                  onClick={() => setPosSourceFilter('all')}
+                  className={`text-xs px-2.5 py-1 rounded-[4px] font-bold transition-colors ${
+                    posSourceFilter === 'all'
+                      ? 'bg-white text-[#202124] shadow-2xs'
+                      : 'text-[#737373] hover:text-[#202124]'
+                  }`}
+                >
+                  Tất cả
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPosSourceFilter('store')}
+                  className={`text-xs px-2.5 py-1 rounded-[4px] font-bold transition-colors ${
+                    posSourceFilter === 'store'
+                      ? 'bg-[#2F7D55] text-white shadow-2xs'
+                      : 'text-[#2F7D55] hover:bg-white/50'
+                  }`}
+                >
+                  👑 Shop
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPosSourceFilter('collab')}
+                  className={`text-xs px-2.5 py-1 rounded-[4px] font-bold transition-colors ${
+                    posSourceFilter === 'collab'
+                      ? 'bg-[#B7791F] text-white shadow-2xs'
+                      : 'text-[#8C5D17] hover:bg-white/50'
+                  }`}
+                >
+                  🤝 Collab
+                </button>
+              </div>
+
               {/* Toggle: Tự động ẩn hàng bán hết */}
               <button
                 type="button"
@@ -817,6 +858,19 @@ export default function PosTerminalPage() {
                           <Package className="w-8 h-8 text-[#9E9E9C]" />
                         )}
 
+                        {/* Origin Source Badge (Top Left) */}
+                        <div className="absolute top-2 left-2">
+                          {prod.collab_partner ? (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#FEF7EC]/95 text-[#8C5D17] border border-[#B7791F]/30 backdrop-blur-[2px] shadow-2xs">
+                              🤝 {prod.collab_partner}
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#EAF4EE]/95 text-[#2F7D55] border border-[#2F7D55]/30 backdrop-blur-[2px] shadow-2xs">
+                              👑 {activeWorkspace?.name || 'Shop'}
+                            </span>
+                          )}
+                        </div>
+
                         {/* Stock Badge */}
                         <div className="absolute top-2 right-2">
                           {availableStock > 0 ? (
@@ -840,6 +894,11 @@ export default function PosTerminalPage() {
                       </div>
 
                       <div className="p-2.5 sm:p-3">
+                        {prod.collab_partner && (
+                          <span className="text-[9.5px] font-semibold text-[#8C5D17] block mb-0.5 truncate">
+                            🤝 Collab: {prod.collab_partner}
+                          </span>
+                        )}
                         <h4 className="text-xs font-bold text-[#202124] line-clamp-2 leading-tight">
                           {prod.name}
                         </h4>

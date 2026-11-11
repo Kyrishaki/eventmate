@@ -39,6 +39,7 @@ export function ReceiptModal({
     return {
       productName: p?.name || 'Sản phẩm Merchandise',
       variantName: v?.name || it.variant_id,
+      collabPartner: p?.collab_partner || null,
     };
   };
 
@@ -48,22 +49,26 @@ export function ReceiptModal({
 
   const handleCopyText = () => {
     const textReceipt = [
-      `=== ${activeWorkspace?.name || 'EVENTMATE MERCHANDISE'} ===`,
+      `=== ${activeWorkspace?.name || 'HIKARUSTORE'} ===`,
+      activeWorkspace?.owner_name ? `Đại diện: ${activeWorkspace.owner_name}` : '',
+      activeWorkspace?.phone ? `Hotline: ${activeWorkspace.phone}` : '',
+      activeWorkspace?.address ? `Địa chỉ: ${activeWorkspace.address}` : '',
       `Sự kiện: ${currentEvent}`,
       `Quầy: ${currentBooth}`,
       `Mã đơn: ${order.order_number}`,
       `Thời gian: ${formatDate(order.created_at)}`,
       `--------------------------------`,
       ...(order.items || []).map((it) => {
-        const { productName, variantName } = getItemNames(it);
-        return `${productName} (${variantName}) x${it.quantity}: ${formatCurrency(it.unit_price * it.quantity, activeWorkspace?.currency || 'VND')}`;
+        const { productName, variantName, collabPartner } = getItemNames(it);
+        const tag = collabPartner ? ` [Collab: ${collabPartner}]` : '';
+        return `${productName} (${variantName})${tag} x${it.quantity}: ${formatCurrency(it.unit_price * it.quantity, activeWorkspace?.currency || 'VND')}`;
       }),
       `--------------------------------`,
       `Tạm tính: ${formatCurrency(order.subtotal_amount, activeWorkspace?.currency || 'VND')}`,
       order.discount_amount > 0 ? `Giảm giá: -${formatCurrency(order.discount_amount, activeWorkspace?.currency || 'VND')}` : '',
       `TỔNG CỘNG: ${formatCurrency(order.final_amount, activeWorkspace?.currency || 'VND')}`,
       `Hình thức: ${order.payment_method === 'cash' ? 'Tiền mặt' : 'Chuyển khoản VietQR'}`,
-      `Cảm ơn quý khách đã ủng hộ tour diễn!`,
+      activeWorkspace?.slogan || 'Cảm ơn quý khách đã ủng hộ!',
     ]
       .filter(Boolean)
       .join('\n');
@@ -113,12 +118,21 @@ export function ReceiptModal({
           >
             {/* Header */}
             <div className="text-center pb-3 border-b border-dashed border-[#D6D6D2] dark:border-neutral-700 space-y-1">
-              <div className="w-7 h-7 mx-auto rounded-[4px] bg-[#315C4C] text-white flex items-center justify-center font-bold text-xs">
-                EM
+              <div className="w-9 h-9 mx-auto rounded-[6px] overflow-hidden flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
               </div>
-              <p className="font-bold text-xs uppercase tracking-wider">{activeWorkspace?.name || 'EVENTMATE'}</p>
-              <p className="text-[10px] text-[#737373] dark:text-neutral-400">OFFICIAL MERCHANDISE RECEIPT</p>
-              <p className="text-[11px] font-semibold text-[#315C4C]">{currentEvent}</p>
+              <p className="font-bold text-sm uppercase tracking-wider">{activeWorkspace?.name || 'HIKARUSTORE'}</p>
+              {activeWorkspace?.owner_name && (
+                <p className="text-[10px] text-[#737373] dark:text-neutral-400">Đại diện: {activeWorkspace.owner_name}</p>
+              )}
+              {activeWorkspace?.phone && (
+                <p className="text-[10px] text-[#737373] dark:text-neutral-400">Hotline: {activeWorkspace.phone}</p>
+              )}
+              {activeWorkspace?.address && (
+                <p className="text-[9.5px] text-[#737373] dark:text-neutral-400 leading-tight px-2">{activeWorkspace.address}</p>
+              )}
+              <p className="text-[11px] font-semibold text-[#315C4C] pt-1">{currentEvent}</p>
               <p className="text-[10px] text-[#737373] dark:text-neutral-400">{currentBooth}</p>
             </div>
 
@@ -147,11 +161,16 @@ export function ReceiptModal({
                 <span>THÀNH TIỀN</span>
               </div>
               {(order.items || []).map((it, idx) => {
-                const { productName, variantName } = getItemNames(it);
+                const { productName, variantName, collabPartner } = getItemNames(it);
                 return (
                   <div key={idx} className="space-y-0.5">
                     <div className="flex justify-between font-semibold">
-                      <span className="truncate pr-2">{productName}</span>
+                      <span className="truncate pr-2">
+                        {productName}
+                        {collabPartner && (
+                          <span className="text-[9px] text-[#B7791F] ml-1 font-normal">[Collab: {collabPartner}]</span>
+                        )}
+                      </span>
                       <span className="shrink-0">
                         {formatCurrency(it.unit_price * it.quantity, activeWorkspace?.currency || 'VND')}
                       </span>
@@ -187,7 +206,7 @@ export function ReceiptModal({
             {/* Footer QR & Message */}
             <div className="text-center pt-3 border-t border-dashed border-[#D6D6D2] dark:border-neutral-700 space-y-2">
               <p className="text-[10px] text-[#737373] dark:text-neutral-400 italic">
-                Cảm ơn bạn đã đồng hành và ủng hộ nghệ sĩ!
+                {activeWorkspace?.slogan || 'Cảm ơn bạn đã đồng hành và ủng hộ nghệ sĩ!'}
                 <br />
                 Vui lòng kiểm tra hàng hóa kỹ trước khi rời quầy.
               </p>

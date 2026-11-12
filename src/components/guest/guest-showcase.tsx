@@ -28,10 +28,8 @@ import {
   Ticket,
   CheckCircle2,
   Search,
-  ShieldCheck,
   X,
   Sparkles,
-  Truck,
   Users2,
   Bookmark,
   ArrowLeft,
@@ -495,128 +493,37 @@ export function GuestShowcase() {
         </div>
       )}
 
-      {/* Clean Storefront Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-white via-[#F4F8F6] to-[#EBF3EE] dark:from-neutral-900 dark:via-neutral-900 dark:to-emerald-950/30 border-b border-[#E8E8E5] dark:border-neutral-800 py-8 sm:py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div className="lg:col-span-7 space-y-4">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EAF4EE] dark:bg-emerald-950/70 text-[#2F7D55] dark:text-emerald-300 border border-[#2F7D55]/20 text-xs font-semibold">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Gian Hàng Chính Thức — {storeName}</span>
-              </div>
-
-              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-[#202124] dark:text-white leading-tight">
-                {activeWorkspace?.slogan ||
-                  'Merchandise & Phụ Kiện Anime / Game Chính Hãng'}
-              </h1>
-
-              <p className="text-sm sm:text-base text-[#5F6368] dark:text-neutral-300 leading-relaxed max-w-2xl">
-                Xem tồn kho thực tế theo từng mẫu, <strong>đặt giữ đồ miễn phí</strong> để nhận
-                trực tiếp tại quầy sự kiện không lo hết hàng, hoặc{' '}
-                <strong>đặt ship COD tận nơi</strong> toàn quốc.
-              </p>
-
-              <div className="flex flex-wrap items-center gap-2.5 pt-1">
-                <a
-                  href="#catalog-section"
-                  className="inline-flex items-center gap-2 h-10 px-5 rounded-[8px] bg-[#315C4C] hover:bg-[#284A3D] text-white text-xs sm:text-sm font-bold shadow-sm transition-colors"
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                  <span>Xem sản phẩm ({allActiveProducts.length})</span>
-                </a>
-
-                <a
-                  href={zaloHref}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 h-10 px-4 rounded-[8px] bg-white dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 hover:border-[#315C4C] text-[#202124] dark:text-neutral-100 text-xs sm:text-sm font-semibold transition-colors"
-                >
-                  <MessageCircle className="w-4 h-4 text-[#1D4ED8] dark:text-blue-400" />
-                  <span>Nhắn Zalo tư vấn</span>
-                </a>
-              </div>
-            </div>
-
-            {/* 3 Clean Value Highlights */}
-            <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3">
-              <div className="p-3.5 rounded-[10px] bg-white/90 dark:bg-neutral-900/90 border border-[#E8E8E5] dark:border-neutral-800 flex items-center gap-3 shadow-2xs">
-                <div className="w-9 h-9 rounded-[8px] bg-[#EAF4EE] dark:bg-emerald-950/60 text-[#2F7D55] dark:text-emerald-400 flex items-center justify-center shrink-0">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="font-bold text-xs sm:text-sm text-[#202124] dark:text-neutral-100">
-                    100% Chính Hãng & Tuyển Chọn
-                  </p>
-                  <p className="text-[11px] text-[#737373] dark:text-neutral-400">
-                    Hình ảnh rõ ràng, kiểm tra hàng trước khi nhận
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-3.5 rounded-[10px] bg-white/90 dark:bg-neutral-900/90 border border-[#E8E8E5] dark:border-neutral-800 flex items-center gap-3 shadow-2xs">
-                <div className="w-9 h-9 rounded-[8px] bg-[#FEF7EC] dark:bg-amber-950/60 text-[#B7791F] dark:text-amber-400 flex items-center justify-center shrink-0">
-                  <Bookmark className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="font-bold text-xs sm:text-sm text-[#202124] dark:text-neutral-100">
-                    Đặt Giữ Đồ Miễn Phí Tại Quầy
-                  </p>
-                  <p className="text-[11px] text-[#737373] dark:text-neutral-400">
-                    Không cần cọc trước, đọc mã vé hoặc SĐT là lấy ngay
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-3.5 rounded-[10px] bg-white/90 dark:bg-neutral-900/90 border border-[#E8E8E5] dark:border-neutral-800 flex items-center gap-3 shadow-2xs">
-                <div className="w-9 h-9 rounded-[8px] bg-[#EFF6FF] dark:bg-blue-950/60 text-[#1D4ED8] dark:text-blue-400 flex items-center justify-center shrink-0">
-                  <Truck className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="font-bold text-xs sm:text-sm text-[#202124] dark:text-neutral-100">
-                    Giao Hàng COD Toàn Quốc
-                  </p>
-                  <p className="text-[11px] text-[#737373] dark:text-neutral-400">
-                    Đóng gói chống sốc cẩn thận 1–4 ngày nhận hàng
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Upcoming/Active Events & Pickup Locations Strip */}
-          {realEvents.length > 0 && (
-            <div className="mt-6 pt-5 border-t border-[#E8E8E5]/80 dark:border-neutral-800 flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold text-[#5F6368] dark:text-neutral-400 flex items-center gap-1.5 mr-1">
-                <Calendar className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400" />
-                <span>Sự kiện có quầy nhận hàng:</span>
-              </span>
-              {realEvents.map((ev) => (
-                <button
-                  key={ev.id}
-                  type="button"
-                  onClick={() =>
-                    setSelectedEventId((prev) => (prev === ev.id ? 'all' : ev.id))
-                  }
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-colors cursor-pointer ${
-                    selectedEventId === ev.id
-                      ? 'bg-[#315C4C] text-white border-[#315C4C]'
-                      : 'bg-white dark:bg-neutral-900 text-[#202124] dark:text-neutral-200 border-[#E8E8E5] dark:border-neutral-700 hover:border-[#315C4C]'
-                  }`}
-                >
-                  <MapPin className="w-3 h-3 opacity-80" />
-                  <span>{ev.name}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
       {/* Main Storefront Catalog */}
       <main
         id="catalog-section"
-        className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-1 w-full space-y-6"
+        className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 w-full space-y-5"
       >
+        {/* Upcoming/Active Events & Pickup Locations Strip */}
+        {realEvents.length > 0 && (
+          <div className="bg-white dark:bg-neutral-900 rounded-[10px] border border-[#E8E8E5] dark:border-neutral-800 px-3.5 py-2.5 shadow-2xs flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold text-[#5F6368] dark:text-neutral-400 flex items-center gap-1.5 mr-1">
+              <Calendar className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400" />
+              <span>Sự kiện có quầy nhận hàng:</span>
+            </span>
+            {realEvents.map((ev) => (
+              <button
+                key={ev.id}
+                type="button"
+                onClick={() =>
+                  setSelectedEventId((prev) => (prev === ev.id ? 'all' : ev.id))
+                }
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-colors cursor-pointer ${
+                  selectedEventId === ev.id
+                    ? 'bg-[#315C4C] text-white border-[#315C4C]'
+                    : 'bg-[#F7F7F5] dark:bg-neutral-800 text-[#202124] dark:text-neutral-200 border-[#E8E8E5] dark:border-neutral-700 hover:border-[#315C4C]'
+                }`}
+              >
+                <MapPin className="w-3 h-3 opacity-80" />
+                <span>{ev.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
         {/* Filter & Search Toolbar */}
         {allActiveProducts.length > 0 && (
           <div className="bg-white dark:bg-neutral-900 rounded-[10px] border border-[#E8E8E5] dark:border-neutral-800 p-3.5 sm:p-4 shadow-2xs space-y-3">

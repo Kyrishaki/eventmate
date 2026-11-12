@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useDataStore } from '@/stores/data-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { usePreorderStore } from '@/stores/preorder-store';
-import { useOrdersStore } from '@/stores/orders-store';
+import { useOrdersStore, normalizeVietQrBankId } from '@/stores/orders-store';
 import { calculateVariantStock, VariantStockBreakdown } from '@/lib/stock-status';
 import { formatCurrency } from '@/lib/utils';
 import { filterRealEvents, filterRealBooths } from '@/lib/test-data-filter';
@@ -1393,7 +1393,7 @@ export function GuestShowcase() {
                   <div className="w-20 h-20 bg-white p-1 rounded border border-[#E8E8E5] shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={`https://img.vietqr.io/image/${activeBankConfig.bankId}-${activeBankConfig.accountNo}-compact2.png?amount=${bagTotal}&addInfo=${encodeURIComponent(
+                      src={`https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-compact2.png?amount=${bagTotal}&addInfo=${encodeURIComponent(
                         'MUAONL'
                       )}&accountName=${encodeURIComponent(activeBankConfig.accountName)}`}
                       alt="VietQR"
@@ -1561,7 +1561,7 @@ export function GuestShowcase() {
               <div className="w-28 h-28 bg-white p-1 rounded border border-[#E8E8E5] shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={`https://img.vietqr.io/image/${activeBankConfig.bankId}-${activeBankConfig.accountNo}-compact2.png?amount=0&addInfo=MUAONL&accountName=${encodeURIComponent(
+                  src={`https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-compact2.png?amount=0&addInfo=MUAONL&accountName=${encodeURIComponent(
                     activeBankConfig.accountName
                   )}`}
                   alt="VietQR Bank"

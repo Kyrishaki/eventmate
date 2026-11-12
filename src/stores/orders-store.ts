@@ -37,8 +37,16 @@ export interface BankConfig {
   voiceAnnouncement?: boolean;
 }
 
+export function normalizeVietQrBankId(bankId?: string | null): string {
+  const clean = (bankId || '').trim().toUpperCase();
+  if (!clean || clean === 'CTG' || clean === 'VIETINBANK' || clean === '970415') {
+    return 'ICB';
+  }
+  return clean;
+}
+
 export const DEFAULT_BANK_CONFIG: BankConfig = {
-  bankId: 'CTG',
+  bankId: 'ICB',
   accountNo: '109876880260',
   accountName: 'NGUYEN BAO THUONG',
   autoCheckEnabled: false,
@@ -266,13 +274,17 @@ export const useOrdersStore = create<OrdersStoreState>()(
         set({ discountAmount: Math.max(0, discountAmount) });
       },
 
-      setBankConfig: (activeBankConfig) => {
-        set({ activeBankConfig });
+      setBankConfig: (config) => {
+        const normalizedConfig: BankConfig = {
+          ...config,
+          bankId: normalizeVietQrBankId(config.bankId),
+        };
+        set({ activeBankConfig: normalizedConfig });
         if (typeof window !== 'undefined') {
           try {
-            localStorage.setItem('eventmate_shared_bank_config', JSON.stringify(activeBankConfig));
+            localStorage.setItem('eventmate_shared_bank_config', JSON.stringify(normalizedConfig));
             const bc = new BroadcastChannel('eventmate_bank_sync');
-            bc.postMessage({ type: 'BANK_CONFIG_UPDATED', config: activeBankConfig });
+            bc.postMessage({ type: 'BANK_CONFIG_UPDATED', config: normalizedConfig });
             bc.close();
           } catch (e) {
             console.warn('Bank config broadcast error:', e);
@@ -756,7 +768,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
                 }
           );
         }
-        // Ensure activeBankConfig has valid values
+        // Ensure activeBankConfig has valid values & valid VietQR bank code (CTG -> ICB)
         try {
           if (typeof window !== 'undefined') {
             if (state.activeBankConfig?.accountNo === '0988776655') {
@@ -767,20 +779,26 @@ export const useOrdersStore = create<OrdersStoreState>()(
             if (savedBank) {
               const parsed = JSON.parse(savedBank);
               if (parsed?.bankId && parsed?.accountNo && parsed.accountNo !== '0988776655') {
-                state.activeBankConfig = {
+                const fixedBank = {
                   ...DEFAULT_BANK_CONFIG,
                   ...parsed,
+                  bankId: normalizeVietQrBankId(parsed.bankId),
                   apiToken: parsed.apiToken || DEFAULT_BANK_CONFIG.apiToken,
                 };
+                state.activeBankConfig = fixedBank;
+                if (parsed.bankId !== fixedBank.bankId) {
+                  localStorage.setItem('eventmate_shared_bank_config', JSON.stringify(fixedBank));
+                }
               } else {
                 state.activeBankConfig = DEFAULT_BANK_CONFIG;
               }
             } else if (!state.activeBankConfig || !state.activeBankConfig.accountNo || state.activeBankConfig.accountNo === '0988776655') {
               state.activeBankConfig = DEFAULT_BANK_CONFIG;
-            } else if (!state.activeBankConfig.apiToken) {
+            } else {
               state.activeBankConfig = {
                 ...state.activeBankConfig,
-                apiToken: DEFAULT_BANK_CONFIG.apiToken,
+                bankId: normalizeVietQrBankId(state.activeBankConfig.bankId),
+                apiToken: state.activeBankConfig.apiToken || DEFAULT_BANK_CONFIG.apiToken,
               };
             }
           }

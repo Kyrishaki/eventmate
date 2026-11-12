@@ -32,7 +32,7 @@ const defaultWorkspaces: Workspace[] = [
     address: 'Gian Hàng HikaruStore, Khu Artist Alley SECC, Q.7, TP. Hồ Chí Minh',
     social_link: 'https://zalo.me/0988776655',
     slogan: 'Chuyên cung cấp Keychain, Standee & Figure Anime - Game Limbus Company chính hãng',
-    bank_name: 'VietinBank',
+    bank_name: 'ICB',
     bank_account_no: '109876880260',
     bank_account_name: 'NGUYEN BAO THUONG',
     created_at: new Date().toISOString(),

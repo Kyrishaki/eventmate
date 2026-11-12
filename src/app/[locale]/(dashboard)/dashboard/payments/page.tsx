@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useOrdersStore } from '@/stores/orders-store';
+import { useOrdersStore, normalizeVietQrBankId } from '@/stores/orders-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useDataStore } from '@/stores/data-store';
 import { useAuthStore } from '@/stores/auth-store';
@@ -56,7 +56,7 @@ export default function PaymentsPage() {
   const [proofFilter, setProofFilter] = React.useState<'all' | 'unverified' | 'verified'>('all');
   const [lightboxImage, setLightboxImage] = React.useState<string | null>(null);
 
-  const [bankId, setBankId] = React.useState(activeBankConfig.bankId || 'CTG');
+  const [bankId, setBankId] = React.useState(normalizeVietQrBankId(activeBankConfig.bankId));
   const [accountNo, setAccountNo] = React.useState(activeBankConfig.accountNo || '109876880260');
   const [accountName, setAccountName] = React.useState(activeBankConfig.accountName || 'NGUYEN BAO THUONG');
   const [autoCheckEnabled, setAutoCheckEnabled] = React.useState(
@@ -92,7 +92,7 @@ export default function PaymentsPage() {
   React.useEffect(() => {
     const timer = setTimeout(() => {
       if (activeBankConfig) {
-        setBankId(activeBankConfig.bankId || 'CTG');
+        setBankId(normalizeVietQrBankId(activeBankConfig.bankId));
         setAccountNo(activeBankConfig.accountNo || '109876880260');
         setAccountName(activeBankConfig.accountName || 'NGUYEN BAO THUONG');
         setAutoCheckEnabled(activeBankConfig.autoCheckEnabled === true);
@@ -572,6 +572,7 @@ export default function PaymentsPage() {
                   value={bankId}
                   onChange={(e) => setBankId(e.target.value)}
                 >
+                  <option value="ICB">VietinBank</option>
                   <option value="MB">MB Bank (Quân Đội)</option>
                   <option value="VCB">Vietcombank</option>
                   <option value="TCB">Techcombank</option>
@@ -579,7 +580,6 @@ export default function PaymentsPage() {
                   <option value="VPB">VPBank</option>
                   <option value="TPB">TPBank</option>
                   <option value="BIDV">BIDV</option>
-                  <option value="CTG">VietinBank</option>
                 </select>
               </div>
 
@@ -615,14 +615,18 @@ export default function PaymentsPage() {
             {/* Live QR Preview */}
             <div className="p-4 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[6px] flex flex-col sm:flex-row items-center gap-4">
               <div className="w-28 h-28 bg-white p-1 rounded border border-[#E8E8E5] shrink-0 flex items-center justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=50000&addInfo=EM8899&accountName=${encodeURIComponent(
-                    accountName
-                  )}`}
-                  alt="VietQR Demo"
-                  className="w-full h-full object-contain"
-                />
+                {accountNo.trim() ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={`https://img.vietqr.io/image/${normalizeVietQrBankId(bankId)}-${accountNo.trim()}-compact2.png?amount=50000&addInfo=EM8899&accountName=${encodeURIComponent(
+                      accountName.trim()
+                    )}`}
+                    alt="VietQR Demo"
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <QrCode className="w-10 h-10 text-[#9E9E9C]" />
+                )}
               </div>
 
               <div className="text-xs text-[#737373] space-y-1">

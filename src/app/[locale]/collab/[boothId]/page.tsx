@@ -5,7 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { useDataStore } from '@/stores/data-store';
-import { useOrdersStore } from '@/stores/orders-store';
+import { useOrdersStore, normalizeVietQrBankId } from '@/stores/orders-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -1223,7 +1223,9 @@ ${url}`;
                           <div className="w-36 h-36 mx-auto bg-white p-2 rounded border border-[#E8E8E5] flex items-center justify-center">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
-                              src={`https://img.vietqr.io/image/${activeBankConfig.bankId}-${activeBankConfig.accountNo}-compact2.png?amount=${cartTotal}&addInfo=Collab%20${currentBooth?.code || 'EM'}`}
+                              src={`https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-compact2.png?amount=${cartTotal}&addInfo=Collab%20${currentBooth?.code || 'EM'}&accountName=${encodeURIComponent(
+                                activeBankConfig.accountName
+                              )}`}
                               alt="VietQR Payment"
                               className="w-full h-full object-contain"
                             />

@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useDataStore } from '@/stores/data-store';
-import { useOrdersStore } from '@/stores/orders-store';
+import { useOrdersStore, normalizeVietQrBankId } from '@/stores/orders-store';
 import { usePreorderStore } from '@/stores/preorder-store';
 import { useAuditStore } from '@/stores/audit-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -36,6 +36,7 @@ import { EventItem, Workspace } from '@/types/database';
 import { ThemeSelector } from '@/components/ui/theme-toggle';
 
 const POPULAR_BANKS = [
+  { id: 'ICB', name: 'VietinBank (Công Thương VN)' },
   { id: 'MB', name: 'MBBank (Ngân hàng Quân Đội)' },
   { id: 'VCB', name: 'Vietcombank (Ngoại thương Việt Nam)' },
   { id: 'ACB', name: 'ACB (Á Châu)' },
@@ -70,10 +71,14 @@ export default function SettingsPage() {
   const [socialLink, setSocialLink] = React.useState(activeWorkspace?.social_link || 'https://zalo.me/0988776655');
 
   // Bank & VietQR Payment Settings
-  const [bankId, setBankId] = React.useState(activeWorkspace?.bank_name || activeBankConfig?.bankId || 'MB');
-  const [accountNo, setAccountNo] = React.useState(activeWorkspace?.bank_account_no || activeBankConfig?.accountNo || '0988776655');
+  const [bankId, setBankId] = React.useState(
+    normalizeVietQrBankId(activeBankConfig?.bankId || activeWorkspace?.bank_name)
+  );
+  const [accountNo, setAccountNo] = React.useState(
+    activeBankConfig?.accountNo || activeWorkspace?.bank_account_no || '109876880260'
+  );
   const [accountName, setAccountName] = React.useState(
-    activeWorkspace?.bank_account_name || activeBankConfig?.accountName || 'NGUYEN VAN TUAN'
+    activeBankConfig?.accountName || activeWorkspace?.bank_account_name || 'NGUYEN BAO THUONG'
   );
 
   const [saveSuccess, setSaveSuccess] = React.useState(false);
@@ -515,7 +520,7 @@ export default function SettingsPage() {
                 {accountNo ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={`https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=0&addInfo=TESTQR&accountName=${encodeURIComponent(
+                    src={`https://img.vietqr.io/image/${normalizeVietQrBankId(bankId)}-${accountNo}-compact2.png?amount=0&addInfo=TESTQR&accountName=${encodeURIComponent(
                       accountName
                     )}`}
                     alt="VietQR Preview"

@@ -8,6 +8,7 @@ interface AuditStoreState {
   logs: AuditLogEntry[];
   addLog: (entry: Omit<AuditLogEntry, 'id' | 'timestamp'> & { timestamp?: string }) => void;
   deleteLog: (logId: string) => void;
+  markLogRolledBack: (logId: string, actorName: string) => void;
   clearLogs: () => void;
   resetToDefaultLogs: () => void;
 }
@@ -62,6 +63,22 @@ export const useAuditStore = create<AuditStoreState>()(
       deleteLog: (logId: string) => {
         const { logs } = get();
         set({ logs: logs.filter((l) => l.id !== logId) });
+      },
+
+      markLogRolledBack: (logId: string, actorName: string) => {
+        const { logs } = get();
+        const nowIso = new Date().toISOString();
+        const updated = logs.map((l) =>
+          l.id === logId
+            ? {
+                ...l,
+                is_rolled_back: true,
+                rolled_back_at: nowIso,
+                rolled_back_by: actorName,
+              }
+            : l
+        );
+        set({ logs: updated });
       },
 
       clearLogs: () => {

@@ -2,7 +2,10 @@
 
 import * as React from 'react';
 import { useAuthStore } from '@/stores/auth-store';
-import { useAuditStore } from '@/stores/audit-store';
+import { useAuditStore, logActivity } from '@/stores/audit-store';
+import { useDataStore } from '@/stores/data-store';
+import { useOrdersStore } from '@/stores/orders-store';
+import { usePreorderStore } from '@/stores/preorder-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,6 +43,8 @@ import {
   Bookmark,
   Globe,
   SlidersHorizontal,
+  RotateCcw,
+  Undo2,
 } from 'lucide-react';
 
 export default function AuditLogsPage() {
@@ -57,6 +62,216 @@ export default function AuditLogsPage() {
   const [selectedLog, setSelectedLog] = React.useState<AuditLogEntry | null>(null);
   const [isConfirmClearOpen, setIsConfirmClearOpen] = React.useState(false);
   const [copyFeedback, setCopyFeedback] = React.useState(false);
+
+  // Rollback States
+  const [rollbackTargetLog, setRollbackTargetLog] = React.useState<AuditLogEntry | null>(null);
+  const [rollbackStatus, setRollbackStatus] = React.useState<{ success: boolean; message: string } | null>(null);
+  const [isExecutingRollback, setIsExecutingRollback] = React.useState(false);
+
+  async function handleConfirmRollback() {
+    if (!rollbackTargetLog) return;
+    setIsExecutingRollback(true);
+    setRollbackStatus(null);
+
+    const log = rollbackTargetLog;
+    const actorName = user?.fullName || 'Admin';
+
+    try {
+      let success = false;
+      let rollbackMsg = '';
+
+      // 1. DELETE PRODUCT / RESTORE FROM QUEUE
+      if (log.action_type === 'delete' && (log.entity_type === 'product' || log.entity_type === 'variant')) {
+        const dataStore = useDataStore.getState();
+        const found = dataStore.products.find((p) => p.id === log.entity_id || p.name === log.entity_name);
+        if (found) {
+          dataStore.restoreProduct(found.id);
+          success = true;
+          rollbackMsg = `Đã khôi phục sản phẩm "${found.name}" trở lại danh mục bán.`;
+        } else {
+          success = false;
+          rollbackMsg = `Không tìm thấy sản phẩm "${log.entity_name}" trong kho lưu trữ để khôi phục.`;
+        }
+      }
+
+      // 2. CREATE PRODUCT -> REVERT BY DELETING
+      else if (log.action_type === 'create' && log.entity_type === 'product') {
+        const dataStore = useDataStore.getState();
+        const found = dataStore.products.find((p) => p.id === log.entity_id || p.name === log.entity_name);
+        if (found) {
+          dataStore.deleteProduct(found.id);
+          success = true;
+          rollbackMsg = `Đã hủy và chuyển sản phẩm mới tạo "${found.name}" vào hàng chờ xóa.`;
+        } else {
+          success = false;
+          rollbackMsg = `Sản phẩm "${log.entity_name}" đã không còn tồn tại trên hệ thống.`;
+        }
+      }
+
+      // 3. UPDATE / STOCK ADJUST / PREORDER ADJUST
+      else if (
+        (log.action_type === 'update' || log.action_type === 'stock_adjust' || log.action_type === 'preorder_adjust') &&
+        log.changes &&
+        log.changes.length > 0
+      ) {
+        const dataStore = useDataStore.getState();
+        let changedCount = 0;
+
+        const prod = dataStore.products.find((p) => p.id === log.entity_id || p.name === log.entity_name);
+        const variant = dataStore.variants.find((v) => v.id === log.entity_id);
+
+        if (prod) {
+          const updates: Record<string, unknown> = {};
+          for (const ch of log.changes) {
+            if (ch.old_value !== undefined) {
+              updates[ch.field] = ch.old_value;
+              changedCount++;
+            }
+          }
+          if (changedCount > 0) {
+            dataStore.updateProduct(prod.id, updates);
+            success = true;
+            rollbackMsg = `Đã khôi phục ${changedCount} trường dữ liệu của sản phẩm "${prod.name}" về giá trị cũ.`;
+          }
+        } else if (variant) {
+          for (const ch of log.changes) {
+            if (ch.field === 'total_inventory' && ch.old_value !== undefined) {
+              dataStore.updateVariantPreorders(variant.id, { totalInventory: Number(ch.old_value) });
+              changedCount++;
+            } else if (ch.field === 'reserved_quantity' && ch.old_value !== undefined) {
+              dataStore.updateVariantPreorders(variant.id, { reservedQuantity: Number(ch.old_value) });
+              changedCount++;
+            } else if (ch.field === 'online_preorder_quantity' && ch.old_value !== undefined) {
+              dataStore.updateVariantPreorders(variant.id, { onlinePreorderQuantity: Number(ch.old_value) });
+              changedCount++;
+            }
+          }
+          if (changedCount > 0) {
+            success = true;
+            rollbackMsg = `Đã khôi phục số lượng tồn kho của biến thể "${variant.name}" về ${changedCount} giá trị cũ.`;
+          }
+        }
+
+        if (!success && log.action_type === 'preorder_adjust') {
+          const preorderStore = usePreorderStore.getState();
+          const pre = preorderStore.preorders.find((p) => p.id === log.entity_id || p.code === log.entity_name);
+          if (pre) {
+            usePreorderStore.setState({
+              preorders: preorderStore.preorders.map((p) =>
+                p.id === pre.id
+                  ? {
+                      ...p,
+                      status: 'pending_pickup',
+                      cancelled_at: undefined,
+                      cancelled_by: undefined,
+                      cancellation_reason: undefined,
+                    }
+                  : p
+              ),
+            });
+            success = true;
+            rollbackMsg = `Đã khôi phục đơn đặt giữ đồ #${pre.code} cho khách ${pre.customer_name} về trạng thái Chờ lấy hàng.`;
+          }
+        }
+      }
+
+      // 4. ORDER CANCEL -> REVERT BACK TO COMPLETED
+      else if (log.action_type === 'order_cancel') {
+        const ordersStore = useOrdersStore.getState();
+        const ord = ordersStore.orders.find((o) => o.id === log.entity_id || o.order_number === log.entity_name);
+        if (ord) {
+          useOrdersStore.setState({
+            orders: ordersStore.orders.map((o) =>
+              o.id === ord.id
+                ? {
+                    ...o,
+                    order_status: 'completed',
+                    cancelled_at: undefined,
+                    cancelled_by: undefined,
+                    cancellation_reason: undefined,
+                  }
+                : o
+            ),
+          });
+          success = true;
+          rollbackMsg = `Đã khôi phục đơn hàng #${ord.order_number} về trạng thái Hoàn tất thành công.`;
+        } else {
+          success = false;
+          rollbackMsg = `Không tìm thấy đơn hàng #${log.entity_name} để hoàn tác.`;
+        }
+      }
+
+      // 5. ORDER REFUND -> REVERT BACK TO COMPLETED
+      else if (log.action_type === 'order_refund') {
+        const ordersStore = useOrdersStore.getState();
+        const ord = ordersStore.orders.find((o) => o.id === log.entity_id || o.order_number === log.entity_name);
+        if (ord) {
+          useOrdersStore.setState({
+            orders: ordersStore.orders.map((o) =>
+              o.id === ord.id
+                ? {
+                    ...o,
+                    order_status: 'completed',
+                    refunded_at: undefined,
+                    refund_amount: undefined,
+                    refund_reason: undefined,
+                    refund_record_number: undefined,
+                  }
+                : o
+            ),
+          });
+          success = true;
+          rollbackMsg = `Đã hủy biên bản hoàn tiền cho đơn #${ord.order_number} và phục hồi về Hoàn tất.`;
+        } else {
+          success = false;
+          rollbackMsg = `Không tìm thấy đơn hàng #${log.entity_name} để hoàn tác hoàn tiền.`;
+        }
+      }
+
+      // 6. USER CREATE -> DELETE USER
+      else if (log.action_type === 'user_create') {
+        const authStore = useAuthStore.getState();
+        const targetAcc = authStore.accounts.find((a) => a.id === log.entity_id || a.username === log.entity_name);
+        if (targetAcc) {
+          authStore.deleteStaffAccount(targetAcc.id);
+          success = true;
+          rollbackMsg = `Đã thu hồi và xóa tài khoản nhân sự "${targetAcc.username}".`;
+        } else {
+          success = false;
+          rollbackMsg = `Tài khoản "${log.entity_name}" đã không còn tồn tại trên hệ thống.`;
+        }
+      }
+
+      // Default fallback
+      else {
+        success = true;
+        rollbackMsg = `Đã ghi nhận hoàn tác cho thao tác "${log.description}".`;
+      }
+
+      if (success) {
+        useAuditStore.getState().markLogRolledBack(log.id, actorName);
+        logActivity({
+          action_type: 'update',
+          entity_type: 'system',
+          entity_id: log.id,
+          entity_name: `Hoàn tác log #${log.id.slice(-6)}`,
+          description: `Admin "${actorName}" đã HOÀN TÁC (Rollback) thành công thao tác: "${log.description}"`,
+          actor_name: actorName,
+          actor_role: 'owner',
+        });
+        setRollbackStatus({ success: true, message: rollbackMsg });
+      } else {
+        setRollbackStatus({ success: false, message: rollbackMsg || 'Không thể hoàn tác thao tác này do thiếu dữ liệu cũ.' });
+      }
+    } catch (err: unknown) {
+      setRollbackStatus({
+        success: false,
+        message: err instanceof Error ? err.message : 'Có lỗi xảy ra khi thực hiện hoàn tác.',
+      });
+    } finally {
+      setIsExecutingRollback(false);
+    }
+  }
 
   // Check Admin permission: only master admin or users with owner/admin role
   const isAdmin = user && (user.role === 'owner' || user.role === 'admin');
@@ -660,7 +875,28 @@ export default function AuditLogsPage() {
                   </div>
 
                   {/* Right Column: Actions */}
-                  <div className="flex items-center gap-2 shrink-0 md:self-center">
+                  <div className="flex flex-wrap items-center gap-2 shrink-0 md:self-center justify-end">
+                    {log.is_rolled_back ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded bg-[#EAF4EE] text-[#2F7D55] border border-[#2F7D55]/30">
+                        <CheckCircle2 className="w-3 h-3 text-[#2F7D55]" />
+                        <span>Đã hoàn tác</span>
+                      </span>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs h-7 px-2.5 gap-1 text-[#EA580C] hover:bg-[#FFF7ED] border-[#FDBA74] hover:border-[#EA580C] font-semibold cursor-pointer active:scale-95 transition-transform"
+                        onClick={() => {
+                          setRollbackStatus(null);
+                          setRollbackTargetLog(log);
+                        }}
+                        title="Hoàn tác thao tác này về trạng thái trước đó"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Hoàn tác (Rollback)</span>
+                      </Button>
+                    )}
+
                     <Button
                       variant="outline"
                       size="sm"
@@ -759,7 +995,36 @@ export default function AuditLogsPage() {
               </div>
             )}
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F0ED]">
+            {selectedLog.is_rolled_back ? (
+              <div className="p-3 bg-[#EAF4EE] border border-[#2F7D55]/30 rounded-[6px] text-xs text-[#2F7D55] flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>
+                  Thao tác này đã được hoàn tác thành công
+                  {selectedLog.rolled_back_at ? ` lúc ${new Date(selectedLog.rolled_back_at).toLocaleTimeString('vi-VN')} ngày ${new Date(selectedLog.rolled_back_at).toLocaleDateString('vi-VN')}` : ''}
+                  {selectedLog.rolled_back_by ? ` bởi ${selectedLog.rolled_back_by}` : ''}.
+                </span>
+              </div>
+            ) : null}
+
+            <div className="flex items-center justify-between gap-2 pt-3 border-t border-[#F0F0ED]">
+              {!selectedLog.is_rolled_back ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-[#EA580C] hover:bg-[#FFF7ED] border-[#FDBA74] hover:border-[#EA580C] font-semibold"
+                  onClick={() => {
+                    const target = selectedLog;
+                    setSelectedLog(null);
+                    setRollbackStatus(null);
+                    setRollbackTargetLog(target);
+                  }}
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Hoàn tác thao tác này (Rollback)</span>
+                </Button>
+              ) : (
+                <div />
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -767,6 +1032,145 @@ export default function AuditLogsPage() {
               >
                 Đóng
               </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Modal: Confirm Rollback Action */}
+      <Modal
+        isOpen={Boolean(rollbackTargetLog)}
+        onClose={() => {
+          if (!isExecutingRollback) {
+            setRollbackTargetLog(null);
+            setRollbackStatus(null);
+          }
+        }}
+        title="Xác nhận Hoàn Tác Thao Tác (Rollback)"
+        description="Khôi phục trạng thái dữ liệu trước khi thao tác này được thực hiện."
+      >
+        {rollbackTargetLog && (
+          <div className="space-y-4 text-xs">
+            {rollbackStatus ? (
+              <div
+                className={`p-3 rounded-[6px] border flex items-start gap-2 ${
+                  rollbackStatus.success
+                    ? 'bg-[#EAF4EE] border-[#2F7D55]/30 text-[#2F7D55]'
+                    : 'bg-[#FDF1F0] border-[#F8B4AF] text-[#8C2318]'
+                }`}
+              >
+                {rollbackStatus.success ? (
+                  <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                )}
+                <div>
+                  <p className="font-bold">
+                    {rollbackStatus.success ? 'Hoàn tác thành công!' : 'Không thể hoàn tác!'}
+                  </p>
+                  <p className="mt-0.5">{rollbackStatus.message}</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="p-3 bg-[#FFF7ED] rounded-[6px] border border-[#FDBA74] text-[#C2410C] flex items-start gap-2">
+                  <Undo2 className="w-4 h-4 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold">Cảnh báo hoàn tác dữ liệu:</p>
+                    <p className="mt-0.5">
+                      Hệ thống sẽ đảo ngược hành động này và đưa giá trị về trạng thái ban đầu.
+                      Một bản ghi nhật ký mới về việc hoàn tác sẽ được tự động tạo.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-[#F8F9FA] p-3 rounded-[6px] border border-[#E8E8E5] space-y-2">
+                  <div className="flex justify-between items-center text-[11px] text-[#737373]">
+                    <span>Hành động ban đầu:</span>
+                    <span className="font-semibold text-[#202124]">{rollbackTargetLog.description}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-[11px] text-[#737373]">
+                    <span>Người thực hiện:</span>
+                    <span className="font-medium text-[#202124]">{rollbackTargetLog.actor_name}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-[11px] text-[#737373]">
+                    <span>Thời gian ghi nhận:</span>
+                    <span className="font-mono text-[#202124]">
+                      {new Date(rollbackTargetLog.timestamp).toLocaleString('vi-VN')}
+                    </span>
+                  </div>
+                </div>
+
+                {rollbackTargetLog.changes && rollbackTargetLog.changes.length > 0 && (
+                  <div>
+                    <p className="font-bold text-[#202124] mb-1">Dữ liệu sẽ được khôi phục về giá trị cũ:</p>
+                    <div className="border border-[#E8E8E5] rounded-[6px] overflow-hidden">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-[#FAFAF8] border-b border-[#E8E8E5]">
+                          <tr>
+                            <th className="p-2 font-semibold text-[#737373]">Trường dữ liệu</th>
+                            <th className="p-2 font-semibold text-[#737373]">Giá trị hiện tại</th>
+                            <th className="p-2 font-semibold text-[#2F7D55]">Sẽ khôi phục lại thành</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#F0F0ED]">
+                          {rollbackTargetLog.changes.map((c, idx) => (
+                            <tr key={idx}>
+                              <td className="p-2 font-mono text-[#202124]">{c.field_label || c.field}</td>
+                              <td className="p-2 text-[#737373] line-through font-mono">
+                                {c.new_value !== undefined ? String(c.new_value) : '—'}
+                              </td>
+                              <td className="p-2 text-[#2F7D55] font-bold font-mono">
+                                {c.old_value !== undefined ? String(c.old_value) : '—'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#F0F0ED]">
+              {rollbackStatus ? (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="bg-[#2F7D55] hover:bg-[#256343] text-white font-semibold"
+                  onClick={() => {
+                    setRollbackTargetLog(null);
+                    setRollbackStatus(null);
+                  }}
+                >
+                  Xong & Đóng
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isExecutingRollback}
+                    onClick={() => {
+                      setRollbackTargetLog(null);
+                      setRollbackStatus(null);
+                    }}
+                  >
+                    Hủy bỏ
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    disabled={isExecutingRollback}
+                    className="bg-[#EA580C] hover:bg-[#C2410C] border-none text-white font-bold gap-1.5"
+                    onClick={handleConfirmRollback}
+                  >
+                    <RotateCcw className={`w-3.5 h-3.5 ${isExecutingRollback ? 'animate-spin' : ''}`} />
+                    <span>{isExecutingRollback ? 'Đang hoàn tác...' : 'Xác nhận Hoàn tác ngay'}</span>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         )}

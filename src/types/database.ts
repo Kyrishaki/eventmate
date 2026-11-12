@@ -341,4 +341,8 @@ export interface AuditLogEntry {
   booth_name?: string;
   event_name?: string;
   changes?: AuditLogChange[];
+  is_rolled_back?: boolean;
+  rolled_back_at?: string;
+  rolled_back_by?: string;
+  snapshot?: unknown;
 }

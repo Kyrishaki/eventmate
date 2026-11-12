@@ -48,6 +48,9 @@ import {
   Upload,
   AlertCircle,
   QrCode,
+  Tag,
+  Store,
+  RotateCcw,
 } from 'lucide-react';
 
 interface GuestBagItem {
@@ -426,6 +429,13 @@ export function GuestShowcase() {
     selectedEventId !== 'all' ||
     sourceFilter !== 'all';
 
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setSelectedCategoryId('all');
+    setSelectedEventId('all');
+    setSourceFilter('all');
+  };
+
   return (
     <div className="min-h-screen bg-[#F7F7F5] dark:bg-neutral-950 text-[#202124] dark:text-neutral-100 flex flex-col font-sans transition-colors">
       {/* Staff Preview Bar (ONLY rendered when Admin/Staff is previewing) */}
@@ -628,81 +638,61 @@ export function GuestShowcase() {
                   </select>
                 )}
               </div>
-
-              {/* Origin Toggle (only shown when store has collab items too) */}
-              {collabProdsCount > 0 && (
-                <div className="flex items-center gap-1.5 bg-[#F7F7F5] dark:bg-neutral-800 p-1 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-700 self-start">
-                  <button
-                    type="button"
-                    onClick={() => setSourceFilter('all')}
-                    className={`px-2.5 py-1 rounded-[6px] text-xs font-bold transition-colors cursor-pointer ${
-                      sourceFilter === 'all'
-                        ? 'bg-white dark:bg-neutral-700 text-[#202124] dark:text-white shadow-2xs'
-                        : 'text-[#737373] hover:text-[#202124] dark:hover:text-neutral-200'
-                    }`}
-                  >
-                    Tất cả ({allActiveProducts.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSourceFilter('store')}
-                    className={`px-2.5 py-1 rounded-[6px] text-xs font-bold transition-colors cursor-pointer ${
-                      sourceFilter === 'store'
-                        ? 'bg-[#315C4C] text-white shadow-2xs'
-                        : 'text-[#737373] hover:text-[#202124] dark:hover:text-neutral-200'
-                    }`}
-                  >
-                    Chính hãng ({storeProdsCount})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSourceFilter('collab')}
-                    className={`px-2.5 py-1 rounded-[6px] text-xs font-bold transition-colors cursor-pointer ${
-                      sourceFilter === 'collab'
-                        ? 'bg-[#B7791F] text-white shadow-2xs'
-                        : 'text-[#737373] hover:text-[#202124] dark:hover:text-neutral-200'
-                    }`}
-                  >
-                    Collab ({collabProdsCount})
-                  </button>
-                </div>
-              )}
             </div>
 
-            {/* Category Chips */}
-            {categories.some((c) => allActiveProducts.some((p) => p.category_id === c.id)) && (
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none pt-1 border-t border-[#F0F0ED] dark:border-neutral-800">
+            {/* Phân loại & Nguồn hàng: 100% Dropdown Chuẩn */}
+            <div className="flex flex-wrap items-center gap-2.5 pt-2.5 border-t border-[#F0F0ED] dark:border-neutral-800">
+              {/* Category Dropdown */}
+              <div className="flex items-center gap-1.5 flex-1 min-w-[170px] sm:flex-none">
+                <Tag className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
+                <span className="text-xs font-bold text-[#737373] dark:text-neutral-400 shrink-0">Phân loại:</span>
+                <select
+                  value={selectedCategoryId}
+                  onChange={(e) => setSelectedCategoryId(e.target.value)}
+                  className="h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full sm:w-auto"
+                >
+                  <option value="all">Tất cả danh mục ({allActiveProducts.length})</option>
+                  {categories.map((cat) => {
+                    const count = allActiveProducts.filter((p) => p.category_id === cat.id).length;
+                    if (count === 0) return null;
+                    return (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name} ({count})
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              {/* Source Dropdown (if collab items exist) */}
+              {collabProdsCount > 0 && (
+                <div className="flex items-center gap-1.5 flex-1 min-w-[150px] sm:flex-none">
+                  <Store className="w-3.5 h-3.5 text-[#737373] dark:text-neutral-400 shrink-0" />
+                  <span className="text-xs font-bold text-[#737373] dark:text-neutral-400 shrink-0">Nguồn:</span>
+                  <select
+                    value={sourceFilter}
+                    onChange={(e) => setSourceFilter(e.target.value as any)}
+                    className="h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full sm:w-auto"
+                  >
+                    <option value="all">Tất cả ({allActiveProducts.length})</option>
+                    <option value="store">Chính hãng ({storeProdsCount})</option>
+                    <option value="collab">Collab ({collabProdsCount})</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Reset Filter Button */}
+              {hasActiveFilters && (
                 <button
                   type="button"
-                  onClick={() => setSelectedCategoryId('all')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-colors cursor-pointer ${
-                    selectedCategoryId === 'all'
-                      ? 'bg-[#315C4C] text-white shadow-2xs'
-                      : 'bg-[#F7F7F5] dark:bg-neutral-800 text-[#5F6368] dark:text-neutral-300 hover:bg-[#EDEDEA] dark:hover:bg-neutral-700'
-                  }`}
+                  onClick={handleClearFilters}
+                  className="h-8 px-2.5 text-xs text-[#C44536] hover:bg-[#FDF1F0] dark:hover:bg-rose-950/40 border border-[#F8B4AF] dark:border-rose-900 rounded-[6px] gap-1 font-semibold flex items-center ml-auto transition-colors cursor-pointer"
                 >
-                  Tất cả danh mục ({allActiveProducts.length})
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Đặt lại</span>
                 </button>
-                {categories.map((cat) => {
-                  const count = allActiveProducts.filter((p) => p.category_id === cat.id).length;
-                  if (count === 0) return null;
-                  return (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setSelectedCategoryId(cat.id)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-colors cursor-pointer ${
-                        selectedCategoryId === cat.id
-                          ? 'bg-[#315C4C] text-white shadow-2xs'
-                          : 'bg-[#F7F7F5] dark:bg-neutral-800 text-[#5F6368] dark:text-neutral-300 hover:bg-[#EDEDEA] dark:hover:bg-neutral-700'
-                      }`}
-                    >
-                      {cat.name} ({count})
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 

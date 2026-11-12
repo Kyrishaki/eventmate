@@ -1181,43 +1181,6 @@ export default function PosTerminalPage() {
             </div>
 
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 shrink-0">
-              {/* Origin Source Filter Pills */}
-              <div className="flex items-center gap-1 bg-[#E8E8E5] dark:bg-neutral-800 p-0.5 rounded-[6px] shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setPosSourceFilter('all')}
-                  className={`text-xs px-2.5 py-1 rounded-[4px] font-bold transition-colors whitespace-nowrap ${
-                    posSourceFilter === 'all'
-                      ? 'bg-white dark:bg-neutral-700 text-[#202124] dark:text-neutral-100 shadow-2xs'
-                      : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124]'
-                  }`}
-                >
-                  Tất cả
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPosSourceFilter('store')}
-                  className={`text-xs px-2.5 py-1 rounded-[4px] font-bold transition-colors whitespace-nowrap ${
-                    posSourceFilter === 'store'
-                      ? 'bg-[#2F7D55] text-white shadow-2xs'
-                      : 'text-[#2F7D55] hover:bg-white/50'
-                  }`}
-                >
-                  👑 Shop
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPosSourceFilter('collab')}
-                  className={`text-xs px-2.5 py-1 rounded-[4px] font-bold transition-colors whitespace-nowrap ${
-                    posSourceFilter === 'collab'
-                      ? 'bg-[#B7791F] text-white shadow-2xs'
-                      : 'text-[#8C5D17] hover:bg-white/50'
-                  }`}
-                >
-                  🤝 Collab
-                </button>
-              </div>
-
               {/* Toggle: Tự động ẩn hàng bán hết */}
               <button
                 type="button"
@@ -1250,12 +1213,35 @@ export default function PosTerminalPage() {
             </div>
           </div>
 
-          {/* Bảng Sắp xếp & Bộ lọc Chi Tiết (Sorting & Filter Toolbar) */}
+          {/* Bảng Sắp xếp & Bộ lọc Chi Tiết (Toàn bộ dùng Dropdown chuẩn) */}
           <div className="bg-white dark:bg-neutral-850 border border-[#E8E8E5] dark:border-neutral-700/80 rounded-[8px] p-2.5 mb-3 shadow-2xs space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[280px]">
-                {/* 1. Sắp xếp (Sorting) */}
+                {/* 1. Phân loại / Danh mục (Dropdown) */}
                 <div className="flex items-center gap-1.5 min-w-[160px] flex-1 sm:flex-none">
+                  <Tag className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
+                  <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Phân loại:</span>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full sm:w-auto"
+                  >
+                    <option value="all">Tất cả phân loại ({workspaceCategories.total})</option>
+                    {workspaceCategories.list.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name} ({cat.count})
+                      </option>
+                    ))}
+                    {workspaceCategories.uncategorizedCount > 0 && (
+                      <option value="uncategorized">
+                        Khác / Chưa phân loại ({workspaceCategories.uncategorizedCount})
+                      </option>
+                    )}
+                  </select>
+                </div>
+
+                {/* 2. Sắp xếp (Sorting Dropdown) */}
+                <div className="flex items-center gap-1.5 min-w-[155px] flex-1 sm:flex-none">
                   <ArrowUpDown className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
                   <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Sắp xếp:</span>
                   <select
@@ -1275,7 +1261,22 @@ export default function PosTerminalPage() {
                   </select>
                 </div>
 
-                {/* 2. Tình trạng hàng (Stock filter) */}
+                {/* 3. Nguồn hàng (Source Dropdown) */}
+                <div className="flex items-center gap-1.5 min-w-[140px] flex-1 sm:flex-none">
+                  <Store className="w-3.5 h-3.5 text-[#737373] dark:text-neutral-400 shrink-0" />
+                  <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Nguồn:</span>
+                  <select
+                    value={posSourceFilter}
+                    onChange={(e) => setPosSourceFilter(e.target.value as any)}
+                    className="h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full sm:w-auto"
+                  >
+                    <option value="all">Tất cả nguồn hàng</option>
+                    <option value="store">👑 Shop chính (HikaruStore)</option>
+                    <option value="collab">🤝 Đối tác Collab</option>
+                  </select>
+                </div>
+
+                {/* 4. Tình trạng hàng (Stock filter Dropdown) */}
                 <div className="flex items-center gap-1.5 min-w-[140px] flex-1 sm:flex-none">
                   <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Tình trạng:</span>
                   <select
@@ -1291,7 +1292,7 @@ export default function PosTerminalPage() {
                   </select>
                 </div>
 
-                {/* 3. Khoảng giá (Price range) */}
+                {/* 5. Khoảng giá (Price range Dropdown) */}
                 <div className="flex items-center gap-1.5 min-w-[130px] flex-1 sm:flex-none">
                   <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Giá:</span>
                   <select
@@ -1329,75 +1330,6 @@ export default function PosTerminalPage() {
               </div>
             </div>
           </div>
-
-          {/* Product Category Filter Bar (Horizontal Scrollable Pills) */}
-          {(workspaceCategories.list.length > 0 || workspaceCategories.uncategorizedCount > 0) && (
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2.5 mb-1">
-              <div className="flex items-center gap-1 text-[11px] font-semibold text-[#737373] dark:text-neutral-400 shrink-0 mr-1">
-                <Tag className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400" />
-                <span className="hidden sm:inline">Loại:</span>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setSelectedCategory('all')}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap shrink-0 cursor-pointer border ${
-                  selectedCategory === 'all'
-                    ? 'bg-[#315C4C] text-white border-[#315C4C] shadow-xs'
-                    : 'bg-white dark:bg-neutral-800 text-[#202124] dark:text-neutral-200 border-[#E8E8E5] dark:border-neutral-700 hover:border-[#315C4C]/40'
-                }`}
-              >
-                Tất cả loại ({workspaceCategories.total})
-              </button>
-
-              {workspaceCategories.list.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap shrink-0 cursor-pointer border flex items-center gap-1.5 ${
-                    selectedCategory === cat.id
-                      ? 'bg-[#315C4C] text-white border-[#315C4C] shadow-xs'
-                      : 'bg-white dark:bg-neutral-800 text-[#202124] dark:text-neutral-200 border-[#E8E8E5] dark:border-neutral-700 hover:border-[#315C4C]/40'
-                  }`}
-                >
-                  <span>{cat.name}</span>
-                  <span
-                    className={`text-[10px] font-mono px-1.5 rounded-full ${
-                      selectedCategory === cat.id
-                        ? 'bg-white/20 text-white'
-                        : 'bg-[#F0F0ED] dark:bg-neutral-700 text-[#737373] dark:text-neutral-300'
-                    }`}
-                  >
-                    {cat.count}
-                  </span>
-                </button>
-              ))}
-
-              {workspaceCategories.uncategorizedCount > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedCategory('uncategorized')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap shrink-0 cursor-pointer border flex items-center gap-1.5 ${
-                    selectedCategory === 'uncategorized'
-                      ? 'bg-[#315C4C] text-white border-[#315C4C] shadow-xs'
-                      : 'bg-white dark:bg-neutral-800 text-[#202124] dark:text-neutral-200 border-[#E8E8E5] dark:border-neutral-700 hover:border-[#315C4C]/40'
-                  }`}
-                >
-                  <span>Khác</span>
-                  <span
-                    className={`text-[10px] font-mono px-1.5 rounded-full ${
-                      selectedCategory === 'uncategorized'
-                        ? 'bg-white/20 text-white'
-                        : 'bg-[#F0F0ED] dark:bg-neutral-700 text-[#737373] dark:text-neutral-300'
-                    }`}
-                  >
-                    {workspaceCategories.uncategorizedCount}
-                  </span>
-                </button>
-              )}
-            </div>
-          )}
 
           {filteredProducts.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white border border-[#E8E8E5] rounded-[8px] my-auto">

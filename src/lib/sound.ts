@@ -39,3 +39,30 @@ export function playSuccessChime() {
     console.debug('Audio chime playback omitted:', e);
   }
 }
+
+/**
+ * Speaks a Vietnamese voice notification like a store Soundbox ("Loa thần tài")
+ * when a bank transfer is automatically confirmed.
+ */
+export function speakPaymentReceived(amount: number) {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const formattedAmount = Math.round(amount).toLocaleString('vi-VN');
+    const utterance = new SpeechSynthesisUtterance(
+      `Đã nhận chuyển khoản ${formattedAmount} đồng`
+    );
+    utterance.lang = 'vi-VN';
+    utterance.rate = 1.05;
+    utterance.pitch = 1.0;
+    const voices = window.speechSynthesis.getVoices();
+    const viVoice = voices.find((v) => v.lang.toLowerCase().includes('vi'));
+    if (viVoice) {
+      utterance.voice = viVoice;
+    }
+    window.speechSynthesis.speak(utterance);
+  } catch (e) {
+    console.debug('Speech synthesis omitted:', e);
+  }
+}
+

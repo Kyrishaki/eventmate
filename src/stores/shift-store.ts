@@ -37,6 +37,14 @@ interface ShiftState {
     notes?: string;
   }) => CashierShift;
   recordOrderInShift: (paymentMethod: string, amount: number) => void;
+  reverseOrderInShift: (params: {
+    boothId: string;
+    eventId: string;
+    orderCreatedAt: string;
+    paymentMethod: string;
+    amount: number;
+    decrementCount?: boolean;
+  }) => void;
   closeShift: (closingCashCount: number, notes?: string) => CashierShift | null;
   initShifts: () => void;
 }
@@ -119,6 +127,38 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
       totalQrSales: activeShift.totalQrSales + (isQr ? amount : 0),
       totalSales: activeShift.totalSales + amount,
       ordersCount: activeShift.ordersCount + 1,
+    };
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('eventmate-active-shift', JSON.stringify(updated));
+    }
+
+    set({ activeShift: updated });
+  },
+
+  reverseOrderInShift: ({
+    boothId,
+    eventId,
+    orderCreatedAt,
+    paymentMethod,
+    amount,
+    decrementCount = true,
+  }) => {
+    const { activeShift } = get();
+    if (!activeShift || activeShift.status !== 'open') return;
+    if (activeShift.boothId !== boothId || activeShift.eventId !== eventId) return;
+    if (new Date(orderCreatedAt).getTime() < new Date(activeShift.startTime).getTime()) return;
+
+    const safeAmount = Math.max(0, amount);
+    const isCash = paymentMethod === 'cash';
+    const isQr = paymentMethod === 'qr_manual' || paymentMethod === 'vietqr' || paymentMethod === 'gateway';
+
+    const updated: CashierShift = {
+      ...activeShift,
+      totalCashSales: Math.max(0, activeShift.totalCashSales - (isCash ? safeAmount : 0)),
+      totalQrSales: Math.max(0, activeShift.totalQrSales - (isQr ? safeAmount : 0)),
+      totalSales: Math.max(0, activeShift.totalSales - safeAmount),
+      ordersCount: decrementCount ? Math.max(0, activeShift.ordersCount - 1) : activeShift.ordersCount,
     };
 
     if (typeof window !== 'undefined') {

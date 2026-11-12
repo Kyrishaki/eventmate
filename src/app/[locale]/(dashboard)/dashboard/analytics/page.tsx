@@ -22,7 +22,6 @@ import {
   FileSpreadsheet,
   Filter,
   FlaskConical,
-  Trash2,
 } from 'lucide-react';
 
 import { Order, EventItem, Booth } from '@/types/database';
@@ -33,6 +32,8 @@ import {
   filterRealEvents,
   filterRealOrders,
   filterRealBooths,
+  getEffectiveOrderStatus,
+  isNetRevenueOrder,
 } from '@/lib/test-data-filter';
 import { exportEventToExcel } from '@/lib/export-excel';
 
@@ -54,14 +55,23 @@ function downloadRevenueCsv(
     'Mô hình',
     'Đối tác Collab',
     'Phương thức thanh toán',
+    'Trạng thái',
     'Tạm tính',
     'Giảm giá',
-    'Tổng thanh toán',
+    'Doanh thu thực nhận',
   ];
 
   const rows = orders.map((o) => {
     const event = events.find((e) => e.id === o.event_id);
     const booth = booths.find((b) => b.id === o.booth_id);
+    const effectiveStatus = getEffectiveOrderStatus(o);
+    const statusLabel =
+      effectiveStatus === 'cancelled'
+        ? 'Đã hủy (Void)'
+        : effectiveStatus === 'refunded'
+        ? `Đã hoàn tiền (${o.refund_record_number || 'Refund'})`
+        : 'Hoàn tất';
+    const recognizedRevenue = isNetRevenueOrder(o) ? o.final_amount : 0;
     return [
       o.order_number,
       o.created_at,
@@ -70,9 +80,10 @@ function downloadRevenueCsv(
       booth?.booth_type === 'collab' ? 'Collab' : 'Solo',
       `"${booth?.collab_partner || ''}"`,
       o.payment_method,
+      statusLabel,
       o.subtotal_amount,
       o.discount_amount,
-      o.final_amount,
+      recognizedRevenue,
     ].join(',');
   });
 
@@ -89,7 +100,7 @@ function downloadRevenueCsv(
 
 export default function AnalyticsPage() {
   const { activeWorkspace } = useWorkspaceStore();
-  const { orders, clearTestOrders } = useOrdersStore();
+  const { orders } = useOrdersStore();
   const { events, booths, products, variants, allocations } = useDataStore();
 
   const [selectedEventId, setSelectedEventId] = React.useState<string>('all');
@@ -120,17 +131,18 @@ export default function AnalyticsPage() {
       ? booths.filter((b) => isTestBooth(b) || b.event_id === selectedEventId)
       : booths.filter((b) => b.event_id === selectedEventId && !isTestBooth(b));
 
-  const totalRevenue = filteredOrders.reduce((sum, o) => sum + o.final_amount, 0);
-  const totalOrdersCount = filteredOrders.length;
-  const totalUnitsSold = filteredOrders.reduce(
+  const netOrders = filteredOrders.filter(isNetRevenueOrder);
+  const totalRevenue = netOrders.reduce((sum, o) => sum + o.final_amount, 0);
+  const totalOrdersCount = netOrders.length;
+  const totalUnitsSold = netOrders.reduce(
     (sum, o) => sum + (o.items?.reduce((iSum, item) => iSum + item.quantity, 0) || 0),
     0
   );
   const avgOrderValue = totalOrdersCount > 0 ? totalRevenue / totalOrdersCount : 0;
 
-  // Breakdown by Booth
+  // Breakdown by Booth (net revenue, excluding cancelled / refunded orders)
   const boothSalesMap = displayBooths.map((b) => {
-    const boothOrders = filteredOrders.filter((o) => o.booth_id === b.id);
+    const boothOrders = netOrders.filter((o) => o.booth_id === b.id);
     const revenue = boothOrders.reduce((sum, o) => sum + o.final_amount, 0);
     const units = boothOrders.reduce(
       (sum, o) => sum + (o.items?.reduce((iSum, item) => iSum + item.quantity, 0) || 0),
@@ -273,23 +285,10 @@ export default function AnalyticsPage() {
           <div className="flex items-start sm:items-center gap-2.5">
             <FlaskConical className="w-4 h-4 shrink-0 text-[#B7791F] mt-0.5 sm:mt-0" />
             <span>
-              <strong>Dữ liệu thử nghiệm (Sandbox):</strong> Doanh thu ({formatCurrency(totalRevenue, activeWorkspace?.currency || 'VND')}) và {filteredOrders.length} đơn hàng tại đây là số liệu TEST phát sinh khi chạy thử máy POS, <strong>hoàn toàn không được cộng vào tổng doanh thu thực tế</strong> của hệ thống.
+              <strong>Dữ liệu thử nghiệm (Sandbox):</strong> Doanh thu ({formatCurrency(totalRevenue, activeWorkspace?.currency || 'VND')}) và {totalOrdersCount} đơn hợp lệ tại đây là số liệu TEST phát sinh khi chạy thử máy POS, <strong>hoàn toàn không được cộng vào tổng doanh thu thực tế</strong> của hệ thống.
             </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                if (confirm('Bạn có muốn xóa toàn bộ các đơn hàng thử nghiệm để làm sạch dữ liệu test?')) {
-                  clearTestOrders();
-                }
-              }}
-              className="h-7 text-xs border-[#B7791F] text-[#B7791F] hover:bg-[#B7791F]/15 gap-1"
-            >
-              <Trash2 className="w-3 h-3" />
-              <span>Xóa đơn test</span>
-            </Button>
             <Button
               variant="outline"
               size="sm"

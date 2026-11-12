@@ -145,20 +145,26 @@ function CollabPartnerPortalContent() {
   // Locate current event
   const currentEvent = events.find((e) => e.id === currentBooth?.event_id);
 
+  const bootstrappedBoothRef = React.useRef<string | null>(null);
+
   // Fallback bootstrap if partner opens link on a fresh device without local database
   React.useEffect(() => {
-    if (!currentBooth && boothId) {
+    if (!currentBooth && boothId && bootstrappedBoothRef.current !== boothId) {
+      bootstrappedBoothRef.current = boothId;
       const partnerParam = searchParams.get('partner') || 'Đối tác Liên danh';
       const eventNameParam = searchParams.get('event') || 'Sự kiện Collab 2026';
       const ratioParam = Number(searchParams.get('ratio')) || 50;
       const boothNameParam = searchParams.get('name') || 'Gian hàng Hợp tác Collab';
-      const evtIdParam = searchParams.get('evtId') || `evt-collab-${Date.now()}`;
-      const wsId = activeWorkspace?.id || 'ws-collab-shared';
+      const evtIdParam = searchParams.get('evtId') || `evt-collab-${boothId}`;
+      const wsId = activeWorkspace?.id || 'ws-hac-cam-studio';
 
-      // Check if event exists
-      let evt = events.find((e) => e.id === evtIdParam);
+      // Check if event exists by ID or matching name
+      let evt =
+        events.find((e) => e.id === evtIdParam) ||
+        events.find((e) => e.name.trim().toLowerCase() === eventNameParam.trim().toLowerCase());
       if (!evt) {
         evt = createEvent({
+          id: evtIdParam,
           workspace_id: wsId,
           name: eventNameParam,
           location: 'Địa điểm sự kiện',
@@ -171,6 +177,7 @@ function CollabPartnerPortalContent() {
       }
 
       createBooth({
+        id: boothId,
         workspace_id: wsId,
         event_id: evt.id,
         name: boothNameParam,

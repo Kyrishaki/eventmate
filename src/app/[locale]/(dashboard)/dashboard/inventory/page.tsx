@@ -57,6 +57,7 @@ export default function InventoryPage() {
     variants,
     allocations,
     setAllocation,
+    allocateMaxToBooth,
     quickTransferStock,
     updateVariantPreorders,
   } = useDataStore();
@@ -298,37 +299,22 @@ export default function InventoryPage() {
     if (!selectedBooth || !selectedEvent) return;
     if (!canManageProduct(user, prod.collab_partner)) return;
 
-    const prodVars = variants.filter((v) => v.product_id === prod.id);
-    let updatedCount = 0;
+    const prodVarIds = variants.filter((v) => v.product_id === prod.id).map((v) => v.id);
+    if (prodVarIds.length === 0) return;
 
-    prodVars.forEach((v) => {
-      const allAllocs = allocations.filter((a) => a.variant_id === v.id);
-      const boothAlloc = allAllocs.find((a) => a.booth_id === selectedBooth.id);
-      const currentAllocQty = boothAlloc?.allocated_quantity || 0;
-      const currentSoldQty = boothAlloc?.sold_quantity || 0;
-
-      const maxOfflineCap = Math.max(
-        0,
-        v.total_inventory - (v.online_preorder_quantity || 0) - (v.reserved_quantity || 0)
-      );
-      const otherRealSold = allAllocs
-        .filter((a) => a.booth_id !== selectedBooth.id && !a.is_test)
-        .reduce((sum, a) => sum + (a.sold_quantity || 0), 0);
-      const maxAllowed = Math.max(currentSoldQty, maxOfflineCap - otherRealSold);
-
-      if (maxAllowed > currentAllocQty) {
-        setAllocation(
-          activeWorkspace?.id || 'ws-default',
-          selectedEvent.id,
-          selectedBooth.id,
-          v.id,
-          maxAllowed
-        );
-        updatedCount += 1;
-      }
-    });
+    const updatedCount = allocateMaxToBooth(
+      activeWorkspace?.id || 'ws-default',
+      selectedEvent.id,
+      selectedBooth.id,
+      prodVarIds
+    );
 
     if (updatedCount > 0) {
+      setAllocInputs((prev) => {
+        const next = { ...prev };
+        prodVarIds.forEach((id) => delete next[id]);
+        return next;
+      });
       logActivity({
         actor_name: user?.fullName || 'Nhân viên kho',
         actor_role: (user?.role as AuditActorRole) || 'inventory_staff',
@@ -344,39 +330,25 @@ export default function InventoryPage() {
 
   function handleAllocateMaxAllProducts() {
     if (!selectedBooth || !selectedEvent) return;
-    let totalUpdated = 0;
 
-    activeVariants.forEach((v) => {
-      const prod = products.find((p) => p.id === v.product_id);
-      if (!canManageProduct(user, prod?.collab_partner)) return;
+    const manageableVarIds = activeVariants
+      .filter((v) => {
+        const prod = products.find((p) => p.id === v.product_id);
+        return canManageProduct(user, prod?.collab_partner);
+      })
+      .map((v) => v.id);
 
-      const allAllocs = allocations.filter((a) => a.variant_id === v.id);
-      const boothAlloc = allAllocs.find((a) => a.booth_id === selectedBooth.id);
-      const currentAllocQty = boothAlloc?.allocated_quantity || 0;
-      const currentSoldQty = boothAlloc?.sold_quantity || 0;
+    if (manageableVarIds.length === 0) return;
 
-      const maxOfflineCap = Math.max(
-        0,
-        v.total_inventory - (v.online_preorder_quantity || 0) - (v.reserved_quantity || 0)
-      );
-      const otherRealSold = allAllocs
-        .filter((a) => a.booth_id !== selectedBooth.id && !a.is_test)
-        .reduce((sum, a) => sum + (a.sold_quantity || 0), 0);
-      const maxAllowed = Math.max(currentSoldQty, maxOfflineCap - otherRealSold);
-
-      if (maxAllowed > currentAllocQty) {
-        setAllocation(
-          activeWorkspace?.id || 'ws-default',
-          selectedEvent.id,
-          selectedBooth.id,
-          v.id,
-          maxAllowed
-        );
-        totalUpdated += 1;
-      }
-    });
+    const totalUpdated = allocateMaxToBooth(
+      activeWorkspace?.id || 'ws-default',
+      selectedEvent.id,
+      selectedBooth.id,
+      manageableVarIds
+    );
 
     if (totalUpdated > 0) {
+      setAllocInputs({});
       logActivity({
         actor_name: user?.fullName || 'Nhân viên kho',
         actor_role: (user?.role as AuditActorRole) || 'inventory_staff',
@@ -1153,6 +1125,7 @@ export default function InventoryPage() {
                             {centralStorageRemaining > 0 ? (
                               <button
                                 type="button"
+                                onMouseDown={(e) => e.preventDefault()}
                                 onClick={() =>
                                   handleDirectSetAllocation(v.id, v.name, maxAllowedBoothAlloc)
                                 }
@@ -1164,6 +1137,7 @@ export default function InventoryPage() {
                             ) : availableToSell > 0 ? (
                               <button
                                 type="button"
+                                onMouseDown={(e) => e.preventDefault()}
                                 onClick={() =>
                                   handleDirectSetAllocation(v.id, v.name, currentSoldQty)
                                 }
@@ -1480,6 +1454,7 @@ export default function InventoryPage() {
                                 {centralStorageRemaining > 0 ? (
                                   <button
                                     type="button"
+                                    onMouseDown={(e) => e.preventDefault()}
                                     onClick={() =>
                                       handleDirectSetAllocation(
                                         v.id,
@@ -1495,6 +1470,7 @@ export default function InventoryPage() {
                                 ) : availableToSell > 0 ? (
                                   <button
                                     type="button"
+                                    onMouseDown={(e) => e.preventDefault()}
                                     onClick={() =>
                                       handleDirectSetAllocation(v.id, v.name, currentSoldQty)
                                     }
@@ -1695,6 +1671,7 @@ export default function InventoryPage() {
                             {centralStorageRemaining > 0 && (
                               <button
                                 type="button"
+                                onMouseDown={(e) => e.preventDefault()}
                                 onClick={() =>
                                   handleDirectSetAllocation(v.id, v.name, maxAllowedBoothAlloc)
                                 }
@@ -1854,12 +1831,14 @@ export default function InventoryPage() {
       )}
 
       {/* Physical Stocktake & Discrepancy Reconciliation Modal */}
-      <StocktakeModal
-        isOpen={isStocktakeOpen}
-        onClose={() => setIsStocktakeOpen(false)}
-        booth={selectedBooth || null}
-        event={selectedEvent || null}
-      />
+      {isStocktakeOpen && (
+        <StocktakeModal
+          isOpen={isStocktakeOpen}
+          onClose={() => setIsStocktakeOpen(false)}
+          booth={selectedBooth || null}
+          event={selectedEvent || null}
+        />
+      )}
     </div>
   );
 }

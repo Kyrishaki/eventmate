@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import {
   EventItem,
   Booth,
@@ -26,12 +26,12 @@ export interface DataStoreState {
   invitations: WorkspaceInvitation[];
 
   // Event Actions
-  createEvent: (event: Omit<EventItem, 'id' | 'created_at' | 'updated_at'>) => EventItem;
+  createEvent: (event: Omit<EventItem, 'id' | 'created_at' | 'updated_at'> & { id?: string }) => EventItem;
   updateEvent: (id: string, updates: Partial<EventItem>) => void;
   deleteEvent: (id: string) => void;
 
   // Booth Actions
-  createBooth: (booth: Omit<Booth, 'id' | 'created_at' | 'updated_at'>) => Booth;
+  createBooth: (booth: Omit<Booth, 'id' | 'created_at' | 'updated_at'> & { id?: string }) => Booth;
   updateBooth: (id: string, updates: Partial<Booth>) => void;
   deleteBooth: (id: string) => void;
 
@@ -76,6 +76,12 @@ export interface DataStoreState {
     variantId: string,
     allocatedQuantity: number
   ) => void;
+  allocateMaxToBooth: (
+    workspaceId: string,
+    eventId: string,
+    boothId: string,
+    variantIds?: string[]
+  ) => number;
   quickTransferStock: (boothId: string, variantId: string, delta: number) => boolean;
   resetTestAllocations: () => void;
 
@@ -753,6 +759,41 @@ const defaultInvitations: WorkspaceInvitation[] = [
   },
 ];
 
+const safeLocalStorage: StateStorage = {
+  getItem: (name: string): string | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return window.localStorage.getItem(name);
+    } catch {
+      return null;
+    }
+  },
+  setItem: (name: string, value: string): void => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(name, value);
+    } catch {
+      // QuotaExceededError recovery: purge obsolete keys and retry without crashing the UI
+      try {
+        window.localStorage.removeItem('eventmate_core_data_v3');
+        window.localStorage.removeItem('eventmate_core_data_v4');
+        window.localStorage.removeItem('eventmate_audit_logs_v1');
+        window.localStorage.setItem(name, value);
+      } catch (retryErr) {
+        console.warn('HikaruStore storage quota reached; keeping state in memory:', retryErr);
+      }
+    }
+  },
+  removeItem: (name: string): void => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.removeItem(name);
+    } catch {
+      // ignore
+    }
+  },
+};
+
 export const useDataStore = create<DataStoreState>()(
   persist(
     (set, get) => ({
@@ -767,11 +808,17 @@ export const useDataStore = create<DataStoreState>()(
 
       // Events
       createEvent: (eventData) => {
+        const targetId =
+          eventData.id || `evt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+        const existing = get().events.find((e) => e.id === targetId);
+        if (existing) return existing;
+
+        const nowIso = new Date().toISOString();
         const newEvent: EventItem = {
           ...eventData,
-          id: `evt-${Date.now()}`,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          id: targetId,
+          created_at: nowIso,
+          updated_at: nowIso,
         };
         set({ events: [newEvent, ...get().events] });
         return newEvent;
@@ -793,11 +840,17 @@ export const useDataStore = create<DataStoreState>()(
 
       // Booths
       createBooth: (boothData) => {
+        const targetId =
+          boothData.id || `booth-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+        const existing = get().booths.find((b) => b.id === targetId);
+        if (existing) return existing;
+
+        const nowIso = new Date().toISOString();
         const newBooth: Booth = {
           ...boothData,
-          id: `booth-${Date.now()}`,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          id: targetId,
+          created_at: nowIso,
+          updated_at: nowIso,
         };
         set({ booths: [newBooth, ...get().booths] });
         return newBooth;
@@ -975,25 +1028,27 @@ export const useDataStore = create<DataStoreState>()(
         );
         const targetBooth = booths.find((b) => b.id === boothId);
         const isTargetTest = Boolean(existing?.is_test || targetBooth?.is_test);
-        const currentSold = existing?.sold_quantity || 0;
+        const currentSold = Math.max(0, Number(existing?.sold_quantity) || 0);
+        const safeRequestedQty = Number.isFinite(Number(allocatedQuantity))
+          ? Math.floor(Number(allocatedQuantity))
+          : currentSold;
 
-        let finalQty = Math.max(currentSold, allocatedQuantity);
+        let finalQty = Math.max(currentSold, safeRequestedQty);
         let updatedAllocations = [...allocations];
+        const nowIso = new Date().toISOString();
 
         if (variant && !isTargetTest) {
-          const maxOfflineLimit = Math.max(
-            0,
-            variant.total_inventory -
-              (variant.online_preorder_quantity || 0) -
-              (variant.reserved_quantity || 0)
-          );
+          const totalInv = Math.max(0, Number(variant.total_inventory) || 0);
+          const onlineQty = Math.max(0, Number(variant.online_preorder_quantity) || 0);
+          const reservedQty = Math.max(0, Number(variant.reserved_quantity) || 0);
+          const maxOfflineLimit = Math.max(0, totalInv - onlineQty - reservedQty);
 
           // Real allocations for this variant at OTHER booths
           const otherRealAllocs = updatedAllocations.filter(
             (a) => a.variant_id === variantId && a.booth_id !== boothId && !isTestAllocation(a)
           );
           const otherRealSold = otherRealAllocs.reduce(
-            (sum, a) => sum + (a.sold_quantity || 0),
+            (sum, a) => sum + (Number(a.sold_quantity) || 0),
             0
           );
 
@@ -1004,7 +1059,7 @@ export const useDataStore = create<DataStoreState>()(
           // If other booths currently hold unsold allocation that would push total allocated > maxOfflineLimit,
           // automatically reclaim the needed unsold quantity (prioritizing booths from other events first)
           const currentOtherAllocated = otherRealAllocs.reduce(
-            (sum, a) => sum + a.allocated_quantity,
+            (sum, a) => sum + (Number(a.allocated_quantity) || 0),
             0
           );
           let neededToReclaim = Math.max(0, finalQty + currentOtherAllocated - maxOfflineLimit);
@@ -1020,13 +1075,12 @@ export const useDataStore = create<DataStoreState>()(
             const reductions = new Map<string, number>();
             for (const other of sortedOthers) {
               if (neededToReclaim <= 0) break;
-              const unsoldAtOther = Math.max(
-                0,
-                other.allocated_quantity - (other.sold_quantity || 0)
-              );
+              const otherAllocQty = Number(other.allocated_quantity) || 0;
+              const otherSoldQty = Number(other.sold_quantity) || 0;
+              const unsoldAtOther = Math.max(0, otherAllocQty - otherSoldQty);
               if (unsoldAtOther > 0) {
                 const take = Math.min(unsoldAtOther, neededToReclaim);
-                reductions.set(other.id, other.allocated_quantity - take);
+                reductions.set(other.id, otherAllocQty - take);
                 neededToReclaim -= take;
               }
             }
@@ -1037,7 +1091,7 @@ export const useDataStore = create<DataStoreState>()(
                   ? {
                       ...a,
                       allocated_quantity: reductions.get(a.id)!,
-                      updated_at: new Date().toISOString(),
+                      updated_at: nowIso,
                     }
                   : a
               );
@@ -1046,13 +1100,16 @@ export const useDataStore = create<DataStoreState>()(
         }
 
         if (existing) {
+          if (existing.allocated_quantity === finalQty && updatedAllocations === allocations) {
+            return;
+          }
           set({
             allocations: updatedAllocations.map((a) =>
               a.id === existing.id
                 ? {
                     ...a,
                     allocated_quantity: finalQty,
-                    updated_at: new Date().toISOString(),
+                    updated_at: nowIso,
                   }
                 : a
             ),
@@ -1067,11 +1124,128 @@ export const useDataStore = create<DataStoreState>()(
             allocated_quantity: finalQty,
             sold_quantity: 0,
             is_test: isTargetTest,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            created_at: nowIso,
+            updated_at: nowIso,
           };
           set({ allocations: [...updatedAllocations, newAlloc] });
         }
+      },
+      allocateMaxToBooth: (workspaceId, eventId, boothId, variantIds) => {
+        const { variants, allocations, booths } = get();
+        const targetBooth = booths.find((b) => b.id === boothId);
+        if (!targetBooth) return 0;
+
+        const isTargetTest = Boolean(targetBooth.is_test);
+        const targetVariantSet = variantIds ? new Set(variantIds) : null;
+        const candidateVariants = variants.filter((v) =>
+          targetVariantSet ? targetVariantSet.has(v.id) : true
+        );
+
+        let updatedAllocations = [...allocations];
+        const newAllocationsToAdd: InventoryAllocation[] = [];
+        let updatedCount = 0;
+        const nowIso = new Date().toISOString();
+
+        for (let idx = 0; idx < candidateVariants.length; idx++) {
+          const variant = candidateVariants[idx];
+          const existingIdx = updatedAllocations.findIndex(
+            (a) => a.booth_id === boothId && a.variant_id === variant.id
+          );
+          const existing = existingIdx >= 0 ? updatedAllocations[existingIdx] : undefined;
+          const currentAllocQty = Math.max(0, Number(existing?.allocated_quantity) || 0);
+          const currentSoldQty = Math.max(0, Number(existing?.sold_quantity) || 0);
+
+          const totalInv = Math.max(0, Number(variant.total_inventory) || 0);
+          const onlineQty = Math.max(0, Number(variant.online_preorder_quantity) || 0);
+          const reservedQty = Math.max(0, Number(variant.reserved_quantity) || 0);
+          const maxOfflineLimit = Math.max(0, totalInv - onlineQty - reservedQty);
+
+          const otherRealAllocs = updatedAllocations.filter(
+            (a) =>
+              a.variant_id === variant.id &&
+              a.booth_id !== boothId &&
+              !isTestAllocation(a)
+          );
+          const otherRealSold = isTargetTest
+            ? 0
+            : otherRealAllocs.reduce((sum, a) => sum + (Number(a.sold_quantity) || 0), 0);
+
+          const maxAllowed = Math.max(currentSoldQty, maxOfflineLimit - otherRealSold);
+          if (maxAllowed <= currentAllocQty) continue;
+
+          if (!isTargetTest) {
+            const currentOtherAllocated = otherRealAllocs.reduce(
+              (sum, a) => sum + (Number(a.allocated_quantity) || 0),
+              0
+            );
+            let neededToReclaim = Math.max(
+              0,
+              maxAllowed + currentOtherAllocated - maxOfflineLimit
+            );
+
+            if (neededToReclaim > 0) {
+              const sortedOthers = [...otherRealAllocs].sort((a, b) => {
+                const aDiffEvent = a.event_id !== eventId ? 0 : 1;
+                const bDiffEvent = b.event_id !== eventId ? 0 : 1;
+                return aDiffEvent - bDiffEvent;
+              });
+
+              const reductions = new Map<string, number>();
+              for (const other of sortedOthers) {
+                if (neededToReclaim <= 0) break;
+                const otherAllocQty = Number(other.allocated_quantity) || 0;
+                const otherSoldQty = Number(other.sold_quantity) || 0;
+                const unsoldAtOther = Math.max(0, otherAllocQty - otherSoldQty);
+                if (unsoldAtOther > 0) {
+                  const take = Math.min(unsoldAtOther, neededToReclaim);
+                  reductions.set(other.id, otherAllocQty - take);
+                  neededToReclaim -= take;
+                }
+              }
+
+              if (reductions.size > 0) {
+                updatedAllocations = updatedAllocations.map((a) =>
+                  reductions.has(a.id)
+                    ? {
+                        ...a,
+                        allocated_quantity: reductions.get(a.id)!,
+                        updated_at: nowIso,
+                      }
+                    : a
+                );
+              }
+            }
+          }
+
+          if (existing && existingIdx >= 0) {
+            updatedAllocations[existingIdx] = {
+              ...updatedAllocations[existingIdx],
+              allocated_quantity: maxAllowed,
+              updated_at: nowIso,
+            };
+          } else {
+            newAllocationsToAdd.push({
+              id: `alloc-${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 6)}`,
+              workspace_id: workspaceId,
+              event_id: eventId,
+              booth_id: boothId,
+              variant_id: variant.id,
+              allocated_quantity: maxAllowed,
+              sold_quantity: 0,
+              is_test: isTargetTest,
+              created_at: nowIso,
+              updated_at: nowIso,
+            });
+          }
+
+          updatedCount += 1;
+        }
+
+        if (updatedCount > 0) {
+          set({ allocations: [...updatedAllocations, ...newAllocationsToAdd] });
+        }
+
+        return updatedCount;
       },
       quickTransferStock: (boothId, variantId, delta) => {
         const { variants, allocations, booths } = get();
@@ -1325,6 +1499,7 @@ export const useDataStore = create<DataStoreState>()(
     }),
     {
       name: 'eventmate_core_data_v5',
+      storage: createJSONStorage(() => safeLocalStorage),
       onRehydrateStorage: () => (state) => {
         if (typeof window !== 'undefined') {
           try {
@@ -1364,22 +1539,36 @@ export const useDataStore = create<DataStoreState>()(
           state.allocations = defaultAllocations;
         }
 
-        // Self-heal and ensure events exist
+        // Self-heal and deduplicate events (including cleaning up any duplicate auto-created collab events)
         if (!state.events || state.events.length === 0) {
           state.events = defaultEvents;
         } else {
-          // If evt-test-pos is missing, prepend it
           if (!state.events.some((e) => e.id === 'evt-test-pos')) {
             const testEvt = defaultEvents.find((e) => e.id === 'evt-test-pos');
             if (testEvt) state.events = [testEvt, ...state.events];
           }
-          // Ensure test flag is set on test events
-          state.events = state.events.map((e) =>
-            e.id === 'evt-test-pos' || e.id.includes('test') ? { ...e, is_test: true } : e
-          );
+          const seenEventIds = new Set<string>();
+          const seenCollabEventNames = new Set<string>();
+          state.events = state.events
+            .filter((e) => {
+              if (!e || !e.id || seenEventIds.has(e.id)) return false;
+              seenEventIds.add(e.id);
+              if (e.event_type === 'collab_event') {
+                const key = `${e.workspace_id}:${(e.name || '').trim().toLowerCase()}`;
+                const hasBoothAlloc = state.allocations?.some((a) => a.event_id === e.id);
+                if (!hasBoothAlloc && seenCollabEventNames.has(key)) {
+                  return false;
+                }
+                seenCollabEventNames.add(key);
+              }
+              return true;
+            })
+            .map((e) =>
+              e.id === 'evt-test-pos' || e.id.includes('test') ? { ...e, is_test: true } : e
+            );
         }
 
-        // Self-heal booths
+        // Self-heal and deduplicate booths
         if (!state.booths || state.booths.length === 0) {
           state.booths = defaultBooths;
         } else {
@@ -1391,14 +1580,32 @@ export const useDataStore = create<DataStoreState>()(
             const collabBooth = defaultBooths.find((b) => b.id === 'booth-collab-genz');
             if (collabBooth) state.booths = [...state.booths, collabBooth];
           }
-          state.booths = state.booths.map((b) =>
-            b.id === 'booth-test-1' || b.event_id === 'evt-test-pos' || b.code === 'BOOTH-TEST'
-              ? { ...b, is_test: true }
-              : b
-          );
+          const seenBoothIds = new Set<string>();
+          const seenCollabBoothKeys = new Set<string>();
+          state.booths = state.booths
+            .filter((b) => {
+              if (!b || !b.id || seenBoothIds.has(b.id)) return false;
+              seenBoothIds.add(b.id);
+              if (b.booth_type === 'collab' && b.code?.startsWith('COL-')) {
+                const key = `${b.name}:${b.code}:${b.collab_partner || ''}`;
+                const hasAlloc = state.allocations?.some(
+                  (a) => a.booth_id === b.id && (a.allocated_quantity > 0 || a.sold_quantity > 0)
+                );
+                if (!hasAlloc && seenCollabBoothKeys.has(key)) {
+                  return false;
+                }
+                seenCollabBoothKeys.add(key);
+              }
+              return true;
+            })
+            .map((b) =>
+              b.id === 'booth-test-1' || b.event_id === 'evt-test-pos' || b.code === 'BOOTH-TEST'
+                ? { ...b, is_test: true }
+                : b
+            );
         }
 
-        // Self-heal allocations
+        // Self-heal and deduplicate allocations by (booth_id, variant_id)
         if (!state.allocations || state.allocations.length === 0) {
           state.allocations = defaultAllocations;
         } else {
@@ -1410,9 +1617,29 @@ export const useDataStore = create<DataStoreState>()(
             const collabAlloc = defaultAllocations.find((a) => a.id === 'alloc-collab-genz-1');
             if (collabAlloc) state.allocations = [...state.allocations, collabAlloc];
           }
-          state.allocations = state.allocations.map((a) =>
-            a.event_id === 'evt-test-pos' || a.id.includes('test') ? { ...a, is_test: true } : a
-          );
+          const allocMap = new Map<string, InventoryAllocation>();
+          for (const raw of state.allocations) {
+            if (!raw || !raw.booth_id || !raw.variant_id) continue;
+            const normalized: InventoryAllocation = {
+              ...raw,
+              allocated_quantity: Math.max(0, Number(raw.allocated_quantity) || 0),
+              sold_quantity: Math.max(0, Number(raw.sold_quantity) || 0),
+              is_test:
+                raw.is_test === true ||
+                raw.event_id === 'evt-test-pos' ||
+                Boolean(raw.id && raw.id.includes('test')),
+            };
+            const key = `${normalized.booth_id}::${normalized.variant_id}`;
+            const prev = allocMap.get(key);
+            if (
+              !prev ||
+              normalized.allocated_quantity > prev.allocated_quantity ||
+              normalized.sold_quantity > prev.sold_quantity
+            ) {
+              allocMap.set(key, normalized);
+            }
+          }
+          state.allocations = Array.from(allocMap.values());
         }
 
         // Self-heal products, variants, categories

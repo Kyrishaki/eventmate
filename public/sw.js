@@ -1,5 +1,5 @@
 // HikaruStore Offline PWA Service Worker
-const CACHE_NAME = 'hikarustore-cache-v2';
+const CACHE_NAME = 'hikarustore-cache-v3';
 
 const STATIC_PRECACHE = [
   '/',
@@ -43,13 +43,21 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests and browser extensions
-  if (request.method !== 'GET' || !url.protocol.startsWith('http')) {
+  // Skip non-GET requests, cross-origin requests, and browser extensions
+  if (
+    request.method !== 'GET' ||
+    !url.protocol.startsWith('http') ||
+    url.origin !== self.location.origin
+  ) {
     return;
   }
 
-  // Skip API routes so API responses aren't mistakenly cached
-  if (url.pathname.startsWith('/api/')) {
+  // Skip API routes and Next.js RSC / prefetch payloads so dynamic navigations never fail
+  if (
+    url.pathname.startsWith('/api/') ||
+    request.headers.get('RSC') === '1' ||
+    url.searchParams.has('_rsc')
+  ) {
     return;
   }
 
@@ -73,7 +81,7 @@ self.addEventListener('fetch', (event) => {
             }
             return networkResponse;
           })
-          .catch(() => cached);
+          .catch(() => cached || new Response('', { status: 504 }));
       })
     );
     return;
@@ -96,6 +104,7 @@ self.addEventListener('fetch', (event) => {
           // Fallback to cached root or POS if specific route not cached
           const fallback = (await caches.match('/vi/pos')) || (await caches.match('/'));
           return fallback || new Response('Bạn đang ngoại tuyến. Vui lòng kiểm tra lại kết nối mạng.', {
+            status: 503,
             headers: { 'Content-Type': 'text/plain; charset=utf-8' },
           });
         })
@@ -103,7 +112,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Default: Network with Cache Fallback
+  // Default: Network with Cache Fallback (never resolve to undefined)
   event.respondWith(
     fetch(request)
       .then((networkResponse) => {
@@ -113,6 +122,9 @@ self.addEventListener('fetch', (event) => {
         }
         return networkResponse;
       })
-      .catch(() => caches.match(request))
+      .catch(async () => {
+        const cached = await caches.match(request);
+        return cached || new Response('', { status: 504 });
+      })
   );
 });

@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { getEffectiveOrderStatus } from '@/lib/test-data-filter';
 import { Order } from '@/types/database';
 import { ReceiptModal } from '@/components/pos/receipt-modal';
 import {
@@ -155,6 +156,16 @@ export default function PosOrdersPage() {
                         <Badge variant="outline" className="text-[10px] uppercase">
                           {ord.payment_method === 'cash' ? 'Tiền mặt' : 'VietQR'}
                         </Badge>
+                        {getEffectiveOrderStatus(ord) === 'cancelled' && (
+                          <Badge variant="error" className="text-[10px]">
+                            Đã hủy (Void)
+                          </Badge>
+                        )}
+                        {getEffectiveOrderStatus(ord) === 'refunded' && (
+                          <Badge variant="warning" className="text-[10px]">
+                            Đã hoàn tiền
+                          </Badge>
+                        )}
                       </div>
 
                       <p className="text-xs text-[#737373] mt-1">
@@ -170,7 +181,13 @@ export default function PosOrdersPage() {
 
                     <div className="flex items-center gap-3 self-end sm:self-auto">
                       <div className="text-right">
-                        <span className="text-base font-bold text-[#315C4C]">
+                        <span
+                          className={`text-base font-bold ${
+                            getEffectiveOrderStatus(ord) !== 'completed'
+                              ? 'line-through text-[#9E9E9C]'
+                              : 'text-[#315C4C]'
+                          }`}
+                        >
                           {formatCurrency(ord.final_amount, activeWorkspace?.currency || 'VND')}
                         </span>
                         <span className="text-[10px] text-[#737373] block">

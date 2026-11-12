@@ -378,6 +378,22 @@ export function canManageTeam(role?: WorkspaceRole | null): boolean {
   return role === 'owner' || role === 'admin';
 }
 
+/**
+ * Strict RBAC for order lifecycle mutations (Cancel/Void, Refund/Return):
+ * ONLY Owner and Admin roles are permitted. Cashiers, Managers, Staff, Collab, Viewers cannot cancel or refund orders.
+ */
+export function canManageOrderLifecycle(role?: WorkspaceRole | null): boolean {
+  return role === 'owner' || role === 'admin';
+}
+
+/**
+ * Strict RBAC for sandbox / test data management & cleanup (in Settings):
+ * ONLY Owner and Admin roles are permitted.
+ */
+export function canManageSandboxData(role?: WorkspaceRole | null): boolean {
+  return role === 'owner' || role === 'admin';
+}
+
 export function canManageInventory(role?: WorkspaceRole | null): boolean {
   return (
     role === 'owner' ||

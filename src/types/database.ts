@@ -24,6 +24,8 @@ export type PaymentMethod = 'cash' | 'qr_manual' | 'gateway';
 
 export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
 
+export type OrderStatus = 'completed' | 'cancelled' | 'refunded';
+
 export type SyncStatus = 'synced' | 'pending_sync' | 'conflict';
 
 export type InvitationStatus = 'pending' | 'accepted' | 'expired' | 'revoked';
@@ -185,6 +187,7 @@ export interface Order {
   final_amount: number;
   payment_method: PaymentMethod;
   payment_status: PaymentStatus;
+  order_status?: OrderStatus;
   sync_status: SyncStatus;
   idempotency_key: string;
   notes: string | null;
@@ -194,6 +197,17 @@ export interface Order {
   customer_phone?: string | null;
   tendered_amount?: number | null;
   change_amount?: number | null;
+  cancelled_at?: string | null;
+  cancelled_by?: string | null;
+  cancelled_by_role?: WorkspaceRole | null;
+  cancellation_reason?: string | null;
+  refunded_at?: string | null;
+  refunded_by?: string | null;
+  refunded_by_role?: WorkspaceRole | null;
+  refund_reason?: string | null;
+  refund_amount?: number | null;
+  refund_restocked?: boolean;
+  refund_record_number?: string | null;
   is_test?: boolean;
   offline_created_at: string;
   created_at: string;
@@ -284,6 +298,7 @@ export type AuditActionType =
   | 'preorder_adjust'
   | 'order_create'
   | 'order_cancel'
+  | 'order_refund'
   | 'collab_contribute'
   | 'collab_sync'
   | 'user_create'

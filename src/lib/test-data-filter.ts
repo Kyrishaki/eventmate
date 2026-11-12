@@ -1,4 +1,27 @@
-import { EventItem, Order, Booth, InventoryAllocation } from '@/types/database';
+import { EventItem, Order, OrderStatus, Booth, InventoryAllocation } from '@/types/database';
+
+/**
+ * Resolves the effective lifecycle status of an order, supporting legacy orders
+ * created before `order_status` existed.
+ */
+export function getEffectiveOrderStatus(order: Order | undefined | null): OrderStatus {
+  if (!order) return 'completed';
+  if (order.order_status === 'cancelled' || order.order_status === 'refunded') {
+    return order.order_status;
+  }
+  if (order.payment_status === 'refunded') {
+    return 'refunded';
+  }
+  return 'completed';
+}
+
+/**
+ * Returns true only if the order counts toward net recognized revenue and units sold
+ * (i.e., neither cancelled/voided nor refunded).
+ */
+export function isNetRevenueOrder(order: Order | undefined | null): boolean {
+  return getEffectiveOrderStatus(order) === 'completed';
+}
 
 /**
  * Checks whether an event is a sandbox/test event.
@@ -65,6 +88,14 @@ export function isTestAllocation(allocation: InventoryAllocation | undefined | n
  */
 export function filterRealOrders(orders: Order[]): Order[] {
   return orders.filter((o) => !isTestOrder(o));
+}
+
+/**
+ * Filters real production orders that remain active (not cancelled or refunded)
+ * for net revenue & unit statistics.
+ */
+export function filterNetRealOrders(orders: Order[]): Order[] {
+  return orders.filter((o) => !isTestOrder(o) && isNetRevenueOrder(o));
 }
 
 /**

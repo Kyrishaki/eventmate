@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import { EventItem, Order, Booth, Product, ProductVariant, InventoryAllocation } from '@/types/database';
 import { formatDate } from '@/lib/utils';
+import { getEffectiveOrderStatus, isNetRevenueOrder } from '@/lib/test-data-filter';
 
 export interface ExportEventExcelParams {
   event?: EventItem | null; // null or undefined means "All Events"
@@ -42,26 +43,34 @@ export function exportEventToExcel({
   const wb = XLSX.utils.book_new();
 
   // =========================================================================
-  // SHEET 1: 📊 TỔNG QUAN TÀI CHÍNH & VẬN HÀNH
+  // SHEET 1: 📊 TỔNG QUAN TÀI CHÍNH & VẬN HÀNH (CHỈ TÍNH ĐƠN HỢP LỆ - TRỪ ĐƠN HỦY/HOÀN)
   // =========================================================================
-  const totalRevenue = targetOrders.reduce((sum, o) => sum + o.final_amount, 0);
-  const totalSubtotal = targetOrders.reduce((sum, o) => sum + o.subtotal_amount, 0);
-  const totalDiscount = targetOrders.reduce((sum, o) => sum + (o.discount_amount || 0), 0);
-  const totalOrdersCount = targetOrders.length;
-  const totalUnitsSold = targetOrders.reduce(
+  const netOrders = targetOrders.filter(isNetRevenueOrder);
+  const cancelledOrders = targetOrders.filter((o) => getEffectiveOrderStatus(o) === 'cancelled');
+  const refundedOrders = targetOrders.filter((o) => getEffectiveOrderStatus(o) === 'refunded');
+  const totalRefundedAmount = refundedOrders.reduce(
+    (sum, o) => sum + (o.refund_amount ?? o.final_amount),
+    0
+  );
+
+  const totalRevenue = netOrders.reduce((sum, o) => sum + o.final_amount, 0);
+  const totalSubtotal = netOrders.reduce((sum, o) => sum + o.subtotal_amount, 0);
+  const totalDiscount = netOrders.reduce((sum, o) => sum + (o.discount_amount || 0), 0);
+  const totalOrdersCount = netOrders.length;
+  const totalUnitsSold = netOrders.reduce(
     (sum, o) => sum + (o.items?.reduce((iSum, it) => iSum + (it.quantity || 1), 0) || 1),
     0
   );
   const aov = totalOrdersCount > 0 ? Math.round(totalRevenue / totalOrdersCount) : 0;
 
   // Revenue by method
-  const cashOrders = targetOrders.filter((o) => o.payment_method === 'cash');
+  const cashOrders = netOrders.filter((o) => o.payment_method === 'cash');
   const cashRevenue = cashOrders.reduce((sum, o) => sum + o.final_amount, 0);
 
-  const qrOrders = targetOrders.filter((o) => o.payment_method === 'qr_manual');
+  const qrOrders = netOrders.filter((o) => o.payment_method === 'qr_manual');
   const qrRevenue = qrOrders.reduce((sum, o) => sum + o.final_amount, 0);
 
-  const gatewayOrders = targetOrders.filter((o) => o.payment_method === 'gateway');
+  const gatewayOrders = netOrders.filter((o) => o.payment_method === 'gateway');
   const gatewayRevenue = gatewayOrders.reduce((sum, o) => sum + o.final_amount, 0);
 
   // Collab vs Solo breakdown
@@ -70,7 +79,7 @@ export function exportEventToExcel({
   targetBooths.forEach((b) => {
     const isCollab = b.booth_type === 'collab' || Boolean(b.collab_partner);
     if (isCollab) {
-      const bRevenue = targetOrders
+      const bRevenue = netOrders
         .filter((o) => o.booth_id === b.id)
         .reduce((sum, o) => sum + o.final_amount, 0);
       const ratio = b.revenue_share_ratio || 50;
@@ -131,6 +140,8 @@ export function exportEventToExcel({
     ['Tổng doanh thu từ các gian hàng Collab:', totalCollabRevenue, 'Quầy hợp tác nghệ sĩ/đối tác', ''],
     ['Phần chi trả cho Đối tác Collab:', totalCollabShare, 'Theo tỷ lệ % hợp đồng thỏa thuận', ''],
     ['Doanh thu thực nhận của BTC / Nghệ sĩ:', netRetained, 'Sau khi đã trừ phần chia đối tác', ''],
+    ['Số đơn đã hủy (Void - không tính doanh thu):', cancelledOrders.length, 'Đã hoàn tồn kho tự động', ''],
+    ['Số đơn đã hoàn tiền (Refund):', refundedOrders.length, totalRefundedAmount, 'Xem lý do tại Sheet Chi tiết đơn hàng'],
   ];
 
   const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
@@ -161,6 +172,18 @@ export function exportEventToExcel({
     if (ord.payment_method === 'qr_manual') paymentMethodLabel = 'Chuyển khoản VietQR';
     if (ord.payment_method === 'gateway') paymentMethodLabel = 'Cổng thẻ POS';
 
+    const effectiveStatus = getEffectiveOrderStatus(ord);
+    let statusLabel = 'Hoàn tất';
+    if (effectiveStatus === 'cancelled') statusLabel = 'Đã hủy (Void)';
+    if (effectiveStatus === 'refunded') statusLabel = `Đã hoàn tiền (${ord.refund_record_number || 'Refund'})`;
+
+    const auditNote =
+      effectiveStatus === 'cancelled'
+        ? `[HỦY BỞI ${ord.cancelled_by || 'Admin'}] ${ord.cancellation_reason || ''}`.trim()
+        : effectiveStatus === 'refunded'
+        ? `[HOÀN TIỀN ${ord.refund_record_number || ''} BỞI ${ord.refunded_by || 'Admin'}] ${ord.refund_reason || ''}`.trim()
+        : ord.notes || '';
+
     return {
       STT: idx + 1,
       'Mã đơn hàng': ord.order_number,
@@ -170,17 +193,17 @@ export function exportEventToExcel({
       'Mã quầy': bth?.code || 'BOOTH',
       'Thu ngân': ord.cashier_id || 'Thu ngân POS',
       'Hình thức': paymentMethodLabel,
-      'Trạng thái': ord.payment_status === 'completed' ? 'Hoàn tất' : ord.payment_status,
+      'Trạng thái': statusLabel,
       'Đồng bộ': ord.sync_status === 'synced' ? 'Đã đồng bộ' : 'Chờ đồng bộ (Offline)',
       'Số lượng (Món)': itemCount,
       'Chi tiết sản phẩm đã mua': itemsSummary,
       'Tạm tính (VND)': ord.subtotal_amount,
       'Giảm giá (VND)': ord.discount_amount || 0,
-      'Tổng thanh toán (VND)': ord.final_amount,
+      'Tổng thanh toán (VND)': effectiveStatus === 'completed' ? ord.final_amount : 0,
       'Tiền khách đưa (VND)': ord.tendered_amount ?? (ord.payment_method === 'cash' ? ord.final_amount : ''),
       'Tiền thối lại (VND)': ord.change_amount ?? (ord.payment_method === 'cash' ? 0 : ''),
       'Ảnh nhận hàng': ord.proof_image_url ? 'Có ảnh chụp' : 'Không',
-      'Ghi chú': ord.notes || '',
+      'Ghi chú & Kiểm toán': auditNote,
       'Khóa đối soát Idempotency': ord.idempotency_key,
     };
   });

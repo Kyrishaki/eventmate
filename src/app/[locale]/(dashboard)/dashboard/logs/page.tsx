@@ -120,7 +120,9 @@ export default function AuditLogsPage() {
       l.action_type === 'delete' ||
       l.action_type === 'update' ||
       l.action_type === 'preorder_adjust' ||
-      l.action_type === 'user_delete'
+      l.action_type === 'user_delete' ||
+      l.action_type === 'order_cancel' ||
+      l.action_type === 'order_refund'
   ).length;
 
   // Export JSON Handler
@@ -227,6 +229,18 @@ export default function AuditLogsPage() {
         return (
           <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0]">
             🛒 Đơn POS
+          </span>
+        );
+      case 'order_cancel':
+        return (
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#FDF1F0] text-[#C44536] border border-[#F8B4AF]">
+            🚫 Hủy đơn (Void)
+          </span>
+        );
+      case 'order_refund':
+        return (
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#FEF7EC] text-[#B7791F] border border-[#FDE68A]">
+            ↩ Hoàn tiền / Trả hàng
           </span>
         );
       case 'user_create':
@@ -468,6 +482,8 @@ export default function AuditLogsPage() {
               <option value="preorder_adjust">⚡ Chỉnh Đặt trước / VIP hold</option>
               <option value="stock_adjust">📦 Bổ sung / Điều chỉnh kho</option>
               <option value="order_create">🛒 Tạo đơn hàng POS</option>
+              <option value="order_cancel">🚫 Hủy đơn (Void)</option>
+              <option value="order_refund">↩ Hoàn tiền / Trả hàng</option>
               <option value="create">+ Thêm mới</option>
               <option value="update">✎ Chỉnh sửa</option>
               <option value="delete">🗑 Xóa dữ liệu</option>

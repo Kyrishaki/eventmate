@@ -7,6 +7,7 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 import { Order } from '@/types/database';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useDataStore } from '@/stores/data-store';
+import { getEffectiveOrderStatus } from '@/lib/test-data-filter';
 import { Printer, Copy, CheckCircle2, QrCode } from 'lucide-react';
 
 interface ReceiptModalProps {
@@ -68,6 +69,11 @@ export function ReceiptModal({
       order.discount_amount > 0 ? `Giảm giá: -${formatCurrency(order.discount_amount, activeWorkspace?.currency || 'VND')}` : '',
       `TỔNG CỘNG: ${formatCurrency(order.final_amount, activeWorkspace?.currency || 'VND')}`,
       `Hình thức: ${order.payment_method === 'cash' ? 'Tiền mặt' : 'Chuyển khoản VietQR'}`,
+      getEffectiveOrderStatus(order) === 'cancelled'
+        ? `*** ĐƠN ĐÃ HỦY (VOID) - Lý do: ${order.cancellation_reason || ''} ***`
+        : getEffectiveOrderStatus(order) === 'refunded'
+        ? `*** ĐÃ HOÀN TIỀN (${order.refund_record_number || 'RF'}) - Số tiền: ${formatCurrency(order.refund_amount ?? order.final_amount, activeWorkspace?.currency || 'VND')} - Lý do: ${order.refund_reason || ''} ***`
+        : '',
       activeWorkspace?.slogan || 'Cảm ơn quý khách đã ủng hộ!',
     ]
       .filter(Boolean)
@@ -199,8 +205,31 @@ export function ReceiptModal({
               )}
               <div className="flex justify-between font-bold text-sm text-[#315C4C] pt-1 border-t border-[#E8E8E5] dark:border-neutral-700">
                 <span>TỔNG THANH TOÁN:</span>
-                <span>{formatCurrency(order.final_amount, activeWorkspace?.currency || 'VND')}</span>
+                <span className={getEffectiveOrderStatus(order) !== 'completed' ? 'line-through text-[#737373]' : ''}>
+                  {formatCurrency(order.final_amount, activeWorkspace?.currency || 'VND')}
+                </span>
               </div>
+              {getEffectiveOrderStatus(order) === 'cancelled' && (
+                <div className="mt-2 p-2 border border-dashed border-[#C44536] bg-[#FDF1F0] text-[#C44536] text-center space-y-0.5 rounded">
+                  <p className="font-bold text-[11px]">*** ĐƠN HÀNG ĐÃ HỦY (VOID) ***</p>
+                  {order.cancellation_reason && (
+                    <p className="text-[9px]">Lý do: {order.cancellation_reason}</p>
+                  )}
+                </div>
+              )}
+              {getEffectiveOrderStatus(order) === 'refunded' && (
+                <div className="mt-2 p-2 border border-dashed border-[#B7791F] bg-[#FEF7EC] text-[#B7791F] text-center space-y-0.5 rounded">
+                  <p className="font-bold text-[11px]">
+                    *** BIÊN BẢN HOÀN TIỀN ({order.refund_record_number || 'RF'}) ***
+                  </p>
+                  <p className="text-[10px] font-bold">
+                    Số tiền đã hoàn: {formatCurrency(order.refund_amount ?? order.final_amount, activeWorkspace?.currency || 'VND')}
+                  </p>
+                  {order.refund_reason && (
+                    <p className="text-[9px]">Lý do: {order.refund_reason}</p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Footer QR & Message */}

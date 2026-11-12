@@ -38,28 +38,28 @@ export function StocktakeModal({
   const [isSuccess, setIsSuccess] = React.useState(false);
 
   // Booth allocations
+  const boothId = booth?.id;
   const boothAllocs = React.useMemo(() => {
-    if (!booth) return [];
-    return allocations.filter((a) => a.booth_id === booth.id && !a.is_test);
-  }, [allocations, booth]);
+    if (!boothId || !isOpen) return [];
+    return allocations.filter((a) => a.booth_id === boothId && !a.is_test);
+  }, [allocations, boothId, isOpen]);
 
-  // Initialize actual counts to current system allocated quantity
+  // Initialize actual counts when modal opens for a booth
   React.useEffect(() => {
-    if (boothAllocs.length > 0) {
-      const timer = setTimeout(() => {
-        const initialCounts: Record<string, number> = {};
-        const initialReasons: Record<string, string> = {};
-        boothAllocs.forEach((a) => {
-          const systemQty = Math.max(0, a.allocated_quantity - a.sold_quantity);
-          initialCounts[a.variant_id] = systemQty;
-          initialReasons[a.variant_id] = 'loss';
-        });
-        setActualCounts(initialCounts);
-        setReasons(initialReasons);
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, [boothAllocs]);
+    if (!isOpen || !boothId) return;
+    const currentAllocs = useDataStore
+      .getState()
+      .allocations.filter((a) => a.booth_id === boothId && !a.is_test);
+    const initialCounts: Record<string, number> = {};
+    const initialReasons: Record<string, string> = {};
+    currentAllocs.forEach((a) => {
+      const systemQty = Math.max(0, a.allocated_quantity - a.sold_quantity);
+      initialCounts[a.variant_id] = systemQty;
+      initialReasons[a.variant_id] = 'loss';
+    });
+    setActualCounts(initialCounts);
+    setReasons(initialReasons);
+  }, [isOpen, boothId]);
 
   if (!isOpen || !booth) return null;
 

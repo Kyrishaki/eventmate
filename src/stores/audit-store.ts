@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { AuditLogEntry, AuditActionType, AuditActorRole } from '@/types/database';
 
 // Pre-seeded realistic audit trail for demonstration & immediate traceability
@@ -123,6 +123,33 @@ interface AuditStoreState {
   resetToDefaultLogs: () => void;
 }
 
+const safeAuditStorage: StateStorage = {
+  getItem: (name: string): string | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return window.localStorage.getItem(name);
+    } catch {
+      return null;
+    }
+  },
+  setItem: (name: string, value: string): void => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(name, value);
+    } catch {
+      // Ignore storage quota errors for audit logs so user actions never crash
+    }
+  },
+  removeItem: (name: string): void => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.removeItem(name);
+    } catch {
+      // ignore
+    }
+  },
+};
+
 export const useAuditStore = create<AuditStoreState>()(
   persist(
     (set, get) => ({
@@ -138,8 +165,8 @@ export const useAuditStore = create<AuditStoreState>()(
         };
 
         const currentLogs = get().logs || [];
-        // Keep the latest 500 audit logs to preserve storage
-        const updated = [newEntry, ...currentLogs].slice(0, 500);
+        // Keep the latest 250 audit logs to preserve storage
+        const updated = [newEntry, ...currentLogs].slice(0, 250);
         set({ logs: updated });
       },
 
@@ -158,6 +185,7 @@ export const useAuditStore = create<AuditStoreState>()(
     }),
     {
       name: 'eventmate_audit_logs_v2',
+      storage: createJSONStorage(() => safeAuditStorage),
       onRehydrateStorage: () => () => {
         if (typeof window !== 'undefined') {
           try {

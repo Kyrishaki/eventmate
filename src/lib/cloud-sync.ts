@@ -120,6 +120,33 @@ export function initCloudSync(workspaceId = DEFAULT_WORKSPACE_ID) {
       }
     );
 
+    // Layer C: Realtime Force-Logout Broadcast when account password is randomized / recycled
+    syncChannel.on(
+      'broadcast' as any,
+      { event: 'FORCE_LOGOUT_ACCOUNT' },
+      ({ payload }: { payload: { accountId: string; username: string; newSessionEpoch: number } }) => {
+        if (payload) {
+          try {
+            const { useAuthStore } = require('@/stores/auth-store');
+            const authState = useAuthStore.getState();
+            if (
+              authState.user &&
+              (authState.user.id === payload.accountId ||
+                authState.user.username?.toLowerCase() === payload.username.toLowerCase())
+            ) {
+              console.warn('[CloudSync] Account session invalidated remotely by admin. Logging out...');
+              authState.logout();
+              if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+                window.location.href = '/login?reason=forced_logout';
+              }
+            }
+          } catch (e) {
+            console.warn('[CloudSync] Error handling force logout broadcast:', e);
+          }
+        }
+      }
+    );
+
     syncChannel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
         workspaceStore.setSyncState('synced');
@@ -483,5 +510,34 @@ export async function pushFullStateToCloud(workspaceId = DEFAULT_WORKSPACE_ID): 
   } catch (err) {
     console.warn('[CloudSync] Error saving to cloud:', err);
     return false;
+  }
+}
+
+/**
+ * Broadcasts a force-logout signal across peer devices via Supabase mesh and local tabs via BroadcastChannel.
+ */
+export function broadcastForceLogout(accountId: string, username: string, newSessionEpoch: number) {
+  // 1. Supabase Realtime Mesh Broadcast to other connected phones / tablets / laptops
+  try {
+    if (syncChannel) {
+      syncChannel.send({
+        type: 'broadcast',
+        event: 'FORCE_LOGOUT_ACCOUNT',
+        payload: { accountId, username, newSessionEpoch },
+      });
+    }
+  } catch (err) {
+    console.warn('[CloudSync] Could not broadcast force logout over realtime channel:', err);
+  }
+
+  // 2. Local BroadcastChannel for other tabs & windows in the current browser
+  if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+    try {
+      const bc = new BroadcastChannel('eventmate_auth_events');
+      bc.postMessage({ type: 'FORCE_LOGOUT_ACCOUNT', accountId, username, newSessionEpoch });
+      bc.close();
+    } catch {
+      // ignore
+    }
   }
 }

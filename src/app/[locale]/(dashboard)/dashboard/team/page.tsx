@@ -4,7 +4,14 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { useDataStore } from '@/stores/data-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
-import { useAuthStore, canManageTeam, isViewerOnly, UserAccount, getDisplayPassword } from '@/stores/auth-store';
+import {
+  useAuthStore,
+  canManageTeam,
+  isViewerOnly,
+  UserAccount,
+  getDisplayPassword,
+  generateStaffPassword,
+} from '@/stores/auth-store';
 import { logActivity } from '@/stores/audit-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,13 +40,25 @@ import {
   CheckCircle2,
   X,
   Sparkles,
+  Shuffle,
+  AlertTriangle,
+  LogOut,
+  RefreshCw,
+  Send,
 } from 'lucide-react';
 
 export default function TeamPage() {
   const t = useTranslations('team');
   const tCommon = useTranslations('common');
   const { activeWorkspace } = useWorkspaceStore();
-  const { user, accounts, createStaffAccount, updateAccountCredentials, deleteStaffAccount } = useAuthStore();
+  const {
+    user,
+    accounts,
+    createStaffAccount,
+    updateAccountCredentials,
+    randomizeAccountCredentials,
+    deleteStaffAccount,
+  } = useAuthStore();
 
   const isAdmin = canManageTeam(user?.role) || !user;
   const isReadOnly = isViewerOnly(user?.role);
@@ -62,6 +81,21 @@ export default function TeamPage() {
   const [editCollabPartnerName, setEditCollabPartnerName] = React.useState('');
   const [editModalError, setEditModalError] = React.useState<string | null>(null);
   const [showEditPassword, setShowEditPassword] = React.useState(false);
+
+  // Recycle / Randomize Account Modal State
+  const [isRecycleModalOpen, setIsRecycleModalOpen] = React.useState(false);
+  const [recycleTargetId, setRecycleTargetId] = React.useState('');
+  const [recycleNewName, setRecycleNewName] = React.useState('');
+  const [recycleNewPassword, setRecycleNewPassword] = React.useState('');
+  const [recycleNewRole, setRecycleNewRole] = React.useState<WorkspaceRole>('cashier');
+  const [recycleModalError, setRecycleModalError] = React.useState<string | null>(null);
+  const [isRecycling, setIsRecycling] = React.useState(false);
+  const [recycleSuccessData, setRecycleSuccessData] = React.useState<{
+    username: string;
+    password: string;
+    fullName: string;
+    role: WorkspaceRole;
+  } | null>(null);
 
   // Notification Banner
   const [actionFeedback, setActionFeedback] = React.useState<{
@@ -185,13 +219,72 @@ export default function TeamPage() {
     setEditingAccount(null);
   }
 
-  function generateRandomPassword() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789@#$';
-    let result = '';
-    for (let i = 0; i < 8; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
+  function openRecycleModal(account?: UserAccount | null) {
+    const target = account || accounts[0] || null;
+    if (!target) return;
+    setRecycleTargetId(target.id);
+    setRecycleNewName(target.fullName);
+    setRecycleNewPassword(generateStaffPassword());
+    setRecycleNewRole(target.role);
+    setRecycleModalError(null);
+    setRecycleSuccessData(null);
+    setIsRecycleModalOpen(true);
+  }
+
+  function rerollRecyclePassword() {
+    setRecycleNewPassword(generateStaffPassword());
+  }
+
+  function handleConfirmRecycle(e: React.FormEvent) {
+    e.preventDefault();
+    setRecycleModalError(null);
+
+    const target = accounts.find((a) => a.id === recycleTargetId);
+    if (!target) {
+      setRecycleModalError('Không tìm thấy tài khoản cần tái sử dụng.');
+      return;
     }
-    setEditPassword(result);
+
+    setIsRecycling(true);
+
+    const res = randomizeAccountCredentials({
+      accountId: target.id,
+      newPassword: recycleNewPassword,
+      newFullName: recycleNewName.trim() || target.fullName,
+      newRole: recycleNewRole,
+    });
+
+    setIsRecycling(false);
+
+    if (!res.success) {
+      setRecycleModalError(res.message || 'Lỗi khi đảo mật khẩu');
+      return;
+    }
+
+    logActivity({
+      actor_name: user?.fullName || 'Admin',
+      actor_role: (user?.role as AuditActorRole) || 'owner',
+      action_type: 'update',
+      entity_type: 'team_member',
+      entity_name: `Tài khoản: ${target.username}`,
+      description: `Admin đã đảo ngẫu nhiên mật khẩu tài khoản "${target.username}" để bàn giao cho "${recycleNewName.trim() || target.fullName}" và cưỡng chế đăng xuất toàn bộ thiết bị đang đăng nhập.`,
+      changes: [
+        { field: 'password', field_label: 'Mật khẩu', old_value: '******', new_value: recycleNewPassword },
+        { field: 'session_revoked', field_label: 'Thu hồi phiên', new_value: 'Đã ngắt toàn bộ phiên thiết bị' },
+      ],
+    });
+
+    setRecycleSuccessData({
+      username: target.username,
+      password: recycleNewPassword,
+      fullName: recycleNewName.trim() || target.fullName,
+      role: recycleNewRole,
+    });
+
+    setActionFeedback({
+      type: 'success',
+      message: `Đã đảo ngẫu nhiên mật khẩu cho "${target.username}" và thu hồi phiên trên toàn bộ thiết bị thành công!`,
+    });
   }
 
   function copyAccountCredentials(account: UserAccount) {
@@ -233,6 +326,8 @@ export default function TeamPage() {
     viewer: 'outline',
   };
 
+  const selectedRecycleTarget = accounts.find((a) => a.id === recycleTargetId);
+
   return (
     <div className="space-y-6">
       {/* Top Header */}
@@ -247,20 +342,33 @@ export default function TeamPage() {
             </Badge>
           </div>
           <p className="text-xs text-[#737373] mt-0.5">
-            Quản trị viên trực tiếp quản lý, đổi tên đăng nhập và mật khẩu cho toàn bộ tài khoản trong hệ thống.
+            Quản trị viên trực tiếp quản lý, đổi mật khẩu và đảo ngẫu nhiên mật khẩu để tái sử dụng tài khoản cho nhân sự mới.
           </p>
         </div>
 
         {isAdmin && (
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => setIsAccountModalOpen(true)}
-            className="gap-1.5 font-bold shadow-2xs self-start sm:self-auto"
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>Cấp tài khoản mới</span>
-          </Button>
+          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => openRecycleModal()}
+              className="gap-1.5 font-bold border-[#B7791F]/40 text-[#8C5D17] bg-[#FEF7EC] hover:bg-[#FDF2E9] shadow-2xs"
+              title="Đảo ngẫu nhiên mật khẩu một tài khoản bất kỳ và đá phiên khỏi thiết bị cũ"
+            >
+              <Shuffle className="w-3.5 h-3.5 text-[#B7791F]" />
+              <span>Đảo ngẫu nhiên MK</span>
+            </Button>
+
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setIsAccountModalOpen(true)}
+              className="gap-1.5 font-bold shadow-2xs"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>Cấp tài khoản mới</span>
+            </Button>
+          </div>
         )}
       </div>
 
@@ -295,12 +403,15 @@ export default function TeamPage() {
       <Card className="border-[#E8E8E5] bg-[#F7F7F5] p-3.5">
         <div className="flex items-center gap-2 font-semibold text-xs text-[#202124] mb-1.5">
           <Shield className="w-4 h-4 text-[#315C4C]" />
-          <span>Quy tắc phân quyền tài khoản EventMate:</span>
+          <span>Quy tắc phân quyền & Tái sử dụng tài khoản:</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] text-[#555555]">
           <div>
             <span className="font-semibold text-[#202124]">Admin (Chủ sở hữu / Quản trị):</span>{' '}
-            Toàn quyền thêm, sửa, xóa dữ liệu, đổi tên tài khoản & mật khẩu của tất cả tài khoản, xem doanh thu.
+            Toàn quyền thêm, sửa, xóa, đổi mật khẩu và đảo ngẫu nhiên mật khẩu của tất cả tài khoản.
+          </div>
+          <div>
+            <span className="font-semibold text-[#202124]">Đảo MK Tái sử dụng:</span> Cho phép reset mật khẩu sang mã ngẫu nhiên mới và NGAY LẬP TỨC thoát phiên (đá ra) ở thiết bị cũ.
           </div>
           <div>
             <span className="font-semibold text-[#202124]">Thu ngân (Cashier):</span> Chỉ được mở màn hình Bán hàng
@@ -308,10 +419,6 @@ export default function TeamPage() {
           </div>
           <div>
             <span className="font-semibold text-[#202124]">Đối tác Collab:</span> Chỉ được quản trị và kiểm đếm danh mục sản phẩm của thương hiệu đối tác mình. Kho hàng Admin ở chế độ chỉ đọc.
-          </div>
-          <div>
-            <span className="font-semibold text-[#202124]">Khách xem (Viewer / Guest):</span>{' '}
-            Chỉ được phép xem báo cáo đối soát. Bị chặn mọi quyền thêm, sửa, xóa dữ liệu.
           </div>
         </div>
       </Card>
@@ -325,7 +432,7 @@ export default function TeamPage() {
               Danh sách Tài khoản & Mật khẩu Đã Cấp
             </CardTitle>
             <CardDescription className="text-xs">
-              Admin có thể đổi tên đăng nhập (username) và mật khẩu cho bất kỳ tài khoản nào bên dưới
+              Quản trị viên có thể đổi mật khẩu, đổi username hoặc bấm &ldquo;Đảo MK & Thoát phiên&rdquo; để bàn giao tài khoản cho người khác
             </CardDescription>
           </div>
         </CardHeader>
@@ -390,7 +497,21 @@ export default function TeamPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 shrink-0 self-stretch sm:self-auto justify-end pt-2 md:pt-0 border-t md:border-t-0 border-[#F0F0ED]">
+                <div className="flex items-center gap-2 shrink-0 self-stretch sm:self-auto justify-end pt-2 md:pt-0 border-t md:border-t-0 border-[#F0F0ED] flex-wrap">
+                  {/* Button: Đảo MK & Đăng xuất thiết bị (Tái sử dụng) */}
+                  {isAdmin && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-2.5 text-xs gap-1 border-[#B7791F]/40 text-[#8C5D17] hover:bg-[#FEF7EC] font-semibold"
+                      onClick={() => openRecycleModal(acc)}
+                      title="Đảo ngẫu nhiên mật khẩu và cưỡng chế thoát phiên ở tất cả các thiết bị đang đăng nhập"
+                    >
+                      <Shuffle className="w-3.5 h-3.5 text-[#B7791F]" />
+                      <span>Đảo MK & Thoát phiên</span>
+                    </Button>
+                  )}
+
                   {/* Button: Đổi tên tài khoản & mật khẩu */}
                   {isAdmin && (
                     <Button
@@ -398,10 +519,10 @@ export default function TeamPage() {
                       size="sm"
                       className="h-8 px-2.5 text-xs gap-1 border-[#315C4C]/40 text-[#315C4C] hover:bg-[#EAF4EE] font-semibold"
                       onClick={() => openEditModal(acc)}
-                      title="Đổi tên đăng nhập, mật khẩu và vai trò của tài khoản này"
+                      title="Đổi tên đăng nhập, mật khẩu tùy ý và vai trò của tài khoản này"
                     >
                       <Pencil className="w-3.5 h-3.5" />
-                      <span>Đổi TK / MK</span>
+                      <span>Đổi TK/MK</span>
                     </Button>
                   )}
 
@@ -457,6 +578,236 @@ export default function TeamPage() {
         </div>
       </Card>
 
+      {/* Modal: Đảo Ngẫu Nhiên Mật Khẩu & Thu Hồi Phiên (Tái Sử Dụng Tài Khoản) */}
+      <Modal
+        isOpen={isRecycleModalOpen}
+        onClose={() => {
+          if (!isRecycling) {
+            setIsRecycleModalOpen(false);
+            setRecycleSuccessData(null);
+          }
+        }}
+        title="Đảo Ngẫu Nhiên Mật Khẩu & Thu Hồi Phiên Thiết Bị"
+        description="Đổi mật khẩu sang mã ngẫu nhiên mới để bàn giao cho nhân sự khác và NGAY LẬP TỨC đá phiên làm việc trên các thiết bị cũ."
+      >
+        {recycleSuccessData ? (
+          <div className="space-y-4 text-xs">
+            <div className="p-3.5 rounded-[8px] bg-[#EAF4EE] border border-[#2F7D55]/30 text-xs space-y-2">
+              <div className="flex items-center gap-2 font-bold text-[#2F7D55] text-sm">
+                <CheckCircle2 className="w-5 h-5 shrink-0" />
+                <span>Đã đảo mật khẩu & Thu hồi phiên thành công!</span>
+              </div>
+              <p className="text-[#333333] leading-relaxed">
+                Tất cả thiết bị đang đăng nhập tài khoản <strong>{recycleSuccessData.username}</strong> đã bị đăng xuất ngay lập tức. Hãy sao chép thông tin mới dưới đây để gửi cho nhân sự mới nhận tài khoản:
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-[8px] bg-[#F7F7F5] border border-[#E8E8E5] font-mono text-xs space-y-2">
+              <div className="flex justify-between items-center py-0.5 border-b border-[#E8E8E5]">
+                <span className="text-[#737373]">Đường dẫn:</span>
+                <span className="font-bold text-[#202124]">{typeof window !== 'undefined' ? window.location.origin : ''}/login</span>
+              </div>
+              <div className="flex justify-between items-center py-0.5 border-b border-[#E8E8E5]">
+                <span className="text-[#737373]">Tên tài khoản:</span>
+                <span className="font-bold text-[#202124]">{recycleSuccessData.username}</span>
+              </div>
+              <div className="flex justify-between items-center py-0.5 border-b border-[#E8E8E5]">
+                <span className="text-[#737373]">Mật khẩu mới:</span>
+                <span className="font-bold text-[#C44536] text-sm bg-white px-2 py-0.5 rounded border border-[#E8E8E5]">
+                  {recycleSuccessData.password}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-0.5 border-b border-[#E8E8E5]">
+                <span className="text-[#737373]">Người nhận mới:</span>
+                <span className="font-bold text-[#202124]">{recycleSuccessData.fullName}</span>
+              </div>
+              <div className="flex justify-between items-center py-0.5">
+                <span className="text-[#737373]">Vai trò:</span>
+                <span className="font-bold text-[#202124]">{getRoleLabel(recycleSuccessData.role)}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#E8E8E5]">
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                className="gap-1.5 font-bold"
+                onClick={() => {
+                  const text = `EventMate - Thông tin tài khoản bàn giao mới:\n- Đường dẫn: ${window.location.origin}/login\n- Tên đăng nhập: ${recycleSuccessData.username}\n- Mật khẩu mới: ${recycleSuccessData.password}\n- Người nhận: ${recycleSuccessData.fullName}\n- Vai trò: ${getRoleLabel(recycleSuccessData.role)}`;
+                  navigator.clipboard.writeText(text);
+                  setActionFeedback({
+                    type: 'success',
+                    message: 'Đã sao chép thông tin tài khoản mới vào bộ nhớ tạm để gửi cho nhân sự!',
+                  });
+                  setIsRecycleModalOpen(false);
+                }}
+              >
+                <Copy className="w-3.5 h-3.5" />
+                <span>Sao chép thông tin & Đóng</span>
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleConfirmRecycle} className="space-y-4 text-xs">
+            {recycleModalError && (
+              <div className="p-2.5 bg-[#FDF1F0] border border-[#FADBD8] text-[#C44536] rounded text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{recycleModalError}</span>
+              </div>
+            )}
+
+            {/* Chọn tài khoản cần tái sử dụng */}
+            <div className="space-y-1.5">
+              <Label htmlFor="recycle-account" required>
+                Tài khoản cần đảo mật khẩu & tái sử dụng
+              </Label>
+              <select
+                id="recycle-account"
+                value={recycleTargetId}
+                onChange={(e) => {
+                  const found = accounts.find((a) => a.id === e.target.value);
+                  if (found) {
+                    setRecycleTargetId(found.id);
+                    setRecycleNewName(found.fullName);
+                    setRecycleNewRole(found.role);
+                  }
+                }}
+                className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-xs text-[#202124] font-medium focus:outline-none focus:border-[#315C4C]"
+              >
+                {accounts.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.fullName} (@{a.username}) — {getRoleLabel(a.role)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Tên người nhận mới */}
+            <div className="space-y-1.5">
+              <Label htmlFor="recycle-name" required>
+                Tên nhân sự mới nhận tài khoản
+              </Label>
+              <Input
+                id="recycle-name"
+                required
+                placeholder="VD: Thu ngân Ca chiều - Lan, Trợ lý sự kiện..."
+                value={recycleNewName}
+                onChange={(e) => setRecycleNewName(e.target.value)}
+                className="h-9 text-xs"
+              />
+              <p className="text-[11px] text-[#737373]">
+                Tên hiển thị để nhận diện ai đang chịu trách nhiệm ca/quầy hiện tại
+              </p>
+            </div>
+
+            {/* Mật khẩu ngẫu nhiên mới */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="recycle-password" required className="font-bold text-[#202124]">
+                  Mật khẩu ngẫu nhiên mới sinh ra
+                </Label>
+                <button
+                  type="button"
+                  onClick={rerollRecyclePassword}
+                  className="text-[11px] text-[#B7791F] hover:text-[#8C5D17] flex items-center gap-1 font-bold"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Đổi mã khác</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Input
+                  id="recycle-password"
+                  required
+                  readOnly
+                  value={recycleNewPassword}
+                  className="h-10 text-sm font-mono font-bold bg-[#F7F7F5] text-[#C44536] border-[#E8E8E5]"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(recycleNewPassword);
+                    alert(`Đã sao chép mật khẩu: ${recycleNewPassword}`);
+                  }}
+                  className="h-10 px-3 text-xs shrink-0"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>Sao chép</span>
+                </Button>
+              </div>
+              <p className="text-[11px] text-[#737373]">Mật khẩu ngẫu nhiên rõ ràng, dễ nhớ, dễ gõ trên điện thoại</p>
+            </div>
+
+            {/* Phân quyền */}
+            <div className="space-y-1.5">
+              <Label htmlFor="recycle-role" required>
+                Phân quyền nhiệm vụ cho nhân sự mới
+              </Label>
+              <select
+                id="recycle-role"
+                className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                value={recycleNewRole}
+                onChange={(e) => setRecycleNewRole(e.target.value as WorkspaceRole)}
+              >
+                <option value="cashier">Thu ngân (Cashier) — Chỉ bán hàng tại màn hình POS</option>
+                <option value="manager">Quản lý (Manager) — Quản lý sự kiện, quầy và theo dõi kho</option>
+                <option value="inventory_staff">Nhân viên kho (Inventory) — Quản lý và điều chuyển tồn kho</option>
+                <option value="collab_partner">Đối tác Collab (Collab Partner) — Quản trị sản phẩm & kho riêng</option>
+                <option value="viewer">Khách xem (Viewer) — Chỉ xem báo cáo</option>
+                <option value="admin">Quản trị viên (Admin) — Toàn quyền quản trị</option>
+                <option value="owner">Chủ sở hữu (Owner) — Toàn quyền tối cao</option>
+              </select>
+            </div>
+
+            {/* Hộp cảnh báo cưỡng chế đăng xuất */}
+            <div className="p-3 bg-[#FEF7EC] border border-[#B7791F]/40 rounded-[8px] text-xs text-[#8C5D17] space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-sm">
+                <AlertTriangle className="w-4 h-4 text-[#B7791F] shrink-0" />
+                <span>Cưỡng chế thoát phiên ở tất cả các thiết bị:</span>
+              </div>
+              <p className="text-[11px] leading-relaxed">
+                Ngay khi bạn bấm <strong>&ldquo;Xác nhận Đảo MK & Thoát Phiên&rdquo;</strong>, hệ thống sẽ gửi tín hiệu hủy phiên tức thời đến mọi thiết bị (điện thoại, máy tính bảng) đang mở tài khoản này. Thiết bị cũ sẽ bị đẩy về trang Đăng nhập ngay lập tức.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F0ED]">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isRecycling}
+                onClick={() => setIsRecycleModalOpen(false)}
+              >
+                Hủy bỏ
+              </Button>
+              <Button
+                type="submit"
+                variant="destructive"
+                size="sm"
+                disabled={isRecycling}
+                className="font-bold gap-1.5 bg-[#B7791F] hover:bg-[#8C5D17] text-white"
+              >
+                {isRecycling ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Đang thu hồi phiên...</span>
+                  </>
+                ) : (
+                  <>
+                    <Shuffle className="w-3.5 h-3.5" />
+                    <span>Xác nhận Đảo MK & Thoát Phiên</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
       {/* Modal: Đổi Tên Đăng Nhập & Mật Khẩu (Toàn bộ tài khoản) */}
       <Modal
         isOpen={!!editingAccount}
@@ -510,7 +861,7 @@ export default function TeamPage() {
                   </Label>
                   <button
                     type="button"
-                    onClick={generateRandomPassword}
+                    onClick={() => setEditPassword(generateStaffPassword())}
                     className="text-[10px] text-[#315C4C] hover:underline flex items-center gap-1 font-semibold"
                   >
                     <Sparkles className="w-3 h-3" />
@@ -644,9 +995,19 @@ export default function TeamPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="staff-pass" required>
-                Mật khẩu đăng nhập
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="staff-pass" required>
+                  Mật khẩu đăng nhập
+                </Label>
+                <button
+                  type="button"
+                  onClick={() => setPassword(generateStaffPassword())}
+                  className="text-[10px] text-[#315C4C] hover:underline flex items-center gap-1 font-semibold"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  <span>Tạo ngẫu nhiên</span>
+                </button>
+              </div>
               <Input
                 id="staff-pass"
                 type="text"
@@ -654,7 +1015,7 @@ export default function TeamPage() {
                 placeholder="Tối thiểu 4 ký tự..."
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-9 text-xs font-mono"
+                className="h-9 text-xs font-mono font-bold"
               />
             </div>
           </div>

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/auth-store';
-import { AlertCircle, Lock, User, Eye, EyeOff, UserCheck } from 'lucide-react';
+import { AlertCircle, Lock, User, Eye, EyeOff, UserCheck, AlertTriangle } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,6 +24,16 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isForcedLogout, setIsForcedLogout] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const reason = new URLSearchParams(window.location.search).get('reason');
+      if (reason === 'forced_logout') {
+        setIsForcedLogout(true);
+      }
+    }
+  }, []);
 
   // If the user lands on login page with a Guest session, clear preview mode so they can log in freely
   React.useEffect(() => {
@@ -90,6 +100,19 @@ export default function LoginPage() {
 
       <form onSubmit={handleLogin}>
         <CardContent className="space-y-4">
+          {/* Forced Logout Notice when admin randomized password */}
+          {isForcedLogout && (
+            <div className="p-3 bg-[#FEF7EC] border border-[#B7791F]/40 rounded-[6px] text-xs text-[#8C5D17] space-y-1">
+              <div className="flex items-center gap-1.5 font-bold">
+                <AlertTriangle className="w-4 h-4 text-[#B7791F] shrink-0" />
+                <span>Phiên làm việc đã kết thúc</span>
+              </div>
+              <p className="text-[11px] leading-relaxed">
+                Tài khoản này vừa được Quản trị viên đổi mật khẩu ngẫu nhiên để bàn giao/tái sử dụng và đã tự động đăng xuất trên thiết bị. Vui lòng đăng nhập lại với mật khẩu mới được cấp.
+              </p>
+            </div>
+          )}
+
           {/* Active Session Notice if already logged in */}
           {isAlreadyLoggedIn && (
             <div className="p-3 bg-[#EAF4EE] border border-[#2F7D55]/30 rounded-[6px] text-xs text-[#254639] space-y-2">

@@ -11,6 +11,7 @@ export interface AuthUser {
   avatarUrl?: string | null;
   collabPartnerName?: string;
   collabBoothId?: string;
+  sessionEpoch?: number;
 }
 
 export interface UserAccount {
@@ -22,6 +23,7 @@ export interface UserAccount {
   role: WorkspaceRole;
   collabPartnerName?: string;
   collabBoothId?: string;
+  sessionEpoch?: number;
   createdAt: string;
 }
 
@@ -81,6 +83,22 @@ export function getDisplayPassword(account?: UserAccount | null): string {
   return account.password || '';
 }
 
+/**
+ * Generate a friendly, clear, high-security random password for staff re-use
+ * Format: EM@ + 2 letters + 4 digits (e.g. EM@KT7829)
+ */
+export function generateStaffPassword(): string {
+  const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const digits = '23456789';
+  const l1 = letters.charAt(Math.floor(Math.random() * letters.length));
+  const l2 = letters.charAt(Math.floor(Math.random() * letters.length));
+  const n1 = digits.charAt(Math.floor(Math.random() * digits.length));
+  const n2 = digits.charAt(Math.floor(Math.random() * digits.length));
+  const n3 = digits.charAt(Math.floor(Math.random() * digits.length));
+  const n4 = digits.charAt(Math.floor(Math.random() * digits.length));
+  return `EM@${l1}${l2}${n1}${n2}${n3}${n4}`;
+}
+
 interface AuthState {
   user: AuthUser | null;
   previousUser: AuthUser | null;
@@ -97,6 +115,7 @@ interface AuthState {
   exitCollabPreview: () => void;
   setUser: (user: AuthUser | null) => void;
   logout: () => void;
+  forceLogoutSession: (accountId: string) => void;
 
   // Staff Account Management (Admin only)
   createStaffAccount: (data: {
@@ -118,6 +137,12 @@ interface AuthState {
     collabPartnerName?: string;
     collabBoothId?: string;
   }) => { success: boolean; message?: string };
+  randomizeAccountCredentials: (data: {
+    accountId: string;
+    newPassword?: string;
+    newFullName?: string;
+    newRole?: WorkspaceRole;
+  }) => { success: boolean; newPassword?: string; message?: string };
   deleteStaffAccount: (accountId: string) => void;
 
   // Permission guards
@@ -174,6 +199,7 @@ export const useAuthStore = create<AuthState>()(
           role: found.role,
           collabPartnerName: found.collabPartnerName,
           collabBoothId: found.collabBoothId,
+          sessionEpoch: found.sessionEpoch || Date.now(),
         };
 
         set({
@@ -393,6 +419,90 @@ export const useAuthStore = create<AuthState>()(
         return { success: true };
       },
 
+      forceLogoutSession: (accountId: string) => {
+        const { user } = get();
+        if (user && user.id === accountId) {
+          set({ user: null, isAuthenticated: false, previousUser: null });
+          if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+            window.location.href = '/login?reason=forced_logout';
+          }
+        }
+      },
+
+      randomizeAccountCredentials: (data) => {
+        const { accounts, user } = get();
+        if (user && user.role !== 'owner' && user.role !== 'admin') {
+          return {
+            success: false,
+            message: 'Phân quyền từ chối: Chỉ Quản trị viên (Admin) mới có quyền đảo mật khẩu tài khoản.',
+          };
+        }
+
+        const target = accounts.find((a) => a.id === data.accountId);
+        if (!target) {
+          return { success: false, message: 'Không tìm thấy tài khoản cần đảo mật khẩu.' };
+        }
+
+        const generatedPassword = data.newPassword?.trim() || generateStaffPassword();
+        const newSessionEpoch = Date.now();
+        const cleanFullName = data.newFullName?.trim() || target.fullName;
+        const cleanRole = data.newRole || target.role;
+
+        const updatedAccounts = accounts.map((acc) => {
+          if (acc.id !== data.accountId) return acc;
+          return {
+            ...acc,
+            password: generatedPassword,
+            sessionEpoch: newSessionEpoch,
+            fullName: cleanFullName,
+            role: cleanRole,
+          };
+        });
+
+        // Broadcast force logout signal to peers and local tabs
+        try {
+          const { broadcastForceLogout } = require('@/lib/cloud-sync');
+          broadcastForceLogout(target.id, target.username, newSessionEpoch);
+        } catch {
+          if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+            try {
+              const bc = new BroadcastChannel('eventmate_auth_events');
+              bc.postMessage({
+                type: 'FORCE_LOGOUT_ACCOUNT',
+                accountId: target.id,
+                username: target.username,
+                newSessionEpoch,
+              });
+              bc.close();
+            } catch {
+              // ignore
+            }
+          }
+        }
+
+        // If currently logged in as this account on this machine, log out immediately
+        let updatedUser = user;
+        let shouldLogoutCurrent = false;
+        if (user && user.id === data.accountId) {
+          shouldLogoutCurrent = true;
+          updatedUser = null;
+        }
+
+        set({
+          accounts: updatedAccounts,
+          user: updatedUser,
+          isAuthenticated: shouldLogoutCurrent ? false : get().isAuthenticated,
+        });
+
+        if (shouldLogoutCurrent && typeof window !== 'undefined') {
+          if (!window.location.pathname.includes('/login')) {
+            window.location.href = '/login?reason=forced_logout';
+          }
+        }
+
+        return { success: true, newPassword: generatedPassword };
+      },
+
       deleteStaffAccount: (accountId) => {
         // Prevent deleting master admin accounts
         if (accountId === 'admin-tuan' || accountId === 'admin-hkt') {
@@ -510,10 +620,49 @@ export const useAuthStore = create<AuthState>()(
             state.accounts.push(master);
           }
         });
+
+        // Check if current user session has been revoked by sessionEpoch
+        if (state && state.user && state.accounts) {
+          const matched = state.accounts.find((a) => a.id === state.user?.id);
+          if (matched && matched.sessionEpoch && state.user.sessionEpoch) {
+            if (state.user.sessionEpoch < matched.sessionEpoch) {
+              state.user = null;
+              state.isAuthenticated = false;
+              if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+                window.location.href = '/login?reason=forced_logout';
+              }
+            }
+          }
+        }
       },
     }
   )
 );
+
+// Cross-tab and window session revocation listener via BroadcastChannel
+if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+  try {
+    const authBc = new BroadcastChannel('eventmate_auth_events');
+    authBc.onmessage = (event) => {
+      if (event.data?.type === 'FORCE_LOGOUT_ACCOUNT') {
+        const { accountId, username } = event.data;
+        const current = useAuthStore.getState();
+        if (
+          current.user &&
+          (current.user.id === accountId ||
+            current.user.username?.toLowerCase() === username.toLowerCase())
+        ) {
+          current.logout();
+          if (!window.location.pathname.includes('/login')) {
+            window.location.href = '/login?reason=forced_logout';
+          }
+        }
+      }
+    };
+  } catch {
+    // ignore
+  }
+}
 
 // Permission helper functions
 export function canEditData(role?: WorkspaceRole | null): boolean {

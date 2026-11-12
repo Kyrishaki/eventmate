@@ -6,7 +6,7 @@ import { useWorkspaceStore } from '@/stores/workspace-store';
 import { usePreorderStore } from '@/stores/preorder-store';
 import { useOrdersStore, normalizeVietQrBankId } from '@/stores/orders-store';
 import { calculateVariantStock, VariantStockBreakdown } from '@/lib/stock-status';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, compressImage } from '@/lib/utils';
 import { filterRealEvents, filterRealBooths } from '@/lib/test-data-filter';
 import {
   Product,
@@ -43,6 +43,10 @@ import {
   Check,
   Eye,
   LogIn,
+  Camera,
+  Upload,
+  AlertCircle,
+  QrCode,
 } from 'lucide-react';
 
 interface GuestBagItem {
@@ -118,6 +122,33 @@ export function GuestShowcase() {
   const [keepNotes, setKeepNotes] = React.useState('');
   const [isSubmittingKeep, setIsSubmittingKeep] = React.useState(false);
   const [copiedOrderText, setCopiedOrderText] = React.useState(false);
+  const [proofImage, setProofImage] = React.useState<string | null>(null);
+  const [isProcessingProof, setIsProcessingProof] = React.useState(false);
+  const [copiedBankField, setCopiedBankField] = React.useState<string | null>(null);
+
+  const handleProofFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setIsProcessingProof(true);
+      const compressed = await compressImage(file, 900, 0.75);
+      setProofImage(compressed);
+    } catch (err) {
+      console.error('Lỗi tải ảnh chuyển khoản:', err);
+      alert('Không thể xử lý ảnh tải lên. Vui lòng thử lại với ảnh khác.');
+    } finally {
+      setIsProcessingProof(false);
+      e.target.value = '';
+    }
+  };
+
+  const copyBankInfo = (text: string, field: string) => {
+    if (typeof navigator !== 'undefined') {
+      navigator.clipboard.writeText(text);
+      setCopiedBankField(field);
+      setTimeout(() => setCopiedBankField(null), 2000);
+    }
+  };
 
   const hasStaffPreviewSession = Boolean(previousUser && previousUser.role !== 'viewer');
   const storeName = activeWorkspace?.name || 'HikaruStore';
@@ -136,21 +167,27 @@ export function GuestShowcase() {
     }
   }, [realBooths, selectedPickupBoothId]);
 
-  // Customer reservations matched by saved phone or manual search query
-  const effectiveLookup = (lookupInput || guestPhone).trim().toLowerCase();
+  // Customer reservations matched by phone number or code
+  const cleanLookup = (lookupInput || guestPhone).trim();
   const matchedReservations = React.useMemo(() => {
-    if (!effectiveLookup) return [];
-    return preorders.filter(
-      (p) =>
-        (p.customer_phone || '').toLowerCase().includes(effectiveLookup) ||
-        p.code.toLowerCase().includes(effectiveLookup)
-    );
-  }, [preorders, effectiveLookup]);
+    if (!cleanLookup) return [];
+    const qLower = cleanLookup.toLowerCase();
+    const qDigits = cleanLookup.replace(/\D/g, '');
+    return preorders.filter((p) => {
+      const pPhoneDigits = (p.customer_phone || '').replace(/\D/g, '');
+      const matchPhone = qDigits.length >= 3 && pPhoneDigits.includes(qDigits);
+      const matchCode = p.code.toLowerCase().includes(qLower);
+      const matchName = (p.customer_name || '').toLowerCase().includes(qLower);
+      return matchPhone || matchCode || matchName;
+    });
+  }, [preorders, cleanLookup]);
 
   const savedPhoneReservations = React.useMemo(() => {
-    const cleanPhone = guestPhone.trim().toLowerCase();
-    if (!cleanPhone) return [];
-    return preorders.filter((p) => (p.customer_phone || '').toLowerCase() === cleanPhone);
+    const cleanPhoneDigits = guestPhone.trim().replace(/\D/g, '');
+    if (!cleanPhoneDigits || cleanPhoneDigits.length < 3) return [];
+    return preorders.filter((p) =>
+      (p.customer_phone || '').replace(/\D/g, '').includes(cleanPhoneDigits)
+    );
   }, [preorders, guestPhone]);
 
   // Active catalog items & counts
@@ -282,8 +319,20 @@ export function GuestShowcase() {
   const handleSubmitBagReservation = (e: React.FormEvent) => {
     e.preventDefault();
     if (bag.length === 0) return;
-    if (!guestName.trim() || !guestPhone.trim()) {
-      alert('Vui lòng nhập Họ tên và Số điện thoại để nhân viên đối soát tại quầy.');
+    const cleanPhone = guestPhone.trim();
+    const cleanName = guestName.trim();
+    if (!cleanPhone) {
+      alert('Vui lòng nhập Số điện thoại nhận hàng.');
+      return;
+    }
+    if (!cleanName) {
+      alert('Vui lòng nhập Họ và tên người nhận.');
+      return;
+    }
+    if (!proofImage || !proofImage.trim()) {
+      alert(
+        'BẮT BUỘC: Hàng keep cần chuyển khoản full 100% trước để quầy đóng gói và giữ đồ riêng. Vui lòng quét mã VietQR bên dưới và tải lên ảnh biên lai/chuyển khoản thành công!'
+      );
       return;
     }
 
@@ -297,8 +346,8 @@ export function GuestShowcase() {
         workspace_id: activeWorkspace?.id || 'ws-hac-cam-studio',
         event_id: effectiveEvent?.id || 'general-store',
         booth_id: effectiveBooth?.id || 'general-booth',
-        customer_name: guestName.trim(),
-        customer_phone: guestPhone.trim(),
+        customer_name: cleanName,
+        customer_phone: cleanPhone,
         preorder_type: 'online_preorder',
         status: 'pending_pickup',
         items: bag.map((item) => ({
@@ -309,9 +358,10 @@ export function GuestShowcase() {
           unit_price: item.unitPrice,
         })),
         total_amount: bagTotal,
-        deposit_paid: 0,
-        remaining_amount: bagTotal,
-        notes: `Khách đặt giữ qua Storefront. Khung giờ nhận: ${pickupTime}. Ghi chú: ${
+        deposit_paid: bagTotal, // CK FULL 100% TRƯỚC
+        remaining_amount: 0,    // KHÔNG CÒN NỢ
+        proof_image_url: proofImage,
+        notes: `Khách đã CK FULL 100% qua VietQR. SĐT: ${cleanPhone}. Khung giờ nhận: ${pickupTime}. Ghi chú: ${
           keepNotes.trim() || 'Không'
         }`,
       });
@@ -325,11 +375,12 @@ export function GuestShowcase() {
       });
 
       if (typeof window !== 'undefined') {
-        localStorage.setItem('eventmate_guest_phone', guestPhone.trim());
+        localStorage.setItem('eventmate_guest_phone', cleanPhone);
       }
 
       setBag([]);
       setKeepNotes('');
+      setProofImage(null);
       setBagOpen(false);
       setConfirmedReservation(newReservation);
     } catch {
@@ -441,14 +492,17 @@ export function GuestShowcase() {
             <button
               type="button"
               onClick={() => {
-                setLookupInput(guestPhone);
+                if (!lookupInput && guestPhone) {
+                  setLookupInput(guestPhone);
+                }
                 setMyReservationsOpen(true);
               }}
               className="inline-flex items-center gap-1.5 h-9 px-2.5 sm:px-3 rounded-[6px] text-xs font-semibold border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-[#315C4C] text-[#202124] dark:text-neutral-200 transition-colors cursor-pointer"
-              title="Tra cứu phiếu giữ đồ bằng số điện thoại hoặc mã vé"
+              title="Tra cứu hàng đã keep bằng số điện thoại"
             >
               <Ticket className="w-4 h-4 text-[#B7791F]" />
-              <span className="hidden sm:inline">Tra cứu giữ đồ</span>
+              <span className="hidden sm:inline">Tra cứu hàng đã keep (SĐT)</span>
+              <span className="sm:hidden">Hàng đã keep</span>
               {savedPhoneReservations.length > 0 && (
                 <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FEF7EC] dark:bg-amber-950 text-[#B7791F] dark:text-amber-300 border border-[#B7791F]/30">
                   {savedPhoneReservations.length}
@@ -1151,7 +1205,7 @@ export function GuestShowcase() {
                     : 'text-[#5F6368] dark:text-neutral-300 hover:text-[#202124]'
                 }`}
               >
-                🎟️ Giữ đồ nhận tại quầy (0đ)
+                🎟️ Keep đồ nhận tại quầy (CK Full 100%)
               </button>
               <button
                 type="button"
@@ -1242,26 +1296,201 @@ export function GuestShowcase() {
                   </div>
                 </div>
 
-                <div className="p-2.5 bg-[#FEF7EC] dark:bg-amber-950/30 rounded-[6px] border border-[#B7791F]/30 text-[11px] text-[#8C5D17] dark:text-amber-300">
-                  Không cần thanh toán trước. Bạn đến quầy đọc mã vé hoặc SĐT để kiểm tra và thanh
-                  toán khi nhận hàng.
+                {/* THÔNG TIN THANH TOÁN CHUYỂN KHOẢN FULL 100% (BẮT BUỘC ĐỂ KEEP ĐỒ) */}
+                <div className="p-3.5 rounded-xl bg-[#FAF5FF] dark:bg-purple-950/30 border border-[#A855F7]/30 space-y-3">
+                  <div className="flex items-start gap-2 text-xs text-[#6B21A8] dark:text-purple-300">
+                    <AlertCircle className="w-4 h-4 text-[#9333EA] shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-[#6B21A8] dark:text-purple-200">
+                        QUY ĐỊNH KEEP ĐỒ: Chuyển khoản FULL 100% trước
+                      </p>
+                      <p className="text-[11px] text-[#7E22CE] dark:text-purple-300/90 mt-0.5">
+                        Hàng keep cần được thanh toán chuyển khoản trước 100% để quầy đóng gói và giữ riêng cho bạn không lo hết hàng. Vui lòng quét mã VietQR và tải ảnh chụp biên lai/chuyển khoản bên dưới.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* VietQR & Bank Details Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center bg-white dark:bg-neutral-900 p-3 rounded-lg border border-[#E8E8E5] dark:border-neutral-800">
+                    <div className="sm:col-span-5 flex flex-col items-center justify-center p-1.5 bg-[#FAF5FF] dark:bg-purple-950/40 rounded-lg border border-[#A855F7]/20">
+                      <div className="w-36 h-36 bg-white p-1.5 rounded-md border border-[#E8E8E5] flex items-center justify-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={`https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-compact2.png?amount=${bagTotal}&addInfo=${encodeURIComponent(
+                            `KEEP ${(guestPhone || '').trim().replace(/\D/g, '') || 'ONLINE'}`
+                          )}&accountName=${encodeURIComponent(activeBankConfig.accountName)}`}
+                          alt="VietQR Chuyển Khoản"
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <span className="text-[10px] text-[#7E22CE] dark:text-purple-400 font-semibold mt-1">
+                        Quét mã VietQR tự khớp số tiền
+                      </span>
+                    </div>
+
+                    <div className="sm:col-span-7 space-y-2 text-xs">
+                      <div>
+                        <span className="text-[10.5px] text-[#737373] block">Ngân hàng thụ hưởng:</span>
+                        <span className="font-bold text-[#202124] dark:text-neutral-100 font-mono">
+                          {activeBankConfig.bankId} (VietinBank)
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="text-[10.5px] text-[#737373] block">Số tài khoản:</span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="font-mono font-bold text-sm text-[#315C4C] dark:text-emerald-400 select-all">
+                            {activeBankConfig.accountNo}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => copyBankInfo(activeBankConfig.accountNo, 'acc')}
+                            className="p-1 rounded bg-[#F7F7F5] dark:bg-neutral-800 hover:bg-[#E8E8E5] text-[#737373] text-[10px] flex items-center gap-1 cursor-pointer"
+                          >
+                            {copiedBankField === 'acc' ? (
+                              <Check className="w-3 h-3 text-[#2F7D55]" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                            <span>{copiedBankField === 'acc' ? 'Đã copy' : 'Copy'}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="text-[10.5px] text-[#737373] block">Chủ tài khoản:</span>
+                        <span className="font-semibold text-[#202124] dark:text-neutral-100">
+                          {activeBankConfig.accountName}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="text-[10.5px] text-[#737373] block">Số tiền CK (Full 100%):</span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="font-extrabold text-sm text-[#C44536] dark:text-red-400 font-mono">
+                            {formatCurrency(bagTotal, currency)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => copyBankInfo(String(bagTotal), 'amount')}
+                            className="p-1 rounded bg-[#F7F7F5] dark:bg-neutral-800 hover:bg-[#E8E8E5] text-[#737373] text-[10px] flex items-center gap-1 cursor-pointer"
+                          >
+                            {copiedBankField === 'amount' ? (
+                              <Check className="w-3 h-3 text-[#2F7D55]" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                            <span>{copiedBankField === 'amount' ? 'Đã copy' : 'Copy'}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="text-[10.5px] text-[#737373] block">Nội dung chuyển khoản:</span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="font-mono font-bold text-xs text-[#2F7D55] dark:text-emerald-300 bg-[#EAF4EE] dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-[#2F7D55]/30">
+                            {`KEEP ${(guestPhone || '').trim().replace(/\D/g, '') || 'ONLINE'}`}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              copyBankInfo(
+                                `KEEP ${(guestPhone || '').trim().replace(/\D/g, '') || 'ONLINE'}`,
+                                'content'
+                              )
+                            }
+                            className="p-1 rounded bg-[#F7F7F5] dark:bg-neutral-800 hover:bg-[#E8E8E5] text-[#737373] text-[10px] flex items-center gap-1 cursor-pointer"
+                          >
+                            {copiedBankField === 'content' ? (
+                              <Check className="w-3 h-3 text-[#2F7D55]" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                            <span>{copiedBankField === 'content' ? 'Đã copy' : 'Copy'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ĐÍNH KÈM ẢNH MINH CHỨNG CHUYỂN KHOẢN (BẮT BUỘC) */}
+                  <div className="space-y-1.5 pt-1">
+                    <Label required className="text-xs font-bold text-[#202124] dark:text-neutral-100 flex items-center gap-1.5">
+                      <Camera className="w-4 h-4 text-[#9333EA]" />
+                      <span>Ảnh Biên Lai / Minh Chứng Chuyển Khoản (BẮT BUỘC)</span>
+                    </Label>
+
+                    {proofImage ? (
+                      <div className="p-3 rounded-lg border-2 border-[#2F7D55] bg-[#EAF4EE]/60 dark:bg-emerald-950/30 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded border border-[#2F7D55]/40 overflow-hidden bg-white shrink-0">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={proofImage} alt="Biên lai chuyển khoản" className="w-full h-full object-cover" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-xs text-[#2F7D55] flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Đã đính kèm ảnh biên lai CK thành công</span>
+                            </p>
+                            <p className="text-[11px] text-[#5F6368] dark:text-neutral-400">
+                              Quầy sẽ đối soát số tiền và mã phiên khi bạn đến lấy hàng.
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setProofImage(null)}
+                          className="text-xs font-semibold text-[#C44536] hover:underline shrink-0 cursor-pointer"
+                        >
+                          Chọn ảnh khác
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[#A855F7]/40 hover:border-[#9333EA] rounded-xl bg-white dark:bg-neutral-900 cursor-pointer transition-colors group">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleProofFileChange}
+                            disabled={isProcessingProof}
+                          />
+                          <div className="w-10 h-10 rounded-full bg-[#FAF5FF] dark:bg-purple-950/50 flex items-center justify-center text-[#9333EA] group-hover:scale-105 transition-transform mb-1.5">
+                            <Upload className="w-5 h-5" />
+                          </div>
+                          <p className="font-bold text-xs text-[#202124] dark:text-neutral-200">
+                            {isProcessingProof
+                              ? 'Đang nén & xử lý ảnh...'
+                              : 'Nhấn để tải lên ảnh biên lai chuyển khoản'}
+                          </p>
+                          <p className="text-[11px] text-[#737373] mt-0.5">
+                            Chụp màn hình ứng dụng ngân hàng sau khi chuyển khoản thành công
+                          </p>
+                        </label>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-[#E8E8E5] dark:border-neutral-800">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-[#E8E8E5] dark:border-neutral-800">
                   <div>
-                    <span className="text-[11px] text-[#737373] block">Tổng thanh toán tại quầy</span>
-                    <span className="text-base font-extrabold text-[#315C4C] dark:text-emerald-400">
+                    <span className="text-[11px] text-[#737373] block">Thanh toán CK Full 100%:</span>
+                    <span className="text-base font-extrabold text-[#315C4C] dark:text-emerald-400 font-mono">
                       {formatCurrency(bagTotal, currency)}
+                    </span>
+                    <span className="text-[10px] text-[#2F7D55] block font-semibold">
+                      (Đã thanh toán đủ • Không thu thêm khi nhận hàng)
                     </span>
                   </div>
                   <Button
                     type="submit"
                     variant="primary"
                     isLoading={isSubmittingKeep}
-                    className="h-10 px-5 bg-[#315C4C] hover:bg-[#254639] text-white font-bold text-xs"
+                    disabled={!proofImage || isSubmittingKeep}
+                    className="h-10 px-5 bg-[#315C4C] hover:bg-[#254639] text-white font-bold text-xs disabled:opacity-50"
                   >
                     <CheckCircle2 className="w-4 h-4 mr-1.5" />
-                    <span>Tạo Vé Giữ Đồ</span>
+                    <span>Xác nhận Đã CK Full & Giữ Đồ</span>
                   </Button>
                 </div>
               </form>
@@ -1348,19 +1577,19 @@ export function GuestShowcase() {
         <Modal
           isOpen={!!confirmedReservation}
           onClose={() => setConfirmedReservation(null)}
-          title="Đăng Ký Giữ Đồ Thành Công"
-          description="Lưu lại mã vé hoặc chụp màn hình QR để quầy giao hàng nhanh nhất."
+          title="Đăng Ký Giữ Đồ Thành Công (Đã CK Full 100%)"
+          description="Hàng đã được giữ riêng cho bạn. Khi đến nhận tại quầy, bạn chỉ cần đọc đúng Số Điện Thoại."
           maxWidth="sm"
         >
           <div className="space-y-4 text-center">
             <div className="w-12 h-12 rounded-full bg-[#EAF4EE] dark:bg-emerald-950/60 text-[#2F7D55] dark:text-emerald-400 flex items-center justify-center mx-auto">
-              <Ticket className="w-6 h-6" />
+              <CheckCircle2 className="w-6 h-6" />
             </div>
 
-            <div className="p-4 rounded-[10px] bg-[#F7F7F5] dark:bg-neutral-800 border-2 border-dashed border-[#315C4C]/40 space-y-3">
+            <div className="p-4 rounded-[10px] bg-[#F7F7F5] dark:bg-neutral-800 border-2 border-dashed border-[#2F7D55]/40 space-y-3">
               <div>
-                <span className="text-[10px] uppercase font-bold text-[#737373] tracking-widest block">
-                  Mã vé giữ đồ
+                <span className="text-[10px] uppercase font-bold text-[#2F7D55] dark:text-emerald-400 tracking-widest block">
+                  Đã chuyển khoản Full 100%
                 </span>
                 <span className="text-2xl font-black font-mono text-[#315C4C] dark:text-emerald-400 tracking-wider">
                   {confirmedReservation.code}
@@ -1384,8 +1613,8 @@ export function GuestShowcase() {
                   <span className="font-bold text-right">{confirmedReservation.customer_name}</span>
                 </div>
                 <div className="flex justify-between gap-2">
-                  <span className="text-[#737373] shrink-0">Số điện thoại:</span>
-                  <span className="font-mono font-bold">
+                  <span className="text-[#737373] shrink-0">Số điện thoại nhận:</span>
+                  <span className="font-mono font-bold text-[#315C4C] dark:text-emerald-400">
                     {confirmedReservation.customer_phone}
                   </span>
                 </div>
@@ -1400,22 +1629,48 @@ export function GuestShowcase() {
                   </ul>
                 </div>
                 <div className="flex justify-between pt-1.5 border-t border-[#E8E8E5] dark:border-neutral-700">
-                  <span className="text-[#737373]">Thanh toán tại quầy:</span>
-                  <span className="font-extrabold text-[#315C4C] dark:text-emerald-400">
-                    {formatCurrency(confirmedReservation.total_amount, currency)}
+                  <span className="text-[#737373]">Đã CK Full 100%:</span>
+                  <span className="font-extrabold text-[#2F7D55] dark:text-emerald-400 font-mono">
+                    {formatCurrency(
+                      confirmedReservation.deposit_paid || confirmedReservation.total_amount,
+                      currency
+                    )}
                   </span>
+                </div>
+                <div className="flex justify-between text-[11px]">
+                  <span className="text-[#737373]">Còn lại khi nhận:</span>
+                  <span className="font-bold text-[#2F7D55]">0 đ (Đã thanh toán đủ)</span>
                 </div>
               </div>
             </div>
 
-            <Button
-              type="button"
-              variant="primary"
-              onClick={() => setConfirmedReservation(null)}
-              className="w-full h-10 bg-[#315C4C] hover:bg-[#254639] text-white font-bold text-xs"
-            >
-              Hoàn tất
-            </Button>
+            <div className="p-2.5 rounded bg-[#EAF4EE] dark:bg-emerald-950/40 border border-[#2F7D55]/30 text-xs text-[#254639] dark:text-emerald-300 font-medium text-left">
+              💡 <strong>Lưu ý nhận hàng:</strong> Khi đến quầy sự kiện, bạn chỉ cần đọc đúng Số Điện Thoại: <strong className="font-mono">{confirmedReservation.customer_phone}</strong> là nhân viên sẽ đối soát và giao hàng ngay!
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setLookupInput(confirmedReservation.customer_phone || '');
+                  setConfirmedReservation(null);
+                  setMyReservationsOpen(true);
+                }}
+                className="flex-1 h-10 text-xs font-semibold"
+              >
+                <Phone className="w-3.5 h-3.5 mr-1" />
+                <span>Xem lại bằng SĐT</span>
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={() => setConfirmedReservation(null)}
+                className="flex-1 h-10 bg-[#315C4C] hover:bg-[#254639] text-white font-bold text-xs"
+              >
+                Hoàn tất
+              </Button>
+            </div>
           </div>
         </Modal>
       )}
@@ -1508,78 +1763,191 @@ export function GuestShowcase() {
         </Modal>
       )}
 
-      {/* Modal 5: Tra Cứu Vé Giữ Đồ */}
+      {/* Modal 5: Tra Cứu Hàng Đã Keep Bằng SĐT */}
       <Modal
         isOpen={myReservationsOpen}
         onClose={() => setMyReservationsOpen(false)}
-        title="Tra Cứu Phiếu Giữ Đồ"
-        description="Nhập số điện thoại hoặc mã vé giữ đồ (VD: ONL-1234) để xem lại trạng thái."
+        title="Tra Cứu Hàng Đã Keep (Bằng SĐT)"
+        description="Chỉ cần nhập số điện thoại để xem lại toàn bộ các món đồ bạn đã đăng ký giữ đồ."
         maxWidth="md"
       >
         <div className="space-y-4">
-          <div className="relative">
-            <Search className="w-4 h-4 text-[#737373] absolute left-3 top-1/2 -translate-y-1/2" />
-            <Input
-              value={lookupInput}
-              onChange={(e) => setLookupInput(e.target.value)}
-              placeholder="Nhập SĐT hoặc mã vé..."
-              className="pl-9 h-9.5 text-xs"
-            />
+          <div className="space-y-1.5">
+            <Label htmlFor="lookup-phone-input" className="text-xs font-bold text-[#202124] dark:text-neutral-100 flex items-center gap-1.5">
+              <Phone className="w-4 h-4 text-[#315C4C]" />
+              <span>Số điện thoại đặt keep đồ:</span>
+            </Label>
+            <div className="relative">
+              <Input
+                id="lookup-phone-input"
+                type="tel"
+                value={lookupInput}
+                onChange={(e) => setLookupInput(e.target.value)}
+                placeholder="Nhập số điện thoại (VD: 0912345678)..."
+                className="pl-3 pr-8 h-10 text-xs sm:text-sm font-mono font-semibold"
+              />
+              {lookupInput && (
+                <button
+                  type="button"
+                  onClick={() => setLookupInput('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#737373] hover:text-[#202124] dark:hover:text-white cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            {guestPhone && lookupInput !== guestPhone && (
+              <button
+                type="button"
+                onClick={() => setLookupInput(guestPhone)}
+                className="text-[11px] text-[#315C4C] dark:text-emerald-400 font-semibold hover:underline cursor-pointer"
+              >
+                Tra cứu nhanh bằng SĐT đã lưu: {guestPhone}
+              </button>
+            )}
           </div>
 
-          <div className="space-y-2.5 max-h-[55vh] overflow-y-auto pr-1">
-            {!effectiveLookup ? (
-              <p className="text-center text-xs text-[#737373] py-6">
-                Nhập số điện thoại bạn đã dùng khi giữ đồ để tra cứu.
-              </p>
-            ) : matchedReservations.length === 0 ? (
-              <p className="text-center text-xs text-[#737373] py-6">
-                Không tìm thấy phiếu giữ đồ nào khớp với &ldquo;{lookupInput || guestPhone}&rdquo;.
-              </p>
-            ) : (
-              matchedReservations.map((res) => (
-                <div
-                  key={res.id}
-                  className="p-3.5 rounded-[8px] bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 space-y-2 text-xs"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="font-bold text-sm text-[#315C4C] dark:text-emerald-400 font-mono">
-                        {res.code}
-                      </span>
-                      <span className="text-[10px] text-[#737373] block">
-                        {new Date(res.created_at).toLocaleString('vi-VN')}
-                      </span>
-                    </div>
-                    <Badge
-                      variant={
-                        res.status === 'picked_up'
-                          ? 'success'
-                          : res.status === 'cancelled'
-                          ? 'error'
-                          : 'warning'
-                      }
-                    >
-                      {res.status === 'picked_up'
-                        ? 'Đã nhận đồ'
-                        : res.status === 'cancelled'
-                        ? 'Đã hủy'
-                        : 'Chờ nhận tại quầy'}
-                    </Badge>
-                  </div>
-
-                  <div className="p-2.5 bg-white dark:bg-neutral-900 rounded border border-[#E8E8E5] dark:border-neutral-700 space-y-1">
-                    <p className="font-semibold text-[#202124] dark:text-neutral-200">
-                      {res.items
-                        .map((i) => `${i.quantity}× ${i.product_name} (${i.variant_name || ''})`)
-                        .join(', ')}
-                    </p>
-                    <p className="text-[#315C4C] dark:text-emerald-400 font-bold">
-                      Tổng tiền: {formatCurrency(res.total_amount, currency)}
-                    </p>
-                  </div>
+          <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
+            {!cleanLookup ? (
+              <div className="text-center py-8 space-y-2">
+                <div className="w-12 h-12 rounded-full bg-[#F7F7F5] dark:bg-neutral-800 text-[#737373] flex items-center justify-center mx-auto">
+                  <Phone className="w-5 h-5 text-[#315C4C]" />
                 </div>
-              ))
+                <p className="text-xs text-[#737373] dark:text-neutral-400">
+                  Nhập số điện thoại bạn đã dùng khi giữ đồ ở trên để xem lại danh sách đơn hàng.
+                </p>
+              </div>
+            ) : matchedReservations.length === 0 ? (
+              <div className="text-center py-8 space-y-2 bg-[#F7F7F5] dark:bg-neutral-800 rounded-xl p-4">
+                <p className="text-xs font-bold text-[#202124] dark:text-neutral-100">
+                  Không tìm thấy đơn keep nào với số điện thoại &ldquo;{lookupInput || guestPhone}&rdquo;.
+                </p>
+                <p className="text-[11px] text-[#737373] dark:text-neutral-400">
+                  Vui lòng kiểm tra lại số điện thoại hoặc liên hệ Hotline/Zalo {hotlineDisplay} để được hỗ trợ kiểm tra trực tiếp.
+                </p>
+              </div>
+            ) : (
+              matchedReservations.map((res) => {
+                const booth = realBooths.find((b) => b.id === res.booth_id);
+                const ev = realEvents.find((e) => e.id === res.event_id);
+                return (
+                  <div
+                    key={res.id}
+                    className="p-4 rounded-xl bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 space-y-3 text-xs"
+                  >
+                    <div className="flex items-center justify-between pb-2 border-b border-[#E8E8E5] dark:border-neutral-700">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-sm text-[#315C4C] dark:text-emerald-400 font-mono">
+                            {res.code}
+                          </span>
+                          <span className="text-[10px] text-[#737373]">
+                            • {new Date(res.created_at).toLocaleDateString('vi-VN')}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#555] dark:text-neutral-300 mt-0.5">
+                          Khách: <strong>{res.customer_name}</strong> — SĐT:{' '}
+                          <strong className="font-mono">{res.customer_phone}</strong>
+                        </p>
+                      </div>
+                      <Badge
+                        variant={
+                          res.status === 'picked_up'
+                            ? 'success'
+                            : res.status === 'cancelled'
+                            ? 'error'
+                            : 'warning'
+                        }
+                        className="text-[11px] font-bold shrink-0"
+                      >
+                        {res.status === 'picked_up'
+                          ? 'Đã nhận đồ'
+                          : res.status === 'cancelled'
+                          ? 'Đã hủy'
+                          : 'Đã CK Full 100% • Chờ lấy đồ'}
+                      </Badge>
+                    </div>
+
+                    {/* Địa điểm quầy nhận */}
+                    {(booth || ev) && (
+                      <div className="flex items-center gap-1.5 text-[11px] text-[#5F6368] dark:text-neutral-300">
+                        <MapPin className="w-3.5 h-3.5 text-[#315C4C] shrink-0" />
+                        <span>
+                          Nhận tại: <strong>{booth?.name || 'Quầy sự kiện'}</strong>
+                          {ev ? ` (${ev.name})` : ''}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Danh sách món */}
+                    <div className="p-3 bg-white dark:bg-neutral-900 rounded-lg border border-[#E8E8E5] dark:border-neutral-700 space-y-1.5">
+                      <span className="text-[10.5px] uppercase font-bold text-[#737373] tracking-wide block">
+                        Các món hàng đã giữ:
+                      </span>
+                      <ul className="space-y-1">
+                        {res.items.map((i, idx) => (
+                          <li
+                            key={idx}
+                            className="flex items-center justify-between text-xs text-[#202124] dark:text-neutral-200"
+                          >
+                            <span>
+                              <strong>{i.quantity}×</strong> {i.product_name}{' '}
+                              <span className="text-[#737373]">
+                                ({i.variant_name || 'Tiêu chuẩn'})
+                              </span>
+                            </span>
+                            <span className="font-mono font-semibold text-[#315C4C] dark:text-emerald-400">
+                              {formatCurrency(i.unit_price * i.quantity, currency)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Tổng tiền & tình trạng thanh toán */}
+                    <div className="flex items-center justify-between pt-1">
+                      <div>
+                        <span className="text-[10px] text-[#737373] block">Thanh toán:</span>
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-[#2F7D55] dark:text-emerald-400">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>
+                            Đã CK Full 100% (
+                            {formatCurrency(res.deposit_paid || res.total_amount, currency)})
+                          </span>
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-[#737373] block">Còn nợ tại quầy:</span>
+                        <span className="font-bold text-xs text-[#2F7D55]">0 đ</span>
+                      </div>
+                    </div>
+
+                    {/* Ảnh biên lai đã gửi nếu có */}
+                    {res.proof_image_url && (
+                      <div className="pt-2 border-t border-[#E8E8E5] dark:border-neutral-700 flex items-center justify-between">
+                        <span className="text-[11px] text-[#737373] flex items-center gap-1">
+                          <Camera className="w-3 h-3 text-[#2F7D55]" />
+                          <span>Biên lai chuyển khoản đã lưu</span>
+                        </span>
+                        <div className="w-10 h-10 rounded border border-[#E8E8E5] overflow-hidden bg-white shrink-0">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={res.proof_image_url}
+                            alt="Biên lai CK"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="p-2 rounded bg-[#EAF4EE] dark:bg-emerald-950/40 border border-[#2F7D55]/20 text-[11px] text-[#254639] dark:text-emerald-300">
+                      💡 Khi đến quầy, bạn chỉ cần đọc số điện thoại:{' '}
+                      <strong className="font-mono">{res.customer_phone}</strong> hoặc đưa mã vé{' '}
+                      <strong>{res.code}</strong> là nhận hàng ngay.
+                    </div>
+                  </div>
+                );
+              })
             )}
           </div>
         </div>

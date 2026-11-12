@@ -15,8 +15,6 @@ export default function LoginPage() {
     login,
     loginAsGuest,
     logout,
-    quickLoginAsAdmin,
-    exitGuestPreview,
     isAuthenticated,
     user,
     isGuestPreview,
@@ -86,7 +84,7 @@ export default function LoginPage() {
           Đăng nhập HikaruStore
         </CardTitle>
         <CardDescription className="text-xs text-[#737373]">
-          Nhập tài khoản Quản trị viên hoặc tài khoản Nhân viên được cấp để tiếp tục.
+          Nhập tên đăng nhập và mật khẩu được cấp để tiếp tục.
         </CardDescription>
       </CardHeader>
 
@@ -138,7 +136,7 @@ export default function LoginPage() {
               <Input
                 id="identifier"
                 type="text"
-                placeholder="Tuanadminvippro666, admin, HKT87@123..."
+                placeholder="Nhập tên đăng nhập hoặc email..."
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 className="pl-9 h-10 text-xs bg-white"
@@ -186,20 +184,6 @@ export default function LoginPage() {
           >
             Đăng nhập hệ thống
           </Button>
-
-          {/* Quick 1-click Admin Access Button */}
-          <div className="pt-0.5">
-            <button
-              type="button"
-              onClick={() => {
-                quickLoginAsAdmin();
-                window.location.href = '/dashboard';
-              }}
-              className="w-full py-2 px-3 text-xs font-bold text-[#315C4C] hover:text-[#254639] bg-[#EAF4EE] hover:bg-[#DDF0E4] rounded-[6px] border border-[#315C4C]/40 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
-            >
-              <span>⚡ Vào nhanh tài khoản Admin (Không cần gõ mật khẩu)</span>
-            </button>
-          </div>
 
           {/* Guest Access Alternative */}
           <div className="pt-2 text-center">

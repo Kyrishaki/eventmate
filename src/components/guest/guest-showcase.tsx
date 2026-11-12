@@ -42,7 +42,7 @@ import {
 } from 'lucide-react';
 
 export function GuestShowcase() {
-  const { isGuestPreview, previousUser, exitGuestPreview } = useAuthStore();
+  const { previousUser, exitGuestPreview } = useAuthStore();
   const { products, variants, categories, events, booths, allocations, updateVariantPreorders } = useDataStore();
   const { activeWorkspace } = useWorkspaceStore();
   const { activeBankConfig } = useOrdersStore();
@@ -188,38 +188,42 @@ export function GuestShowcase() {
     }
   };
 
+  const hasStaffPreviewSession = Boolean(previousUser && previousUser.role !== 'viewer');
+
   return (
     <div className="min-h-screen bg-[#F7F7F5] dark:bg-neutral-950 text-[#202124] dark:text-neutral-100 flex flex-col font-sans transition-colors">
-      {/* Top Preview Banner with Instant 1-Click Return */}
-      <div className="bg-[#1E293B] text-white px-4 py-2 flex items-center justify-between text-xs sticky top-0 z-50 border-b border-slate-700 shadow-md">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="font-semibold text-slate-100">
-            {isGuestPreview || previousUser ? 'Chế độ xem trước:' : 'Khu vực khách:'} <b>Gian hàng Merchandise</b>
-          </span>
-          <span className="text-[11px] text-slate-300 hidden md:inline">
-            (Dành cho khách xem sản phẩm & đặt trước keep đồ)
-          </span>
-        </div>
+      {/* Top Preview Banner ONLY shown when logged-in Staff/Admin is previewing */}
+      {hasStaffPreviewSession && (
+        <div className="bg-[#1E293B] text-white px-4 py-2 flex items-center justify-between text-xs sticky top-0 z-50 border-b border-slate-700 shadow-md">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-semibold text-slate-100">
+              Chế độ xem trước: <b>Gian hàng Merchandise</b>
+            </span>
+            <span className="text-[11px] text-slate-300 hidden md:inline">
+              (Dành cho khách xem sản phẩm & đặt trước keep đồ)
+            </span>
+          </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              exitGuestPreview();
-              window.location.href = '/dashboard';
-            }}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-[5px] bg-[#315C4C] hover:bg-[#284A3D] text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
-            title="Thoát giao diện khách và trở lại trang quản trị"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Thoát & Trở lại Quản trị</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                exitGuestPreview();
+                window.location.href = '/dashboard';
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-[5px] bg-[#315C4C] hover:bg-[#284A3D] text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
+              title="Thoát giao diện khách và trở lại trang quản trị"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Thoát & Trở lại Quản trị</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Top Customer Header */}
-      <header className="sticky top-[37px] z-40 bg-white dark:bg-neutral-900 border-b border-[#E8E8E5] dark:border-neutral-800 shadow-2xs">
+      <header className={`sticky ${hasStaffPreviewSession ? 'top-[37px]' : 'top-0'} z-40 bg-white dark:bg-neutral-900 border-b border-[#E8E8E5] dark:border-neutral-800 shadow-2xs`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 sm:h-22 flex items-center justify-between gap-4">
           {/* Brand Logo & Showcase Badge */}
           <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
@@ -279,11 +283,11 @@ export function GuestShowcase() {
               <DensityToggle />
             </div>
 
-            {/* Admin Return / Login Button */}
+            {/* Return / Login Button */}
             <button
               type="button"
               onClick={() => {
-                if (isGuestPreview || previousUser) {
+                if (hasStaffPreviewSession) {
                   exitGuestPreview();
                   window.location.href = '/dashboard';
                 } else {
@@ -291,13 +295,13 @@ export function GuestShowcase() {
                 }
               }}
               className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[6px] text-xs font-bold bg-[#315C4C] hover:bg-[#284A3D] text-white transition-colors shadow-xs cursor-pointer shrink-0"
-              title="Quay lại giao diện quản trị"
+              title={hasStaffPreviewSession ? 'Quay lại giao diện quản trị' : 'Đăng nhập hệ thống'}
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">
-                {isGuestPreview || previousUser ? 'Trở lại Quản lý' : 'Đăng nhập Quản lý'}
+                {hasStaffPreviewSession ? 'Trở lại Quản lý' : 'Đăng nhập'}
               </span>
-              <span className="sm:hidden">Quản lý</span>
+              <span className="sm:hidden">{hasStaffPreviewSession ? 'Quản lý' : 'Đăng nhập'}</span>
             </button>
           </div>
         </div>
@@ -1152,7 +1156,7 @@ export function GuestShowcase() {
             <button
               type="button"
               onClick={() => {
-                if (isGuestPreview || previousUser) {
+                if (hasStaffPreviewSession) {
                   exitGuestPreview();
                   window.location.href = '/dashboard';
                 } else {
@@ -1161,7 +1165,7 @@ export function GuestShowcase() {
               }}
               className="hover:text-[#315C4C] font-semibold text-xs cursor-pointer text-[#315C4C] dark:text-emerald-400 underline"
             >
-              {isGuestPreview || previousUser ? '← Thoát xem thử & Trở lại Quản trị' : 'Khu vực Quản trị / Thu ngân'}
+              {hasStaffPreviewSession ? '← Thoát xem thử & Trở lại Quản trị' : 'Đăng nhập nhân viên'}
             </button>
           </div>
         </div>

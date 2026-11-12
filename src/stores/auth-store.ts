@@ -79,7 +79,6 @@ interface AuthState {
   loginAsGuest: () => void;
   enterGuestPreview: () => void;
   exitGuestPreview: () => void;
-  quickLoginAsAdmin: () => void;
   setUser: (user: AuthUser | null) => void;
   logout: () => void;
 
@@ -117,13 +116,10 @@ export const useAuthStore = create<AuthState>()(
         const cleanId = identifier.trim().toLowerCase();
         const { accounts } = get();
 
-        // Check in current accounts registry with alias support
         const found = accounts.find(
           (acc) =>
             acc.username.toLowerCase() === cleanId ||
-            (acc.email && acc.email.toLowerCase() === cleanId) ||
-            (cleanId === 'admin' && (acc.id === 'admin-tuan' || acc.role === 'owner')) ||
-            (cleanId === 'tuan' && acc.id === 'admin-tuan')
+            (acc.email && acc.email.toLowerCase() === cleanId)
         );
 
         if (!found) {
@@ -131,41 +127,9 @@ export const useAuthStore = create<AuthState>()(
         }
 
         const inputHash = `hash:${secureHash(password)}`;
-        let isMatch = found.password.startsWith('hash:')
+        const isMatch = found.password.startsWith('hash:')
           ? found.password === inputHash
           : found.password === password || found.password === inputHash;
-
-        // Convenient password aliases for pre-configured master accounts
-        if (!isMatch) {
-          const passLower = password.trim().toLowerCase();
-          if (found.id === 'admin-tuan' || found.username.toLowerCase() === 'tuanadminvippro666') {
-            if (
-              passLower === 'tuanadminvippro666' ||
-              password === 'Tu@n1121314151' ||
-              passLower === 'admin' ||
-              passLower === '123456'
-            ) {
-              isMatch = true;
-            }
-          } else if (found.id === 'admin-hkt' || found.username.toLowerCase() === 'hkt87@123') {
-            if (
-              passLower === 'hkt87@123' ||
-              password === 'HKT@997804' ||
-              passLower === 'admin' ||
-              passLower === '123456'
-            ) {
-              isMatch = true;
-            }
-          } else if (found.id === 'collab-genz' || found.username.toLowerCase() === 'collab_genz') {
-            if (
-              passLower === 'collab@123' ||
-              passLower === 'collab_genz' ||
-              passLower === '123456'
-            ) {
-              isMatch = true;
-            }
-          }
-        }
 
         if (!isMatch) {
           return { success: false, message: 'Mật khẩu không chính xác.' };
@@ -234,37 +198,13 @@ export const useAuthStore = create<AuthState>()(
             previousUser: null,
           });
         } else {
-          // Restore default master admin account
-          const masterAdmin = MASTER_ACCOUNTS[0];
           set({
-            user: {
-              id: masterAdmin.id,
-              username: masterAdmin.username,
-              email: masterAdmin.email,
-              fullName: masterAdmin.fullName,
-              role: masterAdmin.role,
-            },
-            isAuthenticated: true,
+            user: null,
+            isAuthenticated: false,
             isGuestPreview: false,
             previousUser: null,
           });
         }
-      },
-
-      quickLoginAsAdmin: () => {
-        const masterAdmin = MASTER_ACCOUNTS[0];
-        set({
-          user: {
-            id: masterAdmin.id,
-            username: masterAdmin.username,
-            email: masterAdmin.email,
-            fullName: masterAdmin.fullName,
-            role: masterAdmin.role,
-          },
-          isAuthenticated: true,
-          isGuestPreview: false,
-          previousUser: null,
-        });
       },
 
       setUser: (user) => set({ user, isAuthenticated: !!user, isGuestPreview: false }),

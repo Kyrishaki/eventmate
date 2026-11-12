@@ -282,17 +282,11 @@ export default function AuditLogsPage() {
             <span className="text-[#737373]">Tài khoản hiện tại:</span>
             <span className="font-semibold text-[#202124]">{user?.fullName || 'Khách xem'}</span>
           </div>
-          <div className="flex items-center justify-between pb-2 border-b border-[#E8E8E5]">
+          <div className="flex items-center justify-between">
             <span className="text-[#737373]">Vai trò hiện tại:</span>
             <Badge variant="warning" className="text-[10px] uppercase font-bold">
               {user?.role || 'viewer'} (Không đủ quyền)
             </Badge>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-[#737373]">Tài khoản Quản trị viên chính:</span>
-            <span className="font-mono text-[#315C4C] font-bold">
-              Tuanadminvippro666 & HKT87@123
-            </span>
           </div>
         </Card>
 
@@ -300,7 +294,7 @@ export default function AuditLogsPage() {
           <Link href="/login">
             <Button variant="primary" size="md" className="gap-2 w-full sm:w-auto shadow-xs">
               <KeyRound className="w-4 h-4" />
-              <span>Đăng nhập bằng tài khoản Quản trị viên (Admin)</span>
+              <span>Đăng nhập bằng tài khoản được cấp quyền</span>
             </Button>
           </Link>
           <Link href="/dashboard">

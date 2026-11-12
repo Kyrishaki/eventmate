@@ -824,9 +824,9 @@ export default function PosTerminalPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F7F5] flex flex-col select-none">
+    <div className="min-h-screen lg:h-[100dvh] lg:overflow-hidden bg-[#F7F7F5] flex flex-col select-none">
       {/* POS Top Navigation Bar */}
-      <header className="bg-white border-b border-[#E8E8E5] sticky top-0 z-30 shadow-2xs">
+      <header className="bg-white border-b border-[#E8E8E5] sticky top-0 z-30 shadow-2xs shrink-0">
         {/* Main Bar */}
         <div className="h-14 sm:h-16 px-3 sm:px-5 flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
@@ -1087,9 +1087,9 @@ export default function PosTerminalPage() {
       </header>
 
       {/* Main Split Layout: Left Products Grid (65%), Right Cart (35%) */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Left: Product Catalog */}
-        <main className="flex-1 overflow-y-auto p-3 sm:p-5 flex flex-col pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-5">
+        <main className="flex-1 overflow-y-auto min-h-0 p-3 sm:p-5 flex flex-col pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-5">
           {/* Search bar & Sold Out Filter Toggle */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3 sm:mb-4">
             <div className="relative flex-1 w-full sm:max-w-md flex items-center gap-2">
@@ -1519,10 +1519,10 @@ export default function PosTerminalPage() {
           )}
         </main>
 
-        {/* Right: Persistent Shopping Cart (Desktop) */}
-        <aside className="w-80 lg:w-96 border-l border-[#E8E8E5] bg-white flex flex-col justify-between hidden lg:flex">
+        {/* Right: Persistent Shopping Cart (Desktop - Fixed Checkout Footer) */}
+        <aside className="w-80 lg:w-96 border-l border-[#E8E8E5] bg-white flex-col justify-between hidden lg:flex h-full min-h-0 overflow-hidden">
           {/* Cart Header */}
-          <div className="p-4 border-b border-[#E8E8E5] flex items-center justify-between">
+          <div className="p-4 border-b border-[#E8E8E5] flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <ShoppingCart className="w-4 h-4 text-[#315C4C]" />
               <h3 className="text-sm font-bold text-[#202124]">Giỏ hàng</h3>
@@ -1542,7 +1542,7 @@ export default function PosTerminalPage() {
           </div>
 
           {/* Cart Item List */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+          <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-2.5">
             {cart.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center text-[#737373] py-12">
                 <ShoppingCart className="w-10 h-10 text-[#9E9E9C] mb-2 stroke-[1.5]" />
@@ -1619,8 +1619,8 @@ export default function PosTerminalPage() {
             )}
           </div>
 
-          {/* Cart Pricing Summary & Checkout Button */}
-          <div className="p-4 border-t border-[#E8E8E5] bg-[#FAFAF8] space-y-3">
+          {/* Cart Pricing Summary & Checkout Button (Pinned permanently at bottom) */}
+          <div className="p-4 border-t border-[#E8E8E5] bg-[#FAFAF8] space-y-3 shrink-0">
             <div className="space-y-1.5 text-xs">
               <div className="flex items-center justify-between text-[#737373]">
                 <span>Tạm tính:</span>

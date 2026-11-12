@@ -38,8 +38,8 @@ export default function EventsPage() {
   const tCommon = useTranslations('common');
   const { activeWorkspace } = useWorkspaceStore();
   const { events, booths, createEvent, updateEvent, deleteEvent } = useDataStore();
-  const { canEditData } = useAuthStore();
-  const editable = canEditData();
+  const { canEditData, user } = useAuthStore();
+  const editable = canEditData() && user?.role !== 'collab_partner';
 
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = React.useState(false);

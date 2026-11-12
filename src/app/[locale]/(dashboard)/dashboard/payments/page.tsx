@@ -51,6 +51,7 @@ export default function PaymentsPage() {
   const { activeBankConfig, setBankConfig, orders, setOrderProofVerified } = useOrdersStore();
   const { events, booths } = useDataStore();
   const { user } = useAuthStore();
+  const isCollab = user?.role === 'collab_partner';
 
   const [activeTab, setActiveTab] = React.useState<'proofs' | 'config'>('proofs');
   const [proofFilter, setProofFilter] = React.useState<'all' | 'unverified' | 'verified'>('all');
@@ -147,6 +148,10 @@ export default function PaymentsPage() {
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault();
+    if (isCollab) {
+      alert('Chỉ Quản trị viên chính (Owner/Admin) có quyền thay đổi cấu hình tài khoản ngân hàng nhận tiền.');
+      return;
+    }
     const updated = {
       bankId: bankId.toUpperCase(),
       accountNo: accountNo.trim(),
@@ -547,6 +552,15 @@ export default function PaymentsPage() {
         </div>
       )}
 
+      {isCollab && (
+        <div className="flex items-center gap-2.5 p-3.5 rounded-[8px] bg-[#FEF7EC] dark:bg-amber-950/40 border border-[#B7791F]/30 text-xs text-[#8C5D17] dark:text-amber-300 shadow-xs">
+          <AlertCircle className="w-4 h-4 shrink-0 text-[#B7791F]" />
+          <span>
+            <strong>Chế độ Chỉ đọc:</strong> Cấu hình tài khoản ngân hàng nhận tiền VietQR và cổng tự động được bảo vệ an toàn và do Quản trị viên chính (Admin) thiết lập chung cho toàn gian hàng.
+          </span>
+        </div>
+      )}
+
       {/* VietQR Bank Settings + Auto-Banking Form */}
       <form onSubmit={handleSave} className="space-y-6">
         <Card className="border-[#E8E8E5] bg-white shadow-xs">
@@ -829,9 +843,16 @@ export default function PaymentsPage() {
             </div>
 
             <div className="pt-1">
-              <Button type="submit" variant="primary" size="sm" className="gap-1.5">
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                className="gap-1.5"
+                disabled={isCollab}
+                title={isCollab ? 'Đối tác Collab không có quyền thay đổi tài khoản ngân hàng' : undefined}
+              >
                 <Save className="w-3.5 h-3.5" />
-                <span>Lưu toàn bộ cấu hình Thanh toán & Tự động</span>
+                <span>{isCollab ? 'Khóa quyền thay đổi (Chỉ Admin)' : 'Lưu toàn bộ cấu hình Thanh toán & Tự động'}</span>
               </Button>
             </div>
           </CardContent>

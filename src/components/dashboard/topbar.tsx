@@ -10,7 +10,7 @@ import { SyncStatusBadge } from '@/components/ui/sync-status-badge';
 import { fetchCloudSnapshot } from '@/lib/cloud-sync';
 import { Badge } from '@/components/ui/badge';
 import { getActiveNavItem } from './nav-config';
-import { LogOut, User as UserIcon, Eye, ChevronDown } from 'lucide-react';
+import { LogOut, User as UserIcon, Eye, ChevronDown, ArrowLeft } from 'lucide-react';
 import { useRouter, usePathname, Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 
@@ -23,7 +23,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const tNav = useTranslations('nav');
-  const { user, logout } = useAuthStore();
+  const { user, previousUser, logout, exitCollabPreview } = useAuthStore();
   const { syncState, unsyncedOrdersCount, activeWorkspace } = useWorkspaceStore();
 
   const activeNav = React.useMemo(() => getActiveNavItem(pathname), [pathname]);
@@ -89,6 +89,23 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
         </div>
 
         <ThemeToggle />
+
+        {/* Return to Admin from Collab Preview */}
+        {user?.role === 'collab_partner' && previousUser && (
+          <button
+            type="button"
+            onClick={() => {
+              exitCollabPreview();
+              router.push('/dashboard');
+            }}
+            className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-[6px] text-xs font-semibold bg-[#FAF5FF] dark:bg-purple-950/60 border border-[#A855F7]/40 text-[#6B21A8] dark:text-purple-300 hover:bg-[#A855F7]/10 transition-colors cursor-pointer"
+            title="Thoát chế độ xem thử Collab và trở lại tài khoản Quản trị"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Trở lại Quản trị</span>
+            <span className="sm:hidden">Thoát</span>
+          </button>
+        )}
 
         {/* View as Guest Button */}
         <button

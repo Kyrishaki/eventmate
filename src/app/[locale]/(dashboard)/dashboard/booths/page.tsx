@@ -38,8 +38,8 @@ export default function BoothsPage() {
   const tCommon = useTranslations('common');
   const { activeWorkspace } = useWorkspaceStore();
   const { booths, events, allocations, createBooth, updateBooth, deleteBooth } = useDataStore();
-  const { canEditData } = useAuthStore();
-  const editable = canEditData();
+  const { canEditData, user, enterCollabPreview } = useAuthStore();
+  const editable = canEditData() && user?.role !== 'collab_partner';
 
   const [selectedEventFilter, setSelectedEventFilter] = React.useState<string>('all');
   const [selectedTypeFilter, setSelectedTypeFilter] = React.useState<string>('all');
@@ -685,7 +685,7 @@ ${url}`;
           isOpen={isCollabModalOpen}
           onClose={() => setIsCollabModalOpen(false)}
           title={`Cổng Hợp Tác Đối Tác — ${selectedCollabBooth.name}`}
-          description={`Gửi liên kết độc quyền này cho đối tác "${selectedCollabBooth.collab_partner || 'Đối tác'}" để họ có thể mở trang giao diện riêng, đồng bộ sản phẩm và xem báo cáo chia sẻ doanh thu.`}
+          description={`Giao diện Quản trị chuẩn HikaruStore dành cho đối tác "${selectedCollabBooth.collab_partner || 'Đối tác'}". Đối tác tự quản lý sản phẩm của mình, kho hàng của Admin được khóa an toàn (Chỉ đọc).`}
         >
           <div className="space-y-4">
             <div className="p-3 bg-[#FEF7EC] rounded-[6px] border border-[#B7791F]/30 space-y-1.5 text-xs text-[#8C5D17]">
@@ -694,7 +694,7 @@ ${url}`;
                 <span>Tỷ lệ: {selectedCollabBooth.revenue_share_ratio || 50}% Đối tác</span>
               </div>
               <p className="text-[11px]">
-                Đối tác khi truy cập link này sẽ vào thẳng cổng làm việc riêng của gian hàng, không cần tài khoản admin chính của bạn.
+                Đối tác dùng chung hệ thống giao diện chuẩn như Admin. Kho hàng của Admin được khóa an toàn (Chỉ đọc), Đối tác không thể can thiệp vào sản phẩm của Admin.
               </p>
             </div>
 
@@ -734,19 +734,21 @@ ${getCollabShareUrl(selectedCollabBooth)}`}
             </div>
 
             <div className="flex items-center justify-between pt-3 border-t border-[#F0F0ED]">
-              <Link
-                href={`/collab/${selectedCollabBooth.id}?partner=${encodeURIComponent(
-                  selectedCollabBooth.collab_partner || ''
-                )}&event=${encodeURIComponent(events.find((e) => e.id === selectedCollabBooth.event_id)?.name || '')}&ratio=${
-                  selectedCollabBooth.revenue_share_ratio || 50
-                }&name=${encodeURIComponent(selectedCollabBooth.name)}&evtId=${encodeURIComponent(selectedCollabBooth.event_id)}`}
-                target="_blank"
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCollabModalOpen(false);
+                  enterCollabPreview(
+                    selectedCollabBooth.collab_partner || 'Đối tác Collab',
+                    selectedCollabBooth.id
+                  );
+                  window.location.href = '/dashboard';
+                }}
+                className="inline-flex items-center gap-1.5 text-xs text-[#315C4C] font-semibold hover:underline cursor-pointer"
               >
-                <Button variant="ghost" size="sm" className="text-xs gap-1 text-[#315C4C]">
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Mở xem thử giao diện Đối tác</span>
-                </Button>
-              </Link>
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Mở xem thử giao diện Đối tác (Chế độ Collab)</span>
+              </button>
 
               <div className="flex items-center gap-2">
                 <Button

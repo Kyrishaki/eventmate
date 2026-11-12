@@ -68,6 +68,8 @@ interface AuthState {
   loginAsGuest: () => void;
   enterGuestPreview: () => void;
   exitGuestPreview: () => void;
+  enterCollabPreview: (partnerName: string, boothId?: string) => void;
+  exitCollabPreview: () => void;
   setUser: (user: AuthUser | null) => void;
   logout: () => void;
 
@@ -191,6 +193,47 @@ export const useAuthStore = create<AuthState>()(
             user: null,
             isAuthenticated: false,
             isGuestPreview: false,
+            previousUser: null,
+          });
+        }
+      },
+
+      enterCollabPreview: (partnerName: string, boothId?: string) => {
+        const current = get().user;
+        const cleanPartner = partnerName.trim() || 'Đối tác Collab';
+        const cleanSlug = cleanPartner.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const collabUser: AuthUser = {
+          id: boothId ? `collab-${boothId}` : `collab-${Date.now()}`,
+          username: `collab_${cleanSlug || 'user'}`,
+          fullName: `Đối tác ${cleanPartner}`,
+          role: 'collab_partner',
+          collabPartnerName: cleanPartner,
+          collabBoothId: boothId,
+        };
+
+        set({
+          previousUser:
+            current && current.role !== 'collab_partner' && current.role !== 'viewer'
+              ? current
+              : get().previousUser,
+          user: collabUser,
+          isAuthenticated: true,
+          isGuestPreview: false,
+        });
+      },
+
+      exitCollabPreview: () => {
+        const prev = get().previousUser;
+        if (prev) {
+          set({
+            user: prev,
+            isAuthenticated: true,
+            previousUser: null,
+          });
+        } else {
+          set({
+            user: null,
+            isAuthenticated: false,
             previousUser: null,
           });
         }

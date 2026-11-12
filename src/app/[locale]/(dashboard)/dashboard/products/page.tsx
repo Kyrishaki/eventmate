@@ -506,6 +506,10 @@ export default function ProductsPage() {
   }
 
   function handleDeleteProduct(prod: Product) {
+    if (!canManageProduct(user, prod.collab_partner)) {
+      alert('Bạn chỉ có quyền xóa sản phẩm thuộc thương hiệu Collab của mình. Không thể can thiệp hàng kho Admin.');
+      return;
+    }
     if (
       confirm(
         `Đưa sản phẩm "${prod.name}" vào hàng chờ xóa ${PRODUCT_RETENTION_DAYS} ngày?\n\nSản phẩm sẽ ngừng hiển thị trên POS & trang khách và tự động xóa vĩnh viễn sau ${PRODUCT_RETENTION_DAYS} ngày (bạn vẫn có thể khôi phục hoặc xóa ngay trong tab Chờ xóa).`
@@ -524,6 +528,10 @@ export default function ProductsPage() {
   }
 
   function handleRestoreProduct(prod: Product) {
+    if (!canManageProduct(user, prod.collab_partner)) {
+      alert('Bạn chỉ có quyền khôi phục sản phẩm thuộc thương hiệu Collab của mình.');
+      return;
+    }
     restoreProduct(prod.id);
     logActivity({
       actor_name: user?.fullName || 'Người dùng',
@@ -536,6 +544,10 @@ export default function ProductsPage() {
   }
 
   function handlePermanentDeleteProduct(prod: Product) {
+    if (!canManageProduct(user, prod.collab_partner)) {
+      alert('Bạn chỉ có quyền xóa sản phẩm thuộc thương hiệu Collab của mình. Không thể can thiệp hàng kho Admin.');
+      return;
+    }
     if (
       confirm(
         `XÓA VĨNH VIỄN sản phẩm "${prod.name}" ngay bây giờ?\n\nToàn bộ phân loại và phân bổ kho của sản phẩm này sẽ bị xóa hoàn toàn và KHÔNG thể khôi phục!`

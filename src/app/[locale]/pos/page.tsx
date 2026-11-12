@@ -336,14 +336,21 @@ export default function PosTerminalPage() {
   // Checkout Modal State
   const [isCheckoutOpen, setIsCheckoutOpen] = React.useState(false);
   const [qrSessionRef, setQrSessionRef] = React.useState('8899');
-
-  const openCheckoutModal = React.useCallback(() => {
-    setQrSessionRef(Math.floor(1000 + Math.random() * 9000).toString());
-    setProofImage(null);
-    setIsCheckoutOpen(true);
-  }, []);
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>('qr_manual');
   const [tenderedCash, setTenderedCash] = React.useState<number>(0);
+  const [cashInputValue, setCashInputValue] = React.useState('');
+
+  const applyCashPreset = React.useCallback((amount: number) => {
+    setTenderedCash(amount);
+    if (amount <= 0) {
+      setCashInputValue('');
+    } else if (amount % 1000 === 0) {
+      setCashInputValue(String(amount / 1000));
+    } else {
+      setCashInputValue((amount / 1000).toFixed(1).replace(/\.0$/, ''));
+    }
+  }, []);
+
   const [orderNotes, setOrderNotes] = React.useState('');
   const [proofImage, setProofImage] = React.useState<string | null>(null);
   const [isCapturingProof, setIsCapturingProof] = React.useState(false);
@@ -381,6 +388,18 @@ export default function PosTerminalPage() {
   const cartSubtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const cartTotal = Math.max(0, cartSubtotal - discountAmount);
   const totalCartUnits = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const openCheckoutModal = React.useCallback(() => {
+    setQrSessionRef(Math.floor(1000 + Math.random() * 9000).toString());
+    setProofImage(null);
+    if (cartTotal > 0) {
+      applyCashPreset(cartTotal);
+    } else {
+      setCashInputValue('');
+      setTenderedCash(0);
+    }
+    setIsCheckoutOpen(true);
+  }, [cartTotal, applyCashPreset]);
 
   // Cash Change & Shortage Calculations
   const cashChange = Math.max(0, (tenderedCash || 0) - cartTotal);
@@ -597,6 +616,7 @@ export default function PosTerminalPage() {
       setIsCheckoutOpen(false);
       setIsMobileCartOpen(false);
       setTenderedCash(0);
+      setCashInputValue('');
       setOrderNotes('');
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Lỗi tạo đơn hàng');
@@ -1781,7 +1801,12 @@ export default function PosTerminalPage() {
 
             <button
               type="button"
-              onClick={() => setPaymentMethod('cash')}
+              onClick={() => {
+                setPaymentMethod('cash');
+                if (tenderedCash === 0 && cartTotal > 0) {
+                  applyCashPreset(cartTotal);
+                }
+              }}
               className={`p-2.5 rounded-[6px] border text-xs font-bold flex flex-col items-center gap-1.5 transition-colors cursor-pointer ${
                 paymentMethod === 'cash'
                   ? 'border-[#315C4C] bg-[#EBF1EE] text-[#315C4C]'
@@ -2016,17 +2041,20 @@ export default function PosTerminalPage() {
               </div>
 
               {/* Manual input */}
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="tendered-cash" className="font-bold text-[#202124] flex items-center gap-1.5">
+                  <Label htmlFor="tendered-cash" className="font-bold text-[#202124] flex items-center gap-1.5 text-xs">
                     <Coins className="w-3.5 h-3.5 text-[#315C4C]" />
-                    <span>Tiền khách đưa:</span>
+                    <span>Tiền khách đưa (Đơn vị nghìn đồng):</span>
                   </Label>
                   {tenderedCash > 0 && (
                     <button
                       type="button"
-                      onClick={() => setTenderedCash(0)}
-                      className="text-[11px] font-semibold text-[#C5221F] hover:underline"
+                      onClick={() => {
+                        setTenderedCash(0);
+                        setCashInputValue('');
+                      }}
+                      className="text-[11px] font-semibold text-[#C5221F] hover:underline cursor-pointer"
                     >
                       Xóa
                     </button>
@@ -2038,17 +2066,45 @@ export default function PosTerminalPage() {
                     id="tendered-cash"
                     type="text"
                     inputMode="numeric"
-                    value={tenderedCash ? tenderedCash.toLocaleString('vi-VN') : ''}
+                    value={cashInputValue}
                     onChange={(e) => {
-                      const raw = e.target.value.replace(/\D/g, '');
-                      setTenderedCash(raw ? parseInt(raw, 10) : 0);
+                      let val = e.target.value.replace(/[^0-9]/g, '');
+                      if (!val) {
+                        setCashInputValue('');
+                        setTenderedCash(0);
+                        return;
+                      }
+                      const numVal = parseInt(val, 10);
+                      // If cashier accidentally typed full zeros (e.g. 50000 or 100000)
+                      if (numVal >= 10000 && numVal % 1000 === 0 && val.endsWith('000')) {
+                        val = String(numVal / 1000);
+                      }
+                      setCashInputValue(val);
+                      const parsedThousands = parseFloat(val) || 0;
+                      setTenderedCash(Math.round(parsedThousands * 1000));
                     }}
-                    placeholder="Nhập số tiền..."
-                    className="h-11 text-lg font-bold bg-white text-[#202124] pr-8 focus:border-[#315C4C]"
+                    onFocus={(e) => e.target.select()}
+                    placeholder="Gõ số nghìn (VD: 1 = 1k, 50 = 50k, 100 = 100k)..."
+                    className="h-12 text-xl font-mono font-extrabold bg-white text-[#202124] pr-24 focus:border-[#315C4C]"
                     autoFocus
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#737373] pointer-events-none">
-                    ₫
+                  <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+                    <span className="font-mono font-black text-sm text-[#315C4C] bg-[#EAF4EE] px-2 py-1 rounded border border-[#2F7D55]/30">
+                      .000 ₫
+                    </span>
+                  </div>
+                </div>
+
+                {/* Real converted amount indicator */}
+                <div className="flex items-center justify-between text-xs px-1">
+                  <span className="text-[#737373] flex items-center gap-1.5">
+                    <span>Thực nhận:</span>
+                    <strong className="text-sm font-extrabold text-[#202124] font-mono">
+                      {formatCurrency(tenderedCash, activeWorkspace?.currency || 'VND')}
+                    </strong>
+                  </span>
+                  <span className="text-[11px] text-[#2F7D55] font-semibold bg-[#EAF4EE] px-2 py-0.5 rounded">
+                    ⚡ Tự thêm 3 số 0 (1 = 1.000đ)
                   </span>
                 </div>
 
@@ -2056,8 +2112,8 @@ export default function PosTerminalPage() {
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 pt-1">
                   <button
                     type="button"
-                    onClick={() => setTenderedCash(cartTotal)}
-                    className="h-8 px-2 rounded-[4px] border border-[#315C4C]/40 bg-[#EAF4EE] text-[#2F7D55] font-bold text-xs hover:bg-[#D8EDE0] active:scale-95 transition-all truncate"
+                    onClick={() => applyCashPreset(cartTotal)}
+                    className="h-8 px-2 rounded-[4px] border border-[#315C4C]/40 bg-[#EAF4EE] text-[#2F7D55] font-bold text-xs hover:bg-[#D8EDE0] active:scale-95 transition-all truncate cursor-pointer"
                   >
                     Đúng số tiền
                   </button>
@@ -2065,8 +2121,8 @@ export default function PosTerminalPage() {
                     <button
                       key={preset}
                       type="button"
-                      onClick={() => setTenderedCash(preset)}
-                      className="h-8 px-1.5 rounded-[4px] border border-[#E8E8E5] bg-white text-[#202124] font-semibold text-xs hover:bg-[#F7F7F5] active:scale-95 transition-all truncate font-mono"
+                      onClick={() => applyCashPreset(preset)}
+                      className="h-8 px-1.5 rounded-[4px] border border-[#E8E8E5] bg-white text-[#202124] font-semibold text-xs hover:bg-[#F7F7F5] active:scale-95 transition-all truncate font-mono cursor-pointer"
                     >
                       {preset >= 1000 ? `${preset / 1000}k` : preset}
                     </button>

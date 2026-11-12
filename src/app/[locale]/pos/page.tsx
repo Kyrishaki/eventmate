@@ -66,6 +66,8 @@ import {
   Radio,
   Scan,
   Barcode,
+  ChevronDown,
+  Tag,
 } from 'lucide-react';
 import { playSuccessChime, speakPaymentReceived } from '@/lib/sound';
 import { FeedbackModal } from '@/components/feedback/feedback-modal';
@@ -92,7 +94,7 @@ export default function PosTerminalPage() {
   const tCommon = useTranslations('common');
   const { activeWorkspace } = useWorkspaceStore();
   const { user, isAuthenticated, loginAsGuest } = useAuthStore();
-  const { events, booths, products, variants, allocations } = useDataStore();
+  const { events, booths, categories, products, variants, allocations } = useDataStore();
   const {
     orders,
     cart,
@@ -328,8 +330,9 @@ export default function PosTerminalPage() {
   const [selectedCategory, setSelectedCategory] = React.useState('all');
   const [posSourceFilter, setPosSourceFilter] = React.useState<'all' | 'store' | 'collab'>('all');
 
-  // Selected Variant state per Product
+  // Selected Variant state per Product & Mobile Variant Picker Modal
   const [selectedVariantMap, setSelectedVariantMap] = React.useState<Record<string, string>>({});
+  const [variantPickerProduct, setVariantPickerProduct] = React.useState<Product | null>(null);
 
   // Checkout Modal State
   const [isCheckoutOpen, setIsCheckoutOpen] = React.useState(false);
@@ -456,9 +459,44 @@ export default function PosTerminalPage() {
     return !prodVariants.some((v) => getVariantAvailableStock(v.id) > 0);
   }).length;
 
+  // Categories available in the current workspace (for Product Category Filter)
+  const workspaceCategories = React.useMemo(() => {
+    const baseProducts = activeProducts.filter((p) => {
+      if (posSourceFilter === 'store' && p.collab_partner) return false;
+      if (posSourceFilter === 'collab' && !p.collab_partner) return false;
+      return true;
+    });
+    const counts = new Map<string, number>();
+    let uncategorizedCount = 0;
+
+    baseProducts.forEach((p) => {
+      if (p.category_id) {
+        counts.set(p.category_id, (counts.get(p.category_id) || 0) + 1);
+      } else {
+        uncategorizedCount += 1;
+      }
+    });
+
+    const list = categories
+      .filter((c) => !activeWorkspace || c.workspace_id === activeWorkspace.id)
+      .filter((c) => (counts.get(c.id) || 0) > 0)
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((c) => ({ id: c.id, name: c.name, count: counts.get(c.id) || 0 }));
+
+    return { list, total: baseProducts.length, uncategorizedCount };
+  }, [activeProducts, categories, activeWorkspace, posSourceFilter]);
+
   const filteredProducts = activeProducts.filter((p) => {
     if (posSourceFilter === 'store' && p.collab_partner) return false;
     if (posSourceFilter === 'collab' && !p.collab_partner) return false;
+
+    if (selectedCategory !== 'all') {
+      if (selectedCategory === 'uncategorized') {
+        if (p.category_id) return false;
+      } else if (p.category_id !== selectedCategory) {
+        return false;
+      }
+    }
 
     const prodVariants = variants.filter((v) => v.product_id === p.id);
 
@@ -1146,6 +1184,75 @@ export default function PosTerminalPage() {
             </div>
           </div>
 
+          {/* Product Category Filter Bar (Horizontal Scrollable Pills) */}
+          {(workspaceCategories.list.length > 0 || workspaceCategories.uncategorizedCount > 0) && (
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2.5 mb-1">
+              <div className="flex items-center gap-1 text-[11px] font-semibold text-[#737373] dark:text-neutral-400 shrink-0 mr-1">
+                <Tag className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400" />
+                <span className="hidden sm:inline">Loại:</span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedCategory('all')}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap shrink-0 cursor-pointer border ${
+                  selectedCategory === 'all'
+                    ? 'bg-[#315C4C] text-white border-[#315C4C] shadow-xs'
+                    : 'bg-white dark:bg-neutral-800 text-[#202124] dark:text-neutral-200 border-[#E8E8E5] dark:border-neutral-700 hover:border-[#315C4C]/40'
+                }`}
+              >
+                Tất cả loại ({workspaceCategories.total})
+              </button>
+
+              {workspaceCategories.list.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap shrink-0 cursor-pointer border flex items-center gap-1.5 ${
+                    selectedCategory === cat.id
+                      ? 'bg-[#315C4C] text-white border-[#315C4C] shadow-xs'
+                      : 'bg-white dark:bg-neutral-800 text-[#202124] dark:text-neutral-200 border-[#E8E8E5] dark:border-neutral-700 hover:border-[#315C4C]/40'
+                  }`}
+                >
+                  <span>{cat.name}</span>
+                  <span
+                    className={`text-[10px] font-mono px-1.5 rounded-full ${
+                      selectedCategory === cat.id
+                        ? 'bg-white/20 text-white'
+                        : 'bg-[#F0F0ED] dark:bg-neutral-700 text-[#737373] dark:text-neutral-300'
+                    }`}
+                  >
+                    {cat.count}
+                  </span>
+                </button>
+              ))}
+
+              {workspaceCategories.uncategorizedCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory('uncategorized')}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap shrink-0 cursor-pointer border flex items-center gap-1.5 ${
+                    selectedCategory === 'uncategorized'
+                      ? 'bg-[#315C4C] text-white border-[#315C4C] shadow-xs'
+                      : 'bg-white dark:bg-neutral-800 text-[#202124] dark:text-neutral-200 border-[#E8E8E5] dark:border-neutral-700 hover:border-[#315C4C]/40'
+                  }`}
+                >
+                  <span>Khác</span>
+                  <span
+                    className={`text-[10px] font-mono px-1.5 rounded-full ${
+                      selectedCategory === 'uncategorized'
+                        ? 'bg-white/20 text-white'
+                        : 'bg-[#F0F0ED] dark:bg-neutral-700 text-[#737373] dark:text-neutral-300'
+                    }`}
+                  >
+                    {workspaceCategories.uncategorizedCount}
+                  </span>
+                </button>
+              )}
+            </div>
+          )}
+
           {filteredProducts.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white border border-[#E8E8E5] rounded-[8px] my-auto">
               <Package className="w-12 h-12 text-[#9E9E9C] mb-3" />
@@ -1219,7 +1326,7 @@ export default function PosTerminalPage() {
                   >
                     <div>
                       {/* Product Image */}
-                      <div className="relative h-24 sm:h-36 bg-[#F7F7F5] overflow-hidden flex items-center justify-center">
+                      <div className="relative h-28 sm:h-36 bg-[#F7F7F5] overflow-hidden flex items-center justify-center">
                         {prod.image_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
@@ -1231,35 +1338,31 @@ export default function PosTerminalPage() {
                           <Package className="w-8 h-8 text-[#9E9E9C]" />
                         )}
 
-                        {/* Origin Source Badge (Top Left) */}
-                        <div className="absolute top-2 left-2">
-                          {prod.collab_partner ? (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#FEF7EC]/95 text-[#8C5D17] border border-[#B7791F]/30 backdrop-blur-[2px] shadow-2xs">
+                        {/* Origin Source Badge (Top Left - ONLY shown for Collab to keep Shop photos clean) */}
+                        {prod.collab_partner && (
+                          <div className="absolute top-1.5 left-1.5">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#FEF7EC]/95 text-[#8C5D17] border border-[#B7791F]/30 backdrop-blur-[2px] shadow-2xs">
                               🤝 {prod.collab_partner}
                             </span>
-                          ) : (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#EAF4EE]/95 text-[#2F7D55] border border-[#2F7D55]/30 backdrop-blur-[2px] shadow-2xs">
-                              👑 {activeWorkspace?.name || 'Shop'}
-                            </span>
-                          )}
-                        </div>
+                          </div>
+                        )}
 
                         {/* Stock Badge */}
-                        <div className="absolute top-2 right-2">
+                        <div className="absolute top-1.5 right-1.5">
                           {availableStock > 0 ? (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-black/70 text-white backdrop-blur-[2px]">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-black/75 text-white backdrop-blur-[2px]">
                               Còn {availableStock}
                             </span>
                           ) : qtyInCart > 0 ? (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#315C4C] text-white">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#315C4C] text-white">
                               {qtyInCart} trong giỏ
                             </span>
                           ) : remoteHeldStock > 0 ? (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#B7791F] text-white" title="Đang trong giỏ của quầy khác">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#B7791F] text-white" title="Đang trong giỏ của quầy khác">
                               Quầy khác giữ {remoteHeldStock}
                             </span>
                           ) : (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#C44536] text-white">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#C44536] text-white">
                               Hết hàng
                             </span>
                           )}
@@ -1267,24 +1370,40 @@ export default function PosTerminalPage() {
                       </div>
 
                       <div className="p-2.5 sm:p-3">
-                        {prod.collab_partner && (
-                          <span className="text-[9.5px] font-semibold text-[#8C5D17] block mb-0.5 truncate">
-                            🤝 Collab: {prod.collab_partner}
-                          </span>
-                        )}
-                        <h4 className="text-xs font-bold text-[#202124] line-clamp-2 leading-tight">
+                        <h4 className="text-xs sm:text-[13px] font-bold text-[#202124] line-clamp-2 leading-snug min-h-[2.1rem]">
                           {prod.name}
                         </h4>
-                        <p className="text-sm font-bold text-[#315C4C] mt-1">
+                        <p className="text-sm sm:text-base font-extrabold text-[#315C4C] mt-1 font-mono">
                           {formatCurrency(
                             activeVariant?.price || 0,
                             activeWorkspace?.currency || 'VND'
                           )}
                         </p>
 
-                        {/* Variant Selector Pills */}
+                        {/* Mobile Variant Selector: Clean Single-Button Drawer Trigger instead of cramped pill stack! */}
+                        {prodVariants.length > 1 ? (
+                          <div className="sm:hidden mt-2">
+                            <button
+                              type="button"
+                              onClick={() => setVariantPickerProduct(prod)}
+                              className="w-full flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-[6px] bg-[#F7F7F5] border border-[#E8E8E5] text-[11px] font-semibold text-[#202124] hover:border-[#315C4C]/50 active:scale-[0.98] transition-all cursor-pointer"
+                            >
+                              <span className="truncate">{activeVariant?.name || 'Chọn mẫu'}</span>
+                              <span className="inline-flex items-center gap-0.5 shrink-0 text-[10px] font-bold text-[#315C4C] bg-[#EAF4EE] px-1.5 py-0.2 rounded">
+                                {prodVariants.length}
+                                <ChevronDown className="w-3 h-3" />
+                              </span>
+                            </button>
+                          </div>
+                        ) : activeVariant ? (
+                          <p className="sm:hidden text-[11px] text-[#737373] truncate mt-1">
+                            {activeVariant.name}
+                          </p>
+                        ) : null}
+
+                        {/* Desktop Variant Selector Pills */}
                         {prodVariants.length > 1 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
+                          <div className="hidden sm:flex flex-wrap gap-1 mt-2">
                             {prodVariants.map((v) => {
                               const isVarSelected = v.id === activeVarId;
                               return (
@@ -1297,7 +1416,7 @@ export default function PosTerminalPage() {
                                       [prod.id]: v.id,
                                     })
                                   }
-                                  className={`px-2 py-0.5 text-[10px] rounded font-medium transition-colors ${
+                                  className={`px-2 py-0.5 text-[10px] rounded font-medium transition-colors cursor-pointer ${
                                     isVarSelected
                                       ? 'bg-[#315C4C] text-white'
                                       : 'bg-[#F0F0ED] text-[#202124] hover:bg-[#E8E8E5]'
@@ -1313,13 +1432,13 @@ export default function PosTerminalPage() {
                         {/* Stock Summary: Mobile Compact vs Desktop Detailed */}
                         {stockBreakdown && (
                           <>
-                            {/* Mobile Compact Stock Chip (saves 70px vertical space on phones) */}
-                            <div className="sm:hidden mt-1.5 px-2 py-1 bg-[#F7F7F5] rounded border border-[#E8E8E5] flex items-center justify-between text-[10px]">
+                            {/* Mobile Compact Stock Chip */}
+                            <div className="sm:hidden mt-2 px-2 py-1 bg-[#F7F7F5] rounded border border-[#E8E8E5] flex items-center justify-between text-[11px]">
                               <span className="text-[#315C4C] font-bold">
                                 Quầy: {availableStock}
                               </span>
                               <span className="text-[#737373]">
-                                Kho bán: <strong className="text-[#2F7D55]">{stockBreakdown.offlineAvailable}</strong>
+                                Kho: <strong className="text-[#2F7D55]">{stockBreakdown.offlineAvailable}</strong>
                               </span>
                             </div>
 
@@ -2548,6 +2667,159 @@ export default function PosTerminalPage() {
           });
         }}
       />
+
+      {/* Mobile Variant Picker Bottom Sheet / Modal */}
+      <Modal
+        isOpen={!!variantPickerProduct}
+        onClose={() => setVariantPickerProduct(null)}
+        title={variantPickerProduct?.name || 'Chọn phân loại sản phẩm'}
+        description="Chọn mẫu / nhân vật / size để thêm vào giỏ hàng"
+        maxWidth="md"
+      >
+        {variantPickerProduct && (() => {
+          const modalVariants = variants.filter((v) => v.product_id === variantPickerProduct.id);
+          return (
+            <div className="space-y-3">
+              {/* Product Summary Header */}
+              <div className="flex items-center gap-3 p-2.5 rounded-[8px] bg-[#F7F7F5] border border-[#E8E8E5]">
+                <div className="w-12 h-12 rounded-[6px] bg-white border border-[#E8E8E5] overflow-hidden shrink-0 flex items-center justify-center">
+                  {variantPickerProduct.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={variantPickerProduct.image_url}
+                      alt={variantPickerProduct.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Package className="w-6 h-6 text-[#9E9E9C]" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-[#202124] line-clamp-2">
+                    {variantPickerProduct.name}
+                  </p>
+                  <p className="text-[11px] text-[#737373] mt-0.5">
+                    {modalVariants.length} phân loại sản phẩm
+                  </p>
+                </div>
+              </div>
+
+              {/* Variants List */}
+              <div className="space-y-2 max-h-[55vh] overflow-y-auto pr-0.5">
+                {modalVariants.map((v) => {
+                  const stock = getVariantAvailableStock(v.id);
+                  const inCart = getVariantInCartQty(v.id);
+                  const isSelected = (selectedVariantMap[variantPickerProduct.id] || modalVariants[0]?.id) === v.id;
+
+                  return (
+                    <div
+                      key={v.id}
+                      onClick={() =>
+                        setSelectedVariantMap({
+                          ...selectedVariantMap,
+                          [variantPickerProduct.id]: v.id,
+                        })
+                      }
+                      className={`p-3 rounded-[8px] border transition-colors flex items-center justify-between gap-3 cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#EAF4EE]/60 border-[#315C4C]'
+                          : 'bg-white border-[#E8E8E5] hover:border-[#315C4C]/40'
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-[#202124] leading-snug">
+                          {v.name}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2 mt-1 text-xs">
+                          <span className="font-bold text-[#315C4C] font-mono">
+                            {formatCurrency(v.price, activeWorkspace?.currency || 'VND')}
+                          </span>
+                          <span className="text-[11px] font-mono text-[#737373]">
+                            {v.sku}
+                          </span>
+                          {stock > 0 ? (
+                            <span className="px-1.5 py-0.5 rounded bg-[#EAF4EE] text-[#2F7D55] text-[10px] font-bold">
+                              Còn {stock}
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 rounded bg-[#FDF1F0] text-[#C44536] text-[10px] font-bold">
+                              Hết hàng
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                        {inCart > 0 ? (
+                          <div className="flex items-center gap-1.5 bg-[#EBF1EE] border border-[#315C4C]/40 rounded-[6px] p-1">
+                            <button
+                              type="button"
+                              onClick={() => handleDecrease(v.id)}
+                              className="w-8 h-8 rounded bg-white text-[#202124] flex items-center justify-center font-bold border border-[#E8E8E5]"
+                            >
+                              <Minus className="w-3.5 h-3.5" />
+                            </button>
+                            <span className="w-6 text-center font-bold text-xs text-[#315C4C]">
+                              {inCart}
+                            </span>
+                            <button
+                              type="button"
+                              disabled={stock <= 0}
+                              onClick={() => handleIncrease(v.id)}
+                              className="w-8 h-8 rounded bg-[#315C4C] text-white flex items-center justify-center font-bold disabled:opacity-30"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="primary"
+                            size="sm"
+                            disabled={stock <= 0}
+                            onClick={() => {
+                              setSelectedVariantMap({
+                                ...selectedVariantMap,
+                                [variantPickerProduct.id]: v.id,
+                              });
+                              addToCart({
+                                variantId: v.id,
+                                productId: variantPickerProduct.id,
+                                productName: variantPickerProduct.name,
+                                variantName: v.name,
+                                sku: v.sku,
+                                price: v.price,
+                                maxAvailable: stock,
+                                imageUrl: variantPickerProduct.image_url,
+                              });
+                            }}
+                            className="h-9 px-3 text-xs font-bold gap-1"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Thêm</span>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="pt-2 border-t border-[#E8E8E5] flex justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setVariantPickerProduct(null)}
+                  className="w-full sm:w-auto h-9 text-xs font-semibold"
+                >
+                  Đóng
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
+      </Modal>
     </div>
   );
 }

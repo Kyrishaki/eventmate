@@ -28,22 +28,22 @@
 
 html.dark {
   color-scheme: dark;
-  --background: #111215;
-  --surface: #1B1D22;
-  --surface-hover: #24272E;
-  --foreground: #F2F3F5;
-  --muted: #9BA1A6;
-  --muted-light: #25282F;
-  --border: #2C3038;
-  --border-strong: #3D424D;
+  --background: #0F1115;
+  --surface: #1A1D24;
+  --surface-hover: #252932;
+  --foreground: #F4F5F7;
+  --muted: #ACB2BA;
+  --muted-light: #14161B;
+  --border: #2E323C;
+  --border-strong: #414755;
   --primary: #3E7A65;
   --primary-hover: #4C8E77;
   --primary-foreground: #FFFFFF;
-  --success: #3EB378;
+  --success: #45C486;
   --success-bg: #152A20;
-  --warning: #D9822B;
+  --warning: #E59838;
   --warning-bg: #2E1F0E;
-  --error: #E5534B;
+  --error: #EF6159;
   --error-bg: #2E1515;
 }
 
@@ -82,10 +82,10 @@ body {
    Scales UI down by ~10% to ~20% on smartphones to maximize interaction space
    ========================================================================== */
 
-/* Default mobile font-size scaling: 14px on < 640px (~87.5% scale) */
+/* Default mobile font-size: crisp 16px standard for readability */
 @media (max-width: 640px) {
-  html:not([data-density="comfortable"]) {
-    font-size: 14px;
+  html:not([data-density="compact"]):not([data-density="ultra-compact"]) {
+    font-size: 16px;
     -webkit-text-size-adjust: 100%;
   }
 }
@@ -96,39 +96,38 @@ html[data-density="comfortable"] {
 }
 @media (max-width: 640px) {
   html[data-density="comfortable"] {
-    font-size: 15px;
+    font-size: 16px;
   }
 }
 
 html[data-density="compact"] {
-  font-size: 14px;
+  font-size: 14.5px;
 }
 @media (max-width: 640px) {
   html[data-density="compact"] {
-    font-size: 13.5px;
+    font-size: 14.5px;
   }
 }
 
 html[data-density="ultra-compact"] {
-  font-size: 12.5px;
+  font-size: 13.5px;
 }
 @media (max-width: 640px) {
   html[data-density="ultra-compact"] {
-    font-size: 12px;
+    font-size: 13.5px;
   }
 }
 
 /* ==========================================================================
    Mobile Ergonomics & iOS Safari Optimization
-   - Prevents iOS auto-zoom on input focus (< 16px font-size)
+   - Prevents iOS auto-zoom on text input focus while keeping compact selects crisp
    - Eliminates tap delays
    - Handles modern phone safe area bottom bars
    ========================================================================== */
 @media screen and (max-width: 768px) {
   input:not([type="checkbox"]):not([type="radio"]),
-  select,
   textarea {
-    font-size: 16px !important;
+    font-size: 16px;
   }
 
   button, a, input, select {

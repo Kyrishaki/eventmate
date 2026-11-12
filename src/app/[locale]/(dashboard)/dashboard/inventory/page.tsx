@@ -494,13 +494,13 @@ export default function InventoryPage() {
   const currency = activeWorkspace?.currency || 'VND';
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5 pb-20 sm:pb-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-[#202124]">{t('title')}</h1>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#EBF1EE] text-[#315C4C] border border-[#315C4C]/20">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#EBF1EE] text-[#315C4C] border border-[#315C4C]/20">
               {workspaceProducts.length} sản phẩm · {activeVariants.length} mã loại
             </span>
           </div>
@@ -519,7 +519,7 @@ export default function InventoryPage() {
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#315C4C]" />
                 <span>
-                  Cấp hết kho ra {selectedBooth.name} (+{boothStats.unallocatedInWarehouse})
+                  Cấp hết kho (+{boothStats.unallocatedInWarehouse})
                 </span>
               </Button>
             )}
@@ -532,7 +532,7 @@ export default function InventoryPage() {
               title="Kiểm đếm số lượng thực tế tại quầy và cân bằng kho"
             >
               <ClipboardCheck className="w-4 h-4" />
-              <span>Kiểm kê quầy ({selectedBooth.code})</span>
+              <span>Kiểm kê ({selectedBooth.code})</span>
             </Button>
           </div>
         )}
@@ -562,82 +562,94 @@ export default function InventoryPage() {
         </div>
       )}
 
-      {/* 4 Clear Inventory KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
-          <div>
-            <p className="text-[11px] font-medium text-[#737373]">
-              Còn bán tại {selectedBooth ? selectedBooth.name : 'quầy'}
+      {/* 4 Clear Inventory KPI Cards (Ergonomic vertical card stack on mobile) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3 sm:p-3.5 flex flex-col justify-between gap-2 shadow-2xs">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[11px] sm:text-xs font-semibold text-[#737373] leading-tight">
+              Còn bán tại quầy
             </p>
-            <p className="text-lg font-extrabold text-[#2F7D55] mt-0.5 font-mono">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#EAF4EE] flex items-center justify-center text-[#2F7D55] shrink-0">
+              <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
+          </div>
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <span className="text-lg sm:text-xl font-extrabold text-[#2F7D55] font-mono leading-none">
               {boothStats.boothAvailable.toLocaleString('vi-VN')}
-              <span className="text-xs font-normal text-[#737373] ml-1">
-                / {boothStats.boothAllocated} đã cấp
-              </span>
-            </p>
-          </div>
-          <div className="w-9 h-9 rounded-lg bg-[#EAF4EE] flex items-center justify-center text-[#2F7D55] shrink-0">
-            <Store className="w-4 h-4" />
+            </span>
+            <span className="text-[11px] text-[#737373] font-medium">
+              / {boothStats.boothAllocated} đã cấp
+            </span>
           </div>
         </div>
 
-        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
-          <div>
-            <p className="text-[11px] font-medium text-[#737373]">
-              Có thể cấp thêm cho {selectedBooth ? selectedBooth.name : 'quầy'}
+        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3 sm:p-3.5 flex flex-col justify-between gap-2 shadow-2xs">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[11px] sm:text-xs font-semibold text-[#737373] leading-tight">
+              Có thể cấp thêm
             </p>
-            <p className="text-lg font-extrabold text-[#B7791F] mt-0.5 font-mono">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FEF7EC] flex items-center justify-center text-[#B7791F] shrink-0">
+              <Boxes className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
+          </div>
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <span className="text-lg sm:text-xl font-extrabold text-[#B7791F] font-mono leading-none">
               +{boothStats.unallocatedInWarehouse.toLocaleString('vi-VN')}
-              <span className="text-xs font-normal text-[#737373] ml-1">món khả dụng</span>
-            </p>
-          </div>
-          <div className="w-9 h-9 rounded-lg bg-[#FEF7EC] flex items-center justify-center text-[#B7791F] shrink-0">
-            <Boxes className="w-4 h-4" />
+            </span>
+            <span className="text-[11px] text-[#737373] font-medium">khả dụng</span>
           </div>
         </div>
 
-        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
-          <div>
-            <p className="text-[11px] font-medium text-[#737373]">Đã khóa (Online & VIP)</p>
-            <p className="text-lg font-extrabold text-[#1D4ED8] mt-0.5 font-mono">
+        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3 sm:p-3.5 flex flex-col justify-between gap-2 shadow-2xs">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[11px] sm:text-xs font-semibold text-[#737373] leading-tight">
+              Khóa Online & VIP
+            </p>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#EFF6FF] flex items-center justify-center text-[#1D4ED8] shrink-0">
+              <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
+          </div>
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <span className="text-lg sm:text-xl font-extrabold text-[#1D4ED8] font-mono leading-none">
               {totalHeldAll.toLocaleString('vi-VN')}
-              <span className="text-xs font-normal text-[#737373] ml-1">
-                / {totalStockAll} tổng kho
-              </span>
-            </p>
-          </div>
-          <div className="w-9 h-9 rounded-lg bg-[#EFF6FF] flex items-center justify-center text-[#1D4ED8] shrink-0">
-            <Globe className="w-4 h-4" />
+            </span>
+            <span className="text-[11px] text-[#737373] font-medium">
+              / {totalStockAll} tổng kho
+            </span>
           </div>
         </div>
 
-        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
-          <div>
-            <p className="text-[11px] font-medium text-[#737373]">Đã bán qua POS</p>
-            <p className="text-lg font-extrabold text-[#202124] mt-0.5 font-mono">
-              {totalSoldAll.toLocaleString('vi-VN')}
-              <span className="text-xs font-normal text-[#737373] ml-1">món đã xuất</span>
+        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3 sm:p-3.5 flex flex-col justify-between gap-2 shadow-2xs">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[11px] sm:text-xs font-semibold text-[#737373] leading-tight">
+              Đã bán qua POS
             </p>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#F7F7F5] border border-[#E8E8E5] flex items-center justify-center text-[#737373] shrink-0">
+              <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
           </div>
-          <div className="w-9 h-9 rounded-lg bg-[#F7F7F5] border border-[#E8E8E5] flex items-center justify-center text-[#737373] shrink-0">
-            <ShoppingBag className="w-4 h-4" />
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <span className="text-lg sm:text-xl font-extrabold text-[#202124] font-mono leading-none">
+              {totalSoldAll.toLocaleString('vi-VN')}
+            </span>
+            <span className="text-[11px] text-[#737373] font-medium">món đã xuất</span>
           </div>
         </div>
       </div>
 
-      {/* Unified Event & Booth Selector + Filter & Search Toolbar (Solid Dark-Mode-Safe Surfaces) */}
+      {/* Unified Event & Booth Selector + Filter & Search Toolbar */}
       <div className="bg-white border border-[#E8E8E5] rounded-xl shadow-2xs overflow-hidden divide-y divide-[#F0F0ED]">
-        {/* Top Row: Event & Booth Selection */}
-        <div className="p-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white">
-          <div className="flex flex-wrap items-center gap-3">
+        {/* Top Row: Event & Booth Selection (Clean Vertical Stack on Mobile) */}
+        <div className="p-3 sm:p-3.5 flex flex-col gap-3 bg-white">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center gap-2.5 sm:gap-3">
             {/* Event Selector */}
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-semibold text-[#737373] flex items-center gap-1">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 min-w-0">
+              <span className="text-[11px] font-semibold text-[#737373] flex items-center gap-1.5 shrink-0 whitespace-nowrap">
                 <Calendar className="w-3.5 h-3.5 text-[#315C4C]" />
                 <span>Sự kiện:</span>
               </span>
               <select
-                className="h-8 rounded-lg border border-[#E8E8E5] bg-[#F7F7F5] px-2.5 text-xs font-bold text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                className="h-9 w-full sm:w-auto sm:min-w-[220px] rounded-lg border border-[#E8E8E5] bg-[#F7F7F5] px-2.5 text-[13px] font-semibold text-[#202124] focus:outline-none focus:border-[#315C4C]"
                 value={selectedEventId}
                 onChange={(e) => handleSelectEvent(e.target.value)}
               >
@@ -660,16 +672,44 @@ export default function InventoryPage() {
               </select>
             </div>
 
-            <span className="hidden sm:inline text-[#E8E8E5]">|</span>
+            {/* Mobile Booth Selector Dropdown (No clipped pills!) */}
+            <div className="sm:hidden flex flex-col gap-1 min-w-0">
+              <span className="text-[11px] font-semibold text-[#737373] flex items-center gap-1.5 shrink-0">
+                <Store className="w-3.5 h-3.5 text-[#315C4C]" />
+                <span>Quầy đang chọn:</span>
+              </span>
+              {eventBooths.length === 0 ? (
+                <span className="text-xs text-[#737373] italic">
+                  Sự kiện chưa có quầy bán nào
+                </span>
+              ) : (
+                <select
+                  className="h-9 w-full rounded-lg border border-[#E8E8E5] bg-[#F7F7F5] px-2.5 text-[13px] font-semibold text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                  value={selectedBoothId}
+                  onChange={(e) => setSelectedBoothId(e.target.value)}
+                >
+                  {eventBooths.map((b) => {
+                    const bAllocTotal = allocations
+                      .filter((a) => a.booth_id === b.id)
+                      .reduce((sum, a) => sum + a.allocated_quantity, 0);
+                    return (
+                      <option key={b.id} value={b.id}>
+                        {b.name} ({bAllocTotal} món)
+                      </option>
+                    );
+                  })}
+                </select>
+              )}
+            </div>
 
-            {/* Booth Selector Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 shrink-0 -mx-0.5 px-0.5">
-              <span className="text-[11px] font-semibold text-[#737373] dark:text-neutral-400 flex items-center gap-1 mr-1 shrink-0">
-                <Store className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400" />
+            {/* Desktop/Tablet Booth Selector Pills */}
+            <div className="hidden sm:flex items-center gap-1.5 flex-wrap py-0.5">
+              <span className="text-[11px] font-semibold text-[#737373] flex items-center gap-1 mr-1 shrink-0">
+                <Store className="w-3.5 h-3.5 text-[#315C4C]" />
                 <span>Quầy:</span>
               </span>
               {eventBooths.length === 0 ? (
-                <span className="text-xs text-[#737373] dark:text-neutral-400 italic">
+                <span className="text-xs text-[#737373] italic">
                   Sự kiện chưa có quầy bán nào
                 </span>
               ) : (
@@ -687,7 +727,7 @@ export default function InventoryPage() {
                         'px-3 py-1.5 text-xs rounded-lg font-bold transition-all flex items-center gap-1.5 cursor-pointer border shrink-0 whitespace-nowrap',
                         isSelected
                           ? 'bg-[#315C4C] text-white border-[#315C4C] shadow-xs'
-                          : 'bg-[#F7F7F5] dark:bg-neutral-800 text-[#202124] dark:text-neutral-100 border-[#E8E8E5] dark:border-neutral-700 hover:border-[#315C4C]/40'
+                          : 'bg-[#F7F7F5] text-[#202124] border-[#E8E8E5] hover:border-[#315C4C]/40'
                       )}
                     >
                       <span>{b.name}</span>
@@ -696,7 +736,7 @@ export default function InventoryPage() {
                           'text-[10px] font-mono px-1.5 py-0.2 rounded',
                           isSelected
                             ? 'bg-white/20 text-white'
-                            : 'bg-white dark:bg-neutral-700 text-[#737373] dark:text-neutral-300 border border-[#E8E8E5] dark:border-neutral-600'
+                            : 'bg-white text-[#737373] border border-[#E8E8E5]'
                         )}
                       >
                         {bAllocTotal} món
@@ -714,22 +754,29 @@ export default function InventoryPage() {
           </div>
         </div>
 
-        {/* Bottom Row: Filter Tabs + Search Input + View Switcher (No /60 opacity!) */}
-        <div className="p-2.5 bg-white flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
-          {/* Quick Filter Tabs */}
-          <div className="flex items-center gap-1 p-1 bg-[#F7F7F5] dark:bg-neutral-800 rounded-lg border border-[#E8E8E5] dark:border-neutral-700 text-xs overflow-x-auto no-scrollbar shrink-0 -mx-0.5 px-0.5">
+        {/* Bottom Row: 2x2 Filter Tabs on Mobile + Search + View Switcher */}
+        <div className="p-2.5 sm:p-3 bg-white flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
+          {/* Quick Filter Tabs (Clean 2x2 Grid on Mobile -> Flex Row on Tablet+) */}
+          <div className="grid grid-cols-2 sm:flex items-center gap-1.5 p-1 bg-[#F7F7F5] rounded-lg border border-[#E8E8E5] text-xs shrink-0">
             <button
               type="button"
               onClick={() => setStockFilter('all')}
               className={cn(
-                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer',
+                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center justify-between sm:justify-start gap-1.5 cursor-pointer',
                 stockFilter === 'all'
-                  ? 'bg-white dark:bg-neutral-900 text-[#202124] dark:text-neutral-100 shadow-2xs'
-                  : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124]'
+                  ? 'bg-[#315C4C] text-white shadow-2xs'
+                  : 'text-[#737373] hover:text-[#202124]'
               )}
             >
-              <span>Tất cả</span>
-              <span className="text-[10px] font-mono px-1.5 rounded bg-[#E8E8E5] dark:bg-neutral-700 text-[#202124] dark:text-neutral-200">
+              <span className="truncate">Tất cả</span>
+              <span
+                className={cn(
+                  'text-[10px] font-mono px-1.5 rounded',
+                  stockFilter === 'all'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-[#E8E8E5] text-[#202124]'
+                )}
+              >
                 {enrichedVariants.length}
               </span>
             </button>
@@ -738,15 +785,24 @@ export default function InventoryPage() {
               type="button"
               onClick={() => setStockFilter('allocated')}
               className={cn(
-                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer',
+                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center justify-between sm:justify-start gap-1.5 cursor-pointer',
                 stockFilter === 'allocated'
-                  ? 'bg-white dark:bg-neutral-900 text-[#315C4C] dark:text-emerald-400 shadow-2xs'
-                  : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124]'
+                  ? 'bg-[#2F7D55] text-white shadow-2xs'
+                  : 'text-[#737373] hover:text-[#202124]'
               )}
             >
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#2F7D55]" />
-              <span>Đã cấp cho quầy</span>
-              <span className="text-[10px] font-mono px-1.5 rounded bg-[#EAF4EE] dark:bg-emerald-950/40 text-[#2F7D55] dark:text-emerald-400">
+              <span className="flex items-center gap-1 truncate">
+                <CheckCircle2 className={cn('w-3.5 h-3.5 shrink-0', stockFilter === 'allocated' ? 'text-white' : 'text-[#2F7D55]')} />
+                <span className="truncate">Đã cấp quầy</span>
+              </span>
+              <span
+                className={cn(
+                  'text-[10px] font-mono px-1.5 rounded',
+                  stockFilter === 'allocated'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-[#EAF4EE] text-[#2F7D55]'
+                )}
+              >
                 {countAllocated}
               </span>
             </button>
@@ -755,15 +811,24 @@ export default function InventoryPage() {
               type="button"
               onClick={() => setStockFilter('has_unallocated')}
               className={cn(
-                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer',
+                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center justify-between sm:justify-start gap-1.5 cursor-pointer',
                 stockFilter === 'has_unallocated'
-                  ? 'bg-white dark:bg-neutral-900 text-[#B7791F] dark:text-amber-400 shadow-2xs'
-                  : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124]'
+                  ? 'bg-[#B7791F] text-white shadow-2xs'
+                  : 'text-[#737373] hover:text-[#202124]'
               )}
             >
-              <Boxes className="w-3.5 h-3.5 text-[#B7791F]" />
-              <span>Có thể cấp thêm</span>
-              <span className="text-[10px] font-mono px-1.5 rounded bg-[#FEF7EC] dark:bg-amber-950/40 text-[#B7791F] dark:text-amber-400">
+              <span className="flex items-center gap-1 truncate">
+                <Boxes className={cn('w-3.5 h-3.5 shrink-0', stockFilter === 'has_unallocated' ? 'text-white' : 'text-[#B7791F]')} />
+                <span className="truncate">Cấp thêm</span>
+              </span>
+              <span
+                className={cn(
+                  'text-[10px] font-mono px-1.5 rounded',
+                  stockFilter === 'has_unallocated'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-[#FEF7EC] text-[#B7791F]'
+                )}
+              >
                 {countHasUnallocated}
               </span>
             </button>
@@ -772,29 +837,38 @@ export default function InventoryPage() {
               type="button"
               onClick={() => setStockFilter('low_or_empty')}
               className={cn(
-                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer',
+                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center justify-between sm:justify-start gap-1.5 cursor-pointer',
                 stockFilter === 'low_or_empty'
-                  ? 'bg-white dark:bg-neutral-900 text-[#C44536] dark:text-rose-400 shadow-2xs'
-                  : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124]'
+                  ? 'bg-[#C44536] text-white shadow-2xs'
+                  : 'text-[#737373] hover:text-[#202124]'
               )}
             >
-              <AlertCircle className="w-3.5 h-3.5 text-[#C44536]" />
-              <span>Sắp hết / Chưa cấp</span>
-              <span className="text-[10px] font-mono px-1.5 rounded bg-[#FDF1F0] dark:bg-rose-950/40 text-[#C44536] dark:text-rose-400">
+              <span className="flex items-center gap-1 truncate">
+                <AlertCircle className={cn('w-3.5 h-3.5 shrink-0', stockFilter === 'low_or_empty' ? 'text-white' : 'text-[#C44536]')} />
+                <span className="truncate">Sắp hết</span>
+              </span>
+              <span
+                className={cn(
+                  'text-[10px] font-mono px-1.5 rounded',
+                  stockFilter === 'low_or_empty'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-[#FDF1F0] text-[#C44536]'
+                )}
+              >
                 {countLowOrEmpty}
               </span>
             </button>
           </div>
 
-          {/* Right: Search + View Mode */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 lg:justify-end">
+          {/* Right: Search + View Mode on clean flex row */}
+          <div className="flex items-center gap-2 flex-1 lg:justify-end">
             <div className="relative flex-1 sm:max-w-xs">
               <Search className="w-3.5 h-3.5 text-[#9E9E9C] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <Input
-                placeholder="Tìm tên sản phẩm, size, mã loại..."
+                placeholder="Tìm sản phẩm, size, mã loại..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-8 pl-8 pr-7 text-xs rounded-lg bg-white dark:bg-neutral-900 w-full"
+                className="h-9 pl-8 pr-7 text-xs rounded-lg bg-white w-full"
               />
               {searchQuery && (
                 <button
@@ -808,14 +882,14 @@ export default function InventoryPage() {
               )}
             </div>
 
-            <div className="flex items-center p-0.5 rounded-lg bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 shrink-0 self-end sm:self-auto">
+            <div className="flex items-center p-0.5 rounded-lg bg-[#F7F7F5] border border-[#E8E8E5] shrink-0">
               <button
                 type="button"
                 onClick={() => setViewMode('grouped')}
                 className={cn(
-                  'px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 text-xs font-semibold',
+                  'px-2.5 py-1.5 rounded-md transition-all flex items-center gap-1.5 text-xs font-semibold cursor-pointer',
                   viewMode === 'grouped'
-                    ? 'bg-white text-[#315C4C] shadow-2xs'
+                    ? 'bg-[#315C4C] text-white shadow-2xs'
                     : 'text-[#737373] hover:text-[#202124]'
                 )}
                 title="Gom nhóm theo từng sản phẩm (Dễ nhìn & Dễ thao tác)"
@@ -827,9 +901,9 @@ export default function InventoryPage() {
                 type="button"
                 onClick={() => setViewMode('table')}
                 className={cn(
-                  'px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 text-xs font-semibold',
+                  'px-2.5 py-1.5 rounded-md transition-all flex items-center gap-1.5 text-xs font-semibold cursor-pointer',
                   viewMode === 'table'
-                    ? 'bg-white text-[#315C4C] shadow-2xs'
+                    ? 'bg-[#315C4C] text-white shadow-2xs'
                     : 'text-[#737373] hover:text-[#202124]'
                 )}
                 title="Xem dạng bảng gọn"
@@ -1187,9 +1261,9 @@ export default function InventoryPage() {
                 key={product.id}
                 className="border-[#E8E8E5] bg-white rounded-xl shadow-2xs overflow-hidden"
               >
-                {/* Solid Dark-Mode-Safe Product Group Header (NO /70 opacity!) */}
-                <div className="p-4 bg-[#F7F7F5] border-b border-[#E8E8E5] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3.5 min-w-0">
+                {/* Solid Dark-Mode-Safe Product Group Header */}
+                <div className="p-3.5 sm:p-4 bg-[#F7F7F5] border-b border-[#E8E8E5] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-start sm:items-center gap-3 min-w-0">
                     <div className="w-12 h-12 rounded-xl bg-white border border-[#E8E8E5] overflow-hidden shrink-0 flex items-center justify-center">
                       {thumbUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -1203,42 +1277,33 @@ export default function InventoryPage() {
                       )}
                     </div>
 
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-[15px] font-bold text-[#202124] truncate">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <h3 className="text-sm sm:text-[15px] font-bold text-[#202124] line-clamp-2 leading-snug">
                           {product.name}
                         </h3>
                         {product.collab_partner && (
-                          <Badge variant="warning" className="text-[10px] gap-1">
+                          <Badge variant="warning" className="text-[10px] gap-1 shrink-0">
                             <Users2 className="w-2.5 h-2.5" />
                             <span>Collab: {product.collab_partner}</span>
                           </Badge>
                         )}
-                        <span className="text-[11px] text-[#737373] font-medium">
-                          ({items.length} phân loại)
-                        </span>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5 text-xs">
-                        <span className="text-[#737373]">
-                          Đã cấp cho <strong>{selectedBooth.name}</strong>:{' '}
-                          <strong className="text-[#202124] font-mono">
-                            {prodTotalBoothAlloc}
-                          </strong>
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1.5 text-[11px]">
+                        <span className="px-2 py-0.5 rounded bg-white border border-[#E8E8E5] text-[#737373] font-medium">
+                          {items.length} phân loại
                         </span>
-                        <span className="text-[#E8E8E5]">•</span>
-                        <span className="text-[#2F7D55] font-semibold">
-                          Còn bán tại quầy:{' '}
-                          <strong className="font-mono">{prodTotalBoothAvail}</strong>
+                        <span className="px-2 py-0.5 rounded bg-white border border-[#E8E8E5] text-[#202124] font-semibold">
+                          Đã cấp: <strong className="font-mono">{prodTotalBoothAlloc}</strong>
+                        </span>
+                        <span className="px-2 py-0.5 rounded bg-[#EAF4EE] text-[#2F7D55] font-semibold">
+                          Còn bán: <strong className="font-mono">{prodTotalBoothAvail}</strong>
                         </span>
                         {prodTotalUnallocated > 0 && (
-                          <>
-                            <span className="text-[#E8E8E5]">•</span>
-                            <span className="text-[#B7791F] font-semibold">
-                              Có thể cấp thêm:{' '}
-                              <strong className="font-mono">+{prodTotalUnallocated}</strong>
-                            </span>
-                          </>
+                          <span className="px-2 py-0.5 rounded bg-[#FEF7EC] text-[#B7791F] font-semibold">
+                            Cấp thêm: <strong className="font-mono">+{prodTotalUnallocated}</strong>
+                          </span>
                         )}
                       </div>
                     </div>

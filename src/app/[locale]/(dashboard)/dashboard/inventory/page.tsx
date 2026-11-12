@@ -39,6 +39,8 @@ import {
   Table2,
   ShoppingBag,
   Sparkles,
+  ArrowUpDown,
+  Tag,
 } from 'lucide-react';
 import { StocktakeModal } from '@/components/inventory/stocktake-modal';
 import {
@@ -55,6 +57,7 @@ export default function InventoryPage() {
     booths,
     products,
     variants,
+    categories,
     allocations,
     setAllocation,
     allocateMaxToBooth,
@@ -73,6 +76,28 @@ export default function InventoryPage() {
     'all' | 'allocated' | 'has_unallocated' | 'low_or_empty'
   >('all');
   const [viewMode, setViewMode] = React.useState<'grouped' | 'table'>('grouped');
+
+  // Extended Inventory Sorting & Filtering
+  const [inventorySortBy, setInventorySortBy] = React.useState<
+    'name_asc' | 'name_desc' | 'available_desc' | 'available_asc' | 'storage_desc' | 'storage_asc' | 'sold_desc' | 'total_stock_desc'
+  >('name_asc');
+  const [categoryFilter, setCategoryFilter] = React.useState<string>('all');
+  const [sourceFilter, setSourceFilter] = React.useState<'all' | 'store' | 'collab'>('all');
+
+  const isInventoryFilterActive =
+    inventorySortBy !== 'name_asc' ||
+    stockFilter !== 'all' ||
+    categoryFilter !== 'all' ||
+    sourceFilter !== 'all' ||
+    Boolean(searchQuery.trim());
+
+  const resetInventoryFilters = React.useCallback(() => {
+    setInventorySortBy('name_asc');
+    setStockFilter('all');
+    setCategoryFilter('all');
+    setSourceFilter('all');
+    setSearchQuery('');
+  }, []);
 
   // Quick Master Stock / Preorder Edit Modal right from Inventory page
   const [masterEditProduct, setMasterEditProduct] = React.useState<Product | null>(null);
@@ -444,19 +469,60 @@ export default function InventoryPage() {
     (item) => item.availableToSell <= 5
   ).length;
 
-  // Filtered variants based on search & stockFilter
+  // Filtered variants based on search, stockFilter, categoryFilter, sourceFilter & sorting
   const normalizedQuery = searchQuery.trim().toLowerCase();
-  const filteredEnrichedVariants = enrichedVariants.filter((item) => {
-    if (stockFilter === 'allocated' && item.currentAllocQty <= 0) return false;
-    if (stockFilter === 'has_unallocated' && item.centralStorageRemaining <= 0) return false;
-    if (stockFilter === 'low_or_empty' && item.availableToSell > 5) return false;
+  const filteredEnrichedVariants = enrichedVariants
+    .filter((item) => {
+      // 1. Stock allocation filter
+      if (stockFilter === 'allocated' && item.currentAllocQty <= 0) return false;
+      if (stockFilter === 'has_unallocated' && item.centralStorageRemaining <= 0) return false;
+      if (stockFilter === 'low_or_empty' && item.availableToSell > 5) return false;
 
-    if (!normalizedQuery) return true;
-    const matchName = (item.product?.name || '').toLowerCase().includes(normalizedQuery);
-    const matchVar = item.variant.name.toLowerCase().includes(normalizedQuery);
-    const matchSku = item.variant.sku.toLowerCase().includes(normalizedQuery);
-    return matchName || matchVar || matchSku;
-  });
+      // 2. Category filter
+      if (categoryFilter !== 'all' && item.product?.category_id !== categoryFilter) return false;
+
+      // 3. Source filter
+      if (sourceFilter === 'store' && item.product?.collab_partner) return false;
+      if (sourceFilter === 'collab' && !item.product?.collab_partner) return false;
+
+      // 4. Search query
+      if (!normalizedQuery) return true;
+      const matchName = (item.product?.name || '').toLowerCase().includes(normalizedQuery);
+      const matchVar = item.variant.name.toLowerCase().includes(normalizedQuery);
+      const matchSku = item.variant.sku.toLowerCase().includes(normalizedQuery);
+      return matchName || matchVar || matchSku;
+    })
+    .sort((a, b) => {
+      if (inventorySortBy === 'name_asc') {
+        const nameA = `${a.product?.name || ''} ${a.variant.name}`;
+        const nameB = `${b.product?.name || ''} ${b.variant.name}`;
+        return nameA.localeCompare(nameB, 'vi');
+      }
+      if (inventorySortBy === 'name_desc') {
+        const nameA = `${a.product?.name || ''} ${a.variant.name}`;
+        const nameB = `${b.product?.name || ''} ${b.variant.name}`;
+        return nameB.localeCompare(nameA, 'vi');
+      }
+      if (inventorySortBy === 'available_desc') {
+        return b.availableToSell - a.availableToSell;
+      }
+      if (inventorySortBy === 'available_asc') {
+        return a.availableToSell - b.availableToSell;
+      }
+      if (inventorySortBy === 'storage_desc') {
+        return b.centralStorageRemaining - a.centralStorageRemaining;
+      }
+      if (inventorySortBy === 'storage_asc') {
+        return a.centralStorageRemaining - b.centralStorageRemaining;
+      }
+      if (inventorySortBy === 'sold_desc') {
+        return b.currentSoldQty - a.currentSoldQty;
+      }
+      if (inventorySortBy === 'total_stock_desc') {
+        return (b.variant.total_inventory || 0) - (a.variant.total_inventory || 0);
+      }
+      return 0;
+    });
 
   // Group filtered variants by Product for Grouped View
   const groupedProductsMap = new Map<
@@ -477,7 +543,40 @@ export default function InventoryPage() {
     }
   });
 
-  const groupedProducts = Array.from(groupedProductsMap.values());
+  const groupedProducts = Array.from(groupedProductsMap.values()).sort((a, b) => {
+    if (inventorySortBy === 'name_asc') {
+      return (a.product.name || '').localeCompare(b.product.name || '', 'vi');
+    }
+    if (inventorySortBy === 'name_desc') {
+      return (b.product.name || '').localeCompare(a.product.name || '', 'vi');
+    }
+    if (inventorySortBy === 'available_desc') {
+      const aAvail = a.items.reduce((s, it) => s + it.availableToSell, 0);
+      const bAvail = b.items.reduce((s, it) => s + it.availableToSell, 0);
+      return bAvail - aAvail;
+    }
+    if (inventorySortBy === 'available_asc') {
+      const aAvail = a.items.reduce((s, it) => s + it.availableToSell, 0);
+      const bAvail = b.items.reduce((s, it) => s + it.availableToSell, 0);
+      return aAvail - bAvail;
+    }
+    if (inventorySortBy === 'storage_desc') {
+      const aStore = a.items.reduce((s, it) => s + it.centralStorageRemaining, 0);
+      const bStore = b.items.reduce((s, it) => s + it.centralStorageRemaining, 0);
+      return bStore - aStore;
+    }
+    if (inventorySortBy === 'storage_asc') {
+      const aStore = a.items.reduce((s, it) => s + it.centralStorageRemaining, 0);
+      const bStore = b.items.reduce((s, it) => s + it.centralStorageRemaining, 0);
+      return aStore - bStore;
+    }
+    if (inventorySortBy === 'sold_desc') {
+      const aSold = a.items.reduce((s, it) => s + it.currentSoldQty, 0);
+      const bSold = b.items.reduce((s, it) => s + it.currentSoldQty, 0);
+      return bSold - aSold;
+    }
+    return 0;
+  });
 
   // Selected Booth Aggregate Stats
   const boothStats = enrichedVariants.reduce(
@@ -912,6 +1011,85 @@ export default function InventoryPage() {
                 <span className="hidden sm:inline text-[11px]">Bảng gọn</span>
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Detailed Inventory Sorting & Filter Control Toolbar */}
+      <div className="bg-white dark:bg-neutral-850 border border-[#E8E8E5] dark:border-neutral-800 rounded-xl p-3 shadow-2xs space-y-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
+            {/* Sorting Select */}
+            <div className="flex items-center gap-1.5 min-w-[170px]">
+              <ArrowUpDown className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
+              <span className="text-xs font-bold text-[#737373] dark:text-neutral-400 shrink-0">Sắp xếp:</span>
+              <select
+                value={inventorySortBy}
+                onChange={(e) => setInventorySortBy(e.target.value as any)}
+                className="h-8 rounded-lg border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-900 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] flex-1 sm:flex-none"
+              >
+                <option value="name_asc">Tên: A → Z (Mặc định)</option>
+                <option value="name_desc">Tên: Z → A</option>
+                <option value="available_desc">Khả dụng tại quầy: Nhiều nhất</option>
+                <option value="available_asc">Khả dụng tại quầy: Sắp hết (Ít nhất)</option>
+                <option value="storage_desc">Kho tổng còn lại: Nhiều nhất</option>
+                <option value="storage_asc">Kho tổng còn lại: Ít nhất</option>
+                <option value="sold_desc">Đã bán tại quầy: Nhiều nhất</option>
+                <option value="total_stock_desc">Tổng tồn kho toàn hệ thống: Cao nhất</option>
+              </select>
+            </div>
+
+            {/* Category Filter */}
+            <div className="flex items-center gap-1.5 min-w-[150px]">
+              <Tag className="w-3.5 h-3.5 text-[#737373] dark:text-neutral-400 shrink-0" />
+              <span className="text-xs font-bold text-[#737373] dark:text-neutral-400 shrink-0">Danh mục:</span>
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="h-8 rounded-lg border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-900 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] flex-1 sm:flex-none"
+              >
+                <option value="all">Tất cả danh mục</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Source Filter */}
+            <div className="flex items-center gap-1.5 min-w-[140px]">
+              <Store className="w-3.5 h-3.5 text-[#737373] dark:text-neutral-400 shrink-0" />
+              <span className="text-xs font-bold text-[#737373] dark:text-neutral-400 shrink-0">Nguồn:</span>
+              <select
+                value={sourceFilter}
+                onChange={(e) => setSourceFilter(e.target.value as any)}
+                className="h-8 rounded-lg border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-900 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] flex-1 sm:flex-none"
+              >
+                <option value="all">Tất cả nguồn hàng</option>
+                <option value="store">👑 Shop chính (HikaruStore)</option>
+                <option value="collab">🤝 Hàng Collab đối tác</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Result counter & Reset */}
+          <div className="flex items-center gap-2.5 shrink-0 ml-auto">
+            <span className="text-xs text-[#737373] dark:text-neutral-400 font-medium">
+              Đang hiển thị <strong className="text-[#315C4C] dark:text-emerald-400 font-bold">{filteredEnrichedVariants.length}</strong> / {enrichedVariants.length} phân loại
+            </span>
+            {isInventoryFilterActive && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetInventoryFilters}
+                className="h-7 px-2.5 text-xs text-[#C44536] hover:bg-[#FDF1F0] border-[#F8B4AF] gap-1 font-semibold"
+                title="Đặt lại toàn bộ bộ lọc và sắp xếp về mặc định"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Đặt lại</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>

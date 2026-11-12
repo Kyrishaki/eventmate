@@ -42,6 +42,7 @@ import {
   Layers,
   Store,
   ShoppingBag,
+  ArrowUpDown,
 } from 'lucide-react';
 
 interface VariantInput {
@@ -93,6 +94,32 @@ export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = React.useState<string>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [viewMode, setViewMode] = React.useState<'list' | 'grid'>('list');
+
+  // Extended Sorting & Filtering States
+  const [sortBy, setSortBy] = React.useState<
+    'newest' | 'oldest' | 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc' | 'stock_desc' | 'stock_asc' | 'reserved_desc'
+  >('newest');
+  const [sourceFilter, setSourceFilter] = React.useState<'all' | 'store' | 'collab'>('all');
+  const [priceRangeFilter, setPriceRangeFilter] = React.useState<
+    'all' | 'under_100k' | '100k_300k' | '300k_500k' | 'above_500k'
+  >('all');
+
+  const isProductFilterActive =
+    sortBy !== 'newest' ||
+    sourceFilter !== 'all' ||
+    priceRangeFilter !== 'all' ||
+    selectedCategory !== 'all' ||
+    Boolean(searchQuery.trim()) ||
+    statusFilter !== 'active';
+
+  const resetProductFilters = React.useCallback(() => {
+    setSortBy('newest');
+    setSourceFilter('all');
+    setPriceRangeFilter('all');
+    setSelectedCategory('all');
+    setSearchQuery('');
+    setStatusFilter('active');
+  }, []);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [editingProduct, setEditingProduct] = React.useState<Product | null>(null);
 
@@ -289,26 +316,111 @@ export default function ProductsPage() {
     };
   }, [workspaceProducts, variants, allocations]);
 
-  const filteredProducts = workspaceProducts.filter((p) => {
-    const isSoldOut = isProductSoldOut(p.id);
-    const isArchived = Boolean(p.is_deleted || !p.is_active);
+  const filteredProducts = React.useMemo(() => {
+    const list = workspaceProducts.filter((p) => {
+      const isSoldOut = isProductSoldOut(p.id);
+      const isArchived = Boolean(p.is_deleted || !p.is_active);
 
-    if (statusFilter === 'active') {
-      if (isArchived || isSoldOut) return false;
-    } else if (statusFilter === 'sold_out') {
-      if (isArchived || !isSoldOut) return false;
-    } else if (statusFilter === 'archived') {
-      if (!isArchived) return false;
-    }
+      // Status Filter
+      if (statusFilter === 'active') {
+        if (isArchived || isSoldOut) return false;
+      } else if (statusFilter === 'sold_out') {
+        if (isArchived || !isSoldOut) return false;
+      } else if (statusFilter === 'archived') {
+        if (!isArchived) return false;
+      }
 
-    const matchesCat = selectedCategory === 'all' || p.category_id === selectedCategory;
-    const matchesSearch =
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      variants
-        .filter((v) => v.product_id === p.id)
-        .some((v) => v.sku.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesCat && matchesSearch;
-  });
+      // Source Filter
+      if (sourceFilter === 'store' && p.collab_partner) return false;
+      if (sourceFilter === 'collab' && !p.collab_partner) return false;
+
+      // Category Filter
+      if (selectedCategory !== 'all' && p.category_id !== selectedCategory) {
+        return false;
+      }
+
+      const prodVariants = variants.filter((v) => v.product_id === p.id);
+
+      // Price Range Filter
+      const prices = prodVariants.map((v) => v.price).filter((pr) => typeof pr === 'number' && !isNaN(pr));
+      const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+      if (priceRangeFilter === 'under_100k' && minPrice >= 100000) return false;
+      if (priceRangeFilter === '100k_300k' && (minPrice < 100000 || minPrice > 300000)) return false;
+      if (priceRangeFilter === '300k_500k' && (minPrice < 300000 || minPrice > 500000)) return false;
+      if (priceRangeFilter === 'above_500k' && minPrice <= 500000) return false;
+
+      // Search Query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchesName = p.name.toLowerCase().includes(q);
+        const matchesSku = prodVariants.some(
+          (v) => v.sku.toLowerCase().includes(q) || (v.barcode && v.barcode.toLowerCase().includes(q))
+        );
+        if (!matchesName && !matchesSku) return false;
+      }
+
+      return true;
+    });
+
+    // Sorting
+    return list.sort((a, b) => {
+      const aVariants = variants.filter((v) => v.product_id === a.id);
+      const bVariants = variants.filter((v) => v.product_id === b.id);
+
+      if (sortBy === 'newest') {
+        const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return bTime - aTime;
+      }
+      if (sortBy === 'oldest') {
+        const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return aTime - bTime;
+      }
+      if (sortBy === 'name_asc') {
+        return a.name.localeCompare(b.name, 'vi');
+      }
+      if (sortBy === 'name_desc') {
+        return b.name.localeCompare(a.name, 'vi');
+      }
+      if (sortBy === 'price_asc') {
+        const aMin = aVariants.length > 0 ? Math.min(...aVariants.map((v) => v.price)) : 0;
+        const bMin = bVariants.length > 0 ? Math.min(...bVariants.map((v) => v.price)) : 0;
+        return aMin - bMin;
+      }
+      if (sortBy === 'price_desc') {
+        const aMax = aVariants.length > 0 ? Math.max(...aVariants.map((v) => v.price)) : 0;
+        const bMax = bVariants.length > 0 ? Math.max(...bVariants.map((v) => v.price)) : 0;
+        return bMax - aMax;
+      }
+      if (sortBy === 'stock_desc') {
+        const aStock = aVariants.reduce((sum, v) => sum + (v.total_inventory || 0), 0);
+        const bStock = bVariants.reduce((sum, v) => sum + (v.total_inventory || 0), 0);
+        return bStock - aStock;
+      }
+      if (sortBy === 'stock_asc') {
+        const aStock = aVariants.reduce((sum, v) => sum + (v.total_inventory || 0), 0);
+        const bStock = bVariants.reduce((sum, v) => sum + (v.total_inventory || 0), 0);
+        return aStock - bStock;
+      }
+      if (sortBy === 'reserved_desc') {
+        const aRes = aVariants.reduce((sum, v) => sum + (v.reserved_quantity || 0), 0);
+        const bRes = bVariants.reduce((sum, v) => sum + (v.reserved_quantity || 0), 0);
+        return bRes - aRes;
+      }
+      return 0;
+    });
+  }, [
+    workspaceProducts,
+    variants,
+    statusFilter,
+    sourceFilter,
+    selectedCategory,
+    priceRangeFilter,
+    searchQuery,
+    sortBy,
+    isProductSoldOut,
+  ]);
 
   function openCreateModal() {
     setEditingProduct(null);
@@ -836,6 +948,84 @@ export default function ProductsPage() {
               <span className="hidden xl:inline text-[11px]">Lưới thẻ</span>
             </button>
           </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Detailed Sorting & Filter Control Panel */}
+      <div className="bg-white dark:bg-neutral-850 border border-[#E8E8E5] dark:border-neutral-800 rounded-xl p-3 shadow-2xs space-y-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
+            {/* Sorting Select */}
+            <div className="flex items-center gap-1.5 min-w-[170px]">
+              <ArrowUpDown className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
+              <span className="text-xs font-bold text-[#737373] dark:text-neutral-400 shrink-0">Sắp xếp:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="h-8 rounded-lg border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-900 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] flex-1 sm:flex-none"
+              >
+                <option value="newest">Mới nhất (Mặc định)</option>
+                <option value="oldest">Cũ nhất</option>
+                <option value="name_asc">Tên: A → Z</option>
+                <option value="name_desc">Tên: Z → A</option>
+                <option value="price_asc">Giá: Thấp → Cao</option>
+                <option value="price_desc">Giá: Cao → Thấp</option>
+                <option value="stock_desc">Tổng tồn kho: Nhiều nhất</option>
+                <option value="stock_asc">Tổng tồn kho: Ít nhất</option>
+                <option value="reserved_desc">Hàng Keep / Preorder: Nhiều nhất</option>
+              </select>
+            </div>
+
+            {/* Source Select */}
+            <div className="flex items-center gap-1.5 min-w-[140px]">
+              <Store className="w-3.5 h-3.5 text-[#737373] dark:text-neutral-400 shrink-0" />
+              <span className="text-xs font-bold text-[#737373] dark:text-neutral-400 shrink-0">Nguồn hàng:</span>
+              <select
+                value={sourceFilter}
+                onChange={(e) => setSourceFilter(e.target.value as any)}
+                className="h-8 rounded-lg border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-900 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] flex-1 sm:flex-none"
+              >
+                <option value="all">Tất cả nguồn hàng</option>
+                <option value="store">👑 Shop chính (HikaruStore)</option>
+                <option value="collab">🤝 Gian hàng Collab</option>
+              </select>
+            </div>
+
+            {/* Price Range Select */}
+            <div className="flex items-center gap-1.5 min-w-[140px]">
+              <span className="text-xs font-bold text-[#737373] dark:text-neutral-400 shrink-0">Khoảng giá:</span>
+              <select
+                value={priceRangeFilter}
+                onChange={(e) => setPriceRangeFilter(e.target.value as any)}
+                className="h-8 rounded-lg border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-900 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] flex-1 sm:flex-none"
+              >
+                <option value="all">Tất cả khoảng giá</option>
+                <option value="under_100k">Dưới 100.000 ₫</option>
+                <option value="100k_300k">100.000 ₫ – 300.000 ₫</option>
+                <option value="300k_500k">300.000 ₫ – 500.000 ₫</option>
+                <option value="above_500k">Trên 500.000 ₫</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Result counter & Reset */}
+          <div className="flex items-center gap-2.5 shrink-0 ml-auto">
+            <span className="text-xs text-[#737373] dark:text-neutral-400 font-medium">
+              Đang hiển thị <strong className="text-[#315C4C] dark:text-emerald-400 font-bold">{filteredProducts.length}</strong> / {workspaceProducts.length} sản phẩm
+            </span>
+            {isProductFilterActive && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetProductFilters}
+                className="h-7 px-2.5 text-xs text-[#C44536] hover:bg-[#FDF1F0] border-[#F8B4AF] gap-1 font-semibold"
+                title="Đặt lại toàn bộ bộ lọc và sắp xếp về mặc định"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Đặt lại</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>

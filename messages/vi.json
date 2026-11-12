@@ -72,12 +72,12 @@
     "feedback": "Góp ý & Báo lỗi",
     "analytics": "Báo cáo",
     "settings": "Cài đặt",
-    "posTerminal": "Bán hàng POS",
+    "posTerminal": "Bán hàng",
     "groupOperations": "Vận hành",
     "groupCatalog": "Hàng hóa & Kho",
     "groupSystem": "Tài chính & Hệ thống",
     "moreMenu": "Menu",
-    "posShort": "Bán POS",
+    "posShort": "Bán hàng",
     "feedbackShort": "Góp ý"
   },
   "dashboard": {

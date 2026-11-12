@@ -263,7 +263,7 @@ export default function SettingsPage() {
           <p className="text-[#404040] dark:text-neutral-300 leading-relaxed text-[11px]">
             Mọi thông tin cá nhân và tài khoản bạn chỉnh sửa bên dưới sẽ được tự động đồng bộ ngay lập tức sang:
             <strong> (1) Gian hàng cho Khách xem</strong> (Hotline, Zalo, địa chỉ, số tài khoản thanh toán online),
-            <strong> (2) Màn hình Bán hàng POS & Mã VietQR</strong>, và
+            <strong> (2) Màn hình Bán hàng & Mã VietQR</strong>, và
             <strong> (3) Hóa đơn in nhiệt / Phiếu xuất hàng</strong>. Bạn không cần phải chỉnh thủ công ở bất kỳ chỗ nào khác!
           </p>
         </div>

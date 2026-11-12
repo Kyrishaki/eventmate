@@ -618,7 +618,7 @@ export default function AuditLogsPage() {
             </span>
             <Users2 className="w-4 h-4 text-[#1D4ED8]" />
           </div>
-          <p className="text-[10px] text-[#1E40AF] mt-1">Bán POS, kiểm kê, chỉnh kho</p>
+          <p className="text-[10px] text-[#1E40AF] mt-1">Bán hàng, kiểm kê, chỉnh kho</p>
         </Card>
 
         {/* Sensitive / Critical Changes */}

@@ -173,7 +173,7 @@ export function ProductImageUploader({
               <span>Đã có ảnh sản phẩm</span>
             </div>
             <p className="text-[11px] text-[#737373]">
-              Ảnh sẽ hiển thị trên bảng điều khiển quản lý và màn hình máy bán hàng POS.
+              Ảnh sẽ hiển thị trên bảng điều khiển quản lý và màn hình bán hàng.
             </p>
 
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">

@@ -22,7 +22,7 @@ const beVietnamPro = Be_Vietnam_Pro({
 
 export const metadata: Metadata = {
   title: 'HikaruStore',
-  description: 'Hệ thống quản lý gian hàng merchandise, kiểm soát kho và bán hàng POS chuyên nghiệp HikaruStore.',
+  description: 'Hệ thống quản lý gian hàng merchandise, kiểm soát kho và bán hàng chuyên nghiệp HikaruStore.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,

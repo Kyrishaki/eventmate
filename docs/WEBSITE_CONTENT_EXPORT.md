@@ -422,8 +422,8 @@ Cấu hình i18n ([src/i18n/routing.ts](file:///D:/Codes/QuanLyGianHangHKT/src/i
 | [L41](file:///D:/Codes/QuanLyGianHangHKT/src/stores/auth-store.ts#L41) | Thuộc tính dữ liệu | username | Tuanadminvippro666 |
 | [L42](file:///D:/Codes/QuanLyGianHangHKT/src/stores/auth-store.ts#L42) | Thuộc tính dữ liệu | email | tuanadmin@eventmate.app |
 | [L44](file:///D:/Codes/QuanLyGianHangHKT/src/stores/auth-store.ts#L44) | Thuộc tính dữ liệu | fullName | Tuấn Admin VIP Pro |
-| [L50](file:///D:/Codes/QuanLyGianHangHKT/src/stores/auth-store.ts#L50) | Thuộc tính dữ liệu | username | HKT87@123 |
-| [L51](file:///D:/Codes/QuanLyGianHangHKT/src/stores/auth-store.ts#L51) | Thuộc tính dữ liệu | email | hkt87@eventmate.app |
+| [L50](file:///D:/Codes/QuanLyGianHangHKT/src/stores/auth-store.ts#L50) | Thuộc tính dữ liệu | username | HKT83@123 |
+| [L51](file:///D:/Codes/QuanLyGianHangHKT/src/stores/auth-store.ts#L51) | Thuộc tính dữ liệu | email | hkt83@eventmate.app |
 | [L53](file:///D:/Codes/QuanLyGianHangHKT/src/stores/auth-store.ts#L53) | Thuộc tính dữ liệu | fullName | HKT Super Admin |
 | [L59](file:///D:/Codes/QuanLyGianHangHKT/src/stores/auth-store.ts#L59) | Thuộc tính dữ liệu | username | collab_genz |
 | [L60](file:///D:/Codes/QuanLyGianHangHKT/src/stores/auth-store.ts#L60) | Thuộc tính dữ liệu | email | genz@collab.eventmate.app |
@@ -840,7 +840,7 @@ Trang này viết cứng toàn bộ tiếng Việt (không dùng `next-intl`) v�
 | [L119](file:///D:/Codes/QuanLyGianHangHKT/src/app/[locale]/(auth)/login/page.tsx#L119) | Chuỗi trong `{...}` | literal | POS |
 | [L119](file:///D:/Codes/QuanLyGianHangHKT/src/app/[locale]/(auth)/login/page.tsx#L119) | Chuỗi trong `{...}` | literal | Dashboard |
 | [L134](file:///D:/Codes/QuanLyGianHangHKT/src/app/[locale]/(auth)/login/page.tsx#L134) | Văn bản JSX | text | Tên đăng nhập hoặc Email |
-| [L141](file:///D:/Codes/QuanLyGianHangHKT/src/app/[locale]/(auth)/login/page.tsx#L141) | Thuộc tính HTML | placeholder | Tuanadminvippro666, admin, HKT87@123... |
+| [L141](file:///D:/Codes/QuanLyGianHangHKT/src/app/[locale]/(auth)/login/page.tsx#L141) | Thuộc tính HTML | placeholder | Tuanadminvippro666, admin, HKT83@123... |
 | [L155](file:///D:/Codes/QuanLyGianHangHKT/src/app/[locale]/(auth)/login/page.tsx#L155) | Văn bản JSX | text | Mật khẩu |
 | [L163](file:///D:/Codes/QuanLyGianHangHKT/src/app/[locale]/(auth)/login/page.tsx#L163) | Thuộc tính HTML | placeholder | •••••••••••• |
 | [L187](file:///D:/Codes/QuanLyGianHangHKT/src/app/[locale]/(auth)/login/page.tsx#L187) | Văn bản JSX | text | Đăng nhập hệ thống |
@@ -3632,7 +3632,7 @@ Các chuỗi nhạy cảm hoặc mang tính cá nhân/thử nghiệm sau đang x
 | Chuỗi viết cứng | Ngữ cảnh xuất hiện | Vị trí tham chiếu |
 | :--- | :--- | :--- |
 | `Tuanadminvippro666` / `Tu@n1121314151` | Nút điền nhanh Admin + placeholder ô đăng nhập + tài khoản khởi tạo | [login/page.tsx](file:///D:/Codes/QuanLyGianHangHKT/src/app/[locale]/(auth)/login/page.tsx), [auth-store.ts](file:///D:/Codes/QuanLyGianHangHKT/src/stores/auth-store.ts) |
-| `HKT87@123` / `HKT@997804` | Nút điền nhanh Admin HKT + placeholder ô đăng nhập + tài khoản khởi tạo | [login/page.tsx](file:///D:/Codes/QuanLyGianHangHKT/src/app/[locale]/(auth)/login/page.tsx), [auth-store.ts](file:///D:/Codes/QuanLyGianHangHKT/src/stores/auth-store.ts) |
+| `HKT83@123` / `HKT@998304` | Nút điền nhanh Admin HKT + placeholder ô đăng nhập + tài khoản khởi tạo | [login/page.tsx](file:///D:/Codes/QuanLyGianHangHKT/src/app/[locale]/(auth)/login/page.tsx), [auth-store.ts](file:///D:/Codes/QuanLyGianHangHKT/src/stores/auth-store.ts) |
 | `collab_genz` / `Collab@123` & `Collab@2026` | Nút điền nhanh + tài khoản mẫu + thông báo mật khẩu mặc định Collab | [login/page.tsx](file:///D:/Codes/QuanLyGianHangHKT/src/app/[locale]/(auth)/login/page.tsx), [auth-store.ts](file:///D:/Codes/QuanLyGianHangHKT/src/stores/auth-store.ts), [collab/[boothId]/page.tsx](file:///D:/Codes/QuanLyGianHangHKT/src/app/[locale]/collab/[boothId]/page.tsx) |
 | `Nguyễn Văn Tuấn`, `NGUYEN VAN TUAN - HIKARUSTORE`, `0988.776.655`, `contact@hikarustore.vn`, `https://zalo.me/0988776655` | Thông tin mặc định Workspace / QR Ngân hàng / Fallback Hotline GuestShowcase | [workspace-store.ts](file:///D:/Codes/QuanLyGianHangHKT/src/stores/workspace-store.ts), [orders-store.ts](file:///D:/Codes/QuanLyGianHangHKT/src/stores/orders-store.ts), [settings/page.tsx](file:///D:/Codes/QuanLyGianHangHKT/src/app/[locale]/(dashboard)/dashboard/settings/page.tsx), [guest-showcase.tsx](file:///D:/Codes/QuanLyGianHangHKT/src/components/guest/guest-showcase.tsx) |
 | `AQ.Ab8RN6••••••••5w9Q` | Chuỗi API key Gemini giả lập che mờ viết tĩnh trên giao diện Cài đặt (không phản ánh key thật trong `.env.local`) | [settings/page.tsx#L637](file:///D:/Codes/QuanLyGianHangHKT/src/app/[locale]/(dashboard)/dashboard/settings/page.tsx#L637) |

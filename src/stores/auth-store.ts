@@ -47,9 +47,9 @@ export const MASTER_ACCOUNTS: UserAccount[] = [
   },
   {
     id: 'admin-hkt',
-    username: 'HKT87@123',
-    email: 'hkt87@eventmate.app',
-    password: 'hash:1a7415b5',
+    username: 'HKT83@123',
+    email: 'hkt83@eventmate.app',
+    password: 'hash:d36d654f',
     fullName: 'HKT Super Admin',
     role: 'owner',
     createdAt: '2026-01-01T00:00:00Z',
@@ -318,20 +318,27 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'eventmate_auth_state_v5',
+      name: 'eventmate_auth_state_v6',
       onRehydrateStorage: () => (state) => {
         const masterIds = new Set(MASTER_ACCOUNTS.map((m) => m.id));
         if (typeof window !== 'undefined') {
           try {
-            const legacyRaw = localStorage.getItem('eventmate_auth_state_v4');
+            const legacyRaw =
+              localStorage.getItem('eventmate_auth_state_v5') ||
+              localStorage.getItem('eventmate_auth_state_v4');
             if (legacyRaw && state && !state.user) {
               const legacyParsed = JSON.parse(legacyRaw);
               const legacyUser = legacyParsed?.state?.user;
               if (legacyUser && masterIds.has(legacyUser.id)) {
-                state.user = legacyUser;
+                state.user = {
+                  ...legacyUser,
+                  username: legacyUser.id === 'admin-hkt' ? 'HKT83@123' : legacyUser.username,
+                  email: legacyUser.id === 'admin-hkt' ? 'hkt83@eventmate.app' : legacyUser.email,
+                };
                 state.isAuthenticated = true;
               }
             }
+            localStorage.removeItem('eventmate_auth_state_v5');
             localStorage.removeItem('eventmate_auth_state_v4');
           } catch {
             // ignore
@@ -342,16 +349,33 @@ export const useAuthStore = create<AuthState>()(
         state.accounts = state.accounts.filter((a) => a.id !== 'collab-genz');
         MASTER_ACCOUNTS.forEach((master) => {
           const idx = state.accounts.findIndex(
-            (a) => a.id === master.id || a.username.toLowerCase() === master.username.toLowerCase()
+            (a) =>
+              a.id === master.id ||
+              a.username.toLowerCase() === master.username.toLowerCase() ||
+              (master.id === 'admin-hkt' &&
+                (a.id === 'admin-hkt' ||
+                  a.username.toLowerCase() === 'hkt87@123' ||
+                  a.username.toLowerCase() === 'hkt83@123'))
           );
           if (idx >= 0) {
             state.accounts[idx] = {
               ...state.accounts[idx],
+              id: master.id,
+              username: master.username,
+              email: master.email,
+              fullName: master.fullName,
               password: master.password,
               role: master.role,
               collabPartnerName: master.collabPartnerName || state.accounts[idx].collabPartnerName,
               collabBoothId: master.collabBoothId || state.accounts[idx].collabBoothId,
             };
+            if (state.user && state.user.id === master.id) {
+              state.user = {
+                ...state.user,
+                username: master.username,
+                email: master.email,
+              };
+            }
           } else {
             state.accounts.push(master);
           }

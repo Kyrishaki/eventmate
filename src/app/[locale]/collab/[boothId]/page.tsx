@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Modal } from '@/components/ui/modal';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, compressImage } from '@/lib/utils';
 import { isNetRevenueOrder } from '@/lib/test-data-filter';
 import { Booth, EventItem, Product, ProductVariant, InventoryAllocation, Order, PaymentMethod } from '@/types/database';
 import {
@@ -51,7 +51,8 @@ import {
   EyeOff,
   Coins,
   AlertCircle,
-  Zap,
+  Camera,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { playSuccessChime } from '@/lib/sound';
 import { calculateVariantStock } from '@/lib/stock-status';
@@ -120,8 +121,28 @@ function CollabPartnerPortalContent() {
   const [isPreorderPickupOpen, setIsPreorderPickupOpen] = React.useState(false);
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>('qr_manual');
   const [tenderedCash, setTenderedCash] = React.useState<number>(0);
+  const [proofImage, setProofImage] = React.useState<string | null>(null);
+  const [isCapturingProof, setIsCapturingProof] = React.useState(false);
   const [isSubmittingOrder, setIsSubmittingOrder] = React.useState(false);
   const [orderSuccess, setOrderSuccess] = React.useState<Order | null>(null);
+
+  const handleCollabProofFileChange = React.useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        setIsCapturingProof(true);
+        const compressed = await compressImage(file, 900, 0.75);
+        setProofImage(compressed);
+      } catch (err) {
+        console.error('Lỗi xử lý ảnh minh chứng CK:', err);
+      } finally {
+        setIsCapturingProof(false);
+        e.target.value = '';
+      }
+    },
+    []
+  );
 
   // Manual Sync Package JSON string for exchange
   const [importJson, setImportJson] = React.useState('');
@@ -381,6 +402,10 @@ ${url}`;
   // POS Checkout Handler
   async function handlePosCheckout() {
     if (cart.length === 0 || !currentBooth) return;
+    if (paymentMethod === 'qr_manual' && (!proofImage || !proofImage.trim())) {
+      alert('BẮT BUỘC: Vui lòng chụp hoặc tải ảnh minh chứng chuyển khoản trước khi xác nhận đơn!');
+      return;
+    }
     if (paymentMethod === 'cash' && cartTotal > 0 && (tenderedCash || 0) < cartTotal) {
       alert(`Số tiền khách đưa chưa đủ! Còn thiếu ${cashShortage.toLocaleString('vi-VN')} VND.`);
       return;
@@ -397,8 +422,10 @@ ${url}`;
         changeAmount: paymentMethod === 'cash' ? cashChange : undefined,
         notes: `Đơn hàng bán tại Quầy Collab: ${partnerName}`,
         isOnline: navigator.onLine,
+        proofImageUrl: proofImage || undefined,
       });
       setOrderSuccess(order);
+      setProofImage(null);
       setTenderedCash(0);
       playSuccessChime();
       clearCart();
@@ -1201,19 +1228,91 @@ ${url}`;
                               className="w-full h-full object-contain"
                             />
                           </div>
-                          <div className="p-2 rounded bg-[#FEF7EC] border border-[#F5C27A]/30 text-[10px] text-[#8C5D17] text-left">
-                            💡 Khi tài khoản báo <strong>&quot;ting ting&quot;</strong> có tiền, bấm nút bên dưới để hoàn tất đơn hàng và trừ kho ngay lập tức.
+                          {/* Mandatory Proof Photo Capture */}
+                          <div
+                            className={`p-2.5 rounded-[6px] border text-left space-y-2 ${
+                              proofImage
+                                ? 'bg-[#EAF4EE] border-[#2F7D55]/40'
+                                : 'bg-[#FEF7EC] border-[#B7791F]/50'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-[11px] font-bold text-[#202124] flex items-center gap-1">
+                                <Camera className="w-3.5 h-3.5 text-[#315C4C]" />
+                                <span>Ảnh minh chứng CK (Bắt buộc)</span>
+                              </span>
+                              {proofImage && (
+                                <button
+                                  type="button"
+                                  onClick={() => setProofImage(null)}
+                                  className="text-[10px] font-semibold text-rose-600 hover:underline cursor-pointer"
+                                >
+                                  Xóa ảnh
+                                </button>
+                              )}
+                            </div>
+
+                            {proofImage ? (
+                              <div className="flex items-center gap-2">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={proofImage}
+                                  alt="Minh chứng chuyển khoản"
+                                  className="w-12 h-12 object-cover rounded border border-[#2F7D55]/40 shrink-0"
+                                />
+                                <span className="text-[11px] font-semibold text-[#2F7D55]">
+                                  ✓ Đã đính kèm ảnh chuyển khoản
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1.5">
+                                <label
+                                  htmlFor="collab-proof-camera-input"
+                                  className="flex-1 py-1.5 px-2 rounded bg-white border border-[#315C4C] text-[#315C4C] text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer hover:bg-[#EBF1EE]"
+                                >
+                                  <Camera className="w-3.5 h-3.5" />
+                                  <span>{isCapturingProof ? 'Đang xử lý...' : 'Chụp ảnh CK'}</span>
+                                  <input
+                                    id="collab-proof-camera-input"
+                                    type="file"
+                                    accept="image/*"
+                                    capture="environment"
+                                    className="hidden"
+                                    onChange={handleCollabProofFileChange}
+                                  />
+                                </label>
+                                <label
+                                  htmlFor="collab-proof-upload-input"
+                                  className="py-1.5 px-2 rounded bg-white border border-[#D5D5D0] text-[#494949] text-[11px] font-semibold flex items-center justify-center gap-1 cursor-pointer hover:bg-[#F7F7F5]"
+                                >
+                                  <ImageIcon className="w-3.5 h-3.5" />
+                                  <span>Chọn ảnh</span>
+                                  <input
+                                    id="collab-proof-upload-input"
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleCollabProofFileChange}
+                                  />
+                                </label>
+                              </div>
+                            )}
                           </div>
+
                           <Button
                             type="button"
                             variant="primary"
                             size="sm"
-                            className="w-full text-xs font-bold bg-[#2F7D55] hover:bg-[#256343] text-white gap-1.5"
-                            disabled={isSubmittingOrder}
+                            className="w-full text-xs font-bold bg-[#2F7D55] hover:bg-[#256343] text-white gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={isSubmittingOrder || !proofImage}
                             onClick={handlePosCheckout}
                           >
                             <CheckCircle2 className="w-4 h-4 text-white" />
-                            <span>✓ Đã nhận tiền ({formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}) - Hoàn tất ngay</span>
+                            <span>
+                              {proofImage
+                                ? `✓ Đã nhận tiền (${formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}) - Hoàn tất ngay`
+                                : 'Chụp / tải ảnh minh chứng CK để xác nhận'}
+                            </span>
                           </Button>
                         </div>
                       )}

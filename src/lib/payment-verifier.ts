@@ -65,7 +65,7 @@ export function listRecentTransactions(limit = 30): VerifiedBankTransaction[] {
 }
 
 /**
- * Checks if a transaction matching `transferCode` (e.g. "EM8899") and `expectedAmount`
+ * Checks if a transaction matching `transferCode` (e.g. "HKTS-8899" or "EM8899") and `expectedAmount`
  * has already been received via Webhook or previous poll.
  */
 export function findMatchingTransactionInStore(
@@ -75,10 +75,16 @@ export function findMatchingTransactionInStore(
   const normalizedCode = normalizeTransferText(transferCode);
   if (!normalizedCode) return null;
 
+  // Extract raw digits suffix if code has form HKTS-8899 or EM8899
+  const rawDigitsSuffix = transferCode.replace(/^[^0-9]*/, '');
+
   const store = getTransactionStore();
   for (const tx of store) {
     const normalizedContent = normalizeTransferText(tx.content);
-    if (normalizedContent.includes(normalizedCode) && tx.amount >= expectedAmount) {
+    const matchesCode =
+      normalizedContent.includes(normalizedCode) ||
+      (rawDigitsSuffix.length >= 4 && normalizedContent.includes(rawDigitsSuffix));
+    if (matchesCode && tx.amount >= expectedAmount) {
       return tx;
     }
   }

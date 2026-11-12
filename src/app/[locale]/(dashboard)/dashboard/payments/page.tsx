@@ -80,7 +80,7 @@ export default function PaymentsPage() {
   } | null>(null);
   const [recentWebhooks, setRecentWebhooks] = React.useState<WebhookLogItem[]>([]);
   const [isLoadingLogs, setIsLoadingLogs] = React.useState(false);
-  const [simCode, setSimCode] = React.useState('EM8899');
+  const [simCode, setSimCode] = React.useState('HKTS-8899');
   const [simAmount, setSimAmount] = React.useState('150000');
   const [webhookCopied, setWebhookCopied] = React.useState(false);
 
@@ -570,7 +570,7 @@ export default function PaymentsPage() {
               1. Tài khoản Ngân hàng Nhận tiền (VietQR)
             </CardTitle>
             <CardDescription className="text-xs">
-              Hệ thống tự động nhúng số tiền và mã phiên <code className="font-mono font-bold text-[#315C4C]">EMxxxx</code> vào mã QR. Khách quét là hiện sẵn đúng số tiền và nội dung chuyển khoản.
+              Hệ thống tự động nhúng số tiền và mã phiên <code className="font-mono font-bold text-[#315C4C]">HKTS-xxxx</code> vào mã QR. Khách quét là hiện sẵn đúng số tiền và nội dung chuyển khoản.
             </CardDescription>
           </CardHeader>
 
@@ -632,7 +632,7 @@ export default function PaymentsPage() {
                 {accountNo.trim() ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={`https://img.vietqr.io/image/${normalizeVietQrBankId(bankId)}-${accountNo.trim()}-compact2.png?amount=50000&addInfo=EM8899&accountName=${encodeURIComponent(
+                    src={`https://img.vietqr.io/image/${normalizeVietQrBankId(bankId)}-${accountNo.trim()}-compact2.png?amount=50000&addInfo=HKTS-8899&accountName=${encodeURIComponent(
                       accountName.trim()
                     )}`}
                     alt="VietQR Demo"
@@ -646,7 +646,7 @@ export default function PaymentsPage() {
               <div className="text-xs text-[#737373] space-y-1">
                 <p className="font-semibold text-[#202124]">Xem trước mã VietQR tại quầy</p>
                 <p>
-                  Khi thu ngân bấm thanh toán trên POS, mã QR sẽ gắn sẵn nội dung riêng (ví dụ: <strong>EM8899</strong>) để máy tự động đối soát xem đơn nào đã được thanh toán.
+                  Khi thu ngân bấm thanh toán trên POS, mã QR sẽ gắn sẵn nội dung riêng (ví dụ: <strong>HKTS-8899</strong>) để máy tự động đối soát xem đơn nào đã được thanh toán.
                 </p>
                 <div className="flex items-center gap-1.5 text-[#2F7D55] text-[11px] pt-1">
                   <ShieldCheck className="w-3.5 h-3.5" />
@@ -689,7 +689,7 @@ export default function PaymentsPage() {
                 <div className="text-xs">
                   <p className="font-bold text-[#202124]">Tự động nhảy &quot;Thanh toán thành công&quot;</p>
                   <p className="text-[11px] text-[#737373] mt-0.5">
-                    Màn hình POS tự động kiểm tra giao dịch khớp mã <code className="font-mono">EMxxxx</code> và tự động hoàn tất đơn hàng ngay khi nhận được tiền.
+                    Màn hình POS tự động kiểm tra giao dịch khớp mã <code className="font-mono font-bold text-[#315C4C]">HKTS-xxxx</code> và tự động hoàn tất đơn hàng ngay khi nhận được tiền.
                   </p>
                 </div>
               </label>
@@ -895,7 +895,7 @@ export default function PaymentsPage() {
                 id="sim-code"
                 value={simCode}
                 onChange={(e) => setSimCode(e.target.value.toUpperCase())}
-                placeholder="VD: EM8899"
+                placeholder="VD: HKTS-8899"
                 className="h-8 font-mono text-xs bg-white uppercase"
               />
             </div>

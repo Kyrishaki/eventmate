@@ -579,6 +579,7 @@ export default function PosTerminalPage() {
         boothId: selectedBooth.id,
         cashierId: user?.id || 'cashier-pos-demo',
         paymentMethod,
+        orderNumber: paymentMethod === 'qr_manual' ? `HKTS-${qrSessionRef}` : undefined,
         tenderedAmount: paymentMethod === 'cash' ? (tenderedCash || cartTotal) : undefined,
         changeAmount: paymentMethod === 'cash' ? cashChange : undefined,
         notes: mergedNote || undefined,
@@ -633,7 +634,7 @@ export default function PosTerminalPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          transferCode: `EM${qrSessionRef}`,
+          transferCode: `HKTS-${qrSessionRef}`,
           expectedAmount: cartTotal,
           provider: activeBankConfig.provider || 'sepay',
           apiToken: activeBankConfig.apiToken || '',
@@ -646,8 +647,8 @@ export default function PosTerminalPage() {
 
       if (data?.matched && !hasAutoCompletedRef.current && proofImage && proofImage.trim()) {
         hasAutoCompletedRef.current = true;
-        const txRef = data.transaction?.referenceCode || `EM${qrSessionRef}`;
-        await handleCompleteOrder(`[Tự động khớp CK: EM${qrSessionRef} - GD: ${txRef}]`);
+        const txRef = data.transaction?.referenceCode || `HKTS-${qrSessionRef}`;
+        await handleCompleteOrder(`[Tự động khớp CK: HKTS-${qrSessionRef} - GD: ${txRef}]`);
       }
     } catch {
       // Ignore transient network errors while polling
@@ -1812,7 +1813,7 @@ export default function PosTerminalPage() {
                   {proofImage
                     ? 'Đã có ảnh minh chứng CK • Bấm nút xanh hoặc [Enter] để hoàn tất'
                     : activeBankConfig.autoCheckEnabled !== false && lastBankCheckTime
-                    ? `Quét mã CK EM${qrSessionRef} (${lastBankCheckTime}) • Bắt buộc chụp ảnh minh chứng`
+                    ? `Quét mã CK HKTS-${qrSessionRef} (${lastBankCheckTime}) • Bắt buộc chụp ảnh minh chứng`
                     : 'Quét mã VietQR • Chụp/tải ảnh minh chứng CK để xác nhận đơn'}
                 </span>
               </div>
@@ -1832,7 +1833,7 @@ export default function PosTerminalPage() {
                 <div className="w-48 h-48 sm:w-52 sm:h-52 mx-auto bg-white p-2.5 rounded-[10px] border-2 border-[#315C4C]/20 shadow-xs flex items-center justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={`https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-compact2.png?amount=${cartTotal}&addInfo=EM${qrSessionRef}&accountName=${encodeURIComponent(
+                    src={`https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-compact2.png?amount=${cartTotal}&addInfo=HKTS-${qrSessionRef}&accountName=${encodeURIComponent(
                       activeBankConfig.accountName
                     )}`}
                     alt="VietQR code"
@@ -1874,9 +1875,24 @@ export default function PosTerminalPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Nội dung chuyển:</span>
-                  <span className="font-mono font-bold text-[#8C5D17] bg-[#FEF7EC] px-1.5 py-0.5 rounded border border-[#B7791F]/20">
-                    EM{qrSessionRef}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono font-bold text-[#8C5D17] bg-[#FEF7EC] px-1.5 py-0.5 rounded border border-[#B7791F]/20 select-all">
+                      HKTS-{qrSessionRef}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (typeof navigator !== 'undefined') {
+                          navigator.clipboard.writeText(`HKTS-${qrSessionRef}`);
+                        }
+                      }}
+                      className="p-0.5 px-1.5 rounded bg-[#F7F7F5] hover:bg-[#E8E8E5] text-[#737373] text-[10px] font-semibold flex items-center gap-1 cursor-pointer"
+                      title="Nhấn để sao chép nội dung CK"
+                    >
+                      <Copy className="w-2.5 h-2.5" />
+                      <span>Copy</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 

@@ -139,6 +139,7 @@ export async function POST(req: NextRequest) {
 
     // 2. If API Token is available, poll SePay or Casso directly (works even on localhost without public webhook!)
     const normalizedCode = normalizeTransferText(transferCode);
+    const rawDigitsSuffix = transferCode.replace(/^[^0-9]*/, '');
 
     if (provider === 'sepay' && token) {
       try {
@@ -157,10 +158,11 @@ export async function POST(req: NextRequest) {
           for (const item of transactions) {
             const amountIn = parseFloat(String(item.amount_in || '0'));
             const contentText = `${item.code || ''} ${item.transaction_content || ''}`;
-            if (
-              amountIn >= expectedAmount &&
-              normalizeTransferText(contentText).includes(normalizedCode)
-            ) {
+            const normalizedContent = normalizeTransferText(contentText);
+            const isMatch =
+              normalizedContent.includes(normalizedCode) ||
+              (rawDigitsSuffix.length >= 4 && normalizedContent.includes(rawDigitsSuffix));
+            if (amountIn >= expectedAmount && isMatch) {
               const verified: VerifiedBankTransaction = recordIncomingTransaction({
                 id: `sepay-api-${item.id}`,
                 gateway: String(item.bank_brand_name || 'SePay Bank'),
@@ -202,10 +204,11 @@ export async function POST(req: NextRequest) {
           for (const item of records) {
             const amountIn = Number(item.amount || 0);
             const contentText = String(item.description || '');
-            if (
-              amountIn >= expectedAmount &&
-              normalizeTransferText(contentText).includes(normalizedCode)
-            ) {
+            const normalizedContent = normalizeTransferText(contentText);
+            const isMatch =
+              normalizedContent.includes(normalizedCode) ||
+              (rawDigitsSuffix.length >= 4 && normalizedContent.includes(rawDigitsSuffix));
+            if (amountIn >= expectedAmount && isMatch) {
               const verified: VerifiedBankTransaction = recordIncomingTransaction({
                 id: `casso-api-${item.id || item.tid}`,
                 gateway: 'Casso Bank',

@@ -1327,7 +1327,7 @@ export function GuestShowcase() {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={`https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-compact2.png?amount=${bagTotal}&addInfo=${encodeURIComponent(
-                            `KEEP ${(guestPhone || '').trim().replace(/\D/g, '') || 'ONLINE'}`
+                            `HKTS-${(guestPhone || '').trim().replace(/\D/g, '') || 'KEEP'}`
                           )}&accountName=${encodeURIComponent(activeBankConfig.accountName)}`}
                           alt="VietQR Chuyển Khoản"
                           className="w-full h-full object-contain"
@@ -1399,13 +1399,13 @@ export function GuestShowcase() {
                         <span className="text-[10.5px] text-[#737373] block">Nội dung chuyển khoản:</span>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <span className="font-mono font-bold text-xs text-[#2F7D55] dark:text-emerald-300 bg-[#EAF4EE] dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-[#2F7D55]/30">
-                            {`KEEP ${(guestPhone || '').trim().replace(/\D/g, '') || 'ONLINE'}`}
+                            {`HKTS-${(guestPhone || '').trim().replace(/\D/g, '') || 'KEEP'}`}
                           </span>
                           <button
                             type="button"
                             onClick={() =>
                               copyBankInfo(
-                                `KEEP ${(guestPhone || '').trim().replace(/\D/g, '') || 'ONLINE'}`,
+                                `HKTS-${(guestPhone || '').trim().replace(/\D/g, '') || 'KEEP'}`,
                                 'content'
                               )
                             }
@@ -1540,7 +1540,7 @@ export function GuestShowcase() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={`https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-compact2.png?amount=${bagTotal}&addInfo=${encodeURIComponent(
-                        'MUAONL'
+                        `HKTS-${(guestPhone || '').trim().replace(/\D/g, '') || 'ONLINE'}`
                       )}&accountName=${encodeURIComponent(activeBankConfig.accountName)}`}
                       alt="VietQR"
                       className="w-full h-full object-contain"
@@ -1733,7 +1733,7 @@ export function GuestShowcase() {
               <div className="w-28 h-28 bg-white p-1 rounded border border-[#E8E8E5] shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={`https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-compact2.png?amount=0&addInfo=MUAONL&accountName=${encodeURIComponent(
+                  src={`https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-compact2.png?amount=0&addInfo=HKTS-ONL&accountName=${encodeURIComponent(
                     activeBankConfig.accountName
                   )}`}
                   alt="VietQR Bank"
@@ -1754,7 +1754,7 @@ export function GuestShowcase() {
                   Chủ TK: <strong>{activeBankConfig.accountName}</strong>
                 </p>
                 <p className="text-[11px] text-[#8C5D17] dark:text-amber-300 bg-[#FEF7EC] dark:bg-amber-950/40 px-2 py-1 rounded border border-[#B7791F]/30">
-                  Nội dung CK: <strong>ONL [Tên] [SĐT]</strong>
+                  Nội dung CK: <strong>HKTS-[SĐT]</strong>
                 </p>
               </div>
             </div>

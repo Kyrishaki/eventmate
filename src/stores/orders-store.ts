@@ -178,6 +178,7 @@ interface OrdersStoreState {
     notes?: string;
     isOnline: boolean;
     proofImageUrl?: string | null;
+    orderNumber?: string;
   }) => Promise<Order>;
 
   // Payment proof verification
@@ -303,6 +304,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
         notes,
         isOnline,
         proofImageUrl,
+        orderNumber: customOrderNumber,
       }) => {
         const { cart, discountAmount, orders } = get();
         if (cart.length === 0) throw new Error('Giỏ hàng trống');
@@ -311,7 +313,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
         const finalAmount = Math.max(0, subtotal - discountAmount);
 
         const orderId = `ord-${Date.now()}`;
-        const orderNumber = `EM-${Date.now().toString().slice(-4)}`;
+        const orderNumber = customOrderNumber || `HKTS-${Date.now().toString().slice(-4)}`;
         const idempotencyKey = `idem-${orderId}-${Math.random().toString(36).substring(2, 8)}`;
         const nowIso = new Date().toISOString();
 
@@ -654,7 +656,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
             : target.final_amount;
         const nowIso = new Date().toISOString();
         const restoredUnits = restockItems ? restoreOrderStockToAllocations(target) : 0;
-        const recordSuffix = target.order_number.replace(/^EM-?/i, '') || String(Date.now()).slice(-4);
+        const recordSuffix = target.order_number.replace(/^(HKTS|EM)-?/i, '') || String(Date.now()).slice(-4);
         const refundRecordNumber = `RF-${recordSuffix}`;
 
         const updatedOrder: Order = {

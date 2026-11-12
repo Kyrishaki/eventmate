@@ -520,7 +520,7 @@ export default function SettingsPage() {
                 {accountNo ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={`https://img.vietqr.io/image/${normalizeVietQrBankId(bankId)}-${accountNo}-compact2.png?amount=0&addInfo=TESTQR&accountName=${encodeURIComponent(
+                    src={`https://img.vietqr.io/image/${normalizeVietQrBankId(bankId)}-${accountNo}-compact2.png?amount=0&addInfo=HKTS-TEST&accountName=${encodeURIComponent(
                       accountName
                     )}`}
                     alt="VietQR Preview"

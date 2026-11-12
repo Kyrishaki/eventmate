@@ -199,7 +199,7 @@ export const usePreorderStore = create<PreorderStoreState>()(
 
       createPreorder: (data) => {
         const id = `pre-${Date.now()}`;
-        const prefix = data.preorder_type === 'vip_hold' ? 'PRE' : 'ONL';
+        const prefix = data.preorder_type === 'vip_hold' ? 'PRE' : 'HKTS';
         const code = `${prefix}-${Date.now().toString().slice(-4)}`;
         const nowIso = new Date().toISOString();
 

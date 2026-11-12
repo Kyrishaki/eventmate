@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { Link } from '@/i18n/routing';
 import { useDataStore } from '@/stores/data-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { usePreorderStore } from '@/stores/preorder-store';
@@ -524,6 +525,15 @@ export function GuestShowcase() {
                 </span>
               )}
             </button>
+
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-[6px] text-xs font-bold border border-[#315C4C]/40 hover:border-[#315C4C] bg-[#EAF4EE] dark:bg-emerald-950/60 text-[#254639] dark:text-emerald-300 hover:bg-[#315C4C] hover:text-white dark:hover:bg-[#315C4C] transition-colors shadow-2xs cursor-pointer"
+              title="Đăng nhập tài khoản Quản trị viên (Admin) / Nhân viên"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Đăng nhập</span>
+            </Link>
 
             <ThemeToggle />
           </div>

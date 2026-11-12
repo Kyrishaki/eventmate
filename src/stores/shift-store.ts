@@ -56,8 +56,10 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
   initShifts: () => {
     if (typeof window === 'undefined') return;
     try {
-      const savedActive = localStorage.getItem('eventmate-active-shift');
-      const savedPast = localStorage.getItem('eventmate-past-shifts');
+      localStorage.removeItem('eventmate-active-shift');
+      localStorage.removeItem('eventmate-past-shifts');
+      const savedActive = localStorage.getItem('eventmate-active-shift-v2');
+      const savedPast = localStorage.getItem('eventmate-past-shifts-v2');
       set({
         activeShift: savedActive ? JSON.parse(savedActive) : null,
         pastShifts: savedPast ? JSON.parse(savedPast) : [],
@@ -96,7 +98,7 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
     };
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem('eventmate-active-shift', JSON.stringify(newShift));
+      localStorage.setItem('eventmate-active-shift-v2', JSON.stringify(newShift));
     }
 
     logActivity({
@@ -130,7 +132,7 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
     };
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem('eventmate-active-shift', JSON.stringify(updated));
+      localStorage.setItem('eventmate-active-shift-v2', JSON.stringify(updated));
     }
 
     set({ activeShift: updated });
@@ -162,7 +164,7 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
     };
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem('eventmate-active-shift', JSON.stringify(updated));
+      localStorage.setItem('eventmate-active-shift-v2', JSON.stringify(updated));
     }
 
     set({ activeShift: updated });
@@ -188,8 +190,8 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
     const newPast = [closedShift, ...pastShifts];
 
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('eventmate-active-shift');
-      localStorage.setItem('eventmate-past-shifts', JSON.stringify(newPast));
+      localStorage.removeItem('eventmate-active-shift-v2');
+      localStorage.setItem('eventmate-past-shifts-v2', JSON.stringify(newPast));
     }
 
     logActivity({

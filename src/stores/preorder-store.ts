@@ -309,12 +309,13 @@ export const usePreorderStore = create<PreorderStoreState>()(
       },
     }),
     {
-      name: 'eventmate_preorders_v3',
+      name: 'eventmate_preorders_v4',
       onRehydrateStorage: () => () => {
         if (typeof window !== 'undefined') {
           try {
             localStorage.removeItem('eventmate_preorders_v1');
             localStorage.removeItem('eventmate_preorders_v2');
+            localStorage.removeItem('eventmate_preorders_v3');
           } catch {
             // ignore
           }

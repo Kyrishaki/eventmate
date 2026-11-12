@@ -207,6 +207,14 @@ export async function fetchCloudSnapshot(workspaceId = DEFAULT_WORKSPACE_ID): Pr
     }
 
     if (data) {
+      const uatResetCutoffIso = '2026-11-12T16:41:00.000Z';
+      const remoteUpdatedAt = typeof data.updated_at === 'string' ? data.updated_at : '';
+      if (!remoteUpdatedAt || remoteUpdatedAt < uatResetCutoffIso) {
+        // Pre-UAT stale snapshot in cloud: overwrite with clean local slate instead of restoring demo data
+        await pushFullStateToCloud(workspaceId);
+        workspaceStore.setSyncState('synced');
+        return true;
+      }
       applyCloudSnapshot(data as CloudSyncSnapshot);
       workspaceStore.setSyncState('synced');
       return true;

@@ -45,7 +45,7 @@ import {
 export default function AuditLogsPage() {
   const { user, isAuthenticated } = useAuthStore();
   const { activeWorkspace } = useWorkspaceStore();
-  const { logs, clearLogs, resetToDefaultLogs, deleteLog } = useAuditStore();
+  const { logs, clearLogs, deleteLog } = useAuditStore();
 
   // Search & Filter States
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -341,17 +341,6 @@ export default function AuditLogsPage() {
           >
             <Download className="w-3.5 h-3.5" />
             <span className="truncate">Xuất JSON</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs gap-1.5 h-8 bg-white flex-1 sm:flex-none justify-center px-2"
-            onClick={resetToDefaultLogs}
-            title="Khôi phục lại dữ liệu log mẫu để đối soát"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span className="truncate">Log mẫu</span>
           </Button>
 
           <Button

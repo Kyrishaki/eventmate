@@ -54,17 +54,6 @@ export const MASTER_ACCOUNTS: UserAccount[] = [
     role: 'owner',
     createdAt: '2026-01-01T00:00:00Z',
   },
-  {
-    id: 'collab-genz',
-    username: 'collab_genz',
-    email: 'genz@collab.eventmate.app',
-    password: 'hash:15fb0680', // Collab@123
-    fullName: 'Đại diện GenZ Studio (Đối tác Collab)',
-    role: 'collab_partner',
-    collabPartnerName: 'GenZ Studio',
-    collabBoothId: 'booth-collab-genz',
-    createdAt: '2026-01-01T00:00:00Z',
-  },
 ];
 
 interface AuthState {
@@ -286,12 +275,32 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'eventmate_auth_state_v4',
+      name: 'eventmate_auth_state_v5',
       onRehydrateStorage: () => (state) => {
+        const masterIds = new Set(MASTER_ACCOUNTS.map((m) => m.id));
+        if (typeof window !== 'undefined') {
+          try {
+            const legacyRaw = localStorage.getItem('eventmate_auth_state_v4');
+            if (legacyRaw && state && !state.user) {
+              const legacyParsed = JSON.parse(legacyRaw);
+              const legacyUser = legacyParsed?.state?.user;
+              if (legacyUser && masterIds.has(legacyUser.id)) {
+                state.user = legacyUser;
+                state.isAuthenticated = true;
+              }
+            }
+            localStorage.removeItem('eventmate_auth_state_v4');
+          } catch {
+            // ignore
+          }
+        }
         if (!state) return;
-        // Upgrade master accounts if needed
+        // Keep only valid accounts and ensure the 2 primary Admin accounts are always up-to-date
+        state.accounts = state.accounts.filter((a) => a.id !== 'collab-genz');
         MASTER_ACCOUNTS.forEach((master) => {
-          const idx = state.accounts.findIndex((a) => a.id === master.id || a.username.toLowerCase() === master.username.toLowerCase());
+          const idx = state.accounts.findIndex(
+            (a) => a.id === master.id || a.username.toLowerCase() === master.username.toLowerCase()
+          );
           if (idx >= 0) {
             state.accounts[idx] = {
               ...state.accounts[idx],

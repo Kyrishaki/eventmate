@@ -716,47 +716,45 @@ export const useOrdersStore = create<OrdersStoreState>()(
       },
     }),
     {
-      name: 'eventmate_orders_state_v5',
+      name: 'eventmate_orders_state_v6',
       onRehydrateStorage: () => (state) => {
         if (typeof window !== 'undefined') {
           try {
             localStorage.removeItem('eventmate_orders_state_v3');
             localStorage.removeItem('eventmate_orders_state_v4');
+            localStorage.removeItem('eventmate_orders_state_v5');
+            if (!localStorage.getItem('hikaru_uat_orders_v6_cleaned')) {
+              localStorage.setItem('hikaru_uat_orders_v6_cleaned', '1');
+              if (localDb) {
+                Promise.all([
+                  localDb.localOrders.clear(),
+                  localDb.orderItems.clear(),
+                  localDb.syncQueue.clear(),
+                  localDb.events.clear(),
+                  localDb.booths.clear(),
+                  localDb.products.clear(),
+                  localDb.variants.clear(),
+                  localDb.allocations.clear(),
+                  localDb.workspaces.clear(),
+                ]).catch(() => {});
+              }
+            }
           } catch {
             // ignore
           }
         }
         if (!state) return;
-        if (!state.orders || state.orders.length === 0) {
-          state.orders = state.sandboxCleared ? [] : sampleInitialOrders;
-          return;
-        }
-
-        // Reassign EM-4748, EM-9089 or legacy test orders to evt-test-pos and booth-test-1, and normalize order_status
-        state.orders = state.orders.map((o) => {
-          const normalizedStatus = o.order_status || (o.payment_status === 'refunded' ? 'refunded' : 'completed');
-          if (o.order_number === 'EM-4748' || o.order_number === 'EM-9089' || o.event_id === 'evt-test-pos') {
-            return {
-              ...o,
-              order_status: normalizedStatus,
-              event_id: 'evt-test-pos',
-              booth_id: o.booth_id || 'booth-test-1',
-              is_test: true,
-            };
-          }
-          return o.order_status ? o : { ...o, order_status: normalizedStatus };
-        });
-
-        // Ensure sample test orders EM-4748 and EM-9089 are present unless sandbox was cleared
-        if (!state.sandboxCleared) {
-          const has4748 = state.orders.some((o) => o.order_number === 'EM-4748');
-          const has9089 = state.orders.some((o) => o.order_number === 'EM-9089');
-          if (!has4748 || !has9089) {
-            const missing = sampleInitialOrders.filter(
-              (so) => !state.orders.some((o) => o.order_number === so.order_number)
-            );
-            state.orders = [...missing, ...state.orders];
-          }
+        if (!Array.isArray(state.orders)) {
+          state.orders = [];
+        } else {
+          state.orders = state.orders.map((o) =>
+            o.order_status
+              ? o
+              : {
+                  ...o,
+                  order_status: o.payment_status === 'refunded' ? 'refunded' : 'completed',
+                }
+          );
         }
         // Ensure activeBankConfig has valid values
         try {

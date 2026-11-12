@@ -797,14 +797,14 @@ const safeLocalStorage: StateStorage = {
 export const useDataStore = create<DataStoreState>()(
   persist(
     (set, get) => ({
-      events: defaultEvents,
-      booths: defaultBooths,
-      categories: defaultCategories,
-      products: defaultProducts,
-      variants: defaultVariants,
-      allocations: defaultAllocations,
-      members: defaultMembers,
-      invitations: defaultInvitations,
+      events: [],
+      booths: [],
+      categories: [],
+      products: [],
+      variants: [],
+      allocations: [],
+      members: [],
+      invitations: [],
 
       // Events
       createEvent: (eventData) => {
@@ -1498,20 +1498,19 @@ export const useDataStore = create<DataStoreState>()(
       },
     }),
     {
-      name: 'eventmate_core_data_v5',
+      name: 'eventmate_core_data_v6',
       storage: createJSONStorage(() => safeLocalStorage),
       onRehydrateStorage: () => (state) => {
         if (typeof window !== 'undefined') {
           try {
             localStorage.removeItem('eventmate_core_data_v3');
             localStorage.removeItem('eventmate_core_data_v4');
-            const savedEvt = localStorage.getItem('eventmate_pos_selected_event');
-            if (savedEvt === 'evt-hanoi-2026' || savedEvt === 'evt-saigon-2026') {
-              localStorage.setItem('eventmate_pos_selected_event', 'evt-hobby-horizon-2026');
-            }
-            const savedDashEvt = localStorage.getItem('eventmate_dashboard_selected_event');
-            if (savedDashEvt === 'evt-hanoi-2026' || savedDashEvt === 'evt-saigon-2026') {
-              localStorage.setItem('eventmate_dashboard_selected_event', 'all');
+            localStorage.removeItem('eventmate_core_data_v5');
+            if (!localStorage.getItem('hikaru_uat_core_v6_cleaned')) {
+              localStorage.removeItem('eventmate_pos_selected_event');
+              localStorage.removeItem('eventmate_pos_selected_booth');
+              localStorage.removeItem('eventmate_dashboard_selected_event');
+              localStorage.setItem('hikaru_uat_core_v6_cleaned', '1');
             }
           } catch {
             // ignore storage errors
@@ -1519,104 +1518,28 @@ export const useDataStore = create<DataStoreState>()(
         }
         if (!state) return;
 
-        // Purge any legacy Hạc Cầm Concert data if ever present
-        const legacyEventIds = new Set(['evt-hanoi-2026', 'evt-saigon-2026']);
-        const legacyProductIds = new Set([
-          'prod-tshirt-tour',
-          'prod-tour-cap',
-          'prod-lightstick',
-          'prod-vinyl-album',
-        ]);
-
-        if (state.events?.some((e) => legacyEventIds.has(e.id))) {
-          state.events = defaultEvents;
-        }
-        if (state.products?.some((p) => legacyProductIds.has(p.id))) {
-          state.products = defaultProducts;
-          state.variants = defaultVariants;
-          state.categories = defaultCategories;
-          state.booths = defaultBooths;
-          state.allocations = defaultAllocations;
-        }
-
-        // Self-heal and deduplicate events (including cleaning up any duplicate auto-created collab events)
-        if (!state.events || state.events.length === 0) {
-          state.events = defaultEvents;
-        } else {
-          if (!state.events.some((e) => e.id === 'evt-test-pos')) {
-            const testEvt = defaultEvents.find((e) => e.id === 'evt-test-pos');
-            if (testEvt) state.events = [testEvt, ...state.events];
-          }
+        // Deduplicate user-created events without injecting demo data
+        if (Array.isArray(state.events) && state.events.length > 0) {
           const seenEventIds = new Set<string>();
-          const seenCollabEventNames = new Set<string>();
-          state.events = state.events
-            .filter((e) => {
-              if (!e || !e.id || seenEventIds.has(e.id)) return false;
-              seenEventIds.add(e.id);
-              if (e.event_type === 'collab_event') {
-                const key = `${e.workspace_id}:${(e.name || '').trim().toLowerCase()}`;
-                const hasBoothAlloc = state.allocations?.some((a) => a.event_id === e.id);
-                if (!hasBoothAlloc && seenCollabEventNames.has(key)) {
-                  return false;
-                }
-                seenCollabEventNames.add(key);
-              }
-              return true;
-            })
-            .map((e) =>
-              e.id === 'evt-test-pos' || e.id.includes('test') ? { ...e, is_test: true } : e
-            );
+          state.events = state.events.filter((e) => {
+            if (!e || !e.id || seenEventIds.has(e.id)) return false;
+            seenEventIds.add(e.id);
+            return true;
+          });
         }
 
-        // Self-heal and deduplicate booths
-        if (!state.booths || state.booths.length === 0) {
-          state.booths = defaultBooths;
-        } else {
-          if (!state.booths.some((b) => b.id === 'booth-test-1')) {
-            const testBooth = defaultBooths.find((b) => b.id === 'booth-test-1');
-            if (testBooth) state.booths = [testBooth, ...state.booths];
-          }
-          if (!state.booths.some((b) => b.id === 'booth-collab-genz')) {
-            const collabBooth = defaultBooths.find((b) => b.id === 'booth-collab-genz');
-            if (collabBooth) state.booths = [...state.booths, collabBooth];
-          }
+        // Deduplicate user-created booths without injecting demo data
+        if (Array.isArray(state.booths) && state.booths.length > 0) {
           const seenBoothIds = new Set<string>();
-          const seenCollabBoothKeys = new Set<string>();
-          state.booths = state.booths
-            .filter((b) => {
-              if (!b || !b.id || seenBoothIds.has(b.id)) return false;
-              seenBoothIds.add(b.id);
-              if (b.booth_type === 'collab' && b.code?.startsWith('COL-')) {
-                const key = `${b.name}:${b.code}:${b.collab_partner || ''}`;
-                const hasAlloc = state.allocations?.some(
-                  (a) => a.booth_id === b.id && (a.allocated_quantity > 0 || a.sold_quantity > 0)
-                );
-                if (!hasAlloc && seenCollabBoothKeys.has(key)) {
-                  return false;
-                }
-                seenCollabBoothKeys.add(key);
-              }
-              return true;
-            })
-            .map((b) =>
-              b.id === 'booth-test-1' || b.event_id === 'evt-test-pos' || b.code === 'BOOTH-TEST'
-                ? { ...b, is_test: true }
-                : b
-            );
+          state.booths = state.booths.filter((b) => {
+            if (!b || !b.id || seenBoothIds.has(b.id)) return false;
+            seenBoothIds.add(b.id);
+            return true;
+          });
         }
 
-        // Self-heal and deduplicate allocations by (booth_id, variant_id)
-        if (!state.allocations || state.allocations.length === 0) {
-          state.allocations = defaultAllocations;
-        } else {
-          if (!state.allocations.some((a) => a.event_id === 'evt-test-pos')) {
-            const testAllocs = defaultAllocations.filter((a) => a.event_id === 'evt-test-pos');
-            state.allocations = [...state.allocations, ...testAllocs];
-          }
-          if (!state.allocations.some((a) => a.id === 'alloc-collab-genz-1')) {
-            const collabAlloc = defaultAllocations.find((a) => a.id === 'alloc-collab-genz-1');
-            if (collabAlloc) state.allocations = [...state.allocations, collabAlloc];
-          }
+        // Deduplicate allocations by (booth_id, variant_id) without injecting demo data
+        if (Array.isArray(state.allocations) && state.allocations.length > 0) {
           const allocMap = new Map<string, InventoryAllocation>();
           for (const raw of state.allocations) {
             if (!raw || !raw.booth_id || !raw.variant_id) continue;
@@ -1624,10 +1547,6 @@ export const useDataStore = create<DataStoreState>()(
               ...raw,
               allocated_quantity: Math.max(0, Number(raw.allocated_quantity) || 0),
               sold_quantity: Math.max(0, Number(raw.sold_quantity) || 0),
-              is_test:
-                raw.is_test === true ||
-                raw.event_id === 'evt-test-pos' ||
-                Boolean(raw.id && raw.id.includes('test')),
             };
             const key = `${normalized.booth_id}::${normalized.variant_id}`;
             const prev = allocMap.get(key);
@@ -1641,23 +1560,6 @@ export const useDataStore = create<DataStoreState>()(
           }
           state.allocations = Array.from(allocMap.values());
         }
-
-        // Self-heal products, variants, categories
-        if (!state.products || state.products.length === 0) {
-          state.products = defaultProducts;
-        } else if (!state.products.some((p) => p.id === 'prod-collab-genz-bag')) {
-          const collabProd = defaultProducts.find((p) => p.id === 'prod-collab-genz-bag');
-          if (collabProd) state.products = [...state.products, collabProd];
-        }
-
-        if (!state.variants || state.variants.length === 0) {
-          state.variants = defaultVariants;
-        } else if (!state.variants.some((v) => v.id === 'var-collab-genz-bag-std')) {
-          const collabVar = defaultVariants.find((v) => v.id === 'var-collab-genz-bag-std');
-          if (collabVar) state.variants = [...state.variants, collabVar];
-        }
-        if (!state.categories || state.categories.length === 0) state.categories = defaultCategories;
-        if (!state.members || state.members.length === 0) state.members = defaultMembers;
       },
     }
   )

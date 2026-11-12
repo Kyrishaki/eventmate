@@ -34,7 +34,39 @@ CREATE POLICY "Allow anon update sync_state"
   USING (true)
   WITH CHECK (true);
 
--- 3. Mở khóa RLS cho các bảng cơ sở dữ liệu EventMate để các máy khách kết nối thông suốt
+-- 3. Bổ sung các cột mới cho bảng orders (Minh chứng chuyển khoản, thông tin khách hàng, hoàn đơn)
+DO $$
+BEGIN
+  -- Minh chứng chuyển khoản & đối soát
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'proof_image_url') THEN
+    ALTER TABLE public.orders ADD COLUMN proof_image_url TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'proof_verified') THEN
+    ALTER TABLE public.orders ADD COLUMN proof_verified BOOLEAN DEFAULT false;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'proof_verified_at') THEN
+    ALTER TABLE public.orders ADD COLUMN proof_verified_at TIMESTAMPTZ;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'proof_verified_by') THEN
+    ALTER TABLE public.orders ADD COLUMN proof_verified_by TEXT;
+  END IF;
+  
+  -- Thông tin khách & loại đơn
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'customer_name') THEN
+    ALTER TABLE public.orders ADD COLUMN customer_name TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'customer_phone') THEN
+    ALTER TABLE public.orders ADD COLUMN customer_phone TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'order_type') THEN
+    ALTER TABLE public.orders ADD COLUMN order_type TEXT DEFAULT 'pos_walkin';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'order_status') THEN
+    ALTER TABLE public.orders ADD COLUMN order_status TEXT DEFAULT 'completed';
+  END IF;
+END $$;
+
+-- 4. Mở khóa RLS cho các bảng cơ sở dữ liệu EventMate để các máy khách kết nối thông suốt
 ALTER TABLE public.workspaces DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.events DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.booths DISABLE ROW LEVEL SECURITY;
@@ -45,7 +77,7 @@ ALTER TABLE public.inventory_allocations DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items DISABLE ROW LEVEL SECURITY;
 
--- 4. Kích hoạt Supabase Realtime cho bảng app_sync_state để nhận thông báo thay đổi tức thì
+-- 5. Kích hoạt Supabase Realtime cho bảng app_sync_state để nhận thông báo thay đổi tức thì
 DO $$
 BEGIN
   IF NOT EXISTS (

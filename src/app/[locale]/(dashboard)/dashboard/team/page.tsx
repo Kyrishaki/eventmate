@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { useDataStore } from '@/stores/data-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
-import { useAuthStore, canManageTeam, isViewerOnly, UserAccount } from '@/stores/auth-store';
+import { useAuthStore, canManageTeam, isViewerOnly, UserAccount, getDisplayPassword } from '@/stores/auth-store';
 import { logActivity } from '@/stores/audit-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -104,7 +104,8 @@ export default function TeamPage() {
   }
 
   function copyAccountCredentials(account: UserAccount) {
-    const text = `EventMate - Thông tin đăng nhập:\n- Đường dẫn: ${window.location.origin}/login\n- Tên đăng nhập: ${account.username}\n- Mật khẩu: ${account.password}\n- Vai trò: ${getRoleLabel(account.role)}${account.collabPartnerName ? `\n- Đối tác: ${account.collabPartnerName} (Chỉ quản trị hàng bán của bản thân)` : ''}`;
+    const displayPassword = getDisplayPassword(account);
+    const text = `EventMate - Thông tin đăng nhập:\n- Đường dẫn: ${window.location.origin}/login\n- Tên đăng nhập: ${account.username}\n- Mật khẩu: ${displayPassword}\n- Vai trò: ${getRoleLabel(account.role)}${account.collabPartnerName ? `\n- Đối tác: ${account.collabPartnerName} (Chỉ quản trị hàng bán của bản thân)` : ''}`;
     navigator.clipboard.writeText(text);
     setCopiedId(account.id);
     setTimeout(() => setCopiedId(null), 2500);
@@ -260,7 +261,7 @@ export default function TeamPage() {
                       <span className="flex items-center gap-1">
                         Mật khẩu:{' '}
                         <span className="font-mono font-bold text-[#202124] bg-[#F7F7F5] px-1.5 py-0.5 rounded border border-[#E8E8E5]">
-                          {isPasswordVisible ? acc.password : '••••••••••••'}
+                          {isPasswordVisible ? getDisplayPassword(acc) : '••••••••••••'}
                         </span>
                         <button
                           type="button"

@@ -24,6 +24,11 @@ export const metadata: Metadata = {
   title: 'HikaruStore',
   description: 'Hệ thống quản lý gian hàng merchandise, kiểm soát kho và bán hàng POS chuyên nghiệp HikaruStore.',
   manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'HikaruStore POS',
+  },
   icons: {
     icon: [
       { url: '/favicon.ico?v=2', sizes: 'any' },

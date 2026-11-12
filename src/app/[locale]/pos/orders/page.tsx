@@ -81,31 +81,31 @@ export default function PosOrdersPage() {
       <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 space-y-4">
         {/* Filters */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <div className="relative max-w-xs w-full">
+          <div className="relative max-w-full sm:max-w-xs w-full">
             <Search className="w-4 h-4 text-[#9E9E9C] absolute left-3 top-2.5" />
             <Input
               placeholder="Tìm theo mã đơn..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9 text-xs bg-white"
+              className="pl-9 h-9 text-xs bg-white w-full"
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 shrink-0">
             <button
               type="button"
               onClick={() => setFilterSync('all')}
-              className={`px-3 py-1 text-xs rounded font-medium ${
-                filterSync === 'all' ? 'bg-[#315C4C] text-white' : 'bg-white border text-[#737373]'
+              className={`px-3 py-1.5 text-xs rounded font-semibold whitespace-nowrap shrink-0 transition-colors ${
+                filterSync === 'all' ? 'bg-[#315C4C] text-white shadow-2xs' : 'bg-white border border-[#E8E8E5] text-[#737373]'
               }`}
             >
-              Tất cả
+              Tất cả ({orders.length})
             </button>
             <button
               type="button"
               onClick={() => setFilterSync('synced')}
-              className={`px-3 py-1 text-xs rounded font-medium ${
-                filterSync === 'synced' ? 'bg-[#315C4C] text-white' : 'bg-white border text-[#737373]'
+              className={`px-3 py-1.5 text-xs rounded font-semibold whitespace-nowrap shrink-0 transition-colors ${
+                filterSync === 'synced' ? 'bg-[#315C4C] text-white shadow-2xs' : 'bg-white border border-[#E8E8E5] text-[#737373]'
               }`}
             >
               Đã đồng bộ
@@ -113,11 +113,11 @@ export default function PosOrdersPage() {
             <button
               type="button"
               onClick={() => setFilterSync('pending')}
-              className={`px-3 py-1 text-xs rounded font-medium ${
-                filterSync === 'pending' ? 'bg-[#B7791F] text-white' : 'bg-white border text-[#737373]'
+              className={`px-3 py-1.5 text-xs rounded font-semibold whitespace-nowrap shrink-0 transition-colors ${
+                filterSync === 'pending' ? 'bg-[#B7791F] text-white shadow-2xs' : 'bg-white border border-[#E8E8E5] text-[#737373]'
               }`}
             >
-              Chờ đồng bộ ngoại tuyến
+              Chờ đồng bộ ({orders.filter((o) => o.sync_status === 'pending_sync').length})
             </button>
           </div>
         </div>
@@ -139,11 +139,11 @@ export default function PosOrdersPage() {
               return (
                 <Card
                   key={ord.id}
-                  className="border-[#E8E8E5] bg-white p-4 shadow-2xs hover:border-[#315C4C]/40 transition-colors"
+                  className="border-[#E8E8E5] bg-white p-3.5 sm:p-4 shadow-2xs hover:border-[#315C4C]/40 transition-colors"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                      <div className="flex items-center gap-2">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="font-mono font-bold text-sm text-[#202124]">
                           {ord.order_number}
                         </span>
@@ -151,36 +151,36 @@ export default function PosOrdersPage() {
                           variant={ord.sync_status === 'synced' ? 'success' : 'warning'}
                           className="text-[10px]"
                         >
-                          {ord.sync_status === 'synced' ? 'Đã đồng bộ server' : 'Chờ đồng bộ'}
+                          {ord.sync_status === 'synced' ? 'Đã đồng bộ' : 'Chờ đồng bộ'}
                         </Badge>
                         <Badge variant="outline" className="text-[10px] uppercase">
                           {ord.payment_method === 'cash' ? 'Tiền mặt' : 'VietQR'}
                         </Badge>
                         {getEffectiveOrderStatus(ord) === 'cancelled' && (
                           <Badge variant="error" className="text-[10px]">
-                            Đã hủy (Void)
+                            Đã hủy
                           </Badge>
                         )}
                         {getEffectiveOrderStatus(ord) === 'refunded' && (
                           <Badge variant="warning" className="text-[10px]">
-                            Đã hoàn tiền
+                            Hoàn tiền
                           </Badge>
                         )}
                       </div>
 
-                      <p className="text-xs text-[#737373] mt-1">
+                      <p className="text-xs text-[#737373]">
                         {event?.name} • {booth?.name} ({booth?.code}) • {formatDate(ord.created_at)}
                       </p>
 
                       {ord.notes && (
-                        <p className="text-[11px] text-[#737373] italic mt-0.5">
+                        <p className="text-[11px] text-[#737373] italic">
                           Ghi chú: {ord.notes}
                         </p>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-3 self-end sm:self-auto">
-                      <div className="text-right">
+                    <div className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-3 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-[#F0F0ED]">
+                      <div className="text-left sm:text-right">
                         <span
                           className={`text-base font-bold ${
                             getEffectiveOrderStatus(ord) !== 'completed'
@@ -195,7 +195,7 @@ export default function PosOrdersPage() {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 shrink-0">
                         <Button
                           variant="outline"
                           size="sm"

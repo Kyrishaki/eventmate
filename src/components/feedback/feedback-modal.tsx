@@ -346,7 +346,9 @@ export function FloatingFeedbackWidget({ hasBottomNav = false }: { hasBottomNav?
     <>
       <div
         className={`fixed right-3 sm:right-5 z-30 print:hidden ${
-          hasBottomNav ? 'bottom-[78px] md:bottom-5' : 'bottom-5'
+          hasBottomNav
+            ? 'bottom-[calc(68px+max(0.35rem,env(safe-area-inset-bottom)))] md:bottom-5'
+            : 'bottom-[max(1.25rem,env(safe-area-inset-bottom))]'
         }`}
       >
         <button

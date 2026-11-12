@@ -20,6 +20,7 @@ import { calculateVariantStock } from '@/lib/stock-status';
 import { PreorderPickupModal } from '@/components/pos/preorder-pickup-modal';
 import { ShiftModal } from '@/components/pos/shift-modal';
 import { ReceiptModal } from '@/components/pos/receipt-modal';
+import { CameraBarcodeScanner } from '@/components/pos/camera-barcode-scanner';
 import { useShiftStore } from '@/stores/shift-store';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { DensityToggle } from '@/components/ui/density-toggle';
@@ -60,6 +61,8 @@ import {
   CopyCheck,
   Volume2,
   Radio,
+  Scan,
+  Barcode,
 } from 'lucide-react';
 import { playSuccessChime, speakPaymentReceived } from '@/lib/sound';
 import { FeedbackModal } from '@/components/feedback/feedback-modal';
@@ -232,6 +235,7 @@ export default function PosTerminalPage() {
   const [isFeedbackOpen, setIsFeedbackOpen] = React.useState(false);
   const [isShiftModalOpen, setIsShiftModalOpen] = React.useState(false);
   const [isReceiptModalOpen, setIsReceiptModalOpen] = React.useState(false);
+  const [isScannerOpen, setIsScannerOpen] = React.useState(false);
   const { activeShift, initShifts } = useShiftStore();
 
   React.useEffect(() => {
@@ -980,13 +984,13 @@ export default function PosTerminalPage() {
         )}
 
         {/* Mobile Sub-bar: Event & Booth Pickers (large touch targets) */}
-        <div className="sm:hidden px-3 py-2 bg-[#FAFAF8] border-t border-[#E8E8E5] grid grid-cols-2 gap-2">
+        <div className="sm:hidden px-3 py-2 bg-[#FAFAF8] dark:bg-neutral-900 border-t border-[#E8E8E5] dark:border-neutral-800 grid grid-cols-2 gap-2">
           <div>
-            <span className="text-[9px] font-bold text-[#737373] uppercase tracking-wider block mb-0.5">
+            <span className="text-[9px] font-bold text-[#737373] dark:text-neutral-400 uppercase tracking-wider block mb-0.5">
               Sự kiện
             </span>
             <select
-              className="w-full h-8 rounded-[4px] border border-[#E8E8E5] bg-white px-2 text-xs font-semibold text-[#202124] focus:outline-none focus:border-[#315C4C] truncate"
+              className="w-full h-8 rounded-[4px] border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] truncate"
               value={selectedEventId}
               onChange={(e) => handleSelectEvent(e.target.value)}
             >
@@ -1000,11 +1004,11 @@ export default function PosTerminalPage() {
           </div>
 
           <div>
-            <span className="text-[9px] font-bold text-[#737373] uppercase tracking-wider block mb-0.5">
+            <span className="text-[9px] font-bold text-[#737373] dark:text-neutral-400 uppercase tracking-wider block mb-0.5">
               Gian hàng
             </span>
             <select
-              className="w-full h-8 rounded-[4px] border border-[#315C4C]/40 bg-white px-2 text-xs font-bold text-[#315C4C] focus:outline-none focus:border-[#315C4C] truncate"
+              className="w-full h-8 rounded-[4px] border border-[#315C4C]/40 dark:border-emerald-600/40 bg-white dark:bg-neutral-800 px-2 text-xs font-bold text-[#315C4C] dark:text-emerald-400 focus:outline-none focus:border-[#315C4C] truncate"
               value={selectedBoothId}
               onChange={(e) => handleSelectBooth(e.target.value)}
             >
@@ -1022,29 +1026,41 @@ export default function PosTerminalPage() {
       {/* Main Split Layout: Left Products Grid (65%), Right Cart (35%) */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Product Catalog */}
-        <main className="flex-1 overflow-y-auto p-3 sm:p-5 flex flex-col pb-28 lg:pb-5">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-5 flex flex-col pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-5">
           {/* Search bar & Sold Out Filter Toggle */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <div className="relative flex-1 max-w-md min-w-[200px]">
-              <Search className="w-4 h-4 text-[#9E9E9C] absolute left-3 top-2.5" />
-              <Input
-                placeholder="Tìm sản phẩm, mã loại..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-9 text-xs bg-white"
-              />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3 sm:mb-4">
+            <div className="relative flex-1 w-full sm:max-w-md flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-[#9E9E9C] absolute left-3 top-2.5" />
+                <Input
+                  placeholder="Tìm sản phẩm, mã loại..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-9 text-xs bg-white dark:bg-neutral-900 w-full"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsScannerOpen(true)}
+                className="h-9 px-2.5 rounded-[6px] bg-[#315C4C] hover:bg-[#284a3d] text-white flex items-center gap-1.5 text-xs font-semibold shrink-0 shadow-2xs active:scale-95 transition-transform cursor-pointer"
+                title="Quét mã vạch / QR sản phẩm bằng Camera"
+                aria-label="Quét mã vạch Camera"
+              >
+                <Scan className="w-4 h-4" />
+                <span className="hidden sm:inline">Quét mã</span>
+              </button>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 shrink-0">
               {/* Origin Source Filter Pills */}
-              <div className="flex items-center gap-1 bg-[#E8E8E5] dark:bg-neutral-800 p-0.5 rounded-[6px]">
+              <div className="flex items-center gap-1 bg-[#E8E8E5] dark:bg-neutral-800 p-0.5 rounded-[6px] shrink-0">
                 <button
                   type="button"
                   onClick={() => setPosSourceFilter('all')}
-                  className={`text-xs px-2.5 py-1 rounded-[4px] font-bold transition-colors ${
+                  className={`text-xs px-2.5 py-1 rounded-[4px] font-bold transition-colors whitespace-nowrap ${
                     posSourceFilter === 'all'
-                      ? 'bg-white text-[#202124] shadow-2xs'
-                      : 'text-[#737373] hover:text-[#202124]'
+                      ? 'bg-white dark:bg-neutral-700 text-[#202124] dark:text-neutral-100 shadow-2xs'
+                      : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124]'
                   }`}
                 >
                   Tất cả
@@ -1052,7 +1068,7 @@ export default function PosTerminalPage() {
                 <button
                   type="button"
                   onClick={() => setPosSourceFilter('store')}
-                  className={`text-xs px-2.5 py-1 rounded-[4px] font-bold transition-colors ${
+                  className={`text-xs px-2.5 py-1 rounded-[4px] font-bold transition-colors whitespace-nowrap ${
                     posSourceFilter === 'store'
                       ? 'bg-[#2F7D55] text-white shadow-2xs'
                       : 'text-[#2F7D55] hover:bg-white/50'
@@ -1063,7 +1079,7 @@ export default function PosTerminalPage() {
                 <button
                   type="button"
                   onClick={() => setPosSourceFilter('collab')}
-                  className={`text-xs px-2.5 py-1 rounded-[4px] font-bold transition-colors ${
+                  className={`text-xs px-2.5 py-1 rounded-[4px] font-bold transition-colors whitespace-nowrap ${
                     posSourceFilter === 'collab'
                       ? 'bg-[#B7791F] text-white shadow-2xs'
                       : 'text-[#8C5D17] hover:bg-white/50'
@@ -1077,17 +1093,17 @@ export default function PosTerminalPage() {
               <button
                 type="button"
                 onClick={() => setHideSoldOut(!hideSoldOut)}
-                className={`text-xs px-2.5 py-1.5 rounded-[6px] border font-medium transition-colors flex items-center gap-1.5 shadow-2xs ${
+                className={`text-xs px-2.5 py-1.5 rounded-[6px] border font-medium transition-colors flex items-center gap-1.5 shadow-2xs whitespace-nowrap shrink-0 ${
                   hideSoldOut
-                    ? 'bg-[#EBF1EE] border-[#315C4C]/40 text-[#315C4C] font-semibold'
-                    : 'bg-white border-[#E8E8E5] text-[#737373] hover:text-[#202124]'
+                    ? 'bg-[#EBF1EE] dark:bg-emerald-950/40 border-[#315C4C]/40 text-[#315C4C] dark:text-emerald-400 font-semibold'
+                    : 'bg-white dark:bg-neutral-800 border-[#E8E8E5] dark:border-neutral-700 text-[#737373] dark:text-neutral-300 hover:text-[#202124]'
                 }`}
                 title="Tự động ẩn sản phẩm hết hàng"
               >
                 {hideSoldOut ? (
                   <>
-                    <EyeOff className="w-3.5 h-3.5 text-[#315C4C]" />
-                    <span>Ẩn hết hàng ({soldOutPosCount})</span>
+                    <EyeOff className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400" />
+                    <span>Ẩn hết ({soldOutPosCount})</span>
                   </>
                 ) : (
                   <>
@@ -1098,7 +1114,7 @@ export default function PosTerminalPage() {
               </button>
 
               {selectedBooth?.collab_partner && (
-                <Badge variant="warning" className="text-xs shrink-0">
+                <Badge variant="warning" className="text-xs shrink-0 whitespace-nowrap">
                   Collab: {selectedBooth.collab_partner}
                 </Badge>
               )}
@@ -1310,26 +1326,28 @@ export default function PosTerminalPage() {
                     {/* Add to Cart / Inline Stepper Touch Action */}
                     <div className="p-2.5 sm:p-3 pt-0">
                       {qtyInCart > 0 ? (
-                        <div className="flex items-center justify-between bg-[#EBF1EE] border border-[#315C4C]/40 rounded-[6px] p-1">
+                        <div className="flex items-center justify-between bg-[#EBF1EE] dark:bg-emerald-950/40 border border-[#315C4C]/40 dark:border-emerald-600/40 rounded-[6px] p-1 gap-1">
                           <button
                             type="button"
                             onClick={() => handleDecrease(activeVariant.id)}
-                            className="w-8 h-8 rounded bg-white text-[#202124] flex items-center justify-center font-bold text-sm shadow-2xs hover:bg-[#F0F0ED] active:scale-95 transition-transform"
+                            className="w-8 h-8 rounded bg-white dark:bg-neutral-800 text-[#202124] dark:text-neutral-100 flex items-center justify-center font-bold text-sm shadow-2xs hover:bg-[#F0F0ED] active:scale-95 transition-transform shrink-0"
+                            aria-label="Giảm số lượng"
                           >
                             <Minus className="w-3.5 h-3.5" />
                           </button>
-                          <div className="text-center">
-                            <span className="font-bold text-xs text-[#315C4C] leading-none block">
+                          <div className="text-center min-w-0 flex-1 px-0.5">
+                            <span className="font-bold text-xs text-[#315C4C] dark:text-emerald-400 leading-none block truncate">
                               {qtyInCart}
                             </span>
-                            <span className="text-[9px] text-[#737373] leading-none">trong giỏ</span>
+                            <span className="text-[9px] text-[#737373] dark:text-neutral-400 leading-none block truncate">trong giỏ</span>
                           </div>
                           <button
                             type="button"
                             disabled={availableStock <= 0}
                             onClick={() => handleIncrease(activeVariant.id)}
-                            className="w-8 h-8 rounded bg-[#315C4C] text-white flex items-center justify-center font-bold text-sm shadow-2xs hover:bg-[#284a3d] disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
+                            className="w-8 h-8 rounded bg-[#315C4C] text-white flex items-center justify-center font-bold text-sm shadow-2xs hover:bg-[#284a3d] disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform shrink-0"
                             title={availableStock <= 0 ? 'Đã đạt giới hạn tồn khả dụng' : 'Thêm 1'}
+                            aria-label="Tăng số lượng"
                           >
                             <Plus className="w-3.5 h-3.5" />
                           </button>
@@ -1504,7 +1522,7 @@ export default function PosTerminalPage() {
 
       {/* Sticky Bottom Cart Bar on Mobile & Tablet */}
       {totalCartUnits > 0 && (
-        <div className="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-[#E8E8E5] p-3 shadow-lg z-30 flex items-center justify-between gap-3 animate-in slide-in-from-bottom-3 duration-200">
+        <div className="lg:hidden fixed bottom-0 inset-x-0 bg-white dark:bg-neutral-900 border-t border-[#E8E8E5] dark:border-neutral-800 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-lg z-30 flex items-center justify-between gap-3 animate-in slide-in-from-bottom-3 duration-200">
           <div
             onClick={() => setIsMobileCartOpen(true)}
             className="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0"
@@ -1518,8 +1536,8 @@ export default function PosTerminalPage() {
               </span>
             </div>
             <div className="truncate">
-              <p className="text-[11px] text-[#737373] leading-none">Giỏ hàng • {totalCartUnits} món</p>
-              <p className="text-base font-bold text-[#315C4C] leading-tight mt-1">
+              <p className="text-[11px] text-[#737373] dark:text-neutral-400 leading-none">Giỏ hàng • {totalCartUnits} món</p>
+              <p className="text-base font-bold text-[#315C4C] dark:text-emerald-400 leading-tight mt-1">
                 {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}
               </p>
             </div>
@@ -1909,6 +1927,27 @@ export default function PosTerminalPage() {
                     ₫
                   </span>
                 </div>
+
+                {/* Quick Cash Presets */}
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setTenderedCash(cartTotal)}
+                    className="h-8 px-2 rounded-[4px] border border-[#315C4C]/40 bg-[#EAF4EE] text-[#2F7D55] font-bold text-xs hover:bg-[#D8EDE0] active:scale-95 transition-all truncate"
+                  >
+                    Đúng số tiền
+                  </button>
+                  {[50000, 100000, 200000, 500000].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setTenderedCash(preset)}
+                      className="h-8 px-1.5 rounded-[4px] border border-[#E8E8E5] bg-white text-[#202124] font-semibold text-xs hover:bg-[#F7F7F5] active:scale-95 transition-all truncate font-mono"
+                    >
+                      {preset >= 1000 ? `${preset / 1000}k` : preset}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Change / Shortage Status Display */}
@@ -2237,6 +2276,27 @@ export default function PosTerminalPage() {
         maxWidth="md"
       >
         <div className="space-y-3">
+          {/* Camera Barcode Scanner */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              setIsScannerOpen(true);
+            }}
+            className="w-full p-3 rounded-[8px] border border-[#315C4C]/40 bg-[#EAF4EE] hover:bg-[#D8EDE0] flex items-center justify-between text-left transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-[#315C4C] text-white flex items-center justify-center shrink-0">
+                <Scan className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-[#202124]">Quét mã vạch sản phẩm (Camera)</p>
+                <p className="text-[11px] text-[#2F7D55]">Dùng camera điện thoại quét barcode/QR để thêm vào giỏ</p>
+              </div>
+            </div>
+            <span className="text-xs font-bold text-[#315C4C]">Quét ngay</span>
+          </button>
+
           {/* Shift / Cash Float */}
           <button
             type="button"
@@ -2373,6 +2433,31 @@ export default function PosTerminalPage() {
           </button>
         </div>
       </Modal>
+
+      {/* Camera Barcode & QR Scanner Modal */}
+      <CameraBarcodeScanner
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        products={products}
+        variants={variants}
+        onProductScanned={(scannedProd, scannedVariant) => {
+          const available = getVariantAvailableStock(scannedVariant.id);
+          if (available <= 0) {
+            alert(`Sản phẩm "${scannedProd.name} - ${scannedVariant.name}" đã hết hàng khả dụng tại quầy!`);
+            return;
+          }
+          addToCart({
+            variantId: scannedVariant.id,
+            productId: scannedProd.id,
+            productName: scannedProd.name,
+            variantName: scannedVariant.name,
+            sku: scannedVariant.sku,
+            price: scannedVariant.price,
+            maxAvailable: available + (cart.find((c) => c.variantId === scannedVariant.id)?.quantity || 0),
+            imageUrl: scannedProd.image_url,
+          });
+        }}
+      />
     </div>
   );
 }

@@ -190,25 +190,25 @@ export default function DashboardOverviewPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap w-full sm:w-auto">
           <Button
             variant="outline"
             size="sm"
             onClick={handleExportExcel}
-            className="gap-1.5 text-xs text-[#2F7D55] border-[#2F7D55]/30 hover:bg-[#EAF4EE] font-semibold h-8 shadow-2xs"
+            className="flex-1 sm:flex-none gap-1.5 text-xs text-[#2F7D55] border-[#2F7D55]/30 hover:bg-[#EAF4EE] font-semibold h-8 shadow-2xs justify-center"
             title="Xuất toàn bộ dữ liệu sự kiện này ra file Excel (.xlsx)"
           >
             <Download className="w-3.5 h-3.5 text-[#2F7D55]" />
             <span>Xuất Excel</span>
           </Button>
-          <Link href="/dashboard/events">
-            <Button variant="outline" size="sm" className="gap-1.5 h-8">
+          <Link href="/dashboard/events" className="flex-1 sm:flex-none">
+            <Button variant="outline" size="sm" className="w-full gap-1.5 h-8 justify-center">
               <Calendar className="w-3.5 h-3.5" />
               <span>{tNav('events')}</span>
             </Button>
           </Link>
-          <Link href="/pos">
-            <Button variant="primary" size="sm" className="gap-1.5 h-8">
+          <Link href="/pos" className="flex-1 sm:flex-none">
+            <Button variant="primary" size="sm" className="w-full gap-1.5 h-8 justify-center shadow-xs">
               <Store className="w-3.5 h-3.5" />
               <span>{tNav('posTerminal')}</span>
             </Button>
@@ -240,18 +240,18 @@ export default function DashboardOverviewPage() {
       )}
 
       {/* Event Filter Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-[8px] border border-[#E8E8E5] shadow-xs">
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#555555]">
-            <Filter className="w-4 h-4 text-[#315C4C]" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 bg-white dark:bg-neutral-900 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-800 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#555555] dark:text-neutral-400 shrink-0">
+            <Filter className="w-4 h-4 text-[#315C4C] dark:text-emerald-400" />
             <span>Sự kiện:</span>
           </div>
 
-          <div className="relative">
+          <div className="relative w-full sm:w-auto sm:max-w-xs flex-1 min-w-0 max-w-full">
             <select
               value={selectedEventId}
               onChange={(e) => handleEventChange(e.target.value)}
-              className="h-8.5 pl-8 pr-8 text-xs font-semibold text-[#202124] bg-[#F7F7F5] border border-[#D5D5D0] rounded-[6px] focus:outline-none focus:ring-1 focus:ring-[#315C4C] cursor-pointer appearance-none"
+              className="w-full max-w-full h-8.5 pl-8 pr-8 text-xs font-semibold text-[#202124] dark:text-neutral-100 bg-[#F7F7F5] dark:bg-neutral-800 border border-[#D5D5D0] dark:border-neutral-700 rounded-[6px] focus:outline-none focus:ring-1 focus:ring-[#315C4C] cursor-pointer appearance-none truncate"
             >
               <optgroup label="Dữ liệu thực tế">
                 <option value="all">Tất cả sự kiện (Số liệu thực tế)</option>
@@ -271,7 +271,7 @@ export default function DashboardOverviewPage() {
                 </optgroup>
               )}
             </select>
-            <Calendar className="w-3.5 h-3.5 text-[#315C4C] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Calendar className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
           {selectedEventId !== 'all' && (
@@ -279,7 +279,7 @@ export default function DashboardOverviewPage() {
               variant="ghost"
               size="sm"
               onClick={() => handleEventChange('all')}
-              className="text-xs h-8 text-[#737373] hover:text-[#202124] gap-1 px-2"
+              className="text-xs h-8 text-[#737373] hover:text-[#202124] gap-1 px-2 self-start sm:self-auto"
             >
               <RotateCcw className="w-3 h-3" />
               <span>Xem số liệu thật</span>
@@ -288,16 +288,16 @@ export default function DashboardOverviewPage() {
         </div>
 
         {isTestEvent(selectedEventId) ? (
-          <div className="flex items-center gap-1.5 text-xs text-[#B7791F] bg-[#B7791F]/10 px-2.5 py-1 rounded-[6px] font-medium border border-[#B7791F]/20">
+          <div className="flex items-center gap-1.5 text-xs text-[#B7791F] bg-[#B7791F]/10 px-2.5 py-1 rounded-[6px] font-medium border border-[#B7791F]/20 shrink-0 self-start sm:self-auto">
             <FlaskConical className="w-3.5 h-3.5 shrink-0" />
             <span>Chế độ Sandbox — Dữ liệu Test</span>
           </div>
         ) : selectedEventId !== 'all' ? (
-          <Badge variant="outline" className="text-xs border-[#315C4C] text-[#315C4C] bg-[#315C4C]/5">
+          <Badge variant="outline" className="text-xs border-[#315C4C] text-[#315C4C] bg-[#315C4C]/5 shrink-0 self-start sm:self-auto">
             {selectedEvent?.name}
           </Badge>
         ) : (
-          <span className="text-[11px] text-[#737373]">
+          <span className="text-[11px] text-[#737373] dark:text-neutral-400 shrink-0">
             {realEvents.length} sự kiện thực tế
           </span>
         )}
@@ -338,21 +338,21 @@ export default function DashboardOverviewPage() {
       )}
 
       {/* KPI Business Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+      <div className="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {metrics.map((metric, idx) => {
           const Icon = metric.icon;
           return (
-            <Card key={idx} className="p-2.5 sm:p-4 bg-white border-[#E8E8E5] shadow-xs">
-              <div className="flex items-center justify-between text-[#737373] mb-1">
-                <span className="text-[11px] sm:text-xs font-medium truncate pr-1">{metric.title}</span>
-                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-[4px] bg-[#F7F7F5] border border-[#E8E8E5] flex items-center justify-center text-[#315C4C] shrink-0">
+            <Card key={idx} className="p-3 sm:p-4 bg-white dark:bg-neutral-900 border-[#E8E8E5] dark:border-neutral-800 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between text-[#737373] dark:text-neutral-400 mb-1.5">
+                <span className="text-xs font-medium truncate pr-1">{metric.title}</span>
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-[6px] bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 flex items-center justify-center text-[#315C4C] dark:text-emerald-400 shrink-0">
                   <Icon className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <div className="text-base sm:text-2xl font-bold tracking-tight text-[#202124] truncate">
+              <div className="text-lg min-[360px]:text-xl sm:text-2xl font-extrabold tracking-tight text-[#202124] dark:text-neutral-100 truncate">
                 {metric.value}
               </div>
-              <p className="text-[10px] sm:text-[11px] text-[#737373] mt-0.5 truncate">{metric.change}</p>
+              <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-1 truncate">{metric.change}</p>
             </Card>
           );
         })}
@@ -413,11 +413,11 @@ export default function DashboardOverviewPage() {
                       <div
                         key={evt.id}
                         onClick={() => handleEventChange(evt.id)}
-                        className="p-3 bg-[#FBFBFA] hover:bg-[#F2F2EF] border border-[#E8E8E5] rounded-[6px] flex items-center justify-between cursor-pointer transition-colors"
+                        className="p-3 bg-[#FBFBFA] dark:bg-neutral-800/60 hover:bg-[#F2F2EF] dark:hover:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 rounded-[6px] flex flex-col sm:flex-row sm:items-center justify-between gap-2 cursor-pointer transition-colors"
                       >
-                        <div className="min-w-0 pr-2">
-                          <div className="flex items-center gap-2">
-                            <p className="text-xs font-bold text-[#202124] truncate">{evt.name}</p>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="text-xs font-bold text-[#202124] dark:text-neutral-100 truncate">{evt.name}</p>
                             <Badge
                               variant={evt.status === 'active' ? 'success' : 'default'}
                               className="text-[9px]"
@@ -427,17 +427,17 @@ export default function DashboardOverviewPage() {
                                 : tEvents(`statusList.${evt.status as 'upcoming' | 'active' | 'completed' | 'draft'}`)}
                             </Badge>
                           </div>
-                          <p className="text-[11px] text-[#737373] flex items-center gap-1 mt-1 truncate">
+                          <p className="text-[11px] text-[#737373] dark:text-neutral-400 flex items-center gap-1 mt-1 truncate">
                             <MapPin className="w-3 h-3 text-[#9E9E9C] shrink-0" />
-                            <span>{evt.location || 'Địa điểm tổ chức'}</span>
+                            <span className="truncate">{evt.location || 'Địa điểm tổ chức'}</span>
                           </p>
                         </div>
 
-                        <div className="text-right shrink-0">
-                          <span className="text-[11px] font-semibold text-[#315C4C] block">
+                        <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center shrink-0 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-[#F0F0ED] dark:border-neutral-700">
+                          <span className="text-[11px] font-semibold text-[#315C4C] dark:text-emerald-400 block">
                             {eventBooths.length} quầy bán
                           </span>
-                          <span className="text-[10px] text-[#737373]">
+                          <span className="text-[10px] text-[#737373] dark:text-neutral-400">
                             Lọc sự kiện này →
                           </span>
                         </div>
@@ -632,11 +632,11 @@ export default function DashboardOverviewPage() {
                 return (
                   <div
                     key={ord.id}
-                    className={`py-3 first:pt-0 last:pb-0 flex items-center justify-between text-xs ${isVoidOrRefund ? 'opacity-65' : ''}`}
+                    className={`py-3 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-4 text-xs ${isVoidOrRefund ? 'opacity-65' : ''}`}
                   >
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`font-mono font-bold text-[#202124] ${ordStatus === 'cancelled' ? 'line-through' : ''}`}>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                        <span className={`font-mono font-bold text-[#202124] dark:text-neutral-100 ${ordStatus === 'cancelled' ? 'line-through' : ''}`}>
                           {ord.order_number}
                         </span>
                         <Badge variant="outline" className="text-[9px]">
@@ -658,15 +658,15 @@ export default function DashboardOverviewPage() {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-[11px] text-[#737373] mt-0.5">
+                      <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-0.5 truncate">
                         {event?.name || 'Sự kiện'} • {booth?.name || 'Quầy POS'} • {formatDate(ord.created_at)}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <span className={`font-bold text-sm block ${isVoidOrRefund ? 'line-through text-[#737373]' : 'text-[#315C4C]'}`}>
+                    <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center shrink-0 border-t sm:border-t-0 pt-1.5 sm:pt-0 border-[#F0F0ED] dark:border-neutral-800">
+                      <span className={`font-bold text-sm block ${isVoidOrRefund ? 'line-through text-[#737373]' : 'text-[#315C4C] dark:text-emerald-400'}`}>
                         {formatCurrency(ord.final_amount, activeWorkspace?.currency || 'VND')}
                       </span>
-                      <span className="text-[10px] text-[#737373]">
+                      <span className="text-[10px] text-[#737373] dark:text-neutral-400">
                         {ord.items?.reduce((s, it) => s + (it.quantity || 1), 0) || 1} món
                       </span>
                     </div>

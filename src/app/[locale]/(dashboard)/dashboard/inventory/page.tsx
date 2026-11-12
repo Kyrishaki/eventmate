@@ -663,13 +663,13 @@ export default function InventoryPage() {
             <span className="hidden sm:inline text-[#E8E8E5]">|</span>
 
             {/* Booth Selector Pills */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] font-semibold text-[#737373] flex items-center gap-1 mr-1">
-                <Store className="w-3.5 h-3.5 text-[#315C4C]" />
-                <span>Quầy nhận hàng:</span>
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 shrink-0 -mx-0.5 px-0.5">
+              <span className="text-[11px] font-semibold text-[#737373] dark:text-neutral-400 flex items-center gap-1 mr-1 shrink-0">
+                <Store className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400" />
+                <span>Quầy:</span>
               </span>
               {eventBooths.length === 0 ? (
-                <span className="text-xs text-[#737373] italic">
+                <span className="text-xs text-[#737373] dark:text-neutral-400 italic">
                   Sự kiện chưa có quầy bán nào
                 </span>
               ) : (
@@ -684,10 +684,10 @@ export default function InventoryPage() {
                       type="button"
                       onClick={() => setSelectedBoothId(b.id)}
                       className={cn(
-                        'px-3 py-1.5 text-xs rounded-lg font-bold transition-all flex items-center gap-1.5 cursor-pointer border',
+                        'px-3 py-1.5 text-xs rounded-lg font-bold transition-all flex items-center gap-1.5 cursor-pointer border shrink-0 whitespace-nowrap',
                         isSelected
                           ? 'bg-[#315C4C] text-white border-[#315C4C] shadow-xs'
-                          : 'bg-[#F7F7F5] text-[#202124] border-[#E8E8E5] hover:border-[#315C4C]/40'
+                          : 'bg-[#F7F7F5] dark:bg-neutral-800 text-[#202124] dark:text-neutral-100 border-[#E8E8E5] dark:border-neutral-700 hover:border-[#315C4C]/40'
                       )}
                     >
                       <span>{b.name}</span>
@@ -696,7 +696,7 @@ export default function InventoryPage() {
                           'text-[10px] font-mono px-1.5 py-0.2 rounded',
                           isSelected
                             ? 'bg-white/20 text-white'
-                            : 'bg-white text-[#737373] border border-[#E8E8E5]'
+                            : 'bg-white dark:bg-neutral-700 text-[#737373] dark:text-neutral-300 border border-[#E8E8E5] dark:border-neutral-600'
                         )}
                       >
                         {bAllocTotal} món
@@ -717,19 +717,19 @@ export default function InventoryPage() {
         {/* Bottom Row: Filter Tabs + Search Input + View Switcher (No /60 opacity!) */}
         <div className="p-2.5 bg-white flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
           {/* Quick Filter Tabs */}
-          <div className="flex flex-wrap items-center gap-1 p-1 bg-[#F7F7F5] rounded-lg border border-[#E8E8E5] text-xs">
+          <div className="flex items-center gap-1 p-1 bg-[#F7F7F5] dark:bg-neutral-800 rounded-lg border border-[#E8E8E5] dark:border-neutral-700 text-xs overflow-x-auto no-scrollbar shrink-0 -mx-0.5 px-0.5">
             <button
               type="button"
               onClick={() => setStockFilter('all')}
               className={cn(
-                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5',
+                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer',
                 stockFilter === 'all'
-                  ? 'bg-white text-[#202124] shadow-2xs'
-                  : 'text-[#737373] hover:text-[#202124]'
+                  ? 'bg-white dark:bg-neutral-900 text-[#202124] dark:text-neutral-100 shadow-2xs'
+                  : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124]'
               )}
             >
               <span>Tất cả</span>
-              <span className="text-[10px] font-mono px-1.5 rounded bg-[#E8E8E5] text-[#202124]">
+              <span className="text-[10px] font-mono px-1.5 rounded bg-[#E8E8E5] dark:bg-neutral-700 text-[#202124] dark:text-neutral-200">
                 {enrichedVariants.length}
               </span>
             </button>
@@ -738,15 +738,15 @@ export default function InventoryPage() {
               type="button"
               onClick={() => setStockFilter('allocated')}
               className={cn(
-                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5',
+                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer',
                 stockFilter === 'allocated'
-                  ? 'bg-white text-[#315C4C] shadow-2xs'
-                  : 'text-[#737373] hover:text-[#202124]'
+                  ? 'bg-white dark:bg-neutral-900 text-[#315C4C] dark:text-emerald-400 shadow-2xs'
+                  : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124]'
               )}
             >
               <CheckCircle2 className="w-3.5 h-3.5 text-[#2F7D55]" />
               <span>Đã cấp cho quầy</span>
-              <span className="text-[10px] font-mono px-1.5 rounded bg-[#EAF4EE] text-[#2F7D55]">
+              <span className="text-[10px] font-mono px-1.5 rounded bg-[#EAF4EE] dark:bg-emerald-950/40 text-[#2F7D55] dark:text-emerald-400">
                 {countAllocated}
               </span>
             </button>
@@ -755,15 +755,15 @@ export default function InventoryPage() {
               type="button"
               onClick={() => setStockFilter('has_unallocated')}
               className={cn(
-                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5',
+                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer',
                 stockFilter === 'has_unallocated'
-                  ? 'bg-white text-[#B7791F] shadow-2xs'
-                  : 'text-[#737373] hover:text-[#202124]'
+                  ? 'bg-white dark:bg-neutral-900 text-[#B7791F] dark:text-amber-400 shadow-2xs'
+                  : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124]'
               )}
             >
               <Boxes className="w-3.5 h-3.5 text-[#B7791F]" />
               <span>Có thể cấp thêm</span>
-              <span className="text-[10px] font-mono px-1.5 rounded bg-[#FEF7EC] text-[#B7791F]">
+              <span className="text-[10px] font-mono px-1.5 rounded bg-[#FEF7EC] dark:bg-amber-950/40 text-[#B7791F] dark:text-amber-400">
                 {countHasUnallocated}
               </span>
             </button>
@@ -772,29 +772,29 @@ export default function InventoryPage() {
               type="button"
               onClick={() => setStockFilter('low_or_empty')}
               className={cn(
-                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5',
+                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer',
                 stockFilter === 'low_or_empty'
-                  ? 'bg-white text-[#C44536] shadow-2xs'
-                  : 'text-[#737373] hover:text-[#202124]'
+                  ? 'bg-white dark:bg-neutral-900 text-[#C44536] dark:text-rose-400 shadow-2xs'
+                  : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124]'
               )}
             >
               <AlertCircle className="w-3.5 h-3.5 text-[#C44536]" />
               <span>Sắp hết / Chưa cấp</span>
-              <span className="text-[10px] font-mono px-1.5 rounded bg-[#FDF1F0] text-[#C44536]">
+              <span className="text-[10px] font-mono px-1.5 rounded bg-[#FDF1F0] dark:bg-rose-950/40 text-[#C44536] dark:text-rose-400">
                 {countLowOrEmpty}
               </span>
             </button>
           </div>
 
           {/* Right: Search + View Mode */}
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1 sm:w-64">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 lg:justify-end">
+            <div className="relative flex-1 sm:max-w-xs">
               <Search className="w-3.5 h-3.5 text-[#9E9E9C] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <Input
                 placeholder="Tìm tên sản phẩm, size, mã loại..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-8 pl-8 pr-7 text-xs rounded-lg bg-white"
+                className="h-8 pl-8 pr-7 text-xs rounded-lg bg-white dark:bg-neutral-900 w-full"
               />
               {searchQuery && (
                 <button
@@ -808,7 +808,7 @@ export default function InventoryPage() {
               )}
             </div>
 
-            <div className="flex items-center p-0.5 rounded-lg bg-[#F7F7F5] border border-[#E8E8E5] shrink-0">
+            <div className="flex items-center p-0.5 rounded-lg bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 shrink-0 self-end sm:self-auto">
               <button
                 type="button"
                 onClick={() => setViewMode('grouped')}

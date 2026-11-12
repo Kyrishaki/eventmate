@@ -299,38 +299,42 @@ ${url}`;
       </div>
 
       {/* Filters Bar: Event and Collab Type */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2 text-xs text-[#737373]">
-          <Calendar className="w-3.5 h-3.5" />
-          <span>{t('selectEvent')}:</span>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 text-xs text-[#737373] dark:text-neutral-400 shrink-0">
+            <Calendar className="w-3.5 h-3.5" />
+            <span>{t('selectEvent')}:</span>
+          </div>
+          <select
+            className="h-8 flex-1 w-full min-w-0 max-w-full truncate rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2.5 text-xs text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C]"
+            value={selectedEventFilter}
+            onChange={(e) => setSelectedEventFilter(e.target.value)}
+          >
+            <option value="all">{t('allEvents')}</option>
+            {workspaceEvents.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.name}
+              </option>
+            ))}
+          </select>
         </div>
-        <select
-          className="h-8 rounded-[6px] border border-[#E8E8E5] bg-white px-2.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
-          value={selectedEventFilter}
-          onChange={(e) => setSelectedEventFilter(e.target.value)}
-        >
-          <option value="all">{t('allEvents')}</option>
-          {workspaceEvents.map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.name}
-            </option>
-          ))}
-        </select>
 
         {/* Filter by Solo vs Collab */}
-        <div className="flex items-center gap-2 text-xs text-[#737373] border-l border-[#E8E8E5] pl-3">
-          <Users2 className="w-3.5 h-3.5" />
-          <span>Mô hình quầy:</span>
+        <div className="flex items-center gap-2 flex-1 sm:flex-none min-w-0">
+          <div className="flex items-center gap-1.5 text-xs text-[#737373] dark:text-neutral-400 shrink-0 sm:border-l sm:border-[#E8E8E5] sm:dark:border-neutral-700 sm:pl-3">
+            <Users2 className="w-3.5 h-3.5" />
+            <span>Mô hình:</span>
+          </div>
+          <select
+            className="h-8 flex-1 sm:flex-none w-full sm:w-auto min-w-0 max-w-full truncate rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2.5 text-xs text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C]"
+            value={selectedTypeFilter}
+            onChange={(e) => setSelectedTypeFilter(e.target.value)}
+          >
+            <option value="all">Tất cả mô hình</option>
+            <option value="solo">Gian hàng Độc lập</option>
+            <option value="collab">Gian hàng Collab (Hợp tác)</option>
+          </select>
         </div>
-        <select
-          className="h-8 rounded-[6px] border border-[#E8E8E5] bg-white px-2.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
-          value={selectedTypeFilter}
-          onChange={(e) => setSelectedTypeFilter(e.target.value)}
-        >
-          <option value="all">Tất cả mô hình</option>
-          <option value="solo">Gian hàng Độc lập</option>
-          <option value="collab">Gian hàng Collab (Hợp tác)</option>
-        </select>
       </div>
 
       {/* Booths Grid */}

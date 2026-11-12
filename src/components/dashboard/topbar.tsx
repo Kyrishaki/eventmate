@@ -37,7 +37,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
   return (
     <header className="h-14 sm:h-16 border-b border-[#E8E8E5] bg-white/95 dark:bg-neutral-900/95 backdrop-blur-sm px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-2xs print:hidden">
       {/* Left: Dynamic Context Header (Mobile: Logo + Title + Workspace pill | Desktop/Tablet: Icon + Page Title) */}
-      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 pr-2">
         {/* Mobile Brand Icon (< md) */}
         <Link href="/dashboard" className="md:hidden shrink-0 flex items-center" title="Về Tổng quan">
           {/* eslint-disable-next-line @next/next/no-img-element */}

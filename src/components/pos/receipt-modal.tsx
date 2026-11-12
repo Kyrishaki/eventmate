@@ -8,7 +8,8 @@ import { Order } from '@/types/database';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useDataStore } from '@/stores/data-store';
 import { getEffectiveOrderStatus } from '@/lib/test-data-filter';
-import { Printer, Copy, CheckCircle2, QrCode } from 'lucide-react';
+import { Printer, Copy, CheckCircle2, QrCode, Bluetooth, AlertCircle } from 'lucide-react';
+import { printReceiptViaBluetooth, isWebBluetoothSupported } from '@/lib/bluetooth-printer';
 
 interface ReceiptModalProps {
   order: Order | null;
@@ -28,6 +29,8 @@ export function ReceiptModal({
   const { activeWorkspace } = useWorkspaceStore();
   const { events, booths, variants, products } = useDataStore();
   const [copied, setCopied] = React.useState(false);
+  const [isPrintingBt, setIsPrintingBt] = React.useState(false);
+  const [btStatus, setBtStatus] = React.useState<{ success: boolean; text: string } | null>(null);
 
   if (!order || !isOpen) return null;
 
@@ -46,6 +49,40 @@ export function ReceiptModal({
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handlePrintBluetooth = async () => {
+    setIsPrintingBt(true);
+    setBtStatus(null);
+    try {
+      const itemDetails = (order.items || []).map((it) => {
+        const { productName, variantName } = getItemNames(it);
+        return {
+          name: productName,
+          variant: variantName,
+          quantity: it.quantity,
+          price: it.unit_price,
+        };
+      });
+
+      const res = await printReceiptViaBluetooth({
+        order,
+        workspace: activeWorkspace,
+        eventName: currentEvent,
+        boothName: currentBooth,
+        itemDetails,
+      });
+
+      setBtStatus({ success: res.success, text: res.message });
+      setTimeout(() => setBtStatus(null), 5000);
+    } catch (err: unknown) {
+      setBtStatus({
+        success: false,
+        text: err instanceof Error ? err.message : 'Lỗi kết nối máy in Bluetooth.',
+      });
+    } finally {
+      setIsPrintingBt(false);
+    }
   };
 
   const handleCopyText = () => {
@@ -88,12 +125,13 @@ export function ReceiptModal({
     <Modal isOpen={isOpen} onClose={onClose} title="Hóa Đơn & Biên Nhận Thanh Toán" maxWidth="md">
       <div className="space-y-4">
         {/* Actions Bar */}
-        <div className="flex items-center justify-between pb-2 border-b border-[#E8E8E5] no-print">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2 border-b border-[#E8E8E5] no-print">
           <p className="text-xs text-[#737373]">
-            Hóa đơn nhiệt chuẩn khổ 58mm / 80mm hoặc xem biên nhận điện tử
+            Hóa đơn nhiệt chuẩn khổ 58mm / 80mm hoặc in Bluetooth
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
+              type="button"
               variant="outline"
               size="sm"
               onClick={handleCopyText}
@@ -103,18 +141,51 @@ export function ReceiptModal({
               {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-[#2F7D55]" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copied ? 'Đã sao chép' : 'Sao chép'}</span>
             </Button>
+
             <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isPrintingBt}
+              isLoading={isPrintingBt}
+              onClick={handlePrintBluetooth}
+              className="text-xs gap-1.5 h-8 border-[#315C4C]/40 text-[#315C4C] hover:bg-[#EAF4EE]"
+              title="In trực tiếp ra máy in nhiệt mini cầm tay qua Bluetooth không dây"
+            >
+              <Bluetooth className="w-3.5 h-3.5 text-[#315C4C]" />
+              <span>In Bluetooth</span>
+            </Button>
+
+            <Button
+              type="button"
               variant="primary"
               size="sm"
               onClick={handlePrint}
               className="text-xs gap-1.5 h-8 bg-[#315C4C] text-white hover:bg-[#254639]"
-              title="In hóa đơn ra máy in nhiệt di động hoặc lưu file PDF"
+              title="In hóa đơn qua trình duyệt hoặc lưu file PDF"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>In Hóa Đơn</span>
+              <span>In Trình Duyệt</span>
             </Button>
           </div>
         </div>
+
+        {btStatus && (
+          <div
+            className={`p-2.5 rounded-[6px] text-xs flex items-center gap-2 no-print animate-in fade-in ${
+              btStatus.success
+                ? 'bg-[#EAF4EE] text-[#2F7D55] border border-[#CEE6D7]'
+                : 'bg-[#FDF1F0] text-[#C44536] border border-[#FADBD8]'
+            }`}
+          >
+            {btStatus.success ? (
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+            ) : (
+              <AlertCircle className="w-4 h-4 shrink-0" />
+            )}
+            <span>{btStatus.text}</span>
+          </div>
+        )}
 
         {/* Thermal Receipt Preview Paper */}
         <div className="bg-[#FAFAF8] dark:bg-neutral-900 p-4 sm:p-6 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-800 flex justify-center">

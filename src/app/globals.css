@@ -394,3 +394,13 @@ html.dark ::-webkit-scrollbar-track {
     color: #000000 !important;
   }
 }
+
+@keyframes scan {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(180px);
+  }
+}
+

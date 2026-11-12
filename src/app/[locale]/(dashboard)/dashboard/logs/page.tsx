@@ -321,14 +321,14 @@ export default function AuditLogsPage() {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2 border-b border-[#E8E8E5]">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-[#202124] flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[#202124] flex items-center gap-2">
               <History className="w-5 h-5 text-[#315C4C]" />
-              <span>Nhật Ký & Tra Cứu Hoạt Động (Audit Log)</span>
+              <span>Nhật Ký Hoạt Động (Audit Log)</span>
             </h1>
             <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-[#2F7D55]/10 text-[#2F7D55] border border-[#2F7D55]/20">
               <span className="w-1.5 h-1.5 rounded-full bg-[#2F7D55] animate-pulse" />
-              Ghi nhận thời gian thực
+              Thời gian thực
             </span>
           </div>
           <p className="text-xs text-[#737373] mt-0.5">
@@ -337,51 +337,51 @@ export default function AuditLogsPage() {
         </div>
 
         {/* Global Log Actions */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="grid grid-cols-3 sm:flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            className="text-xs gap-1.5 h-8 bg-white"
+            className="text-xs gap-1.5 h-8 bg-white flex-1 sm:flex-none justify-center px-2"
             onClick={handleExportJson}
             title="Tải file JSON toàn bộ nhật ký"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Xuất JSON</span>
+            <span className="truncate">Xuất JSON</span>
           </Button>
 
           <Button
             variant="outline"
             size="sm"
-            className="text-xs gap-1.5 h-8 bg-white"
+            className="text-xs gap-1.5 h-8 bg-white flex-1 sm:flex-none justify-center px-2"
             onClick={resetToDefaultLogs}
             title="Khôi phục lại dữ liệu log mẫu để đối soát"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>Nạp log mẫu</span>
+            <span className="truncate">Log mẫu</span>
           </Button>
 
           <Button
             variant="outline"
             size="sm"
-            className="text-xs gap-1.5 h-8 text-[#C44536] hover:bg-[#FDF1F0] hover:border-[#F8B4AF]"
+            className="text-xs gap-1.5 h-8 text-[#C44536] hover:bg-[#FDF1F0] hover:border-[#F8B4AF] flex-1 sm:flex-none justify-center px-2"
             onClick={() => setIsConfirmClearOpen(true)}
             title="Xóa sạch toàn bộ lịch sử log"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            <span>Xóa nhật ký</span>
+            <span className="truncate">Xóa log</span>
           </Button>
         </div>
       </div>
 
       {/* KPI Overview Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Total Logs */}
         <Card className="border-[#E8E8E5] bg-white shadow-2xs p-3.5 sm:p-4">
           <span className="text-[11px] font-semibold text-[#737373] uppercase tracking-wider block">
             Tổng Lượt Thao Tác
           </span>
           <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-xl sm:text-2xl font-black text-[#202124]">
+            <span className="text-lg min-[360px]:text-xl sm:text-2xl font-black text-[#202124]">
               {totalLogsCount}
             </span>
             <FileText className="w-4 h-4 text-[#737373]" />
@@ -398,7 +398,7 @@ export default function AuditLogsPage() {
             Đối Tác Collab Thao Tác
           </span>
           <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-xl sm:text-2xl font-black text-[#B7791F]">
+            <span className="text-lg min-[360px]:text-xl sm:text-2xl font-black text-[#B7791F]">
               {collabLogsCount}
             </span>
             <Handshake className="w-4 h-4 text-[#B7791F]" />
@@ -415,7 +415,7 @@ export default function AuditLogsPage() {
             Staff & Thu Ngân Làm Việc
           </span>
           <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-xl sm:text-2xl font-black text-[#1D4ED8]">
+            <span className="text-lg min-[360px]:text-xl sm:text-2xl font-black text-[#1D4ED8]">
               {staffLogsCount}
             </span>
             <Users2 className="w-4 h-4 text-[#1D4ED8]" />
@@ -432,7 +432,7 @@ export default function AuditLogsPage() {
             Chỉnh Sửa & Xóa Nhạy Cảm
           </span>
           <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-xl sm:text-2xl font-black text-[#C44536]">
+            <span className="text-lg min-[360px]:text-xl sm:text-2xl font-black text-[#C44536]">
               {criticalActionsCount}
             </span>
             <AlertTriangle className="w-4 h-4 text-[#C44536]" />

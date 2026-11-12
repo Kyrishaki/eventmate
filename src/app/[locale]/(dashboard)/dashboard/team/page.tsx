@@ -163,7 +163,7 @@ export default function TeamPage() {
           <Button
             variant="primary"
             size="sm"
-            className="gap-1.5 shadow-xs"
+            className="gap-1.5 shadow-xs w-full sm:w-auto justify-center"
             onClick={() => {
               setModalError(null);
               setIsAccountModalOpen(true);
@@ -276,7 +276,7 @@ export default function TeamPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 shrink-0 self-end md:self-auto pt-2 md:pt-0">
+                <div className="flex items-center gap-2 shrink-0 self-stretch sm:self-auto justify-end pt-2 md:pt-0 border-t md:border-t-0 border-[#F0F0ED] dark:border-neutral-800">
                   <Button
                     variant="outline"
                     size="sm"

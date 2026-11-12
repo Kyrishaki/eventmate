@@ -169,17 +169,17 @@ export default function EventsPage() {
         </div>
 
         {editable ? (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
             <Button
               variant="outline"
               size="sm"
-              className="gap-1.5 border-[#315C4C]/40 text-[#315C4C] hover:bg-[#EAF4EE] font-semibold shadow-2xs"
+              className="flex-1 sm:flex-none justify-center gap-1.5 border-[#315C4C]/40 text-[#315C4C] hover:bg-[#EAF4EE] font-semibold shadow-2xs h-8 text-xs"
               onClick={() => setIsAiModalOpen(true)}
             >
               <Sparkles className="w-3.5 h-3.5 text-[#315C4C]" />
               <span>Quét ảnh Poster (AI)</span>
             </Button>
-            <Button variant="primary" size="sm" className="gap-1.5" onClick={openCreateModal}>
+            <Button variant="primary" size="sm" className="flex-1 sm:flex-none justify-center gap-1.5 h-8 text-xs font-semibold" onClick={openCreateModal}>
               <Plus className="w-3.5 h-3.5" />
               <span>{t('createButton')}</span>
             </Button>
@@ -193,12 +193,12 @@ export default function EventsPage() {
 
       {/* Filter and Search Bar */}
       <div className="flex items-center gap-3">
-        <div className="max-w-xs w-full">
+        <div className="w-full sm:max-w-xs">
           <Input
             placeholder={tCommon('search')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 text-xs"
+            className="h-8 text-xs w-full bg-white dark:bg-neutral-900"
           />
         </div>
       </div>

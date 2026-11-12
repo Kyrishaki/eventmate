@@ -295,64 +295,66 @@ export default function DashboardOrdersPage() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative max-w-xs w-full">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+        <div className="relative flex-1 sm:max-w-xs">
           <Search className="w-4 h-4 text-[#9E9E9C] absolute left-3 top-2.5" />
           <Input
             placeholder="Tìm theo mã đơn, ghi chú, lý do..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-8 text-xs bg-white"
+            className="pl-9 h-8 text-xs bg-white dark:bg-neutral-900 w-full"
           />
         </div>
 
-        {/* Event Filter */}
-        <select
-          className="h-8 rounded-[6px] border border-[#E8E8E5] bg-white px-2.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
-          value={filterEvent}
-          onChange={(e) => setFilterEvent(e.target.value)}
-        >
-          <option value="all">Tất cả sự kiện (Dữ liệu thực tế)</option>
-          <optgroup label="Sự kiện thực tế">
-            {realEvents.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.name}
-              </option>
-            ))}
-          </optgroup>
-          {testEvents.length > 0 && (
-            <optgroup label="Thử nghiệm / Sandbox (Tách biệt)">
-              {testEvents.map((e) => (
+        <div className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-2 flex-1 sm:flex-none min-w-0">
+          {/* Event Filter */}
+          <select
+            className="h-8 w-full max-w-full truncate rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2.5 text-xs text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C]"
+            value={filterEvent}
+            onChange={(e) => setFilterEvent(e.target.value)}
+          >
+            <option value="all">Tất cả sự kiện</option>
+            <optgroup label="Sự kiện thực tế">
+              {realEvents.map((e) => (
                 <option key={e.id} value={e.id}>
-                  🧪 {e.name}
+                  {e.name}
                 </option>
               ))}
             </optgroup>
-          )}
-        </select>
+            {testEvents.length > 0 && (
+              <optgroup label="Thử nghiệm / Sandbox (Tách biệt)">
+                {testEvents.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    🧪 {e.name}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+          </select>
 
-        {/* Payment Filter */}
-        <select
-          className="h-8 rounded-[6px] border border-[#E8E8E5] bg-white px-2.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
-          value={filterPayment}
-          onChange={(e) => setFilterPayment(e.target.value)}
-        >
-          <option value="all">Tất cả hình thức</option>
-          <option value="cash">Tiền mặt</option>
-          <option value="qr_manual">Chuyển khoản VietQR</option>
-        </select>
+          {/* Payment Filter */}
+          <select
+            className="h-8 w-full max-w-full truncate rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2.5 text-xs text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C]"
+            value={filterPayment}
+            onChange={(e) => setFilterPayment(e.target.value)}
+          >
+            <option value="all">Tất cả hình thức</option>
+            <option value="cash">Tiền mặt</option>
+            <option value="qr_manual">Chuyển khoản VietQR</option>
+          </select>
 
-        {/* Order Lifecycle Status Filter */}
-        <select
-          className="h-8 rounded-[6px] border border-[#E8E8E5] bg-white px-2.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value as 'all' | OrderStatus)}
-        >
-          <option value="all">Tất cả trạng thái</option>
-          <option value="completed">Hoàn thành (Hợp lệ)</option>
-          <option value="cancelled">Đã hủy (Void)</option>
-          <option value="refunded">Đã hoàn tiền (Refund)</option>
-        </select>
+          {/* Order Lifecycle Status Filter */}
+          <select
+            className="h-8 w-full max-w-full truncate rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2.5 text-xs text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C]"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value as 'all' | OrderStatus)}
+          >
+            <option value="all">Tất cả trạng thái</option>
+            <option value="completed">Hoàn thành (Hợp lệ)</option>
+            <option value="cancelled">Đã hủy (Void)</option>
+            <option value="refunded">Đã hoàn tiền (Refund)</option>
+          </select>
+        </div>
       </div>
 
       {/* Orders Table */}
@@ -600,52 +602,69 @@ export default function DashboardOrdersPage() {
                     <span className="shrink-0 text-[11px]">{formatDate(ord.created_at)}</span>
                   </div>
 
-                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-[#F0F0ED]">
-                    <div className="flex items-center gap-1.5">
-                      <Badge variant="outline" className="text-[10px]">
-                        {ord.payment_method === 'cash' ? 'Tiền mặt' : 'VietQR'}
-                      </Badge>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-[#F0F0ED] dark:border-neutral-800">
+                    <div className="flex items-center justify-between sm:justify-start gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant="outline" className="text-[10px]">
+                          {ord.payment_method === 'cash' ? 'Tiền mặt' : 'VietQR'}
+                        </Badge>
+                        <span className={`text-[10px] font-medium ${ord.sync_status === 'synced' ? 'text-[#2F7D55]' : 'text-[#B7791F]'}`}>
+                          {ord.sync_status === 'synced' ? '• Đã đồng bộ' : '• Chờ đồng bộ'}
+                        </span>
+                      </div>
                       <span
-                        className={`text-base font-bold ${
-                          isVoidOrRefund ? 'line-through text-[#9E9E9C]' : 'text-[#315C4C]'
+                        className={`text-base font-extrabold sm:hidden ${
+                          isVoidOrRefund ? 'line-through text-[#9E9E9C]' : 'text-[#315C4C] dark:text-emerald-400'
                         }`}
                       >
                         {formatCurrency(ord.final_amount, activeWorkspace?.currency || 'VND')}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1.5">
-                      {canControlOrders && !isVoidOrRefund && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 px-2 text-xs text-[#C44536] border-[#C44536]/40 hover:bg-[#FDF1F0]"
-                            onClick={() => openCancelModal(ord)}
-                            title="Hủy đơn"
-                          >
-                            <Ban className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 px-2 text-xs text-[#B7791F] border-[#B7791F]/40 hover:bg-[#FEF7EC]"
-                            onClick={() => openRefundModal(ord)}
-                            title="Hoàn tiền"
-                          >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                          </Button>
-                        </>
-                      )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 px-3 text-xs gap-1 font-semibold"
-                        onClick={() => setSelectedOrder(ord)}
+                    <div className="flex items-center justify-between sm:justify-end gap-2">
+                      <span
+                        className={`text-base font-extrabold hidden sm:block mr-2 ${
+                          isVoidOrRefund ? 'line-through text-[#9E9E9C]' : 'text-[#315C4C] dark:text-emerald-400'
+                        }`}
                       >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>Chi tiết</span>
-                      </Button>
+                        {formatCurrency(ord.final_amount, activeWorkspace?.currency || 'VND')}
+                      </span>
+
+                      <div className="flex items-center gap-1.5 flex-1 sm:flex-none justify-end">
+                        {canControlOrders && !isVoidOrRefund && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 px-2 text-xs text-[#C44536] border-[#C44536]/40 hover:bg-[#FDF1F0]"
+                              onClick={() => openCancelModal(ord)}
+                              title="Hủy đơn"
+                            >
+                              <Ban className="w-3.5 h-3.5" />
+                              <span className="sm:hidden text-[11px] ml-1">Hủy</span>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 px-2 text-xs text-[#B7791F] border-[#B7791F]/40 hover:bg-[#FEF7EC]"
+                              onClick={() => openRefundModal(ord)}
+                              title="Hoàn tiền"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              <span className="sm:hidden text-[11px] ml-1">Hoàn</span>
+                            </Button>
+                          </>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-3 text-xs gap-1 font-semibold flex-1 sm:flex-none justify-center"
+                          onClick={() => setSelectedOrder(ord)}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Chi tiết</span>
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>

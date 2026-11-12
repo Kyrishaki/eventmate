@@ -89,7 +89,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
         >
           <Topbar onOpenMobileMenu={() => setMobileMenuOpen(true)} />
-          <main className="flex-1 px-2.5 py-3 pb-24 sm:px-6 sm:py-6 md:pb-8 lg:p-8 max-w-7xl w-full mx-auto">
+          <main className="flex-1 px-2.5 py-3 pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:py-6 md:pb-8 lg:p-8 max-w-7xl w-full mx-auto">
             {children}
           </main>
         </div>

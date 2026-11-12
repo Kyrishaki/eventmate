@@ -5,7 +5,7 @@ import { Link } from '@/i18n/routing';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#F7F7F5] flex flex-col justify-between p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen min-h-[100dvh] bg-[#F7F7F5] dark:bg-[#111215] flex flex-col justify-between p-4 sm:p-6 lg:p-8 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
       {/* Top Header */}
       <header className="flex items-center justify-between max-w-5xl w-full mx-auto py-3">
         <Link href="/login" className="flex items-center gap-3 text-[#202124] group">

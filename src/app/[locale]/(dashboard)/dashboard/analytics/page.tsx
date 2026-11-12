@@ -204,12 +204,12 @@ export default function AnalyticsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
           <Button
             variant="outline"
             size="sm"
             onClick={handleExportCsv}
-            className="gap-1.5 text-xs text-[#555555] hover:text-[#202124] h-8"
+            className="flex-1 sm:flex-none justify-center gap-1.5 text-xs text-[#555555] dark:text-neutral-300 hover:text-[#202124] h-8"
             title="Xuất file CSV phẳng cơ bản"
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
@@ -220,7 +220,7 @@ export default function AnalyticsPage() {
             variant="primary"
             size="sm"
             onClick={handleExportExcel}
-            className="gap-1.5 text-xs bg-[#2F7D55] hover:bg-[#286646] text-white shadow-xs font-semibold h-8"
+            className="flex-1 sm:flex-none justify-center gap-1.5 text-xs bg-[#2F7D55] hover:bg-[#286646] text-white shadow-xs font-semibold h-8"
             title="Xuất trọn gói dữ liệu Sự kiện, Doanh thu, Quầy Collab & Tồn kho ra file Excel (.xlsx)"
           >
             <Download className="w-3.5 h-3.5" />
@@ -230,17 +230,17 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Event Filter Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-[8px] border border-[#E8E8E5] shadow-xs">
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#555555]">
-            <Filter className="w-3.5 h-3.5 text-[#737373]" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 bg-white dark:bg-neutral-900 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-800 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2.5 flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#555555] dark:text-neutral-400 shrink-0">
+            <Filter className="w-3.5 h-3.5 text-[#737373] dark:text-neutral-400" />
             <span>Phạm vi sự kiện:</span>
           </div>
 
           <select
             value={selectedEventId}
             onChange={(e) => setSelectedEventId(e.target.value)}
-            className="h-8 rounded-[6px] border border-[#E8E8E5] bg-[#F7F7F5] px-2.5 text-xs font-medium text-[#202124] focus:outline-none focus:border-[#315C4C]"
+            className="w-full sm:w-auto sm:max-w-xs h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2.5 text-xs font-medium text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] truncate max-w-full"
           >
             <option value="all">Tất cả sự kiện (Dữ liệu thực tế)</option>
             <optgroup label="Dữ liệu thực tế">
@@ -262,7 +262,7 @@ export default function AnalyticsPage() {
           </select>
         </div>
 
-        <div className="text-xs text-[#737373]">
+        <div className="text-xs text-[#737373] dark:text-neutral-400 shrink-0">
           {isTestEvent(selectedEventId) ? (
             <Badge variant="outline" className="text-xs border-[#B7791F] text-[#B7791F] bg-[#B7791F]/10">
               Chế độ Sandbox (Test)
@@ -272,7 +272,7 @@ export default function AnalyticsPage() {
               {selectedEvent?.name}
             </Badge>
           ) : (
-            <span className="text-[11px] text-[#737373]">
+            <span className="text-[11px] text-[#737373] dark:text-neutral-400">
               Doanh thu thực tế ({realEvents.length} sự kiện)
             </span>
           )}
@@ -302,33 +302,37 @@ export default function AnalyticsPage() {
       )}
 
       {/* KPI Overview */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-4 bg-white border-[#E8E8E5] shadow-xs">
-          <span className="text-xs text-[#737373] font-medium">Tổng doanh thu</span>
-          <div className="text-2xl font-bold text-[#315C4C] mt-1">
+      <div className="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        <Card className="p-3 sm:p-4 bg-white dark:bg-neutral-900 border-[#E8E8E5] dark:border-neutral-800 shadow-xs flex flex-col justify-between">
+          <span className="text-xs text-[#737373] dark:text-neutral-400 font-medium">Tổng doanh thu</span>
+          <div className="text-lg min-[360px]:text-xl sm:text-2xl font-extrabold text-[#315C4C] dark:text-emerald-400 mt-1 truncate">
             {formatCurrency(totalRevenue, activeWorkspace?.currency || 'VND')}
           </div>
-          <p className="text-[10px] text-[#737373] mt-0.5">Đã thu qua các quầy</p>
+          <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-1">Đã thu qua các quầy</p>
         </Card>
 
-        <Card className="p-4 bg-white border-[#E8E8E5] shadow-xs">
-          <span className="text-xs text-[#737373] font-medium">Tổng đơn hàng</span>
-          <div className="text-2xl font-bold text-[#202124] mt-1">{totalOrdersCount} đơn</div>
-          <p className="text-[10px] text-[#737373] mt-0.5">Giao dịch thành công</p>
+        <Card className="p-3 sm:p-4 bg-white dark:bg-neutral-900 border-[#E8E8E5] dark:border-neutral-800 shadow-xs flex flex-col justify-between">
+          <span className="text-xs text-[#737373] dark:text-neutral-400 font-medium">Tổng đơn hàng</span>
+          <div className="text-lg min-[360px]:text-xl sm:text-2xl font-extrabold text-[#202124] dark:text-neutral-100 mt-1 truncate">
+            {totalOrdersCount} đơn
+          </div>
+          <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-1">Giao dịch thành công</p>
         </Card>
 
-        <Card className="p-4 bg-white border-[#E8E8E5] shadow-xs">
-          <span className="text-xs text-[#737373] font-medium">Số lượng món đã bán</span>
-          <div className="text-2xl font-bold text-[#202124] mt-1">{totalUnitsSold} món</div>
-          <p className="text-[10px] text-[#737373] mt-0.5">Merchandise xuất kho</p>
+        <Card className="p-3 sm:p-4 bg-white dark:bg-neutral-900 border-[#E8E8E5] dark:border-neutral-800 shadow-xs flex flex-col justify-between">
+          <span className="text-xs text-[#737373] dark:text-neutral-400 font-medium">Số lượng món đã bán</span>
+          <div className="text-lg min-[360px]:text-xl sm:text-2xl font-extrabold text-[#202124] dark:text-neutral-100 mt-1 truncate">
+            {totalUnitsSold} món
+          </div>
+          <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-1">Merchandise xuất kho</p>
         </Card>
 
-        <Card className="p-4 bg-white border-[#E8E8E5] shadow-xs">
-          <span className="text-xs text-[#737373] font-medium">Giá trị trung bình / đơn</span>
-          <div className="text-2xl font-bold text-[#B7791F] mt-1">
+        <Card className="p-3 sm:p-4 bg-white dark:bg-neutral-900 border-[#E8E8E5] dark:border-neutral-800 shadow-xs flex flex-col justify-between">
+          <span className="text-xs text-[#737373] dark:text-neutral-400 font-medium">Giá trị TB / đơn</span>
+          <div className="text-lg min-[360px]:text-xl sm:text-2xl font-extrabold text-[#B7791F] dark:text-amber-400 mt-1 truncate">
             {formatCurrency(avgOrderValue, activeWorkspace?.currency || 'VND')}
           </div>
-          <p className="text-[10px] text-[#737373] mt-0.5">AOV theo phiên tour</p>
+          <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-1">AOV theo phiên tour</p>
         </Card>
       </div>
 

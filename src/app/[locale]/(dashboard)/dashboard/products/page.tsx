@@ -654,22 +654,22 @@ export default function ProductsPage() {
       </div>
 
       {/* Unified Filter, Search & View Mode Toolbar */}
-      <div className="bg-white border border-[#E8E8E5] rounded-xl p-2.5 shadow-2xs flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+      <div className="bg-white dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-800 rounded-xl p-2.5 shadow-2xs flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
         {/* Status Segmented Tabs */}
-        <div className="flex flex-wrap items-center gap-1 p-1 bg-[#F7F7F5] rounded-lg border border-[#E8E8E5] text-xs">
+        <div className="flex items-center gap-1 p-1 bg-[#F7F7F5] dark:bg-neutral-800 rounded-lg border border-[#E8E8E5] dark:border-neutral-700 text-xs overflow-x-auto no-scrollbar shrink-0 -mx-0.5 px-0.5">
           <button
             type="button"
             onClick={() => setStatusFilter('active')}
             className={cn(
-              'px-3 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5',
+              'px-3 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer',
               statusFilter === 'active'
-                ? 'bg-white text-[#315C4C] shadow-2xs'
-                : 'text-[#737373] hover:text-[#202124]'
+                ? 'bg-white dark:bg-neutral-900 text-[#315C4C] dark:text-emerald-400 shadow-2xs'
+                : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124]'
             )}
           >
             <span className="w-2 h-2 rounded-full bg-[#2F7D55]" />
             <span>Đang bán</span>
-            <span className="text-[10px] bg-[#EBF1EE] px-1.5 py-0.2 rounded font-mono text-[#315C4C]">
+            <span className="text-[10px] bg-[#EBF1EE] dark:bg-emerald-950/40 px-1.5 py-0.2 rounded font-mono text-[#315C4C] dark:text-emerald-400">
               {activeCount}
             </span>
           </button>
@@ -678,15 +678,15 @@ export default function ProductsPage() {
             type="button"
             onClick={() => setStatusFilter('sold_out')}
             className={cn(
-              'px-3 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5',
+              'px-3 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer',
               statusFilter === 'sold_out'
-                ? 'bg-white text-[#B7791F] shadow-2xs'
-                : 'text-[#737373] hover:text-[#202124]'
+                ? 'bg-white dark:bg-neutral-900 text-[#B7791F] dark:text-amber-400 shadow-2xs'
+                : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124]'
             )}
           >
-            <EyeOff className="w-3.5 h-3.5 text-[#B7791F]" />
+            <EyeOff className="w-3.5 h-3.5 text-[#B7791F] dark:text-amber-400" />
             <span>Hết hàng</span>
-            <span className="text-[10px] bg-[#FEF7EC] px-1.5 py-0.2 rounded font-mono text-[#B7791F]">
+            <span className="text-[10px] bg-[#FEF7EC] dark:bg-amber-950/40 px-1.5 py-0.2 rounded font-mono text-[#B7791F] dark:text-amber-400">
               {soldOutCount}
             </span>
           </button>
@@ -695,15 +695,15 @@ export default function ProductsPage() {
             type="button"
             onClick={() => setStatusFilter('archived')}
             className={cn(
-              'px-3 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5',
+              'px-3 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer',
               statusFilter === 'archived'
-                ? 'bg-white text-[#C44536] shadow-2xs'
-                : 'text-[#737373] hover:text-[#202124]'
+                ? 'bg-white dark:bg-neutral-900 text-[#C44536] dark:text-rose-400 shadow-2xs'
+                : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124]'
             )}
           >
-            <Archive className="w-3.5 h-3.5 text-[#C44536]" />
+            <Archive className="w-3.5 h-3.5 text-[#C44536] dark:text-rose-400" />
             <span>Đã ẩn</span>
-            <span className="text-[10px] bg-[#FDF1F0] px-1.5 py-0.2 rounded font-mono text-[#C44536]">
+            <span className="text-[10px] bg-[#FDF1F0] dark:bg-rose-950/40 px-1.5 py-0.2 rounded font-mono text-[#C44536] dark:text-rose-400">
               {archivedCount}
             </span>
           </button>
@@ -712,28 +712,28 @@ export default function ProductsPage() {
             type="button"
             onClick={() => setStatusFilter('all')}
             className={cn(
-              'px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-1.5',
+              'px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer',
               statusFilter === 'all'
-                ? 'bg-white text-[#202124] shadow-2xs font-semibold'
-                : 'text-[#737373] hover:text-[#202124]'
+                ? 'bg-white dark:bg-neutral-900 text-[#202124] dark:text-neutral-100 shadow-2xs font-semibold'
+                : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124]'
             )}
           >
             <span>Tất cả</span>
-            <span className="text-[10px] bg-[#E8E8E5] px-1.5 py-0.2 rounded font-mono text-[#737373]">
+            <span className="text-[10px] bg-[#E8E8E5] dark:bg-neutral-700 px-1.5 py-0.2 rounded font-mono text-[#737373] dark:text-neutral-300">
               {allCount}
             </span>
           </button>
         </div>
 
         {/* Right: Search + Category Select + View Mode Switcher */}
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
-          <div className="relative flex-1 sm:w-64">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 lg:justify-end">
+          <div className="relative flex-1 sm:max-w-xs">
             <Search className="w-3.5 h-3.5 text-[#9E9E9C] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <Input
               placeholder="Tìm tên sản phẩm, mã loại..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-8 pl-8 pr-7 text-xs rounded-lg"
+              className="h-8 pl-8 pr-7 text-xs rounded-lg w-full"
             />
             {searchQuery && (
               <button
@@ -747,21 +747,22 @@ export default function ProductsPage() {
             )}
           </div>
 
-          <div className="relative flex items-center">
-            <Tag className="w-3.5 h-3.5 text-[#9E9E9C] absolute left-2.5 pointer-events-none" />
-            <select
-              className="h-8 rounded-lg border border-[#E8E8E5] bg-white pl-8 pr-7 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-            >
-              <option value="all">{t('allCategories')}</option>
-              {allExistingCategories.map((c) => (
-                <option key={c.id || c.name} value={c.id}>
-                  {c.name} {c.count > 0 ? `(${c.count})` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 sm:flex-none">
+              <Tag className="w-3.5 h-3.5 text-[#9E9E9C] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <select
+                className="h-8 w-full sm:w-auto rounded-lg border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-900 pl-8 pr-7 text-xs text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C]"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+              >
+                <option value="all">{t('allCategories')}</option>
+                {allExistingCategories.map((c) => (
+                  <option key={c.id || c.name} value={c.id}>
+                    {c.name} {c.count > 0 ? `(${c.count})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
 
           {/* View Mode Switcher */}
           <div className="flex items-center p-0.5 rounded-lg bg-[#F7F7F5] border border-[#E8E8E5] shrink-0">
@@ -793,6 +794,7 @@ export default function ProductsPage() {
               <LayoutGrid className="w-3.5 h-3.5" />
               <span className="hidden xl:inline text-[11px]">Lưới thẻ</span>
             </button>
+          </div>
           </div>
         </div>
       </div>
@@ -1261,29 +1263,30 @@ export default function ProductsPage() {
                     </div>
 
                     {/* Right: Refined Action Toolbar */}
-                    <div className="flex flex-wrap items-center gap-2 shrink-0 border-t xl:border-t-0 pt-3 xl:pt-0 border-[#F0F0ED]">
+                    <div className="w-full xl:w-auto grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 shrink-0 border-t xl:border-t-0 pt-3 xl:pt-0 border-[#F0F0ED] dark:border-neutral-800">
                       {editable && canManageThis ? (
                         <>
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 px-3 text-xs gap-1.5 rounded-lg font-semibold"
+                            className="h-8 px-2.5 sm:px-3 text-xs gap-1.5 rounded-lg font-semibold justify-center"
                             onClick={() => openQuickAdjustModal(prod)}
                             title="Chỉnh nhanh số lượng tổng kho, tự giữ VIP và đơn khách đặt online"
                           >
                             <SlidersHorizontal className="w-3.5 h-3.5 text-[#B7791F]" />
-                            <span>Chỉnh tồn & Đặt trước</span>
+                            <span className="sm:inline hidden">Chỉnh tồn &amp; Đặt trước</span>
+                            <span className="sm:hidden">Chỉnh tồn</span>
                           </Button>
 
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 px-3 text-xs gap-1.5 rounded-lg font-semibold"
+                            className="h-8 px-2.5 sm:px-3 text-xs gap-1.5 rounded-lg font-semibold justify-center"
                             onClick={() => openEditModal(prod)}
                             title="Sửa thông tin, giá bán hoặc đổi ảnh sản phẩm"
                           >
                             <Edit className="w-3.5 h-3.5 text-[#315C4C]" />
-                            <span>Sửa & Ảnh</span>
+                            <span>Sửa &amp; Ảnh</span>
                           </Button>
 
                           {prod.is_deleted ? (

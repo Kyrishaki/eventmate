@@ -234,10 +234,10 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 max-w-4xl pb-12">
       {/* Top Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#E8E8E5]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#E8E8E5]">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-[#202124]">Cài Đặt Hệ Thống & Thông Tin Gian Hàng</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[#202124]">Cài Đặt Hệ Thống & Thông Tin Gian Hàng</h1>
             <Badge variant="outline" className="text-[11px] font-mono">
               {activeWorkspace?.currency || 'VND'}
             </Badge>
@@ -546,11 +546,11 @@ export default function SettingsPage() {
         </Card>
 
         {/* Save Button Bar */}
-        <div className="sticky bottom-4 bg-white/95 dark:bg-neutral-900/95 backdrop-blur p-4 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-800 shadow-lg flex items-center justify-between">
-          <p className="text-xs text-[#737373]">
+        <div className="sticky bottom-2 sm:bottom-4 bg-white/95 dark:bg-neutral-900/95 backdrop-blur p-3.5 sm:p-4 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-800 shadow-lg flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 z-20">
+          <p className="text-xs text-[#737373] dark:text-neutral-400">
             Lưu một lần — Tự động áp dụng cho Gian hàng khách xem, Hóa đơn và Màn hình POS.
           </p>
-          <Button type="submit" variant="primary" size="md" className="gap-2 bg-[#315C4C] hover:bg-[#254639] text-white">
+          <Button type="submit" variant="primary" size="md" className="gap-2 bg-[#315C4C] hover:bg-[#254639] text-white w-full sm:w-auto shrink-0 shadow-sm">
             <Save className="w-4 h-4" />
             <span className="font-bold">Lưu Toàn Bộ Cài Đặt</span>
           </Button>

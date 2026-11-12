@@ -53,7 +53,7 @@ const REFUND_PRESET_REASONS = [
 
 export default function DashboardOrdersPage() {
   const { activeWorkspace } = useWorkspaceStore();
-  const { orders, cancelOrder, refundOrder } = useOrdersStore();
+  const { orders, cancelOrder, refundOrder, setOrderProofVerified } = useOrdersStore();
   const { events, booths, variants, products } = useDataStore();
   const { user } = useAuthStore();
 
@@ -63,7 +63,9 @@ export default function DashboardOrdersPage() {
   const [filterEvent, setFilterEvent] = React.useState('all');
   const [filterPayment, setFilterPayment] = React.useState('all');
   const [filterStatus, setFilterStatus] = React.useState<'all' | OrderStatus>('all');
+  const [filterProof, setFilterProof] = React.useState<'all' | 'has_proof' | 'unverified'>('all');
   const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
+  const [previewProofImage, setPreviewProofImage] = React.useState<string | null>(null);
   const [isReceiptOpen, setIsReceiptOpen] = React.useState(false);
 
   // Cancel / Void modal state
@@ -113,8 +115,14 @@ export default function DashboardOrdersPage() {
     const matchesPayment = filterPayment === 'all' || o.payment_method === filterPayment;
     const effectiveStatus = getEffectiveOrderStatus(o);
     const matchesStatus = filterStatus === 'all' || effectiveStatus === filterStatus;
+    const matchesProof =
+      filterProof === 'all'
+        ? true
+        : filterProof === 'has_proof'
+        ? Boolean(o.proof_image_url)
+        : Boolean(o.proof_image_url && !o.proof_verified);
 
-    return matchesSearch && matchesEvent && matchesPayment && matchesStatus;
+    return matchesSearch && matchesEvent && matchesPayment && matchesStatus && matchesProof;
   });
 
   const openCancelModal = (ord: Order) => {
@@ -343,6 +351,17 @@ export default function DashboardOrdersPage() {
             <option value="qr_manual">Chuyển khoản VietQR</option>
           </select>
 
+          {/* Payment Proof Filter */}
+          <select
+            className="h-8 w-full max-w-full truncate rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2.5 text-xs text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C]"
+            value={filterProof}
+            onChange={(e) => setFilterProof(e.target.value as any)}
+          >
+            <option value="all">Tất cả minh chứng</option>
+            <option value="has_proof">📷 Có ảnh minh chứng</option>
+            <option value="unverified">⚠️ Chờ đối soát</option>
+          </select>
+
           {/* Order Lifecycle Status Filter */}
           <select
             className="h-8 w-full max-w-full truncate rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2.5 text-xs text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C]"
@@ -417,10 +436,22 @@ export default function DashboardOrdersPage() {
                             )}
                           </div>
                           {ord.proof_image_url && (
-                            <span className="inline-flex items-center gap-1 text-[9px] text-[#2F7D55] bg-[#EBF1EE] px-1 py-0.2 rounded font-semibold border border-[#2F7D55]/20 w-fit">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPreviewProofImage(ord.proof_image_url!);
+                              }}
+                              className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded font-semibold border cursor-pointer ${
+                                ord.proof_verified
+                                  ? 'bg-[#EAF4EE] text-[#2F7D55] border-[#2F7D55]/30'
+                                  : 'bg-[#FEF7EC] text-[#B7791F] border-[#B7791F]/30'
+                              }`}
+                              title="Bấm để xem ảnh minh chứng chuyển khoản"
+                            >
                               <Camera className="w-2.5 h-2.5" />
-                              Ảnh nhận hàng
-                            </span>
+                              <span>{ord.proof_verified ? '✓ Đã khớp tiền' : '📷 Minh chứng CK'}</span>
+                            </button>
                           )}
                           {isCancelled && ord.cancellation_reason && (
                             <span className="font-sans font-normal text-[10px] text-[#C44536] truncate max-w-[180px]" title={ord.cancellation_reason}>
@@ -562,6 +593,20 @@ export default function DashboardOrdersPage() {
                         <Badge variant="outline" className="text-[9px] border-[#B7791F] text-[#B7791F] bg-[#B7791F]/10">
                           Thử nghiệm
                         </Badge>
+                      )}
+                      {ord.proof_image_url && (
+                        <button
+                          type="button"
+                          onClick={() => setPreviewProofImage(ord.proof_image_url!)}
+                          className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded font-semibold border cursor-pointer ${
+                            ord.proof_verified
+                              ? 'bg-[#EAF4EE] text-[#2F7D55] border-[#2F7D55]/30'
+                              : 'bg-[#FEF7EC] text-[#B7791F] border-[#B7791F]/30'
+                          }`}
+                        >
+                          <Camera className="w-2.5 h-2.5" />
+                          <span>{ord.proof_verified ? '✓ Đã khớp' : '📷 Minh chứng'}</span>
+                        </button>
                       )}
                     </div>
                     {isCancelled ? (
@@ -753,6 +798,85 @@ export default function DashboardOrdersPage() {
                 </p>
               </div>
             )}
+
+            {/* Proof of Payment Verification Box */}
+            {selectedOrder.proof_image_url ? (
+              <div className="p-3 bg-white dark:bg-neutral-800 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-700 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#202124] dark:text-neutral-100 flex items-center gap-1.5">
+                    <Camera className="w-4 h-4 text-[#315C4C] dark:text-emerald-400" />
+                    <span>Ảnh minh chứng chuyển khoản:</span>
+                  </span>
+                  {selectedOrder.proof_verified ? (
+                    <Badge variant="success" className="text-[10px]">
+                      ✓ Đã khớp tiền
+                    </Badge>
+                  ) : (
+                    <Badge variant="warning" className="text-[10px]">
+                      Chờ đối soát
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewProofImage(selectedOrder.proof_image_url!)}
+                    className="group relative w-20 h-20 rounded-[6px] overflow-hidden border border-[#D5D5D0] dark:border-neutral-600 shrink-0 cursor-pointer"
+                    title="Bấm để xem phóng to ảnh minh chứng"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={selectedOrder.proof_image_url}
+                      alt="Minh chứng chuyển khoản"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-[10px] font-bold">
+                      Phóng to
+                    </div>
+                  </button>
+
+                  <div className="flex-1 space-y-2 text-xs">
+                    <p className="text-[11px] text-[#737373] dark:text-neutral-400 leading-relaxed">
+                      Ảnh do Thu ngân chụp/tải lên tại quầy khi khách quét mã VietQR.
+                      {selectedOrder.proof_verified_by && (
+                        <span className="block text-[#2F7D55] dark:text-emerald-400 font-medium mt-0.5">
+                          Đã đối soát bởi {selectedOrder.proof_verified_by}
+                          {selectedOrder.proof_verified_at ? ` lúc ${formatDate(selectedOrder.proof_verified_at)}` : ''}
+                        </span>
+                      )}
+                    </p>
+
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={selectedOrder.proof_verified ? 'outline' : 'primary'}
+                      onClick={() => {
+                        const nextVerified = !selectedOrder.proof_verified;
+                        setOrderProofVerified(selectedOrder.id, nextVerified, user?.fullName || 'Admin');
+                        setSelectedOrder({
+                          ...selectedOrder,
+                          proof_verified: nextVerified,
+                          proof_verified_by: nextVerified ? (user?.fullName || 'Admin') : null,
+                          proof_verified_at: nextVerified ? new Date().toISOString() : null,
+                        });
+                      }}
+                      className="gap-1.5 text-xs h-7.5"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>
+                        {selectedOrder.proof_verified ? 'Hủy xác nhận khớp tiền' : 'Xác nhận đã khớp tiền ✓'}
+                      </span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : selectedOrder.payment_method === 'qr_manual' ? (
+              <div className="p-2.5 bg-[#FEF7EC] dark:bg-amber-950/30 border border-[#F8E3C3] dark:border-amber-900 rounded-[6px] text-xs text-[#8C5D17] dark:text-amber-300 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-[#B7791F]" />
+                <span>Đơn hàng thanh toán qua VietQR này chưa có ảnh minh chứng đính kèm.</span>
+              </div>
+            ) : null}
 
             <div>
               <p className="font-bold text-[#202124] mb-2 uppercase text-[10px] tracking-wider">
@@ -1109,6 +1233,38 @@ export default function DashboardOrdersPage() {
         isOpen={isReceiptOpen}
         onClose={() => setIsReceiptOpen(false)}
       />
+
+      {/* Lightbox Modal for Payment Proof Photo */}
+      <Modal
+        isOpen={!!previewProofImage}
+        onClose={() => setPreviewProofImage(null)}
+        title="Ảnh minh chứng chuyển khoản (Biên lai)"
+        description="Ảnh chụp màn hình giao dịch do thu ngân tải lên khi khách thanh toán VietQR."
+        maxWidth="xl"
+      >
+        {previewProofImage && (
+          <div className="space-y-4 text-center">
+            <div className="max-h-[70vh] overflow-auto rounded-[8px] border border-[#E8E8E5] dark:border-neutral-700 bg-black/5 flex items-center justify-center p-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={previewProofImage}
+                alt="Minh chứng chuyển khoản full"
+                className="max-h-[65vh] w-auto max-w-full object-contain rounded"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setPreviewProofImage(null)}
+              >
+                Đóng
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

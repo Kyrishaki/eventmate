@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Modal } from '@/components/ui/modal';
 import { SyncStatusBadge, SyncState } from '@/components/ui/sync-status-badge';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, compressImage } from '@/lib/utils';
 import { PaymentMethod, Product, ProductVariant, Order } from '@/types/database';
 import { calculateVariantStock } from '@/lib/stock-status';
 import { PreorderPickupModal } from '@/components/pos/preorder-pickup-modal';
@@ -53,6 +53,8 @@ import {
   Eye,
   EyeOff,
   Coins,
+  Camera,
+  Image as ImageIcon,
   AlertCircle,
   Bug,
   Zap,
@@ -356,11 +358,30 @@ export default function PosTerminalPage() {
     setQrSessionRef(Math.floor(1000 + Math.random() * 9000).toString());
     const isAuto = typeof window !== 'undefined' && localStorage.getItem('pos_auto_confirm_qr') === 'true';
     setQrCountdown(isAuto ? 5 : null);
+    setProofImage(null);
     setIsCheckoutOpen(true);
   }, []);
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>('qr_manual');
   const [tenderedCash, setTenderedCash] = React.useState<number>(0);
   const [orderNotes, setOrderNotes] = React.useState('');
+  const [proofImage, setProofImage] = React.useState<string | null>(null);
+  const [isCapturingProof, setIsCapturingProof] = React.useState(false);
+
+  const handleProofFileChange = React.useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setIsCapturingProof(true);
+      const compressed = await compressImage(file, 900, 0.75);
+      setProofImage(compressed);
+    } catch (err) {
+      console.error('Lỗi xử lý ảnh minh chứng:', err);
+    } finally {
+      setIsCapturingProof(false);
+      e.target.value = '';
+    }
+  }, []);
+
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [confirmedOrder, setConfirmedOrder] = React.useState<Order | null>(null);
 
@@ -542,9 +563,11 @@ export default function PosTerminalPage() {
         changeAmount: paymentMethod === 'cash' ? cashChange : undefined,
         notes: mergedNote || undefined,
         isOnline,
+        proofImageUrl: proofImage || undefined,
       });
 
       setConfirmedOrder(order);
+      setProofImage(null);
       useShiftStore.getState().recordOrderInShift(paymentMethod, order.final_amount);
       playSuccessChime();
       if (paymentMethod === 'qr_manual' && activeBankConfig.voiceAnnouncement !== false) {
@@ -1813,30 +1836,76 @@ export default function PosTerminalPage() {
                 </div>
               </div>
 
-              {/* Auto-banking status & non-phone cashier notice */}
-              <div className="p-2.5 rounded-[6px] bg-[#EAF4EE] border border-[#CEE6D7] text-[#2F7D55] text-[11px] leading-relaxed text-left flex items-start justify-between gap-2">
-                <div className="flex items-start gap-2">
-                  <Radio className="w-4 h-4 shrink-0 mt-0.5 text-[#2F7D55] animate-pulse" />
-                  <div>
-                    <p className="font-bold text-[#202124]">
-                      Tự động nhận diện tiền về (Không cần cầm điện thoại)
-                    </p>
-                    <p className="text-[#2F7D55] mt-0.5">
-                      Hệ thống tự động quét biến động số dư mỗi 2 giây theo mã{' '}
-                      <strong>EM{qrSessionRef}</strong>. Ngay khi khách chuyển khoản xong và tiền vào tài khoản, web sẽ <strong>tự động đọc giọng nói báo tiền về</strong> và nhảy sang màn hình hoàn tất!
-                    </p>
-                  </div>
+              {/* Proof of Payment Photo Capture Section */}
+              <div className="p-3 rounded-[8px] bg-[#F7F7F5] dark:bg-neutral-800 border border-[#D5D5D0] dark:border-neutral-700 text-left space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#202124] dark:text-neutral-100 flex items-center gap-1.5">
+                    <Camera className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400" />
+                    <span>Chụp ảnh minh chứng chuyển khoản:</span>
+                  </span>
+                  {proofImage && (
+                    <button
+                      type="button"
+                      onClick={() => setProofImage(null)}
+                      className="text-[11px] font-semibold text-rose-600 hover:text-rose-700 cursor-pointer"
+                    >
+                      Xóa ảnh
+                    </button>
+                  )}
                 </div>
-                <button
-                  type="button"
-                  onClick={checkBankTransferNow}
-                  disabled={isCheckingBankTx || isSubmitting}
-                  className="shrink-0 px-2 py-1 rounded bg-white border border-[#CEE6D7] text-[10px] font-bold text-[#315C4C] hover:bg-[#F7F7F5] cursor-pointer flex items-center gap-1"
-                  title="Quét kiểm tra giao dịch ngay lập tức"
-                >
-                  <RefreshCw className={`w-3 h-3 ${isCheckingBankTx ? 'animate-spin' : ''}`} />
-                  <span>Quét ngay</span>
-                </button>
+
+                {proofImage ? (
+                  <div className="flex items-center gap-3 p-2 bg-[#EAF4EE] dark:bg-emerald-950/40 border border-[#2F7D55]/30 rounded-[6px]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={proofImage}
+                      alt="Minh chứng chuyển khoản"
+                      className="w-16 h-16 object-cover rounded border border-[#2F7D55]/40 shrink-0"
+                    />
+                    <div className="min-w-0 flex-1 text-xs">
+                      <p className="font-bold text-[#2F7D55] dark:text-emerald-400 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Đã đính kèm ảnh chuyển khoản</span>
+                      </p>
+                      <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-0.5">
+                        Ảnh sẽ được lưu kèm đơn hàng để Quản lý / Admin đối soát.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <label
+                      htmlFor="pos-proof-camera-input"
+                      className="flex-1 py-2 px-3 rounded-[6px] border border-[#315C4C] bg-[#EAF4EE] dark:bg-emerald-950/40 text-[#315C4C] dark:text-emerald-400 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-[#DDF0E4] cursor-pointer transition-colors shadow-2xs"
+                    >
+                      <Camera className="w-4 h-4 shrink-0" />
+                      <span>{isCapturingProof ? 'Đang xử lý...' : 'Chụp ảnh màn hình CK'}</span>
+                      <input
+                        id="pos-proof-camera-input"
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        className="hidden"
+                        onChange={handleProofFileChange}
+                      />
+                    </label>
+
+                    <label
+                      htmlFor="pos-proof-upload-input"
+                      className="py-2 px-3 rounded-[6px] border border-[#D5D5D0] dark:border-neutral-700 bg-white dark:bg-neutral-800 text-[#494949] dark:text-neutral-300 text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-[#F7F7F5] cursor-pointer transition-colors"
+                    >
+                      <ImageIcon className="w-3.5 h-3.5 shrink-0 text-[#737373]" />
+                      <span>Tải ảnh từ máy</span>
+                      <input
+                        id="pos-proof-upload-input"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleProofFileChange}
+                      />
+                    </label>
+                  </div>
+                )}
               </div>
 
               {/* Cashier direct confirmation action */}
@@ -2061,6 +2130,25 @@ export default function PosTerminalPage() {
                 </span>
               </div>
             </div>
+
+            {confirmedOrder.proof_image_url && (
+              <div className="p-2.5 bg-[#F7F7F5] dark:bg-neutral-800 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-700 flex items-center gap-3 text-left">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={confirmedOrder.proof_image_url}
+                  alt="Minh chứng"
+                  className="w-12 h-12 object-cover rounded border border-[#2F7D55]/30 shrink-0"
+                />
+                <div className="min-w-0 flex-1">
+                  <span className="text-[11px] font-bold text-[#2F7D55] dark:text-emerald-400 block">
+                    ✓ Đã lưu ảnh minh chứng CK
+                  </span>
+                  <span className="text-[10px] text-[#737373] dark:text-neutral-400">
+                    Đã sẵn sàng trên Dashboard quản trị để đối soát
+                  </span>
+                </div>
+              </div>
+            )}
 
             {confirmedOrder.payment_method === 'cash' && confirmedOrder.tendered_amount != null && (
               <div className="p-3 bg-[#EAF4EE] border border-[#2F7D55]/30 rounded-[6px] text-xs space-y-1">

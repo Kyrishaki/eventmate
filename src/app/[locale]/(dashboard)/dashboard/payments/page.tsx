@@ -3,12 +3,15 @@
 import * as React from 'react';
 import { useOrdersStore } from '@/stores/orders-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
+import { useDataStore } from '@/stores/data-store';
+import { useAuthStore } from '@/stores/auth-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { formatCurrency } from '@/lib/utils';
+import { Modal } from '@/components/ui/modal';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import { playSuccessChime, speakPaymentReceived } from '@/lib/sound';
 import {
   CreditCard,
@@ -24,6 +27,10 @@ import {
   RefreshCw,
   Zap,
   AlertCircle,
+  Camera,
+  Eye,
+  Store,
+  Calendar,
 } from 'lucide-react';
 import { filterRealOrders, isTestOrder, isNetRevenueOrder } from '@/lib/test-data-filter';
 
@@ -41,20 +48,26 @@ interface WebhookLogItem {
 
 export default function PaymentsPage() {
   const { activeWorkspace } = useWorkspaceStore();
-  const { activeBankConfig, setBankConfig, orders } = useOrdersStore();
+  const { activeBankConfig, setBankConfig, orders, setOrderProofVerified } = useOrdersStore();
+  const { events, booths } = useDataStore();
+  const { user } = useAuthStore();
 
-  const [bankId, setBankId] = React.useState(activeBankConfig.bankId || 'MB');
-  const [accountNo, setAccountNo] = React.useState(activeBankConfig.accountNo || '');
-  const [accountName, setAccountName] = React.useState(activeBankConfig.accountName || '');
+  const [activeTab, setActiveTab] = React.useState<'proofs' | 'config'>('proofs');
+  const [proofFilter, setProofFilter] = React.useState<'all' | 'unverified' | 'verified'>('all');
+  const [lightboxImage, setLightboxImage] = React.useState<string | null>(null);
+
+  const [bankId, setBankId] = React.useState(activeBankConfig.bankId || 'CTG');
+  const [accountNo, setAccountNo] = React.useState(activeBankConfig.accountNo || '109876880260');
+  const [accountName, setAccountName] = React.useState(activeBankConfig.accountName || 'NGUYEN BAO THUONG');
   const [autoCheckEnabled, setAutoCheckEnabled] = React.useState(
-    activeBankConfig.autoCheckEnabled !== false
+    activeBankConfig.autoCheckEnabled === true
   );
   const [provider, setProvider] = React.useState<'sepay' | 'casso' | 'webhook_only'>(
-    activeBankConfig.provider || 'sepay'
+    activeBankConfig.provider || 'webhook_only'
   );
   const [apiToken, setApiToken] = React.useState(activeBankConfig.apiToken || '');
   const [voiceAnnouncement, setVoiceAnnouncement] = React.useState(
-    activeBankConfig.voiceAnnouncement !== false
+    activeBankConfig.voiceAnnouncement === true
   );
   const [isSaved, setIsSaved] = React.useState(false);
 
@@ -79,13 +92,13 @@ export default function PaymentsPage() {
   React.useEffect(() => {
     const timer = setTimeout(() => {
       if (activeBankConfig) {
-        setBankId(activeBankConfig.bankId || 'MB');
-        setAccountNo(activeBankConfig.accountNo || '');
-        setAccountName(activeBankConfig.accountName || '');
-        setAutoCheckEnabled(activeBankConfig.autoCheckEnabled !== false);
-        setProvider(activeBankConfig.provider || 'sepay');
+        setBankId(activeBankConfig.bankId || 'CTG');
+        setAccountNo(activeBankConfig.accountNo || '109876880260');
+        setAccountName(activeBankConfig.accountName || 'NGUYEN BAO THUONG');
+        setAutoCheckEnabled(activeBankConfig.autoCheckEnabled === true);
+        setProvider(activeBankConfig.provider || 'webhook_only');
         setApiToken(activeBankConfig.apiToken || '');
-        setVoiceAnnouncement(activeBankConfig.voiceAnnouncement !== false);
+        setVoiceAnnouncement(activeBankConfig.voiceAnnouncement === true);
       }
     }, 0);
     return () => clearTimeout(timer);
@@ -203,24 +216,290 @@ export default function PaymentsPage() {
     }
   }
 
+  // Filter transfer orders with proof images
+  const transferOrdersWithProof = orders.filter((o) => !!o.proof_image_url);
+  const unverifiedProofsCount = transferOrdersWithProof.filter((o) => !o.proof_verified).length;
+  const verifiedProofsCount = transferOrdersWithProof.filter((o) => !!o.proof_verified).length;
+
+  const filteredProofOrders = transferOrdersWithProof.filter((o) => {
+    if (proofFilter === 'unverified') return !o.proof_verified;
+    if (proofFilter === 'verified') return !!o.proof_verified;
+    return true;
+  });
+
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 max-w-5xl">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#E8E8E5]">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-[#202124]">
-              Phương thức & Cấu hình Thanh toán Tự động
+              Thanh toán & Đối soát Chuyển khoản
             </h1>
             <Badge variant="outline" className="text-[11px] font-mono">
-              Auto-Banking / VietQR
+              VietinBank / VietQR
             </Badge>
           </div>
           <p className="text-xs text-[#737373] mt-0.5">
-            Cấu hình tài khoản nhận tiền và tự động nhảy &quot;Thanh toán thành công&quot; trên máy POS mà thu ngân không cần cầm điện thoại.
+            Admin kiểm tra ảnh chụp minh chứng chuyển khoản từ quầy thu ngân và cấu hình tài khoản VietQR nhận tiền.
           </p>
         </div>
+
+        {/* Tab switcher */}
+        <div className="flex items-center gap-1 p-1 bg-[#F0F0ED] rounded-[8px] self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setActiveTab('proofs')}
+            className={`px-3 py-1.5 rounded-[6px] text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'proofs'
+                ? 'bg-white text-[#202124] shadow-xs'
+                : 'text-[#737373] hover:text-[#202124]'
+            }`}
+          >
+            <Camera className="w-3.5 h-3.5" />
+            <span>Đối soát minh chứng</span>
+            {unverifiedProofsCount > 0 ? (
+              <span className="px-1.5 py-0.2 bg-[#C5221F] text-white rounded-full text-[10px] font-bold">
+                {unverifiedProofsCount}
+              </span>
+            ) : (
+              <span className="px-1.5 py-0.2 bg-[#E8E8E5] text-[#737373] rounded-full text-[10px]">
+                {transferOrdersWithProof.length}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('config')}
+            className={`px-3 py-1.5 rounded-[6px] text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'config'
+                ? 'bg-white text-[#202124] shadow-xs'
+                : 'text-[#737373] hover:text-[#202124]'
+            }`}
+          >
+            <QrCode className="w-3.5 h-3.5" />
+            <span>Cấu hình VietQR & Ngân hàng</span>
+          </button>
+        </div>
       </div>
+
+      {activeTab === 'proofs' ? (
+        /* TAB 1: PROOF VERIFICATION DASHBOARD */
+        <div className="space-y-4">
+          {/* Proof Summary Stats & Filter */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 bg-white border border-[#E8E8E5] rounded-[8px] shadow-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-[#202124]">Lọc theo trạng thái:</span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setProofFilter('all')}
+                  className={`px-2.5 py-1 rounded-[6px] text-xs font-medium cursor-pointer transition-colors ${
+                    proofFilter === 'all'
+                      ? 'bg-[#315C4C] text-white'
+                      : 'bg-[#F7F7F5] text-[#555] hover:bg-[#E8E8E5]'
+                  }`}
+                >
+                  Tất cả ({transferOrdersWithProof.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProofFilter('unverified')}
+                  className={`px-2.5 py-1 rounded-[6px] text-xs font-medium cursor-pointer transition-colors flex items-center gap-1 ${
+                    proofFilter === 'unverified'
+                      ? 'bg-[#B7791F] text-white'
+                      : 'bg-[#FEF7EC] text-[#B7791F] hover:bg-[#FEEBC8]'
+                  }`}
+                >
+                  <span>Chờ đối soát</span>
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-white/20">
+                    {unverifiedProofsCount}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProofFilter('verified')}
+                  className={`px-2.5 py-1 rounded-[6px] text-xs font-medium cursor-pointer transition-colors flex items-center gap-1 ${
+                    proofFilter === 'verified'
+                      ? 'bg-[#2F7D55] text-white'
+                      : 'bg-[#EAF4EE] text-[#2F7D55] hover:bg-[#CEE6D7]'
+                  }`}
+                >
+                  <span>Đã khớp tiền</span>
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-white/20">
+                    {verifiedProofsCount}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-[#737373]">
+              Bấm vào ảnh để phóng to kiểm tra bill. Bấm nút xanh để xác nhận khớp tiền tài khoản.
+            </p>
+          </div>
+
+          {/* Proof Orders Grid / List */}
+          {filteredProofOrders.length === 0 ? (
+            <Card className="p-8 text-center bg-white border-[#E8E8E5]">
+              <div className="w-12 h-12 mx-auto rounded-full bg-[#F7F7F5] flex items-center justify-center text-[#737373] mb-3">
+                <Camera className="w-6 h-6" />
+              </div>
+              <p className="text-sm font-semibold text-[#202124]">
+                {proofFilter === 'unverified'
+                  ? 'Tuyệt vời! Không còn đơn hàng nào chờ đối soát minh chứng'
+                  : 'Chưa có đơn hàng nào có ảnh minh chứng chuyển khoản'}
+              </p>
+              <p className="text-xs text-[#737373] mt-1 max-w-md mx-auto">
+                Khi thu ngân tại máy POS chọn thanh toán Chuyển khoản VietQR và chụp lại ảnh giao dịch / bill ngân hàng của khách, ảnh sẽ xuất hiện tại đây để Admin kiểm tra chéo với app ngân hàng.
+              </p>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredProofOrders.map((order) => {
+                const booth = booths.find((b) => b.id === order.booth_id);
+                const event = events.find((e) => e.id === order.event_id);
+                const isVerified = !!order.proof_verified;
+
+                return (
+                  <Card
+                    key={order.id}
+                    className={`bg-white border transition-shadow overflow-hidden shadow-xs hover:shadow-sm ${
+                      isVerified ? 'border-[#CEE6D7]' : 'border-[#F6AD55]'
+                    }`}
+                  >
+                    {/* Image Header with Lightbox Zoom Click */}
+                    <div className="relative h-48 bg-[#1B1F23] flex items-center justify-center group overflow-hidden">
+                      {order.proof_image_url ? (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={order.proof_image_url}
+                            alt={`Minh chứng ${order.order_number}`}
+                            className="w-full h-full object-contain cursor-pointer transition-transform duration-200 group-hover:scale-105"
+                            onClick={() => setLightboxImage(order.proof_image_url || null)}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setLightboxImage(order.proof_image_url || null)}
+                            className="absolute bottom-2 right-2 px-2 py-1 rounded bg-black/70 hover:bg-black text-white text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition-opacity backdrop-blur-xs"
+                          >
+                            <Eye className="w-3 h-3" />
+                            <span>Phóng to xem bill</span>
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-xs text-[#737373]">Không có ảnh minh chứng</span>
+                      )}
+
+                      {/* Verified overlay badge */}
+                      <div className="absolute top-2 left-2">
+                        {isVerified ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#2F7D55] text-white shadow-xs">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Đã khớp tiền
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#B7791F] text-white shadow-xs">
+                            <AlertCircle className="w-3 h-3" />
+                            Chờ đối soát
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Card Content */}
+                    <div className="p-3.5 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-sm text-[#202124]">
+                              {order.order_number}
+                            </span>
+                            <Badge variant="outline" className="text-[10px]">
+                              VietQR
+                            </Badge>
+                          </div>
+                          <p className="text-[11px] text-[#737373] mt-0.5 flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            <span>{formatDate(order.created_at)}</span>
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-base text-[#315C4C]">
+                            {formatCurrency(order.final_amount, 'VND')}
+                          </div>
+                          <span className="text-[10px] text-[#737373]">
+                            {order.items?.length || 0} món
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Event & Booth location */}
+                      {(event || booth) && (
+                        <div className="text-[11px] text-[#555] bg-[#F7F7F5] p-2 rounded-[6px] space-y-0.5">
+                          {booth && (
+                            <div className="flex items-center gap-1.5 font-medium text-[#202124]">
+                              <Store className="w-3 h-3 text-[#315C4C]" />
+                              <span>{booth.name}</span>
+                            </div>
+                          )}
+                          {event && (
+                            <p className="text-[10px] text-[#737373] truncate">
+                              Sự kiện: {event.name}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Verification status details */}
+                      {isVerified && order.proof_verified_at && (
+                        <div className="text-[10px] text-[#2F7D55] bg-[#EAF4EE] p-2 rounded-[6px]">
+                          ✓ Khớp bởi: <strong>{order.proof_verified_by || 'Admin'}</strong> lúc{' '}
+                          {formatDate(order.proof_verified_at)}
+                        </div>
+                      )}
+
+                      {/* Action Button */}
+                      <div className="pt-1">
+                        {isVerified ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setOrderProofVerified(order.id, false)}
+                            className="w-full text-xs text-[#737373] hover:text-[#C5221F] hover:bg-[#FDF2E9]"
+                          >
+                            Hủy trạng thái đã khớp
+                          </Button>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="primary"
+                            size="sm"
+                            onClick={() =>
+                              setOrderProofVerified(
+                                order.id,
+                                true,
+                                user?.fullName || user?.username || user?.email || 'Admin'
+                              )
+                            }
+                            className="w-full text-xs gap-1.5 bg-[#2F7D55] hover:bg-[#256343]"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Xác nhận đã khớp tiền vào TK ✓</span>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ) : (
+        /* TAB 2: BANK SETTINGS & AUTO-BANKING */
+        <div className="space-y-6">
 
       {/* Revenue by Method KPI */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -652,6 +931,39 @@ export default function PaymentsPage() {
           )}
         </CardContent>
       </Card>
+        </div>
+      )}
+
+      {/* Lightbox Modal for Fullscreen Proof Inspection */}
+      <Modal
+        isOpen={!!lightboxImage}
+        onClose={() => setLightboxImage(null)}
+        title="Chi tiết ảnh minh chứng chuyển khoản (Bill)"
+        maxWidth="lg"
+      >
+        <div className="space-y-4">
+          <div className="bg-[#121212] rounded-[8px] p-2 flex items-center justify-center max-h-[75vh] overflow-hidden">
+            {lightboxImage && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={lightboxImage}
+                alt="Minh chứng chi tiết"
+                className="max-h-[72vh] w-auto max-w-full object-contain rounded"
+              />
+            )}
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setLightboxImage(null)}
+            >
+              Đóng cửa sổ
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

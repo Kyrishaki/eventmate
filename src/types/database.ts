@@ -193,6 +193,9 @@ export interface Order {
   notes: string | null;
   order_type?: 'pos_walkin' | 'preorder_pickup';
   proof_image_url?: string | null;
+  proof_verified?: boolean;
+  proof_verified_at?: string | null;
+  proof_verified_by?: string | null;
   customer_name?: string | null;
   customer_phone?: string | null;
   tendered_amount?: number | null;

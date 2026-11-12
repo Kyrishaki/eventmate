@@ -38,13 +38,12 @@ export interface BankConfig {
 }
 
 export const DEFAULT_BANK_CONFIG: BankConfig = {
-  bankId: 'MB',
-  accountNo: '0988776655',
-  accountName: 'NGUYEN VAN TUAN - HIKARUSTORE',
-  autoCheckEnabled: true,
-  provider: 'sepay',
-  apiToken: '4TCBKUQD7M0WLPWZAAJCHUVC7EVJFB0NXM5GVGDL18SKUEPZBHYIM3JKOXLLJTFC',
-  voiceAnnouncement: true,
+  bankId: 'CTG',
+  accountNo: '109876880260',
+  accountName: 'NGUYEN BAO THUONG',
+  autoCheckEnabled: false,
+  provider: 'webhook_only',
+  voiceAnnouncement: false,
 };
 
 export interface OrderLifecycleResult {
@@ -170,7 +169,11 @@ interface OrdersStoreState {
     changeAmount?: number;
     notes?: string;
     isOnline: boolean;
+    proofImageUrl?: string | null;
   }) => Promise<Order>;
+
+  // Payment proof verification
+  setOrderProofVerified: (orderId: string, verified: boolean, verifiedBy?: string) => void;
 
   // Sync actions
   syncPendingOrders: () => Promise<{ successCount: number; failCount: number }>;
@@ -287,6 +290,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
         changeAmount,
         notes,
         isOnline,
+        proofImageUrl,
       }) => {
         const { cart, discountAmount, orders } = get();
         if (cart.length === 0) throw new Error('Giỏ hàng trống');
@@ -327,6 +331,8 @@ export const useOrdersStore = create<OrdersStoreState>()(
           sync_status: syncStatus,
           idempotency_key: idempotencyKey,
           notes: notes || null,
+          proof_image_url: proofImageUrl || null,
+          proof_verified: false,
           tendered_amount: tenderedAmount !== undefined ? tenderedAmount : (paymentMethod === 'cash' ? finalAmount : null),
           change_amount: changeAmount !== undefined ? changeAmount : (paymentMethod === 'cash' ? 0 : null),
           is_test: isTestEvent(eventId) || boothId === 'booth-test-1',
@@ -413,6 +419,23 @@ export const useOrdersStore = create<OrdersStoreState>()(
         });
 
         return newOrder;
+      },
+
+      setOrderProofVerified: (orderId: string, verified: boolean, verifiedBy?: string) => {
+        const { orders } = get();
+        const nowIso = new Date().toISOString();
+        const updated = orders.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                proof_verified: verified,
+                proof_verified_at: verified ? nowIso : null,
+                proof_verified_by: verified ? verifiedBy || 'Admin' : null,
+                updated_at: nowIso,
+              }
+            : o
+        );
+        set({ orders: updated });
       },
 
       syncPendingOrders: async () => {
@@ -738,17 +761,23 @@ export const useOrdersStore = create<OrdersStoreState>()(
         // Ensure activeBankConfig has valid values
         try {
           if (typeof window !== 'undefined') {
+            if (state.activeBankConfig?.accountNo === '0988776655') {
+              state.activeBankConfig = DEFAULT_BANK_CONFIG;
+              localStorage.removeItem('eventmate_shared_bank_config');
+            }
             const savedBank = localStorage.getItem('eventmate_shared_bank_config');
             if (savedBank) {
               const parsed = JSON.parse(savedBank);
-              if (parsed?.bankId && parsed?.accountNo) {
+              if (parsed?.bankId && parsed?.accountNo && parsed.accountNo !== '0988776655') {
                 state.activeBankConfig = {
                   ...DEFAULT_BANK_CONFIG,
                   ...parsed,
                   apiToken: parsed.apiToken || DEFAULT_BANK_CONFIG.apiToken,
                 };
+              } else {
+                state.activeBankConfig = DEFAULT_BANK_CONFIG;
               }
-            } else if (!state.activeBankConfig || !state.activeBankConfig.accountNo) {
+            } else if (!state.activeBankConfig || !state.activeBankConfig.accountNo || state.activeBankConfig.accountNo === '0988776655') {
               state.activeBankConfig = DEFAULT_BANK_CONFIG;
             } else if (!state.activeBankConfig.apiToken) {
               state.activeBankConfig = {

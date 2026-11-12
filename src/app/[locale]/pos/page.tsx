@@ -26,6 +26,7 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { DensityToggle } from '@/components/ui/density-toggle';
 import { usePreorderStore } from '@/stores/preorder-store';
 import { useRealtimeCartSync } from '@/stores/realtime-cart-sync';
+import { initCloudSync, fetchCloudSnapshot } from '@/lib/cloud-sync';
 import {
   Store,
   Calendar,
@@ -154,11 +155,12 @@ export default function PosTerminalPage() {
     return eventBooths[0]?.id || booths[0]?.id || '';
   });
 
-  // Real-time Multi-seller Cart Synchronization
+  // Real-time Multi-seller Cart & Cloud Synchronization
   const { initSync, broadcastMyCart, getRemoteHeldQty } = useRealtimeCartSync();
 
   React.useEffect(() => {
     initSync();
+    initCloudSync();
   }, [initSync]);
 
   // Broadcast local cart changes immediately so other cashiers see updated stock

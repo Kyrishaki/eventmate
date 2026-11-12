@@ -7,6 +7,7 @@ import { MobileBottomNav } from '@/components/dashboard/mobile-bottom-nav';
 import { useAuthStore, isViewerOnly } from '@/stores/auth-store';
 import { FloatingFeedbackWidget } from '@/components/feedback/feedback-modal';
 import { GuestShowcase } from '@/components/guest/guest-showcase';
+import { initCloudSync } from '@/lib/cloud-sync';
 import { cn } from '@/lib/utils';
 
 const emptySubscribe = () => () => {};
@@ -42,6 +43,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const { isAuthenticated, user, isGuestPreview } = useAuthStore();
   const hasMounted = useMounted();
+
+  React.useEffect(() => {
+    initCloudSync();
+  }, []);
 
   if (!hasMounted) {
     return (

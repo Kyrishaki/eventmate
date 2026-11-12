@@ -11,9 +11,10 @@ interface SyncStatusBadgeProps {
   status: SyncState;
   pendingCount?: number;
   className?: string;
+  onClick?: () => void;
 }
 
-export function SyncStatusBadge({ status, pendingCount = 0, className }: SyncStatusBadgeProps) {
+export function SyncStatusBadge({ status, pendingCount = 0, className, onClick }: SyncStatusBadgeProps) {
   const t = useTranslations('common');
 
   const configs = {
@@ -59,13 +60,17 @@ export function SyncStatusBadge({ status, pendingCount = 0, className }: SyncSta
   const Icon = current.icon;
 
   return (
-    <div
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={status === 'syncing'}
       className={cn(
-        'inline-flex items-center gap-1.5 px-2 py-1 rounded-[4px] border text-xs font-medium tracking-tight select-none',
+        'inline-flex items-center gap-1.5 px-2 py-1 rounded-[4px] border text-xs font-medium tracking-tight select-none transition-opacity',
+        onClick && 'cursor-pointer hover:opacity-85 active:scale-95',
         current.badgeClass,
         className
       )}
-      title={`Connection status: ${current.label}`}
+      title={onClick ? `Trạng thái: ${current.label} (Bấm để đồng bộ đám mây ngay)` : `Connection status: ${current.label}`}
     >
       <span className={cn('w-2 h-2 rounded-full shrink-0', current.dotClass)} />
       <Icon className={cn('w-3 h-3 shrink-0', status === 'syncing' && 'animate-spin')} />
@@ -73,6 +78,6 @@ export function SyncStatusBadge({ status, pendingCount = 0, className }: SyncSta
       {pendingCount > 0 && (
         <span className="sm:hidden font-mono font-bold text-[10px]">({pendingCount})</span>
       )}
-    </div>
+    </button>
   );
 }

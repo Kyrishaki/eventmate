@@ -7,6 +7,7 @@ import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { DensityToggle } from '@/components/ui/density-toggle';
 import { SyncStatusBadge } from '@/components/ui/sync-status-badge';
+import { fetchCloudSnapshot } from '@/lib/cloud-sync';
 import { Badge } from '@/components/ui/badge';
 import { getActiveNavItem } from './nav-config';
 import { LogOut, User as UserIcon, Eye, ChevronDown } from 'lucide-react';
@@ -74,7 +75,13 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
 
       {/* Right: Sync Status, Language, Theme, Scale, Guest Preview, Profile & Logout */}
       <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-        <SyncStatusBadge status={syncState} pendingCount={unsyncedOrdersCount} />
+        <SyncStatusBadge
+          status={syncState}
+          pendingCount={unsyncedOrdersCount}
+          onClick={() => {
+            fetchCloudSnapshot();
+          }}
+        />
 
         <div className="hidden md:flex items-center gap-2">
           <LanguageSwitcher />

@@ -59,6 +59,7 @@ import { logActivity } from '@/stores/audit-store';
 import { PreorderPickupModal } from '@/components/pos/preorder-pickup-modal';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useRealtimeCartSync } from '@/stores/realtime-cart-sync';
+import { initCloudSync } from '@/lib/cloud-sync';
 import { ProductImageUploader } from '@/components/ui/product-image-uploader';
 
 function CollabPartnerPortalContent() {
@@ -134,6 +135,7 @@ function CollabPartnerPortalContent() {
 
   React.useEffect(() => {
     initSync();
+    initCloudSync();
   }, [initSync]);
 
   React.useEffect(() => {

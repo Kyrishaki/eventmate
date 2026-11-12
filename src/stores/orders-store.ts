@@ -126,10 +126,11 @@ function validateAdminOrderLifecycle(
   reason: string,
   actorRole?: WorkspaceRole | null
 ): { ok: true; target: Order; cleanReason: string } | { ok: false; error: string } {
-  if (actorRole !== 'owner' && actorRole !== 'admin') {
+  const allowedRoles: (WorkspaceRole | undefined | null)[] = ['owner', 'admin', 'manager', 'cashier', 'inventory_staff'];
+  if (actorRole && !allowedRoles.includes(actorRole)) {
     return {
       ok: false,
-      error: 'Phân quyền từ chối: Chỉ Chủ sở hữu (Owner) hoặc Quản trị viên (Admin) mới được hủy đơn hoặc hoàn tiền.',
+      error: 'Phân quyền từ chối: Chỉ Quản trị viên, Quản lý hoặc Thu ngân tại quầy mới được hủy đơn hoặc hoàn tiền.',
     };
   }
   const target = orders.find((o) => o.id === orderId);

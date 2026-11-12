@@ -1025,10 +1025,10 @@ export default function PosTerminalPage() {
               size="sm"
               className="h-8 px-2.5 text-xs gap-1.5 border-[#B7791F]/40 text-[#8C5D17] hover:bg-[#FEF7EC] font-bold shadow-2xs"
               onClick={() => setIsPreorderPickupOpen(true)}
-              title="Trả hàng cho khách đặt trước (Cần chụp ảnh minh chứng)"
+              title="Giao hàng cho khách đặt trước (Keep hàng - Cần chụp ảnh minh chứng)"
             >
               <Package className="w-3.5 h-3.5 text-[#B7791F]" />
-              <span>Trả hàng</span>
+              <span>Giao Keep</span>
               {pendingPreordersCount > 0 && (
                 <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#B7791F] text-white font-mono">
                   {pendingPreordersCount}

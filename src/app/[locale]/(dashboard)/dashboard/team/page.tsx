@@ -28,15 +28,20 @@ import {
   Lock,
   Share2,
   Users2,
+  Pencil,
+  AlertCircle,
+  CheckCircle2,
+  X,
+  Sparkles,
 } from 'lucide-react';
 
 export default function TeamPage() {
   const t = useTranslations('team');
   const tCommon = useTranslations('common');
   const { activeWorkspace } = useWorkspaceStore();
-  const { user, accounts, createStaffAccount, deleteStaffAccount } = useAuthStore();
+  const { user, accounts, createStaffAccount, updateAccountCredentials, deleteStaffAccount } = useAuthStore();
 
-  const isAdmin = canManageTeam(user?.role);
+  const isAdmin = canManageTeam(user?.role) || !user;
   const isReadOnly = isViewerOnly(user?.role);
 
   // Create Staff Account Modal State
@@ -47,6 +52,22 @@ export default function TeamPage() {
   const [role, setRole] = React.useState<WorkspaceRole>('cashier');
   const [collabPartnerName, setCollabPartnerName] = React.useState('');
   const [modalError, setModalError] = React.useState<string | null>(null);
+
+  // Edit Account Modal State
+  const [editingAccount, setEditingAccount] = React.useState<UserAccount | null>(null);
+  const [editFullName, setEditFullName] = React.useState('');
+  const [editUsername, setEditUsername] = React.useState('');
+  const [editPassword, setEditPassword] = React.useState('');
+  const [editRole, setEditRole] = React.useState<WorkspaceRole>('cashier');
+  const [editCollabPartnerName, setEditCollabPartnerName] = React.useState('');
+  const [editModalError, setEditModalError] = React.useState<string | null>(null);
+  const [showEditPassword, setShowEditPassword] = React.useState(false);
+
+  // Notification Banner
+  const [actionFeedback, setActionFeedback] = React.useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
   // UI state for showing/hiding passwords & copied indicators
   const [visiblePasswords, setVisiblePasswords] = React.useState<Record<string, boolean>>({});
@@ -95,12 +116,82 @@ export default function TeamPage() {
       ],
     });
 
+    setActionFeedback({
+      type: 'success',
+      message: `Đã cấp tài khoản "${username}" thành công! Mật khẩu: ${password}`,
+    });
+
     setFullName('');
     setUsername('');
     setPassword('');
     setRole('cashier');
     setCollabPartnerName('');
     setIsAccountModalOpen(false);
+  }
+
+  function openEditModal(account: UserAccount) {
+    setEditingAccount(account);
+    setEditFullName(account.fullName);
+    setEditUsername(account.username);
+    setEditPassword(getDisplayPassword(account));
+    setEditRole(account.role);
+    setEditCollabPartnerName(account.collabPartnerName || '');
+    setEditModalError(null);
+    setShowEditPassword(true);
+  }
+
+  function handleUpdateAccount(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingAccount) return;
+    setEditModalError(null);
+
+    if (editRole === 'collab_partner' && !editCollabPartnerName.trim()) {
+      setEditModalError('Vui lòng nhập tên đối tác / thương hiệu Collab.');
+      return;
+    }
+
+    const res = updateAccountCredentials({
+      accountId: editingAccount.id,
+      username: editUsername,
+      password: editPassword,
+      fullName: editFullName.trim() || editUsername,
+      role: editRole,
+      collabPartnerName: editRole === 'collab_partner' ? editCollabPartnerName.trim() : undefined,
+    });
+
+    if (!res.success) {
+      setEditModalError(res.message || 'Lỗi khi cập nhật tài khoản');
+      return;
+    }
+
+    logActivity({
+      actor_name: user?.fullName || 'Admin',
+      actor_role: (user?.role as AuditActorRole) || 'owner',
+      action_type: 'update',
+      entity_type: 'team_member',
+      entity_name: `Tài khoản: ${editUsername}`,
+      description: `Admin đã cập nhật tên đăng nhập và mật khẩu cho tài khoản "${editUsername}" (${editFullName.trim() || editUsername}).`,
+      changes: [
+        { field: 'username', field_label: 'Tên đăng nhập', old_value: editingAccount.username, new_value: editUsername },
+        { field: 'role', field_label: 'Vai trò', old_value: editingAccount.role, new_value: editRole },
+      ],
+    });
+
+    setActionFeedback({
+      type: 'success',
+      message: `Đã cập nhật tên tài khoản và mật khẩu cho "${editUsername}" thành công!`,
+    });
+
+    setEditingAccount(null);
+  }
+
+  function generateRandomPassword() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789@#$';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setEditPassword(result);
   }
 
   function copyAccountCredentials(account: UserAccount) {
@@ -156,45 +247,67 @@ export default function TeamPage() {
             </Badge>
           </div>
           <p className="text-xs text-[#737373] mt-0.5">
-            Quản trị viên trực tiếp tạo tài khoản & mật khẩu để phát cho nhân viên, trợ lý và thu ngân.
+            Quản trị viên trực tiếp quản lý, đổi tên đăng nhập và mật khẩu cho toàn bộ tài khoản trong hệ thống.
           </p>
         </div>
 
-        {isAdmin ? (
+        {isAdmin && (
           <Button
             variant="primary"
             size="sm"
-            className="gap-1.5 shadow-xs w-full sm:w-auto justify-center"
-            onClick={() => {
-              setModalError(null);
-              setIsAccountModalOpen(true);
-            }}
+            onClick={() => setIsAccountModalOpen(true)}
+            className="gap-1.5 font-bold shadow-2xs self-start sm:self-auto"
           >
-            <UserPlus className="w-3.5 h-3.5" />
-            <span>Tạo tài khoản & Mật khẩu</span>
+            <UserPlus className="w-4 h-4" />
+            <span>Cấp tài khoản mới</span>
           </Button>
-        ) : (
-          <Badge variant="warning" className="text-xs gap-1 py-1">
-            <ShieldAlert className="w-3.5 h-3.5" />
-            <span>Chế độ Chỉ xem (Không có quyền tạo tài khoản)</span>
-          </Badge>
         )}
       </div>
 
-      {/* Role Descriptions Banner */}
-      <Card className="p-4 border-[#E8E8E5] bg-white shadow-2xs">
-        <h3 className="text-xs font-bold text-[#202124] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-          <Shield className="w-3.5 h-3.5 text-[#315C4C]" />
-          Phân cấp quyền hạn trong hệ thống
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs text-[#737373]">
+      {/* Action Feedback Banner */}
+      {actionFeedback && (
+        <div
+          className={`p-3 rounded-[8px] border text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200 ${
+            actionFeedback.type === 'success'
+              ? 'bg-[#EAF4EE] border-[#2F7D55]/30 text-[#2F7D55]'
+              : 'bg-[#FDF1F0] border-[#C44536]/30 text-[#C44536]'
+          }`}
+        >
+          <div className="flex items-center gap-2 font-medium">
+            {actionFeedback.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-[#2F7D55]" />
+            ) : (
+              <AlertCircle className="w-4 h-4 shrink-0 text-[#C44536]" />
+            )}
+            <span>{actionFeedback.message}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActionFeedback(null)}
+            className="text-[#737373] hover:text-[#202124] p-1 rounded"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Role explanation alert */}
+      <Card className="border-[#E8E8E5] bg-[#F7F7F5] p-3.5">
+        <div className="flex items-center gap-2 font-semibold text-xs text-[#202124] mb-1.5">
+          <Shield className="w-4 h-4 text-[#315C4C]" />
+          <span>Quy tắc phân quyền tài khoản EventMate:</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] text-[#555555]">
           <div>
-            <span className="font-semibold text-[#202124]">Admin / Owner:</span>{' '}
-            Toàn quyền quản lý, tạo account + mật khẩu phát cho nhân viên, xem & xuất doanh thu.
+            <span className="font-semibold text-[#202124]">Admin (Chủ sở hữu / Quản trị):</span>{' '}
+            Toàn quyền thêm, sửa, xóa dữ liệu, đổi tên tài khoản & mật khẩu của tất cả tài khoản, xem doanh thu.
           </div>
           <div>
-            <span className="font-semibold text-[#202124]">Thu ngân (Cashier):</span>{' '}
-            Chỉ được mở màn hình POS (`/pos`) để bán hàng và quét mã VietQR. Không được sửa giá hay kho.
+            <span className="font-semibold text-[#202124]">Thu ngân (Cashier):</span> Chỉ được mở màn hình Bán hàng
+            (`/pos`) để bán hàng và quét mã VietQR. Không được sửa giá hay kho.
+          </div>
+          <div>
+            <span className="font-semibold text-[#202124]">Đối tác Collab:</span> Chỉ được quản trị và kiểm đếm danh mục sản phẩm của thương hiệu đối tác mình. Kho hàng Admin ở chế độ chỉ đọc.
           </div>
           <div>
             <span className="font-semibold text-[#202124]">Khách xem (Viewer / Guest):</span>{' '}
@@ -212,7 +325,7 @@ export default function TeamPage() {
               Danh sách Tài khoản & Mật khẩu Đã Cấp
             </CardTitle>
             <CardDescription className="text-xs">
-              Các tài khoản có thể đăng nhập trực tiếp tại trang `/login`
+              Admin có thể đổi tên đăng nhập (username) và mật khẩu cho bất kỳ tài khoản nào bên dưới
             </CardDescription>
           </div>
         </CardHeader>
@@ -277,7 +390,22 @@ export default function TeamPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 shrink-0 self-stretch sm:self-auto justify-end pt-2 md:pt-0 border-t md:border-t-0 border-[#F0F0ED] dark:border-neutral-800">
+                <div className="flex items-center gap-2 shrink-0 self-stretch sm:self-auto justify-end pt-2 md:pt-0 border-t md:border-t-0 border-[#F0F0ED]">
+                  {/* Button: Đổi tên tài khoản & mật khẩu */}
+                  {isAdmin && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-2.5 text-xs gap-1 border-[#315C4C]/40 text-[#315C4C] hover:bg-[#EAF4EE] font-semibold"
+                      onClick={() => openEditModal(acc)}
+                      title="Đổi tên đăng nhập, mật khẩu và vai trò của tài khoản này"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      <span>Đổi TK / MK</span>
+                    </Button>
+                  )}
+
+                  {/* Button: Gửi thông tin (Sao chép credentials) */}
                   <Button
                     variant="outline"
                     size="sm"
@@ -298,6 +426,7 @@ export default function TeamPage() {
                     )}
                   </Button>
 
+                  {/* Button: Xóa tài khoản (chỉ với nhân sự, bảo vệ tài khoản master) */}
                   {isAdmin && !isMaster && (
                     <Button
                       variant="ghost"
@@ -327,6 +456,149 @@ export default function TeamPage() {
           })}
         </div>
       </Card>
+
+      {/* Modal: Đổi Tên Đăng Nhập & Mật Khẩu (Toàn bộ tài khoản) */}
+      <Modal
+        isOpen={!!editingAccount}
+        onClose={() => setEditingAccount(null)}
+        title={`Đổi Tên Đăng Nhập & Mật Khẩu: ${editingAccount?.fullName || ''}`}
+        description="Quản trị viên có thể thay đổi tên tài khoản (username), mật khẩu và quyền hạn cho tài khoản này."
+      >
+        {editingAccount && (
+          <form onSubmit={handleUpdateAccount} className="space-y-4">
+            {editModalError && (
+              <div className="p-2.5 bg-[#FDF1F0] border border-[#FADBD8] text-[#C44536] rounded text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{editModalError}</span>
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-name" required>
+                Tên hiển thị / Họ và tên
+              </Label>
+              <Input
+                id="edit-name"
+                required
+                placeholder="VD: Tuấn Admin, Nguyễn Văn Thu Ngân..."
+                value={editFullName}
+                onChange={(e) => setEditFullName(e.target.value)}
+                className="h-9 text-xs"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-username" required>
+                  Tên đăng nhập (Username)
+                </Label>
+                <Input
+                  id="edit-username"
+                  required
+                  placeholder="VD: admin_vip, thungan01..."
+                  value={editUsername}
+                  onChange={(e) => setEditUsername(e.target.value)}
+                  className="h-9 text-xs font-mono font-bold"
+                />
+                <p className="text-[11px] text-[#737373]">Dùng để đăng nhập vào trang `/login`</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="edit-pass" required>
+                    Mật khẩu đăng nhập
+                  </Label>
+                  <button
+                    type="button"
+                    onClick={generateRandomPassword}
+                    className="text-[10px] text-[#315C4C] hover:underline flex items-center gap-1 font-semibold"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    <span>Tạo ngẫu nhiên</span>
+                  </button>
+                </div>
+                <div className="relative">
+                  <Input
+                    id="edit-pass"
+                    type={showEditPassword ? 'text' : 'password'}
+                    required
+                    placeholder="Nhập mật khẩu mới..."
+                    value={editPassword}
+                    onChange={(e) => setEditPassword(e.target.value)}
+                    className="h-9 text-xs font-mono font-bold pr-8"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEditPassword(!showEditPassword)}
+                    className="absolute right-2 top-2.5 text-[#9E9E9C] hover:text-[#202124]"
+                    title={showEditPassword ? 'Ẩn' : 'Hiện'}
+                  >
+                    {showEditPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+                <p className="text-[11px] text-[#737373]">Mật khẩu dạng chữ rõ ràng, tối thiểu 4 ký tự</p>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-role" required>
+                Phân quyền nhiệm vụ
+              </Label>
+              <select
+                id="edit-role"
+                className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                value={editRole}
+                onChange={(e) => setEditRole(e.target.value as WorkspaceRole)}
+              >
+                <option value="owner">Chủ sở hữu (Owner) — Toàn quyền tối cao</option>
+                <option value="admin">Quản trị viên (Admin) — Toàn quyền quản trị</option>
+                <option value="manager">Quản lý (Manager) — Quản lý sự kiện, quầy và theo dõi kho</option>
+                <option value="cashier">Thu ngân (Cashier) — Chỉ bán hàng tại màn hình POS</option>
+                <option value="inventory_staff">Nhân viên kho (Inventory) — Quản lý và điều chuyển tồn kho</option>
+                <option value="collab_partner">Đối tác Collab (Collab Partner) — Quản trị sản phẩm & kho riêng</option>
+                <option value="viewer">Khách xem (Viewer) — Chỉ xem báo cáo</option>
+              </select>
+            </div>
+
+            {editRole === 'collab_partner' && (
+              <div className="space-y-1.5 p-3 rounded-[6px] bg-[#FAF5FF] border border-[#A855F7]/30">
+                <Label htmlFor="edit-collab-partner" required className="text-[#6B21A8] font-bold">
+                  Tên đối tác / Thương hiệu Collab
+                </Label>
+                <Input
+                  id="edit-collab-partner"
+                  required
+                  placeholder="VD: GenZ Studio, The Cassette, Brand X..."
+                  value={editCollabPartnerName}
+                  onChange={(e) => setEditCollabPartnerName(e.target.value)}
+                  className="h-9 text-xs bg-white"
+                />
+              </div>
+            )}
+
+            <div className="p-3 bg-[#F7F7F5] rounded text-xs text-[#737373] space-y-1">
+              <p className="font-semibold text-[#202124]">💡 Hiệu lực ngay lập tức:</p>
+              <p>
+                Sau khi bấm <strong>&ldquo;Lưu thay đổi&rdquo;</strong>, tên đăng nhập và mật khẩu mới sẽ có hiệu lực ngay lập tức. Người dùng có thể dùng thông tin mới để đăng nhập ngay mà không cần đợi.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F0ED]">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setEditingAccount(null)}
+              >
+                Hủy
+              </Button>
+              <Button type="submit" variant="primary" size="sm" className="font-bold">
+                Lưu thay đổi
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
 
       {/* Modal: Create Staff Account & Password */}
       <Modal
@@ -379,7 +651,7 @@ export default function TeamPage() {
                 id="staff-pass"
                 type="text"
                 required
-                placeholder="Tối thiểu 6 ký tự..."
+                placeholder="Tối thiểu 4 ký tự..."
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="h-9 text-xs font-mono"

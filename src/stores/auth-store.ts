@@ -61,21 +61,23 @@ export const MASTER_ACCOUNTS: UserAccount[] = [
  */
 export function getDisplayPassword(account?: UserAccount | null): string {
   if (!account) return '';
-  if (account.id === 'admin-tuan' || account.username?.toLowerCase() === 'tuanadminvippro666') {
+  // If the account password is plain text, return it directly
+  if (account.password && !account.password.startsWith('hash:')) {
+    return account.password;
+  }
+  if (account.password === 'hash:558f1e4a' || account.username?.toLowerCase() === 'tuanadminvippro666') {
     return 'Tu@n1121314151';
   }
   if (
-    account.id === 'admin-hkt' ||
+    account.password === 'hash:d36d654f' ||
+    account.password === 'hash:1a7415b5' ||
     account.username?.toLowerCase() === 'hkt83@123' ||
     account.username?.toLowerCase() === 'hkt87@123'
   ) {
     return 'HKT@998304';
   }
-  if (account.password?.startsWith('hash:')) {
-    if (account.password === 'hash:558f1e4a') return 'Tu@n1121314151';
-    if (account.password === 'hash:d36d654f' || account.password === 'hash:1a7415b5') return 'HKT@998304';
-    return account.password;
-  }
+  if (account.id === 'admin-tuan') return 'Tu@n1121314151';
+  if (account.id === 'admin-hkt') return 'HKT@998304';
   return account.password || '';
 }
 
@@ -102,6 +104,16 @@ interface AuthState {
     password: string;
     fullName: string;
     role: WorkspaceRole;
+    email?: string;
+    collabPartnerName?: string;
+    collabBoothId?: string;
+  }) => { success: boolean; message?: string };
+  updateAccountCredentials: (data: {
+    accountId: string;
+    username: string;
+    password?: string;
+    fullName?: string;
+    role?: WorkspaceRole;
     email?: string;
     collabPartnerName?: string;
     collabBoothId?: string;
@@ -304,6 +316,83 @@ export const useAuthStore = create<AuthState>()(
         return { success: true };
       },
 
+      updateAccountCredentials: (data) => {
+        const { accounts, user } = get();
+        // Permission check
+        if (user && user.role !== 'owner' && user.role !== 'admin') {
+          return {
+            success: false,
+            message: 'Phân quyền từ chối: Chỉ Quản trị viên (Admin) mới có quyền chỉnh sửa tài khoản và mật khẩu.',
+          };
+        }
+
+        const cleanUsername = data.username.trim();
+        if (!cleanUsername) {
+          return { success: false, message: 'Tên đăng nhập không được để trống.' };
+        }
+
+        const target = accounts.find((a) => a.id === data.accountId);
+        if (!target) {
+          return { success: false, message: 'Không tìm thấy tài khoản cần chỉnh sửa.' };
+        }
+
+        // Check duplicate username with other accounts
+        const isDuplicate = accounts.some(
+          (a) => a.id !== data.accountId && a.username.toLowerCase() === cleanUsername.toLowerCase()
+        );
+        if (isDuplicate) {
+          return { success: false, message: `Tên đăng nhập "${cleanUsername}" đã được sử dụng bởi tài khoản khác.` };
+        }
+
+        const cleanPassword = data.password?.trim();
+        if (cleanPassword !== undefined && cleanPassword.length > 0 && cleanPassword.length < 4) {
+          return { success: false, message: 'Mật khẩu phải từ 4 ký tự trở lên.' };
+        }
+
+        const cleanFullName = data.fullName !== undefined ? data.fullName.trim() : target.fullName;
+        const cleanEmail = data.email !== undefined ? data.email.trim() : target.email;
+        const cleanRole = data.role || target.role;
+
+        const updatedAccounts = accounts.map((acc) => {
+          if (acc.id !== data.accountId) return acc;
+          return {
+            ...acc,
+            username: cleanUsername,
+            fullName: cleanFullName || cleanUsername,
+            email: cleanEmail,
+            role: cleanRole,
+            password: cleanPassword ? cleanPassword : acc.password,
+            collabPartnerName:
+              data.collabPartnerName !== undefined ? data.collabPartnerName.trim() || undefined : acc.collabPartnerName,
+            collabBoothId:
+              data.collabBoothId !== undefined ? data.collabBoothId.trim() || undefined : acc.collabBoothId,
+          };
+        });
+
+        // Update active session user if currently logged in as this account
+        let updatedUser = user;
+        if (user && user.id === data.accountId) {
+          updatedUser = {
+            ...user,
+            username: cleanUsername,
+            fullName: cleanFullName || cleanUsername,
+            email: cleanEmail,
+            role: cleanRole,
+            collabPartnerName:
+              data.collabPartnerName !== undefined ? data.collabPartnerName.trim() || undefined : user.collabPartnerName,
+            collabBoothId:
+              data.collabBoothId !== undefined ? data.collabBoothId.trim() || undefined : user.collabBoothId,
+          };
+        }
+
+        set({
+          accounts: updatedAccounts,
+          user: updatedUser,
+        });
+
+        return { success: true };
+      },
+
       deleteStaffAccount: (accountId) => {
         // Prevent deleting master admin accounts
         if (accountId === 'admin-tuan' || accountId === 'admin-hkt') {
@@ -345,27 +434,31 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'eventmate_auth_state_v7',
+      name: 'eventmate_auth_state_v8',
       onRehydrateStorage: () => (state) => {
         const masterIds = new Set(MASTER_ACCOUNTS.map((m) => m.id));
         if (typeof window !== 'undefined') {
           try {
             const legacyRaw =
+              localStorage.getItem('eventmate_auth_state_v8') ||
+              localStorage.getItem('eventmate_auth_state_v7') ||
               localStorage.getItem('eventmate_auth_state_v6') ||
               localStorage.getItem('eventmate_auth_state_v5') ||
               localStorage.getItem('eventmate_auth_state_v4');
-            if (legacyRaw && state && !state.user) {
+            if (legacyRaw && state) {
               const legacyParsed = JSON.parse(legacyRaw);
               const legacyUser = legacyParsed?.state?.user;
-              if (legacyUser && masterIds.has(legacyUser.id)) {
+              if (legacyUser && !state.user && masterIds.has(legacyUser.id)) {
                 state.user = {
                   ...legacyUser,
-                  username: legacyUser.id === 'admin-hkt' ? 'HKT83@123' : legacyUser.username,
-                  email: legacyUser.id === 'admin-hkt' ? 'hkt83@eventmate.app' : legacyUser.email,
                 };
                 state.isAuthenticated = true;
               }
+              if (legacyParsed?.state?.accounts && Array.isArray(legacyParsed.state.accounts) && legacyParsed.state.accounts.length > 0) {
+                state.accounts = legacyParsed.state.accounts;
+              }
             }
+            localStorage.removeItem('eventmate_auth_state_v7');
             localStorage.removeItem('eventmate_auth_state_v6');
             localStorage.removeItem('eventmate_auth_state_v5');
             localStorage.removeItem('eventmate_auth_state_v4');
@@ -387,22 +480,30 @@ export const useAuthStore = create<AuthState>()(
                   a.username.toLowerCase() === 'hkt83@123'))
           );
           if (idx >= 0) {
+            const existing = state.accounts[idx];
+            let resolvedPassword = existing.password;
+            if (resolvedPassword?.startsWith('hash:')) {
+              if (resolvedPassword === 'hash:558f1e4a') resolvedPassword = 'Tu@n1121314151';
+              else if (resolvedPassword === 'hash:d36d654f' || resolvedPassword === 'hash:1a7415b5') resolvedPassword = 'HKT@998304';
+              else resolvedPassword = master.password;
+            }
             state.accounts[idx] = {
-              ...state.accounts[idx],
+              ...existing,
               id: master.id,
-              username: master.username,
-              email: master.email,
-              fullName: master.fullName,
-              password: master.password,
-              role: master.role,
-              collabPartnerName: master.collabPartnerName || state.accounts[idx].collabPartnerName,
-              collabBoothId: master.collabBoothId || state.accounts[idx].collabBoothId,
+              username: existing.username || master.username,
+              email: existing.email || master.email,
+              fullName: existing.fullName || master.fullName,
+              password: resolvedPassword || master.password,
+              role: existing.role || master.role,
+              collabPartnerName: master.collabPartnerName || existing.collabPartnerName,
+              collabBoothId: master.collabBoothId || existing.collabBoothId,
             };
             if (state.user && state.user.id === master.id) {
               state.user = {
                 ...state.user,
-                username: master.username,
-                email: master.email,
+                username: state.accounts[idx].username,
+                email: state.accounts[idx].email,
+                fullName: state.accounts[idx].fullName,
               };
             }
           } else {

@@ -1181,7 +1181,7 @@ export default function InventoryPage() {
                           <img
                             src={thumbUrl}
                             alt={product.name}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain p-1"
                           />
                         ) : (
                           <Package className="w-6 h-6 text-[#9E9E9C]" />
@@ -1448,7 +1448,7 @@ export default function InventoryPage() {
                         <img
                           src={thumbUrl}
                           alt={product.name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain p-1"
                         />
                       ) : (
                         <Package className="w-6 h-6 text-[#9E9E9C]" />
@@ -1790,7 +1790,7 @@ export default function InventoryPage() {
                               <img
                                 src={thumbUrl}
                                 alt={product?.name || 'Sản phẩm'}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-contain p-1"
                               />
                             ) : (
                               <Package className="w-4 h-4 text-[#9E9E9C]" />

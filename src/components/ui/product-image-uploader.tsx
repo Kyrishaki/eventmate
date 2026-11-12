@@ -156,7 +156,7 @@ export function ProductImageUploader({
         <div className="p-3 bg-[#FBFBFA] rounded-[8px] border border-[#E8E8E5] flex flex-col sm:flex-row items-center gap-4">
           <div className="relative w-28 h-28 rounded-[6px] overflow-hidden bg-black/5 border border-[#E8E8E5] shrink-0 flex items-center justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={value} alt="Preview" className="w-full h-full object-cover" />
+            <img src={value} alt="Preview" className="w-full h-full object-contain p-1" />
             <button
               type="button"
               onClick={() => onChange(null)}

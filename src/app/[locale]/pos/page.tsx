@@ -1471,22 +1471,22 @@ export default function PosTerminalPage() {
                     className="rounded-[8px] border border-[#E8E8E5] bg-white overflow-hidden shadow-2xs hover:border-[#315C4C]/40 transition-colors flex flex-col justify-between"
                   >
                     <div>
-                      {/* Product Image */}
-                      <div className="relative h-28 sm:h-36 bg-[#F7F7F5] overflow-hidden flex items-center justify-center">
+                      {/* Product Image: Aspect-Square 1:1 & Object-Contain to preserve original image format without cropping */}
+                      <div className="relative w-full aspect-square bg-[#F8F9FA] dark:bg-neutral-800/80 overflow-hidden flex items-center justify-center p-2.5">
                         {prod.image_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={prod.image_url}
                             alt={prod.name}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain drop-shadow-2xs transition-transform duration-200 hover:scale-105"
                           />
                         ) : (
-                          <Package className="w-8 h-8 text-[#9E9E9C]" />
+                          <Package className="w-10 h-10 text-[#9E9E9C]" />
                         )}
 
                         {/* Origin Source Badge (Top Left - ONLY shown for Collab to keep Shop photos clean) */}
                         {prod.collab_partner && (
-                          <div className="absolute top-1.5 left-1.5">
+                          <div className="absolute top-1.5 left-1.5 z-10">
                             <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#FEF7EC]/95 text-[#8C5D17] border border-[#B7791F]/30 backdrop-blur-[2px] shadow-2xs">
                               🤝 {prod.collab_partner}
                             </span>
@@ -1494,7 +1494,7 @@ export default function PosTerminalPage() {
                         )}
 
                         {/* Stock Badge */}
-                        <div className="absolute top-1.5 right-1.5">
+                        <div className="absolute top-1.5 right-1.5 z-10">
                           {availableStock > 0 ? (
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-black/75 text-white backdrop-blur-[2px]">
                               Còn {availableStock}
@@ -2874,7 +2874,7 @@ export default function PosTerminalPage() {
                     <img
                       src={variantPickerProduct.image_url}
                       alt={variantPickerProduct.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain p-0.5"
                     />
                   ) : (
                     <Package className="w-6 h-6 text-[#9E9E9C]" />

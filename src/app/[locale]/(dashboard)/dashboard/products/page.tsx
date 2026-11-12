@@ -1102,7 +1102,7 @@ export default function ProductsPage() {
                         <img
                           src={prod.image_url}
                           alt={prod.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
                         <Package className="w-7 h-7 text-[#9E9E9C]" />
@@ -1371,7 +1371,7 @@ export default function ProductsPage() {
                           <img
                             src={prod.image_url}
                             alt={prod.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
                           <Package className="w-7 h-7 text-[#9E9E9C]" />

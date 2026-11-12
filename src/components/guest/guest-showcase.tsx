@@ -787,17 +787,17 @@ export function GuestShowcase() {
                   className="rounded-[12px] bg-white dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-800 overflow-hidden shadow-2xs hover:shadow-md hover:border-[#315C4C]/40 transition-all flex flex-col justify-between group"
                 >
                   <div>
-                    {/* Clickable Product Image */}
+                    {/* Clickable Product Image: Aspect-Square & Object-Contain */}
                     <div
                       onClick={() => handleOpenProductDetail(prod)}
-                      className="relative aspect-[4/3] bg-[#F7F7F5] dark:bg-neutral-800/80 overflow-hidden flex items-center justify-center cursor-pointer"
+                      className="relative aspect-square bg-[#F8F9FA] dark:bg-neutral-800/80 overflow-hidden flex items-center justify-center p-2.5 cursor-pointer"
                     >
                       {prod.image_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={prod.image_url}
                           alt={prod.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
                         <Package className="w-10 h-10 text-[#9E9E9C]" />
@@ -968,7 +968,7 @@ export function GuestShowcase() {
                       <img
                         src={detailProduct.image_url}
                         alt={detailProduct.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain p-2"
                       />
                     ) : (
                       <Package className="w-12 h-12 text-[#9E9E9C]" />

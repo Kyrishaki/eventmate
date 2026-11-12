@@ -57,6 +57,8 @@ export interface DataStoreState {
   ) => void;
   deleteProduct: (id: string) => void;
   restoreProduct: (id: string) => void;
+  permanentDeleteProduct: (id: string) => void;
+  purgeExpiredDeletedProducts: () => number;
   toggleProductActive: (id: string) => void;
   updateVariantPreorders: (
     variantId: string,
@@ -794,6 +796,32 @@ const safeLocalStorage: StateStorage = {
   },
 };
 
+export const PRODUCT_RETENTION_DAYS = 15;
+const PRODUCT_RETENTION_MS = PRODUCT_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+
+export function getProductPurgeInfo(product: Product): {
+  expiresAt: string;
+  remainingDays: number;
+  remainingHours: number;
+  isExpired: boolean;
+} {
+  const deletedMs = product.deleted_at
+    ? new Date(product.deleted_at).getTime()
+    : new Date(product.updated_at || Date.now()).getTime();
+  const safeDeletedMs = Number.isNaN(deletedMs) ? Date.now() : deletedMs;
+  const expiresMs = product.scheduled_purge_at
+    ? new Date(product.scheduled_purge_at).getTime()
+    : safeDeletedMs + PRODUCT_RETENTION_MS;
+  const safeExpiresMs = Number.isNaN(expiresMs) ? safeDeletedMs + PRODUCT_RETENTION_MS : expiresMs;
+  const remainingMs = Math.max(0, safeExpiresMs - Date.now());
+  return {
+    expiresAt: new Date(safeExpiresMs).toISOString(),
+    remainingDays: Math.ceil(remainingMs / (24 * 60 * 60 * 1000)),
+    remainingHours: Math.ceil(remainingMs / (60 * 60 * 1000)),
+    isExpired: Date.now() >= safeExpiresMs,
+  };
+}
+
 export const useDataStore = create<DataStoreState>()(
   persist(
     (set, get) => ({
@@ -957,7 +985,10 @@ export const useDataStore = create<DataStoreState>()(
         });
       },
       deleteProduct: (id) => {
-        // SOFT-DELETE: Mark product as hidden/deleted without deleting data or allocations
+        // Queue product for permanent deletion after 15 days
+        const now = Date.now();
+        const nowIso = new Date(now).toISOString();
+        const purgeAtIso = new Date(now + PRODUCT_RETENTION_MS).toISOString();
         set({
           products: get().products.map((p) =>
             p.id === id
@@ -965,15 +996,16 @@ export const useDataStore = create<DataStoreState>()(
                   ...p,
                   is_deleted: true,
                   is_active: false,
-                  deleted_at: new Date().toISOString(),
-                  updated_at: new Date().toISOString(),
+                  deleted_at: nowIso,
+                  scheduled_purge_at: purgeAtIso,
+                  updated_at: nowIso,
                 }
               : p
           ),
         });
       },
       restoreProduct: (id) => {
-        // RESTORE: Bring soft-deleted product back to active
+        // Restore queued product back to active catalog
         set({
           products: get().products.map((p) =>
             p.id === id
@@ -982,11 +1014,44 @@ export const useDataStore = create<DataStoreState>()(
                   is_deleted: false,
                   is_active: true,
                   deleted_at: null,
+                  scheduled_purge_at: null,
                   updated_at: new Date().toISOString(),
                 }
               : p
           ),
         });
+      },
+      permanentDeleteProduct: (id) => {
+        const removedVarIds = new Set(
+          get()
+            .variants.filter((v) => v.product_id === id)
+            .map((v) => v.id)
+        );
+        set({
+          products: get().products.filter((p) => p.id !== id),
+          variants: get().variants.filter((v) => v.product_id !== id),
+          allocations: get().allocations.filter((a) => !removedVarIds.has(a.variant_id)),
+        });
+      },
+      purgeExpiredDeletedProducts: () => {
+        const expiredIds = new Set(
+          get()
+            .products.filter((p) => p.is_deleted && getProductPurgeInfo(p).isExpired)
+            .map((p) => p.id)
+        );
+        if (expiredIds.size === 0) return 0;
+
+        const removedVarIds = new Set(
+          get()
+            .variants.filter((v) => expiredIds.has(v.product_id))
+            .map((v) => v.id)
+        );
+        set({
+          products: get().products.filter((p) => !expiredIds.has(p.id)),
+          variants: get().variants.filter((v) => !expiredIds.has(v.product_id)),
+          allocations: get().allocations.filter((a) => !removedVarIds.has(a.variant_id)),
+        });
+        return expiredIds.size;
       },
       toggleProductActive: (id) => {
         set({
@@ -1559,6 +1624,29 @@ export const useDataStore = create<DataStoreState>()(
             }
           }
           state.allocations = Array.from(allocMap.values());
+        }
+
+        // Automatically purge products whose 15-day deletion queue period has expired
+        if (Array.isArray(state.products) && state.products.length > 0) {
+          const expiredIds = new Set(
+            state.products
+              .filter((p) => p && p.is_deleted && getProductPurgeInfo(p).isExpired)
+              .map((p) => p.id)
+          );
+          if (expiredIds.size > 0) {
+            state.products = state.products.filter((p) => !expiredIds.has(p.id));
+            if (Array.isArray(state.variants)) {
+              const removedVarIds = new Set(
+                state.variants.filter((v) => expiredIds.has(v.product_id)).map((v) => v.id)
+              );
+              state.variants = state.variants.filter((v) => !expiredIds.has(v.product_id));
+              if (Array.isArray(state.allocations)) {
+                state.allocations = state.allocations.filter(
+                  (a) => !removedVarIds.has(a.variant_id)
+                );
+              }
+            }
+          }
         }
       },
     }

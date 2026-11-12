@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { useDataStore } from '@/stores/data-store';
+import { useDataStore, getProductPurgeInfo, PRODUCT_RETENTION_DAYS } from '@/stores/data-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useAuthStore, canManageProduct, isCollabPartner } from '@/stores/auth-store';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,15 +23,13 @@ import {
   Tag,
   Boxes,
   Users2,
-  CheckCircle,
-  Archive,
+  Clock,
   SlidersHorizontal,
   Bookmark,
   Globe,
   Info,
   Edit,
   RotateCcw,
-  Eye,
   EyeOff,
   Camera,
   Lock,
@@ -81,7 +79,8 @@ export default function ProductsPage() {
     updateProduct,
     deleteProduct,
     restoreProduct,
-    toggleProductActive,
+    permanentDeleteProduct,
+    purgeExpiredDeletedProducts,
     updateVariantPreorders,
     addCategory,
   } = useDataStore();
@@ -509,7 +508,7 @@ export default function ProductsPage() {
   function handleDeleteProduct(prod: Product) {
     if (
       confirm(
-        `Bạn có chắc muốn ẩn/xóa sản phẩm "${prod.name}"? (Sản phẩm sẽ được ẩn đi chứ không bị xóa vĩnh viễn, bạn có thể khôi phục lại bất kỳ lúc nào).`
+        `Đưa sản phẩm "${prod.name}" vào hàng chờ xóa ${PRODUCT_RETENTION_DAYS} ngày?\n\nSản phẩm sẽ ngừng hiển thị trên POS & trang khách và tự động xóa vĩnh viễn sau ${PRODUCT_RETENTION_DAYS} ngày (bạn vẫn có thể khôi phục hoặc xóa ngay trong tab Chờ xóa).`
       )
     ) {
       deleteProduct(prod.id);
@@ -519,7 +518,7 @@ export default function ProductsPage() {
         action_type: 'delete',
         entity_type: 'product',
         entity_name: prod.name,
-        description: `Đã ẩn/xóa sản phẩm "${prod.name}" khỏi danh mục đang bán (chuyển vào mục Đã ẩn/Đã xóa).`,
+        description: `Đã đưa sản phẩm "${prod.name}" vào hàng chờ xóa ${PRODUCT_RETENTION_DAYS} ngày.`,
       });
     }
   }
@@ -532,8 +531,38 @@ export default function ProductsPage() {
       action_type: 'update',
       entity_type: 'product',
       entity_name: prod.name,
-      description: `Khôi phục sản phẩm "${prod.name}" trở lại danh mục đang mở bán.`,
+      description: `Khôi phục sản phẩm "${prod.name}" từ hàng chờ xóa 15 ngày trở lại danh mục mở bán.`,
     });
+  }
+
+  function handlePermanentDeleteProduct(prod: Product) {
+    if (
+      confirm(
+        `XÓA VĨNH VIỄN sản phẩm "${prod.name}" ngay bây giờ?\n\nToàn bộ phân loại và phân bổ kho của sản phẩm này sẽ bị xóa hoàn toàn và KHÔNG thể khôi phục!`
+      )
+    ) {
+      permanentDeleteProduct(prod.id);
+      logActivity({
+        actor_name: user?.fullName || 'Người dùng',
+        actor_role: (user?.role as AuditActorRole) || 'staff',
+        action_type: 'delete',
+        entity_type: 'product',
+        entity_name: prod.name,
+        description: `Đã xóa vĩnh viễn sản phẩm "${prod.name}" khỏi hệ thống.`,
+      });
+    }
+  }
+
+  React.useEffect(() => {
+    purgeExpiredDeletedProducts();
+  }, [purgeExpiredDeletedProducts]);
+
+  function getPurgeCountdownLabel(prod: Product): string {
+    const info = getProductPurgeInfo(prod);
+    if (info.remainingDays <= 1) {
+      return `Chờ xóa • Còn ${Math.max(1, info.remainingHours)} giờ`;
+    }
+    return `Chờ xóa • Còn ${info.remainingDays} ngày`;
   }
 
   const currency = activeWorkspace?.currency || 'VND';
@@ -701,8 +730,8 @@ export default function ProductsPage() {
                 : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124]'
             )}
           >
-            <Archive className="w-3.5 h-3.5 text-[#C44536] dark:text-rose-400" />
-            <span>Đã ẩn</span>
+            <Clock className="w-3.5 h-3.5 text-[#C44536] dark:text-rose-400" />
+            <span>Chờ xóa (15 ngày)</span>
             <span className="text-[10px] bg-[#FDF1F0] dark:bg-rose-950/40 px-1.5 py-0.2 rounded font-mono text-[#C44536] dark:text-rose-400">
               {archivedCount}
             </span>
@@ -799,6 +828,15 @@ export default function ProductsPage() {
         </div>
       </div>
 
+      {statusFilter === 'archived' && filteredProducts.length > 0 && (
+        <div className="p-3 rounded-xl bg-[#FDF1F0] dark:bg-rose-950/30 border border-[#C44536]/30 dark:border-rose-800/50 flex items-center gap-2.5 text-xs text-[#A33023] dark:text-rose-300">
+          <Clock className="w-4 h-4 shrink-0" />
+          <span>
+            Sản phẩm trong hàng chờ sẽ <strong>tự động xóa hoàn toàn sau {PRODUCT_RETENTION_DAYS} ngày</strong> kể từ lúc xóa. Bạn có thể bấm <strong>Khôi phục</strong> hoặc <strong>Xóa hẳn</strong> ngay lập tức.
+          </span>
+        </div>
+      )}
+
       {/* Products Content */}
       {filteredProducts.length === 0 ? (
         <Card className="border-[#E8E8E5] shadow-xs rounded-xl">
@@ -888,13 +926,10 @@ export default function ProductsPage() {
                             <span>{prod.collab_partner}</span>
                           </Badge>
                         )}
-                        {prod.is_deleted ? (
-                          <Badge variant="error" className="text-[10px]">
-                            Đã xóa
-                          </Badge>
-                        ) : !prod.is_active ? (
-                          <Badge variant="warning" className="text-[10px]">
-                            Đang ẩn
+                        {prod.is_deleted || !prod.is_active ? (
+                          <Badge variant="error" className="text-[10px] gap-1">
+                            <Clock className="w-2.5 h-2.5" />
+                            <span>{getPurgeCountdownLabel(prod)}</span>
                           </Badge>
                         ) : isSoldOut ? (
                           <Badge variant="warning" className="text-[10px]">
@@ -1038,39 +1073,36 @@ export default function ProductsPage() {
                       </div>
 
                       <div className="flex items-center gap-1">
-                        {prod.is_deleted ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 px-2 text-[11px] gap-1 text-[#2F7D55]"
-                            onClick={() => handleRestoreProduct(prod)}
-                          >
-                            <RotateCcw className="w-3 h-3" />
-                            <span>Khôi phục</span>
-                          </Button>
-                        ) : (
+                        {prod.is_deleted || !prod.is_active ? (
                           <>
-                            <button
-                              type="button"
-                              onClick={() => toggleProductActive(prod.id)}
-                              className="p-1.5 rounded-md text-[#737373] hover:text-[#202124] hover:bg-white transition-colors"
-                              title={prod.is_active ? 'Tạm ẩn sản phẩm' : 'Hiện lại sản phẩm'}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 px-2 text-[11px] gap-1 text-[#2F7D55]"
+                              onClick={() => handleRestoreProduct(prod)}
+                              title="Khôi phục sản phẩm trở lại mở bán"
                             >
-                              {prod.is_active ? (
-                                <EyeOff className="w-3.5 h-3.5" />
-                              ) : (
-                                <Eye className="w-3.5 h-3.5 text-[#2F7D55]" />
-                              )}
-                            </button>
+                              <RotateCcw className="w-3 h-3" />
+                              <span>Khôi phục</span>
+                            </Button>
                             <button
                               type="button"
-                              onClick={() => handleDeleteProduct(prod)}
-                              className="p-1.5 rounded-md text-[#737373] hover:text-[#C44536] hover:bg-[#FDF1F0] transition-colors"
-                              title="Xóa / Ẩn sản phẩm"
+                              onClick={() => handlePermanentDeleteProduct(prod)}
+                              className="p-1.5 rounded-md text-[#C44536] hover:bg-[#FDF1F0] transition-colors cursor-pointer"
+                              title="Xóa vĩnh viễn ngay lập tức"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteProduct(prod)}
+                            className="p-1.5 rounded-md text-[#737373] hover:text-[#C44536] hover:bg-[#FDF1F0] transition-colors cursor-pointer"
+                            title="Đưa vào hàng chờ xóa 15 ngày"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         )}
                       </div>
                     </>
@@ -1177,14 +1209,10 @@ export default function ProductsPage() {
                             </Badge>
                           )}
 
-                          {prod.is_deleted && (
-                            <Badge variant="error" className="text-[10px] font-semibold">
-                              Đã xóa (Đang ẩn)
-                            </Badge>
-                          )}
-                          {!prod.is_active && !prod.is_deleted && (
-                            <Badge variant="warning" className="text-[10px]">
-                              Tạm ngưng bán
+                          {(prod.is_deleted || !prod.is_active) && (
+                            <Badge variant="error" className="text-[10px] font-semibold gap-1">
+                              <Clock className="w-3 h-3" />
+                              <span>{getPurgeCountdownLabel(prod)}</span>
                             </Badge>
                           )}
                           {isSoldOut && !prod.is_deleted && prod.is_active && (
@@ -1289,47 +1317,38 @@ export default function ProductsPage() {
                             <span>Sửa &amp; Ảnh</span>
                           </Button>
 
-                          {prod.is_deleted ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 px-3 text-xs gap-1.5 rounded-lg border-[#2F7D55]/50 text-[#2F7D55] hover:bg-[#EBF1EE] font-semibold"
-                              onClick={() => handleRestoreProduct(prod)}
-                              title="Khôi phục sản phẩm này trở lại mở bán"
-                            >
-                              <RotateCcw className="w-3.5 h-3.5" />
-                              <span>Khôi phục</span>
-                            </Button>
-                          ) : (
-                            <div className="flex items-center gap-1 pl-1 border-l border-[#E8E8E5]">
+                          {prod.is_deleted || !prod.is_active ? (
+                            <div className="flex items-center gap-1.5 pl-1 border-l border-[#E8E8E5]">
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
-                                className="h-8 px-2.5 text-xs gap-1 text-[#737373] hover:text-[#202124] rounded-lg"
-                                onClick={() => toggleProductActive(prod.id)}
-                                title={prod.is_active ? 'Tạm ẩn khỏi POS' : 'Mở bán lại trên POS'}
+                                className="h-8 px-3 text-xs gap-1.5 rounded-lg border-[#2F7D55]/50 text-[#2F7D55] hover:bg-[#EBF1EE] font-semibold"
+                                onClick={() => handleRestoreProduct(prod)}
+                                title="Khôi phục sản phẩm này trở lại mở bán"
                               >
-                                {prod.is_active ? (
-                                  <>
-                                    <EyeOff className="w-3.5 h-3.5" />
-                                    <span className="hidden sm:inline">Ẩn</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <CheckCircle className="w-3.5 h-3.5 text-[#2F7D55]" />
-                                    <span className="hidden sm:inline text-[#2F7D55] font-semibold">
-                                      Hiện lại
-                                    </span>
-                                  </>
-                                )}
+                                <RotateCcw className="w-3.5 h-3.5" />
+                                <span>Khôi phục</span>
                               </Button>
 
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                className="h-8 px-2.5 text-xs gap-1 text-[#C44536] hover:bg-[#FDF1F0] rounded-lg font-semibold"
+                                onClick={() => handlePermanentDeleteProduct(prod)}
+                                title="Xóa vĩnh viễn sản phẩm này ngay lập tức"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">Xóa hẳn</span>
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 pl-1 border-l border-[#E8E8E5]">
+                              <Button
+                                variant="ghost"
+                                size="sm"
                                 className="h-8 w-8 p-0 text-[#737373] hover:text-[#C44536] hover:bg-[#FDF1F0] rounded-lg"
                                 onClick={() => handleDeleteProduct(prod)}
-                                title="Xóa / Ẩn sản phẩm (Có thể khôi phục bất kỳ lúc nào)"
+                                title="Đưa vào hàng chờ xóa 15 ngày"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </Button>

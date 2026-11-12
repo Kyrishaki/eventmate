@@ -131,6 +131,7 @@ export interface Product {
   is_active: boolean;
   is_deleted?: boolean;
   deleted_at?: string | null;
+  scheduled_purge_at?: string | null;
   collab_partner?: string | null;
   created_at: string;
   updated_at: string;

@@ -443,7 +443,7 @@ export default function PosTerminalPage() {
     const effectiveBoothId = selectedBoothId || effectiveBooths[0]?.id || booths[0]?.id;
     if (!effectiveBoothId) return 0;
     const alloc = allocations.find(
-      (a) => a.booth_id === effectiveBoothId && a.variant_id === variantId
+      (a) => a.booth_id === effectiveBoothId && a.variant_id === variantId && !a.is_test
     );
     if (!alloc) return 0;
     const inCart = cart.find((c) => c.variantId === variantId)?.quantity || 0;
@@ -458,7 +458,7 @@ export default function PosTerminalPage() {
         variant.total_inventory - (variant.online_preorder_quantity || 0) - (variant.reserved_quantity || 0)
       );
       const totalSoldOffline = allocations
-        .filter((a) => a.variant_id === variantId)
+        .filter((a) => a.variant_id === variantId && !a.is_test)
         .reduce((sum, a) => sum + (a.sold_quantity || 0), 0);
       maxOfflineAvailable = Math.max(0, maxOfflineLimit - totalSoldOffline);
     }

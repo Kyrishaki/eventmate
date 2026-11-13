@@ -277,17 +277,17 @@ export default function DashboardOverviewPage() {
         <div className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-4.5 flex flex-col gap-1.5">
           <span className="text-[13px] text-[#A3A3A0]">Đơn hoàn tất</span>
           <span className="text-[26px] sm:text-[28px] font-bold text-[#F4F4F2] tracking-tight">
-            {netOrders.length > 0 ? netOrders.length : '1'}
+            {netOrders.length}
           </span>
         </div>
 
-        {/* Metric 3: Quầy đang mở ca */}
+        {/* Metric 3: Quầy đang hoạt động */}
         <div className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-4.5 flex flex-col gap-1.5">
-          <span className="text-[13px] text-[#A3A3A0]">Quầy đang mở ca</span>
+          <span className="text-[13px] text-[#A3A3A0]">Quầy đang hoạt động</span>
           <span className="text-[26px] sm:text-[28px] font-bold text-[#F4F4F2] tracking-tight">
-            {activeBoothsCount > 0 ? activeBoothsCount : '1'}{' '}
+            {activeBoothsCount}{' '}
             <span className="text-[14px] text-[#A3A3A0] font-normal">
-              / {filteredBooths.length || 6} quầy
+              / {filteredBooths.length} quầy
             </span>
           </span>
         </div>

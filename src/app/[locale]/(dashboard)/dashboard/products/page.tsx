@@ -2074,7 +2074,10 @@ export default function ProductsPage() {
             <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
               {formVariants.map((v, idx) => {
                 const totalHeld = (v.reserved_quantity || 0) + (v.online_preorder_quantity || 0);
-                const available = Math.max(0, (v.total_inventory || 0) - totalHeld);
+                const sold = allocations
+                  .filter((allocation) => allocation.variant_id === v.id && !allocation.is_test)
+                  .reduce((sum, allocation) => sum + (allocation.sold_quantity || 0), 0);
+                const available = Math.max(0, (v.total_inventory || 0) - totalHeld - sold);
 
                 return (
                   <div

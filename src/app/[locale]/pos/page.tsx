@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { Selector } from '@astryxdesign/core/Selector';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { useDataStore } from '@/stores/data-store';
@@ -1282,16 +1281,20 @@ export default function PosTerminalPage() {
                   </select>
                 </div>
 
-                <Selector
-                  label="Tag"
-                  size="sm"
-                  value={posTagFilter}
-                  onChange={setPosTagFilter}
-                  options={[
-                    { value: '', label: 'Tất cả tag' },
-                    ...productTags.map((tag) => ({ value: tag, label: tag })),
-                  ]}
-                />
+                <label className="flex items-center gap-1.5 min-w-[140px] flex-1 sm:flex-none">
+                  <Tag className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
+                  <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Tag:</span>
+                  <select
+                    value={posTagFilter}
+                    onChange={(e) => setPosTagFilter(e.target.value)}
+                    className="h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full sm:w-auto"
+                  >
+                    <option value="">Tất cả tag</option>
+                    {productTags.map((tag) => (
+                      <option key={tag} value={tag}>{tag}</option>
+                    ))}
+                  </select>
+                </label>
               </div>
 
               {/* Result counter & Reset Filter */}

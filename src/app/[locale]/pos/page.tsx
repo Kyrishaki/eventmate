@@ -511,9 +511,15 @@ export default function PosTerminalPage() {
     return { list, total: baseProducts.length, uncategorizedCount };
   }, [activeProducts, categories, activeWorkspace, posSourceFilter]);
 
-  const productTags = [...new Set(activeProducts.flatMap((product) => product.tags || []))]
-    .filter(Boolean)
-    .sort((a, b) => a.localeCompare(b, 'vi'));
+  const tagCounts = new Map<string, number>();
+  activeProducts.forEach((product) => {
+    // Count products, including those with the same tag repeated in their data, once per tag.
+    new Set(product.tags || []).forEach((tag) => {
+      if (tag) tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+    });
+  });
+  const productTags = [...tagCounts.keys()]
+    .sort((a, b) => a.localeCompare(b, 'vi', { sensitivity: 'base' }));
 
   const filteredProducts = React.useMemo(() => {
     const list = activeProducts.filter((p) => {
@@ -1289,9 +1295,9 @@ export default function PosTerminalPage() {
                     onChange={(e) => setPosTagFilter(e.target.value)}
                     className="h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full sm:w-auto"
                   >
-                    <option value="">Tất cả tag</option>
+                    <option value="">Tất cả tag ({activeProducts.length})</option>
                     {productTags.map((tag) => (
-                      <option key={tag} value={tag}>{tag}</option>
+                      <option key={tag} value={tag}>{tag} ({tagCounts.get(tag)})</option>
                     ))}
                   </select>
                 </label>

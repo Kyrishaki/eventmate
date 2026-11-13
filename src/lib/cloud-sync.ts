@@ -6,6 +6,7 @@ import { useOrdersStore } from '@/stores/orders-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { Order } from '@/types/database';
+import { getEffectiveOrderStatus } from '@/lib/test-data-filter';
 
 export interface CloudCatalogPayload {
   events?: DataStoreState['events'];
@@ -42,6 +43,20 @@ let isInitialized = false;
 let syncChannel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null;
 let saveDebounceTimer: NodeJS.Timeout | null = null;
 let isApplyingRemoteUpdate = false;
+
+function shouldKeepLocalOrder(localOrder: Order, incomingOrder: Order): boolean {
+  const localStatus = getEffectiveOrderStatus(localOrder);
+  const incomingStatus = getEffectiveOrderStatus(incomingOrder);
+  const localIsTerminal = localStatus === 'cancelled' || localStatus === 'refunded';
+  const incomingIsTerminal = incomingStatus === 'cancelled' || incomingStatus === 'refunded';
+
+  // A completed copy from an older device must never resurrect a voided/refunded order.
+  if (localIsTerminal && !incomingIsTerminal) return true;
+
+  const localUpdatedAt = Date.parse(localOrder.updated_at || '');
+  const incomingUpdatedAt = Date.parse(incomingOrder.updated_at || '');
+  return Number.isFinite(localUpdatedAt) && Number.isFinite(incomingUpdatedAt) && localUpdatedAt > incomingUpdatedAt;
+}
 
 /**
  * Initializes the two-way Realtime & Cloud sync engine with Supabase.
@@ -216,9 +231,14 @@ function setupStoreSubscribers(workspaceId: string) {
     if (!canSyncOrder) return;
 
     if (state.orders !== prevState.orders && state.orders.length > 0) {
-      const newest = state.orders[0];
-      if (newest && (!prevState.orders[0] || newest.id !== prevState.orders[0].id)) {
-        syncOrderCreated(newest, workspaceId);
+      const previousOrdersById = new Map(prevState.orders.map((order) => [order.id, order]));
+      const changedOrder = state.orders.find((order) => {
+        const previous = previousOrdersById.get(order.id);
+        return !previous || previous.updated_at !== order.updated_at || previous.order_status !== order.order_status;
+      });
+
+      if (changedOrder) {
+        syncOrderCreated(changedOrder, workspaceId);
       }
     }
   });
@@ -289,19 +309,26 @@ export function applyCloudSnapshot(snapshot: CloudSyncSnapshot) {
       const existingIds = new Set(currentOrders.map((o) => o.id));
 
       const merged = [...currentOrders];
+      const terminalOrdersToRepair: Order[] = [];
       for (const remoteOrder of orders_data) {
         if (!existingIds.has(remoteOrder.id)) {
           merged.unshift(remoteOrder);
           existingIds.add(remoteOrder.id);
         } else {
-          // Update if status changed
           const idx = merged.findIndex((o) => o.id === remoteOrder.id);
-          if (idx !== -1 && merged[idx].order_status !== remoteOrder.order_status) {
+          if (idx !== -1 && shouldKeepLocalOrder(merged[idx], remoteOrder)) {
+            if (getEffectiveOrderStatus(merged[idx]) !== getEffectiveOrderStatus(remoteOrder)) {
+              terminalOrdersToRepair.push(merged[idx]);
+            }
+          } else if (idx !== -1) {
             merged[idx] = remoteOrder;
           }
         }
       }
       useOrdersStore.setState({ orders: merged });
+
+      // Repair the cloud snapshot when it contained a stale completed copy.
+      terminalOrdersToRepair.forEach((order) => syncOrderCreated(order, snapshot.workspace_id));
     }
   } finally {
     setTimeout(() => {
@@ -363,7 +390,9 @@ export function applyOrderUpsert(order: Order) {
     const currentOrders = ordersStore.orders;
     const idx = currentOrders.findIndex((o) => o.id === order.id);
 
-    if (idx !== -1) {
+    if (idx !== -1 && shouldKeepLocalOrder(currentOrders[idx], order)) {
+      syncOrderCreated(currentOrders[idx]);
+    } else if (idx !== -1) {
       const updated = [...currentOrders];
       updated[idx] = order;
       useOrdersStore.setState({ orders: updated });

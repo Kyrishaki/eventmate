@@ -78,14 +78,14 @@ export default function DashboardOverviewPage() {
   const selectedEvent = workspaceEvents.find((e) => e.id === selectedEventId);
 
   const workspaceOrders = orders.filter(
-    (o) => !activeWorkspace || o.workspace_id === activeWorkspace.id || o.workspace_id === 'ws-hac-cam-studio'
+    (o) => !activeWorkspace || o.workspace_id === activeWorkspace.id
   );
 
   const filteredOrders =
     selectedEventId === 'all'
       ? filterRealOrders(workspaceOrders)
       : isTestEvent(selectedEventId)
-      ? workspaceOrders.filter((o) => o.event_id === selectedEventId || isTestOrder(o))
+      ? workspaceOrders.filter((o) => o.event_id === selectedEventId)
       : workspaceOrders.filter((o) => o.event_id === selectedEventId && !isTestOrder(o));
 
   const filteredBooths =
@@ -108,12 +108,23 @@ export default function DashboardOverviewPage() {
 
   // Pending items for "Cần xử lý"
   const pendingPreordersCount = preorders.filter(
-    (p) => p.status === 'pending_pickup'
+    (p) => p.status === 'pending_pickup' &&
+      (!activeWorkspace || p.workspace_id === activeWorkspace.id) &&
+      (selectedEventId === 'all' ? !isTestEvent(p.event_id) : p.event_id === selectedEventId)
   ).length;
 
-  const totalAllocatedQty = allRealAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
-  const totalInvQty = variants.reduce((sum, v) => sum + v.total_inventory, 0);
-  const unallocatedInventoryCount = Math.max(0, totalInvQty - totalAllocatedQty);
+  // Warehouse availability is global to the workspace, summed per variant.
+  const workspaceProductIds = new Set(products
+    .filter((product) => !product.is_deleted && (!activeWorkspace || product.workspace_id === activeWorkspace.id))
+    .map((product) => product.id));
+  const unallocatedInventoryCount = variants
+    .filter((variant) => workspaceProductIds.has(variant.product_id))
+    .reduce((sum, variant) => {
+      const allocated = allRealAllocations
+        .filter((allocation) => allocation.variant_id === variant.id)
+        .reduce((quantity, allocation) => quantity + allocation.allocated_quantity, 0);
+      return sum + Math.max(0, variant.total_inventory - allocated);
+    }, 0);
 
   // Cash in drawer
   const cashInDrawer = activeShift
@@ -233,7 +244,7 @@ export default function DashboardOverviewPage() {
           <span className="w-2.5 h-2.5 rounded-full bg-[#F5B301] shrink-0" />
           <span className="flex-1 text-[14.5px]">
             <strong className="font-semibold text-[#F4F4F2]">
-              {pendingPreordersCount > 0 ? `${pendingPreordersCount} đơn giữ` : '3 đơn giữ'}
+              {pendingPreordersCount} đơn giữ
             </strong>{' '}
             chờ đối soát tiền chuyển khoản
           </span>
@@ -250,7 +261,7 @@ export default function DashboardOverviewPage() {
           <span className="w-2.5 h-2.5 rounded-full bg-[#A3A3A0] shrink-0" />
           <span className="flex-1 text-[14.5px]">
             <strong className="font-semibold text-[#F4F4F2]">
-              {unallocatedInventoryCount > 0 ? `${unallocatedInventoryCount} món` : '10 món'}
+              {unallocatedInventoryCount} món
             </strong>{' '}
             trong kho tổng chưa cấp cho quầy nào
           </span>
@@ -316,9 +327,9 @@ export default function DashboardOverviewPage() {
           </div>
 
           <div className="flex flex-col divide-y divide-[#2E2E32]">
-            {effectiveEvents.slice(0, 4).map((evt) => {
+            {effectiveEvents.filter((event) => selectedEventId === 'all' || event.id === selectedEventId).slice(0, 4).map((evt) => {
               const eventBooths = booths.filter((b) => b.event_id === evt.id);
-              const eventOrders = orders.filter((o) => o.event_id === evt.id && isNetRevenueOrder(o));
+              const eventOrders = workspaceOrders.filter((o) => o.event_id === evt.id && isNetRevenueOrder(o) && (isTestEvent(evt) || !isTestOrder(o)));
               const eventRevenue = eventOrders.reduce((sum, o) => sum + o.final_amount, 0);
 
               const isOngoing = evt.status === 'active';
@@ -374,13 +385,14 @@ export default function DashboardOverviewPage() {
                 Chưa có đơn hàng nào được ghi nhận.
               </div>
             ) : (
-              filteredOrders.slice(0, 5).map((order) => {
+              [...filteredOrders].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5).map((order) => {
                 const booth = booths.find((b) => b.id === order.booth_id);
                 const orderDate = new Date(order.created_at);
                 const timeString = `${orderDate.getHours().toString().padStart(2, '0')}:${orderDate.getMinutes().toString().padStart(2, '0')}`;
                 const effectiveStatus = getEffectiveOrderStatus(order);
                 const isCancelled = effectiveStatus === 'cancelled';
                 const isCompleted = effectiveStatus === 'completed';
+                const isRefunded = effectiveStatus === 'refunded';
 
                 return (
                   <Link
@@ -393,7 +405,7 @@ export default function DashboardOverviewPage() {
                         {order.order_number || order.id.slice(-8)}
                       </span>
                       <span className="text-[12.5px] text-[#A3A3A0] truncate">
-                        {booth?.name || 'Vẽ thôi'} · {order.payment_method === 'cash' ? 'Tiền mặt' : 'Chuyển khoản'} · {timeString}
+                        {booth?.name || 'Quầy không xác định'} · {order.payment_method === 'cash' ? 'Tiền mặt' : 'Chuyển khoản'} · {timeString}
                       </span>
                     </div>
 
@@ -407,7 +419,7 @@ export default function DashboardOverviewPage() {
                             : 'text-[#F5B301]'
                         }`}
                       >
-                        {isCompleted ? 'Hoàn tất' : isCancelled ? 'Đã hủy' : 'Đang xử lý'}
+                        {isCompleted ? 'Hoàn tất' : isCancelled ? 'Đã hủy' : isRefunded ? 'Đã hoàn tiền' : 'Đang xử lý'}
                       </span>
                       <span className="font-bold text-[14px] text-[#F4F4F2] text-right min-w-[80px]">
                         {formatCurrency(order.final_amount, 'VND')}

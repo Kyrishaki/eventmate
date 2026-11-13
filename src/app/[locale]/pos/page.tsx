@@ -985,12 +985,12 @@ export default function PosTerminalPage() {
             <button
               type="button"
               onClick={() => setIsMobileCartOpen(true)}
-              className="relative p-2 rounded-[6px] bg-[#315C4C] text-white active:scale-95 transition-transform cursor-pointer"
+              className="relative p-2 rounded-[6px] bg-amber-500 text-neutral-950 font-bold active:scale-95 transition-transform cursor-pointer border border-amber-600/30"
               aria-label="Giỏ hàng"
             >
               <ShoppingCart className="w-4 h-4" />
               {totalCartUnits > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#C44536] text-white text-[10px] font-bold flex items-center justify-center">
+                <span className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center shadow-2xs">
                   {totalCartUnits}
                 </span>
               )}

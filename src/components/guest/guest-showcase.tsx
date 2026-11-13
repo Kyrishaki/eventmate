@@ -467,36 +467,36 @@ export function GuestShowcase() {
           hasStaffPreviewSession ? 'top-[37px]' : 'top-0'
         } z-40 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border-b border-[#E8E8E5] dark:border-neutral-800`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-3">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 sm:h-18 flex items-center justify-between gap-2 sm:gap-4">
           {/* Brand Logo */}
           <button
             type="button"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="flex items-center gap-2.5 sm:gap-3 min-w-0 text-left cursor-pointer"
+            className="flex items-center gap-2 sm:gap-3 min-w-0 text-left cursor-pointer shrink"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.png"
               alt={`${storeName} Logo`}
-              className="h-10 sm:h-12 w-auto max-w-[96px] object-contain shrink-0"
+              className="h-8 sm:h-12 w-auto max-w-[40px] sm:max-w-[96px] object-contain shrink-0"
             />
             <div className="min-w-0">
-              <span className="font-extrabold text-base sm:text-xl tracking-tight text-[#202124] dark:text-neutral-100 block truncate">
+              <span className="font-extrabold text-sm sm:text-xl tracking-tight text-[#202124] dark:text-neutral-100 block truncate">
                 {storeName}
               </span>
-              <span className="text-[11px] sm:text-xs text-[#737373] dark:text-neutral-400 block truncate">
+              <span className="hidden sm:block text-[11px] sm:text-xs text-[#737373] dark:text-neutral-400 truncate">
                 Official Merchandise Store
               </span>
             </div>
           </button>
 
           {/* Customer Action Controls */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <a
               href={hotlineHref}
-              className="hidden lg:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-[6px] bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 hover:border-[#315C4C] text-[#202124] dark:text-neutral-200 transition-colors"
+              className="hidden lg:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-[6px] bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 hover:border-amber-500 text-[#202124] dark:text-neutral-200 transition-colors"
             >
-              <Phone className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400" />
+              <Phone className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               <span>{hotlineDisplay}</span>
             </a>
 
@@ -508,14 +508,14 @@ export function GuestShowcase() {
                 }
                 setMyReservationsOpen(true);
               }}
-              className="inline-flex items-center gap-1.5 h-9 px-2.5 sm:px-3 rounded-[6px] text-xs font-semibold border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-[#315C4C] text-[#202124] dark:text-neutral-200 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 h-8.5 sm:h-9 px-2 sm:px-3 rounded-[6px] text-xs font-semibold border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-amber-500 text-[#202124] dark:text-neutral-200 transition-colors cursor-pointer"
               title="Tra cứu hàng đã keep bằng số điện thoại"
             >
-              <Ticket className="w-4 h-4 text-[#B7791F]" />
-              <span className="hidden sm:inline">Tra cứu hàng đã keep (SĐT)</span>
-              <span className="sm:hidden">Hàng đã keep</span>
+              <Ticket className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 shrink-0" />
+              <span className="hidden md:inline">Tra cứu hàng đã keep</span>
+              <span className="hidden sm:inline md:hidden">Keep</span>
               {savedPhoneReservations.length > 0 && (
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FEF7EC] dark:bg-amber-950 text-[#B7791F] dark:text-amber-300 border border-[#B7791F]/30">
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500 text-neutral-950">
                   {savedPhoneReservations.length}
                 </span>
               )}
@@ -524,13 +524,13 @@ export function GuestShowcase() {
             <button
               type="button"
               onClick={() => setBagOpen(true)}
-              className="relative inline-flex items-center gap-1.5 h-9 px-3 rounded-[6px] text-xs font-bold bg-[#315C4C] hover:bg-[#284A3D] text-white transition-colors shadow-xs cursor-pointer"
+              className="relative inline-flex items-center gap-1.5 h-8.5 sm:h-9 px-2.5 sm:px-3 rounded-[6px] text-xs font-bold bg-amber-500 hover:bg-amber-400 text-neutral-950 transition-colors shadow-xs cursor-pointer border border-amber-600/20"
               title="Mở giỏ hàng & đăng ký giữ đồ"
             >
-              <ShoppingBag className="w-4 h-4" />
-              <span className="hidden xs:inline">Giỏ giữ đồ</span>
+              <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span className="hidden sm:inline">Giỏ giữ đồ</span>
               {bagCount > 0 && (
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-extrabold bg-white text-[#315C4C]">
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-red-600 text-white shadow-2xs">
                   {bagCount}
                 </span>
               )}
@@ -538,11 +538,11 @@ export function GuestShowcase() {
 
             <Link
               href="/login"
-              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-[6px] text-xs font-bold border border-[#315C4C]/40 hover:border-[#315C4C] bg-[#EAF4EE] dark:bg-emerald-950/60 text-[#254639] dark:text-emerald-300 hover:bg-[#315C4C] hover:text-white dark:hover:bg-[#315C4C] transition-colors shadow-2xs cursor-pointer"
+              className="inline-flex items-center gap-1 h-8.5 sm:h-9 px-2 sm:px-3 rounded-[6px] text-xs font-bold border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 text-[#202124] dark:text-neutral-100 hover:border-amber-500 transition-colors shadow-2xs cursor-pointer"
               title="Đăng nhập tài khoản Quản trị viên (Admin) / Nhân viên"
             >
-              <LogIn className="w-3.5 h-3.5" />
-              <span>Đăng nhập</span>
+              <LogIn className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Đăng nhập</span>
             </Link>
 
             <ThemeToggle />
@@ -755,7 +755,7 @@ export function GuestShowcase() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-5">
             {visibleProducts.map((prod) => {
               const prodVariants = variants.filter((v) => v.product_id === prod.id);
               const activeVarId = selectedVariantMap[prod.id] || prodVariants[0]?.id;
@@ -774,13 +774,13 @@ export function GuestShowcase() {
               return (
                 <article
                   key={prod.id}
-                  className="rounded-[12px] bg-white dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-800 overflow-hidden shadow-2xs hover:shadow-md hover:border-[#315C4C]/40 transition-all flex flex-col justify-between group"
+                  className="rounded-[12px] bg-white dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-800 overflow-hidden shadow-2xs hover:shadow-md hover:border-amber-500/40 transition-all flex flex-col justify-between group"
                 >
                   <div>
                     {/* Clickable Product Image: Aspect-Square & Object-Contain */}
                     <div
                       onClick={() => handleOpenProductDetail(prod)}
-                      className="relative aspect-square bg-[#F8F9FA] dark:bg-neutral-800/80 overflow-hidden flex items-center justify-center p-2.5 cursor-pointer"
+                      className="relative aspect-square bg-[#F8F9FA] dark:bg-neutral-800/80 overflow-hidden flex items-center justify-center p-2 sm:p-2.5 cursor-pointer"
                     >
                       {prod.image_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -790,32 +790,32 @@ export function GuestShowcase() {
                           className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
-                        <Package className="w-10 h-10 text-[#9E9E9C]" />
+                        <Package className="w-8 h-8 sm:w-10 sm:h-10 text-[#9E9E9C]" />
                       )}
 
                       {/* Single Clean Stock Badge */}
-                      <div className="absolute top-2.5 right-2.5">
+                      <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5">
                         {isAvailable ? (
                           <span
-                            className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold text-white shadow-xs ${
-                              isLowStock ? 'bg-[#D97706]' : 'bg-[#2F7D55]'
+                            className={`px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold text-white shadow-xs ${
+                              isLowStock ? 'bg-amber-600' : 'bg-emerald-600'
                             }`}
                           >
                             {isLowStock ? `Còn ${availCount}` : `Còn hàng (${availCount})`}
                           </span>
                         ) : (stock?.online || 0) > 0 ? (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#B7791F] text-white shadow-xs">
-                            Đã giữ hết tại quầy
+                          <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-amber-600 text-white shadow-xs">
+                            Đã giữ hết
                           </span>
                         ) : (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-neutral-700/90 text-white shadow-xs">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-neutral-700/90 text-white shadow-xs">
                             Tạm hết hàng
                           </span>
                         )}
                       </div>
 
                       {/* Subtle Quick View Overlay on Hover */}
-                      <div className="absolute inset-x-0 bottom-0 p-2.5 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex justify-end">
+                      <div className="absolute inset-x-0 bottom-0 p-2 sm:p-2.5 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex justify-end">
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/90 text-[#202124] text-[10px] font-bold">
                           <Eye className="w-3 h-3" />
                           Xem chi tiết
@@ -824,34 +824,34 @@ export function GuestShowcase() {
                     </div>
 
                     {/* Product Body */}
-                    <div className="p-4 space-y-2.5">
+                    <div className="p-2.5 sm:p-4 space-y-1.5 sm:space-y-2.5">
                       {/* Single Metadata Row (Category & optional Collab tag) */}
-                      <div className="flex items-center justify-between gap-2 text-[11px]">
-                        <span className="font-semibold text-[#315C4C] dark:text-emerald-400 truncate">
+                      <div className="flex items-center justify-between gap-1 text-[10px] sm:text-[11px]">
+                        <span className="font-bold text-amber-700 dark:text-amber-400 truncate">
                           {category?.name || 'Merchandise'}
                         </span>
                         {prod.collab_partner && (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#FEF7EC] dark:bg-amber-950/60 text-[#8C5D17] dark:text-amber-300 font-bold shrink-0">
-                            <Users2 className="w-3 h-3" />
-                            <span>Collab: {prod.collab_partner}</span>
+                          <span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded bg-red-500/15 dark:bg-red-950/60 text-red-600 dark:text-red-300 font-bold shrink-0 border border-red-500/30 text-[9px] sm:text-[10px]">
+                            <Users2 className="w-2.5 h-2.5" />
+                            <span>Collab</span>
                           </span>
                         )}
                       </div>
 
                       <h3
                         onClick={() => handleOpenProductDetail(prod)}
-                        className="font-bold text-sm sm:text-[15px] text-[#202124] dark:text-neutral-100 line-clamp-2 min-h-[2.5rem] leading-snug cursor-pointer hover:text-[#315C4C] dark:hover:text-emerald-400 transition-colors"
+                        className="font-bold text-xs sm:text-[15px] text-[#202124] dark:text-neutral-100 line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] leading-snug cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
                       >
                         {prod.name}
                       </h3>
 
                       {/* Price */}
                       <div className="flex items-baseline justify-between">
-                        <span className="text-base sm:text-lg font-extrabold text-[#315C4C] dark:text-emerald-400">
+                        <span className="text-sm sm:text-lg font-extrabold text-amber-600 dark:text-amber-400">
                           {formatCurrency(activeVariant?.price || 0, currency)}
                         </span>
                         {prodVariants.length > 1 && (
-                          <span className="text-[11px] text-[#737373] dark:text-neutral-400">
+                          <span className="text-[10px] sm:text-[11px] text-[#737373] dark:text-neutral-400 hidden xs:inline">
                             {prodVariants.length} mẫu
                           </span>
                         )}
@@ -872,9 +872,9 @@ export function GuestShowcase() {
                                     [prod.id]: v.id,
                                   })
                                 }
-                                className={`px-2 py-1 rounded-[5px] text-[11px] font-semibold transition-colors max-w-[140px] truncate cursor-pointer ${
+                                className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-[5px] text-[10px] sm:text-[11px] font-semibold transition-colors max-w-[120px] truncate cursor-pointer ${
                                   isSelected
-                                    ? 'bg-[#315C4C] text-white shadow-2xs'
+                                    ? 'bg-amber-500 text-neutral-950 shadow-2xs font-bold'
                                     : 'bg-[#F0F0ED] dark:bg-neutral-800 text-[#202124] dark:text-neutral-300 hover:bg-[#E4E4E0] dark:hover:bg-neutral-700'
                                 }`}
                                 title={v.name}
@@ -887,9 +887,9 @@ export function GuestShowcase() {
                             <button
                               type="button"
                               onClick={() => handleOpenProductDetail(prod)}
-                              className="px-2 py-1 rounded-[5px] text-[11px] font-semibold bg-[#EAF4EE] dark:bg-emerald-950/60 text-[#2F7D55] dark:text-emerald-300 hover:underline cursor-pointer"
+                              className="px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-[5px] text-[10px] sm:text-[11px] font-semibold bg-amber-500/15 text-amber-800 dark:text-amber-300 hover:underline cursor-pointer"
                             >
-                              +{hiddenVariantsCount} mẫu khác
+                              +{hiddenVariantsCount} mẫu
                             </button>
                           )}
                         </div>
@@ -898,15 +898,15 @@ export function GuestShowcase() {
                   </div>
 
                   {/* Card Footer Actions */}
-                  <div className="p-4 pt-0 grid grid-cols-2 gap-2">
+                  <div className="p-2.5 sm:p-4 pt-0 grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => setOnlineModalProduct(prod)}
-                      className="h-9 text-xs font-semibold gap-1 border-[#E8E8E5] dark:border-neutral-700 hover:border-[#315C4C] text-[#202124] dark:text-neutral-200"
+                      className="h-8 sm:h-9 text-[11px] sm:text-xs font-semibold gap-1 border-[#E8E8E5] dark:border-neutral-700 hover:border-amber-500 text-[#202124] dark:text-neutral-200"
                     >
-                      <MessageCircle className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400" />
+                      <MessageCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                       <span>Mua Online</span>
                     </Button>
 
@@ -918,7 +918,7 @@ export function GuestShowcase() {
                       onClick={() =>
                         activeVariant && addToBag(prod, activeVariant, 1, false)
                       }
-                      className="h-9 text-xs font-bold gap-1 bg-[#315C4C] hover:bg-[#254639] text-white disabled:opacity-50"
+                      className="h-8 sm:h-9 text-[11px] sm:text-xs font-bold gap-1 bg-amber-500 hover:bg-amber-400 text-neutral-950 disabled:opacity-50 border border-amber-600/20"
                     >
                       <Bookmark className="w-3.5 h-3.5" />
                       <span>{isAvailable ? 'Giữ đồ ngay' : 'Hết hàng'}</span>

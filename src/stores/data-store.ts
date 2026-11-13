@@ -57,8 +57,6 @@ export interface DataStoreState {
   ) => void;
   deleteProduct: (id: string) => void;
   restoreProduct: (id: string) => void;
-  permanentDeleteProduct: (id: string) => void;
-  purgeExpiredDeletedProducts: () => number;
   toggleProductActive: (id: string) => void;
   updateVariantPreorders: (
     variantId: string,
@@ -108,6 +106,7 @@ export interface DataStoreState {
     barcode?: string;
     reservedQuantity?: number;
     onlinePreorderQuantity?: number;
+    tags?: string[];
   }) => { product: Product; variant: ProductVariant; allocation: InventoryAllocation };
   restockCollabVariant: (boothId: string, variantId: string, addedQty: number) => boolean;
   mergeCollabSyncPackage: (pkg: {
@@ -258,6 +257,7 @@ const defaultProducts: Product[] = [
     name: 'Keychain Acrylic 2 Lớp Limbus Company - 12 Sinners',
     description: 'Móc khóa mica 2 lớp in UV sắc nét kèm hiệu ứng ép kim tuyến Hologram, khoen cài hình bánh răng đồng hồ Dante (Project Moon).',
     image_url: '/products/limbus-keychain-sinners.svg',
+    tags: ['Limbus Company', 'Project Moon', 'Keychain', 'Acrylic', 'Hologram', 'Best Seller'],
     is_active: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -269,6 +269,7 @@ const defaultProducts: Product[] = [
     name: 'Standee Acrylic Limbus Company - E.G.O & Walpurgisnacht (18cm)',
     description: 'Standee Acrylic dày 4mm cắt laser viền bóng, đế in biểu tượng Lobotomy E.G.O và hiệu ứng ánh kim lấp lánh.',
     image_url: '/products/limbus-standee-ego.svg',
+    tags: ['Limbus Company', 'Project Moon', 'Standee', 'Acrylic', 'E.G.O', 'Walpurgisnacht'],
     is_active: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -280,6 +281,7 @@ const defaultProducts: Product[] = [
     name: 'Figure Chibi / Nendoroid Limbus Company - Bus Department',
     description: 'Mô hình PVC/ABS cao 10cm chính hãng kèm 3 biểu cảm khuôn mặt thay thế và phụ kiện vũ khí đặc trưng của từng Sinner.',
     image_url: '/products/limbus-figure-chibi.svg',
+    tags: ['Limbus Company', 'Figure', 'Chibi', 'Nendoroid', 'Premium'],
     is_active: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -291,6 +293,7 @@ const defaultProducts: Product[] = [
     name: 'Standee Sa Bàn 3D Chuyến Xe Mephistopheles - Limbus Company',
     description: 'Bộ Standee sa bàn 5 lớp lắp ghép 3D tái hiện nội thất xe buýt Mephistopheles cùng Charon, Dante và Vergilius.',
     image_url: '/products/limbus-diorama-mephi.svg',
+    tags: ['Limbus Company', 'Standee 3D', 'Sa bàn', 'Mephistopheles', 'Limited'],
     is_active: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -302,6 +305,7 @@ const defaultProducts: Product[] = [
     name: 'Keychain Shaker Cát Chảy Limbus Company - Enkephalin & Golden Bough',
     description: 'Móc khóa Shaker chứa dầu lấp lánh màu xanh Enkephalin và nhánh cây vàng Golden Bough cùng charm mini các Sinners bên trong.',
     image_url: '/products/limbus-shaker-keychain.svg',
+    tags: ['Limbus Company', 'Keychain', 'Shaker', 'Cát chảy', 'Enkephalin'],
     is_active: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -313,6 +317,7 @@ const defaultProducts: Product[] = [
     name: 'Figure Anime Chính Hãng - Hobby Horizon Exclusive Pop Up Parade',
     description: 'Dòng Figure PVC tỷ lệ chuẩn cao 18cm nhập khẩu Nhật Bản (Good Smile Company), hộp nguyên seal trưng bày tại Hobby Horizon.',
     image_url: '/products/anime-figure-popup.svg',
+    tags: ['Anime', 'Figure', 'Pop Up Parade', 'Frieren', 'Oshi no Ko', 'Chính hãng'],
     is_active: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -324,6 +329,7 @@ const defaultProducts: Product[] = [
     name: 'Set Standee & Keychain Hologram Limbus Company x GenZ Studio',
     description: 'Bộ sưu tập Fanart độc quyền hợp tác cùng GenZ Studio cho kỳ lễ hội Hobby Horizon: gồm 1 Standee 16cm + 1 Keychain Hologram + 2 Card bo góc.',
     image_url: '/products/limbus-collab-set.svg',
+    tags: ['Limbus Company', 'Collab', 'GenZ Studio', 'Combo Set', 'Hologram'],
     collab_partner: 'GenZ Studio',
     is_active: true,
     created_at: new Date().toISOString(),
@@ -796,43 +802,17 @@ const safeLocalStorage: StateStorage = {
   },
 };
 
-export const PRODUCT_RETENTION_DAYS = 15;
-const PRODUCT_RETENTION_MS = PRODUCT_RETENTION_DAYS * 24 * 60 * 60 * 1000;
-
-export function getProductPurgeInfo(product: Product): {
-  expiresAt: string;
-  remainingDays: number;
-  remainingHours: number;
-  isExpired: boolean;
-} {
-  const deletedMs = product.deleted_at
-    ? new Date(product.deleted_at).getTime()
-    : new Date(product.updated_at || Date.now()).getTime();
-  const safeDeletedMs = Number.isNaN(deletedMs) ? Date.now() : deletedMs;
-  const expiresMs = product.scheduled_purge_at
-    ? new Date(product.scheduled_purge_at).getTime()
-    : safeDeletedMs + PRODUCT_RETENTION_MS;
-  const safeExpiresMs = Number.isNaN(expiresMs) ? safeDeletedMs + PRODUCT_RETENTION_MS : expiresMs;
-  const remainingMs = Math.max(0, safeExpiresMs - Date.now());
-  return {
-    expiresAt: new Date(safeExpiresMs).toISOString(),
-    remainingDays: Math.ceil(remainingMs / (24 * 60 * 60 * 1000)),
-    remainingHours: Math.ceil(remainingMs / (60 * 60 * 1000)),
-    isExpired: Date.now() >= safeExpiresMs,
-  };
-}
-
 export const useDataStore = create<DataStoreState>()(
   persist(
     (set, get) => ({
-      events: [],
-      booths: [],
-      categories: [],
-      products: [],
-      variants: [],
-      allocations: [],
-      members: [],
-      invitations: [],
+      events: defaultEvents,
+      booths: defaultBooths,
+      categories: defaultCategories,
+      products: defaultProducts,
+      variants: defaultVariants,
+      allocations: defaultAllocations,
+      members: defaultMembers,
+      invitations: defaultInvitations,
 
       // Events
       createEvent: (eventData) => {
@@ -985,10 +965,7 @@ export const useDataStore = create<DataStoreState>()(
         });
       },
       deleteProduct: (id) => {
-        // Queue product for permanent deletion after 15 days
-        const now = Date.now();
-        const nowIso = new Date(now).toISOString();
-        const purgeAtIso = new Date(now + PRODUCT_RETENTION_MS).toISOString();
+        // SOFT-DELETE: Mark product as hidden/deleted without deleting data or allocations
         set({
           products: get().products.map((p) =>
             p.id === id
@@ -996,16 +973,15 @@ export const useDataStore = create<DataStoreState>()(
                   ...p,
                   is_deleted: true,
                   is_active: false,
-                  deleted_at: nowIso,
-                  scheduled_purge_at: purgeAtIso,
-                  updated_at: nowIso,
+                  deleted_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
                 }
               : p
           ),
         });
       },
       restoreProduct: (id) => {
-        // Restore queued product back to active catalog
+        // RESTORE: Bring soft-deleted product back to active
         set({
           products: get().products.map((p) =>
             p.id === id
@@ -1014,44 +990,11 @@ export const useDataStore = create<DataStoreState>()(
                   is_deleted: false,
                   is_active: true,
                   deleted_at: null,
-                  scheduled_purge_at: null,
                   updated_at: new Date().toISOString(),
                 }
               : p
           ),
         });
-      },
-      permanentDeleteProduct: (id) => {
-        const removedVarIds = new Set(
-          get()
-            .variants.filter((v) => v.product_id === id)
-            .map((v) => v.id)
-        );
-        set({
-          products: get().products.filter((p) => p.id !== id),
-          variants: get().variants.filter((v) => v.product_id !== id),
-          allocations: get().allocations.filter((a) => !removedVarIds.has(a.variant_id)),
-        });
-      },
-      purgeExpiredDeletedProducts: () => {
-        const expiredIds = new Set(
-          get()
-            .products.filter((p) => p.is_deleted && getProductPurgeInfo(p).isExpired)
-            .map((p) => p.id)
-        );
-        if (expiredIds.size === 0) return 0;
-
-        const removedVarIds = new Set(
-          get()
-            .variants.filter((v) => expiredIds.has(v.product_id))
-            .map((v) => v.id)
-        );
-        set({
-          products: get().products.filter((p) => !expiredIds.has(p.id)),
-          variants: get().variants.filter((v) => !expiredIds.has(v.product_id)),
-          allocations: get().allocations.filter((a) => !removedVarIds.has(a.variant_id)),
-        });
-        return expiredIds.size;
       },
       toggleProductActive: (id) => {
         set({
@@ -1413,6 +1356,7 @@ export const useDataStore = create<DataStoreState>()(
         barcode,
         reservedQuantity,
         onlinePreorderQuantity,
+        tags,
       }) => {
         const prodId = `prod-collab-${Date.now()}`;
         const varId = `var-collab-${Date.now()}`;
@@ -1425,6 +1369,7 @@ export const useDataStore = create<DataStoreState>()(
           name: name.trim(),
           description: `Sản phẩm do đối tác ${partnerName} mang đến`,
           image_url: imageUrl?.trim() || null,
+          tags: tags && tags.length > 0 ? tags : ['Collab', partnerName],
           is_active: true,
           collab_partner: partnerName,
           created_at: new Date().toISOString(),
@@ -1563,19 +1508,20 @@ export const useDataStore = create<DataStoreState>()(
       },
     }),
     {
-      name: 'eventmate_core_data_v6',
+      name: 'eventmate_core_data_v5',
       storage: createJSONStorage(() => safeLocalStorage),
       onRehydrateStorage: () => (state) => {
         if (typeof window !== 'undefined') {
           try {
             localStorage.removeItem('eventmate_core_data_v3');
             localStorage.removeItem('eventmate_core_data_v4');
-            localStorage.removeItem('eventmate_core_data_v5');
-            if (!localStorage.getItem('hikaru_uat_core_v6_cleaned')) {
-              localStorage.removeItem('eventmate_pos_selected_event');
-              localStorage.removeItem('eventmate_pos_selected_booth');
-              localStorage.removeItem('eventmate_dashboard_selected_event');
-              localStorage.setItem('hikaru_uat_core_v6_cleaned', '1');
+            const savedEvt = localStorage.getItem('eventmate_pos_selected_event');
+            if (savedEvt === 'evt-hanoi-2026' || savedEvt === 'evt-saigon-2026') {
+              localStorage.setItem('eventmate_pos_selected_event', 'evt-hobby-horizon-2026');
+            }
+            const savedDashEvt = localStorage.getItem('eventmate_dashboard_selected_event');
+            if (savedDashEvt === 'evt-hanoi-2026' || savedDashEvt === 'evt-saigon-2026') {
+              localStorage.setItem('eventmate_dashboard_selected_event', 'all');
             }
           } catch {
             // ignore storage errors
@@ -1583,28 +1529,104 @@ export const useDataStore = create<DataStoreState>()(
         }
         if (!state) return;
 
-        // Deduplicate user-created events without injecting demo data
-        if (Array.isArray(state.events) && state.events.length > 0) {
+        // Purge any legacy Hạc Cầm Concert data if ever present
+        const legacyEventIds = new Set(['evt-hanoi-2026', 'evt-saigon-2026']);
+        const legacyProductIds = new Set([
+          'prod-tshirt-tour',
+          'prod-tour-cap',
+          'prod-lightstick',
+          'prod-vinyl-album',
+        ]);
+
+        if (state.events?.some((e) => legacyEventIds.has(e.id))) {
+          state.events = defaultEvents;
+        }
+        if (state.products?.some((p) => legacyProductIds.has(p.id))) {
+          state.products = defaultProducts;
+          state.variants = defaultVariants;
+          state.categories = defaultCategories;
+          state.booths = defaultBooths;
+          state.allocations = defaultAllocations;
+        }
+
+        // Self-heal and deduplicate events (including cleaning up any duplicate auto-created collab events)
+        if (!state.events || state.events.length === 0) {
+          state.events = defaultEvents;
+        } else {
+          if (!state.events.some((e) => e.id === 'evt-test-pos')) {
+            const testEvt = defaultEvents.find((e) => e.id === 'evt-test-pos');
+            if (testEvt) state.events = [testEvt, ...state.events];
+          }
           const seenEventIds = new Set<string>();
-          state.events = state.events.filter((e) => {
-            if (!e || !e.id || seenEventIds.has(e.id)) return false;
-            seenEventIds.add(e.id);
-            return true;
-          });
+          const seenCollabEventNames = new Set<string>();
+          state.events = state.events
+            .filter((e) => {
+              if (!e || !e.id || seenEventIds.has(e.id)) return false;
+              seenEventIds.add(e.id);
+              if (e.event_type === 'collab_event') {
+                const key = `${e.workspace_id}:${(e.name || '').trim().toLowerCase()}`;
+                const hasBoothAlloc = state.allocations?.some((a) => a.event_id === e.id);
+                if (!hasBoothAlloc && seenCollabEventNames.has(key)) {
+                  return false;
+                }
+                seenCollabEventNames.add(key);
+              }
+              return true;
+            })
+            .map((e) =>
+              e.id === 'evt-test-pos' || e.id.includes('test') ? { ...e, is_test: true } : e
+            );
         }
 
-        // Deduplicate user-created booths without injecting demo data
-        if (Array.isArray(state.booths) && state.booths.length > 0) {
+        // Self-heal and deduplicate booths
+        if (!state.booths || state.booths.length === 0) {
+          state.booths = defaultBooths;
+        } else {
+          if (!state.booths.some((b) => b.id === 'booth-test-1')) {
+            const testBooth = defaultBooths.find((b) => b.id === 'booth-test-1');
+            if (testBooth) state.booths = [testBooth, ...state.booths];
+          }
+          if (!state.booths.some((b) => b.id === 'booth-collab-genz')) {
+            const collabBooth = defaultBooths.find((b) => b.id === 'booth-collab-genz');
+            if (collabBooth) state.booths = [...state.booths, collabBooth];
+          }
           const seenBoothIds = new Set<string>();
-          state.booths = state.booths.filter((b) => {
-            if (!b || !b.id || seenBoothIds.has(b.id)) return false;
-            seenBoothIds.add(b.id);
-            return true;
-          });
+          const seenCollabBoothKeys = new Set<string>();
+          state.booths = state.booths
+            .filter((b) => {
+              if (!b || !b.id || seenBoothIds.has(b.id)) return false;
+              seenBoothIds.add(b.id);
+              if (b.booth_type === 'collab' && b.code?.startsWith('COL-')) {
+                const key = `${b.name}:${b.code}:${b.collab_partner || ''}`;
+                const hasAlloc = state.allocations?.some(
+                  (a) => a.booth_id === b.id && (a.allocated_quantity > 0 || a.sold_quantity > 0)
+                );
+                if (!hasAlloc && seenCollabBoothKeys.has(key)) {
+                  return false;
+                }
+                seenCollabBoothKeys.add(key);
+              }
+              return true;
+            })
+            .map((b) =>
+              b.id === 'booth-test-1' || b.event_id === 'evt-test-pos' || b.code === 'BOOTH-TEST'
+                ? { ...b, is_test: true }
+                : b
+            );
         }
 
-        // Deduplicate allocations by (booth_id, variant_id) without injecting demo data
-        if (Array.isArray(state.allocations) && state.allocations.length > 0) {
+        // Self-heal and deduplicate allocations by (booth_id, variant_id)
+        if (!state.allocations || state.allocations.length === 0) {
+          state.allocations = defaultAllocations;
+        } else {
+          if (!state.allocations.some((a) => a.event_id === 'evt-test-pos')) {
+            const testAllocs = defaultAllocations.filter((a) => a.event_id === 'evt-test-pos');
+            state.allocations = [...state.allocations, ...testAllocs];
+          }
+          if (!state.allocations.some((a) => a.id === 'alloc-collab-genz-1')) {
+            const collabAlloc = defaultAllocations.find((a) => a.id === 'alloc-collab-genz-1');
+            if (collabAlloc) state.allocations = [...state.allocations, collabAlloc];
+          }
           const allocMap = new Map<string, InventoryAllocation>();
           for (const raw of state.allocations) {
             if (!raw || !raw.booth_id || !raw.variant_id) continue;
@@ -1612,6 +1634,10 @@ export const useDataStore = create<DataStoreState>()(
               ...raw,
               allocated_quantity: Math.max(0, Number(raw.allocated_quantity) || 0),
               sold_quantity: Math.max(0, Number(raw.sold_quantity) || 0),
+              is_test:
+                raw.is_test === true ||
+                raw.event_id === 'evt-test-pos' ||
+                Boolean(raw.id && raw.id.includes('test')),
             };
             const key = `${normalized.booth_id}::${normalized.variant_id}`;
             const prev = allocMap.get(key);
@@ -1626,28 +1652,35 @@ export const useDataStore = create<DataStoreState>()(
           state.allocations = Array.from(allocMap.values());
         }
 
-        // Automatically purge products whose 15-day deletion queue period has expired
-        if (Array.isArray(state.products) && state.products.length > 0) {
-          const expiredIds = new Set(
-            state.products
-              .filter((p) => p && p.is_deleted && getProductPurgeInfo(p).isExpired)
-              .map((p) => p.id)
-          );
-          if (expiredIds.size > 0) {
-            state.products = state.products.filter((p) => !expiredIds.has(p.id));
-            if (Array.isArray(state.variants)) {
-              const removedVarIds = new Set(
-                state.variants.filter((v) => expiredIds.has(v.product_id)).map((v) => v.id)
-              );
-              state.variants = state.variants.filter((v) => !expiredIds.has(v.product_id));
-              if (Array.isArray(state.allocations)) {
-                state.allocations = state.allocations.filter(
-                  (a) => !removedVarIds.has(a.variant_id)
-                );
+        // Self-heal products, variants, categories
+        if (!state.products || state.products.length === 0) {
+          state.products = defaultProducts;
+        } else {
+          if (!state.products.some((p) => p.id === 'prod-collab-genz-bag')) {
+            const collabProd = defaultProducts.find((p) => p.id === 'prod-collab-genz-bag');
+            if (collabProd) state.products = [...state.products, collabProd];
+          }
+          // Backfill default tags for existing default products if missing
+          const defaultProdTagMap = new Map(defaultProducts.map((dp) => [dp.id, dp.tags || []]));
+          state.products = state.products.map((p) => {
+            if (!p.tags || p.tags.length === 0) {
+              const fallbackTags = defaultProdTagMap.get(p.id);
+              if (fallbackTags && fallbackTags.length > 0) {
+                return { ...p, tags: fallbackTags };
               }
             }
-          }
+            return p;
+          });
         }
+
+        if (!state.variants || state.variants.length === 0) {
+          state.variants = defaultVariants;
+        } else if (!state.variants.some((v) => v.id === 'var-collab-genz-bag-std')) {
+          const collabVar = defaultVariants.find((v) => v.id === 'var-collab-genz-bag-std');
+          if (collabVar) state.variants = [...state.variants, collabVar];
+        }
+        if (!state.categories || state.categories.length === 0) state.categories = defaultCategories;
+        if (!state.members || state.members.length === 0) state.members = defaultMembers;
       },
     }
   )

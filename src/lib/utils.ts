@@ -5,20 +5,72 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: number, currency: string = 'VND', locale: string = 'vi-VN') {
-  return new Intl.NumberFormat(locale, {
+export function formatCurrency(amount: number, _currency: string = 'VND', _locale: string = 'vi-VN') {
+  const safeAmount = Number.isFinite(amount) ? amount : 0;
+  return new Intl.NumberFormat('vi-VN', {
     style: 'currency',
-    currency: currency,
-    maximumFractionDigits: currency === 'VND' ? 0 : 2,
-  }).format(amount);
+    currency: 'VND',
+    maximumFractionDigits: 0,
+  }).format(safeAmount);
 }
 
-export function formatDate(dateStr: string | Date, locale: string = 'vi') {
-  const date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
-  return new Intl.DateTimeFormat(locale === 'vi' ? 'vi-VN' : 'en-US', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date);
+function getVietnameseDateParts(dateInput: string | Date): {
+  day: string;
+  month: string;
+  year: string;
+  hour: string;
+  minute: string;
+  second: string;
+} | null {
+  const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  const formatter = new Intl.DateTimeFormat('vi-VN', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+
+  const parts = formatter.formatToParts(date);
+  const pick = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value || '00';
+
+  const rawHour = pick('hour');
+  const hour = rawHour === '24' ? '00' : rawHour;
+
+  return {
+    day: pick('day'),
+    month: pick('month'),
+    year: pick('year'),
+    hour,
+    minute: pick('minute'),
+    second: pick('second'),
+  };
+}
+
+export function formatDate(dateStr: string | Date, _locale: string = 'vi') {
+  const parts = getVietnameseDateParts(dateStr);
+  if (!parts) return typeof dateStr === 'string' ? dateStr : '';
+  return `${parts.hour}:${parts.minute} - ${parts.day}/${parts.month}/${parts.year}`;
+}
+
+export function formatDateOnly(dateStr: string | Date) {
+  const parts = getVietnameseDateParts(dateStr);
+  if (!parts) return typeof dateStr === 'string' ? dateStr : '';
+  return `${parts.day}/${parts.month}/${parts.year}`;
+}
+
+export function formatTimeOnly(dateStr: string | Date) {
+  const parts = getVietnameseDateParts(dateStr);
+  if (!parts) return typeof dateStr === 'string' ? dateStr : '';
+  return `${parts.hour}:${parts.minute}:${parts.second}`;
 }
 
 export function compressImage(file: File, maxDimension = 1000, quality = 0.75): Promise<string> {
@@ -55,3 +107,4 @@ export function compressImage(file: File, maxDimension = 1000, quality = 0.75): 
     reader.readAsDataURL(file);
   });
 }
+

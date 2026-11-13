@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { useDataStore, getProductPurgeInfo, PRODUCT_RETENTION_DAYS } from '@/stores/data-store';
+import { useDataStore } from '@/stores/data-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useAuthStore, canManageProduct, isCollabPartner } from '@/stores/auth-store';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,13 +23,15 @@ import {
   Tag,
   Boxes,
   Users2,
-  Clock,
+  CheckCircle,
+  Archive,
   SlidersHorizontal,
   Bookmark,
   Globe,
   Info,
   Edit,
   RotateCcw,
+  Eye,
   EyeOff,
   Camera,
   Lock,
@@ -37,9 +39,13 @@ import {
   ChevronDown,
   Search,
   X,
+  LayoutGrid,
+  List,
+  Layers,
   Store,
   ShoppingBag,
   ArrowUpDown,
+  Hash,
 } from 'lucide-react';
 
 interface VariantInput {
@@ -77,8 +83,7 @@ export default function ProductsPage() {
     updateProduct,
     deleteProduct,
     restoreProduct,
-    permanentDeleteProduct,
-    purgeExpiredDeletedProducts,
+    toggleProductActive,
     updateVariantPreorders,
     addCategory,
   } = useDataStore();
@@ -89,33 +94,12 @@ export default function ProductsPage() {
 
   const [statusFilter, setStatusFilter] = React.useState<'active' | 'all' | 'sold_out' | 'archived'>('active');
   const [selectedCategory, setSelectedCategory] = React.useState<string>('all');
-  const [searchQuery, setSearchQuery] = React.useState('');
-
-  // Extended Sorting & Filtering States
+  const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
   const [sortBy, setSortBy] = React.useState<
-    'newest' | 'oldest' | 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc' | 'stock_desc' | 'stock_asc' | 'reserved_desc'
-  >('newest');
-  const [sourceFilter, setSourceFilter] = React.useState<'all' | 'store' | 'collab'>('all');
-  const [priceRangeFilter, setPriceRangeFilter] = React.useState<
-    'all' | 'under_100k' | '100k_300k' | '300k_500k' | 'above_500k'
-  >('all');
-
-  const isProductFilterActive =
-    sortBy !== 'newest' ||
-    sourceFilter !== 'all' ||
-    priceRangeFilter !== 'all' ||
-    selectedCategory !== 'all' ||
-    Boolean(searchQuery.trim()) ||
-    statusFilter !== 'active';
-
-  const resetProductFilters = React.useCallback(() => {
-    setSortBy('newest');
-    setSourceFilter('all');
-    setPriceRangeFilter('all');
-    setSelectedCategory('all');
-    setSearchQuery('');
-    setStatusFilter('active');
-  }, []);
+    'default' | 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc' | 'stock_desc' | 'sold_desc' | 'tag_asc'
+  >('default');
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [viewMode, setViewMode] = React.useState<'list' | 'grid'>('list');
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [editingProduct, setEditingProduct] = React.useState<Product | null>(null);
 
@@ -247,6 +231,8 @@ export default function ProductsPage() {
   const [description, setDescription] = React.useState('');
   const [imageUrl, setImageUrl] = React.useState('');
   const [collabPartner, setCollabPartner] = React.useState('');
+  const [productTags, setProductTags] = React.useState<string[]>([]);
+  const [tagInput, setTagInput] = React.useState('');
   const [formVariants, setFormVariants] = React.useState<VariantInput[]>([
     {
       name: 'Tiêu chuẩn (Standard)',
@@ -262,6 +248,81 @@ export default function ProductsPage() {
   const workspaceProducts = products.filter(
     (p) => !activeWorkspace || p.workspace_id === activeWorkspace.id
   );
+
+  // Aggregate all tags across workspace products + default quick suggestions
+  const allExistingTags = React.useMemo(() => {
+    const tagMap = new Map<string, { name: string; count: number }>();
+    const suggestedTags = [
+      'Limbus Company',
+      'Project Moon',
+      'Keychain',
+      'Standee',
+      'Figure',
+      'Acrylic',
+      'Hologram',
+      'Best Seller',
+      'Limited',
+      'Collab',
+    ];
+    suggestedTags.forEach((tag) => {
+      tagMap.set(tag.toLowerCase(), { name: tag, count: 0 });
+    });
+
+    workspaceProducts.forEach((p) => {
+      if (p.is_deleted) return;
+      (p.tags || []).forEach((rawTag) => {
+        const clean = rawTag.trim();
+        if (!clean) return;
+        const lower = clean.toLowerCase();
+        const existing = tagMap.get(lower);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          tagMap.set(lower, { name: clean, count: 1 });
+        }
+      });
+    });
+
+    return Array.from(tagMap.values()).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'vi'));
+  }, [workspaceProducts]);
+
+  function toggleTagFilter(tag: string) {
+    setSelectedTags((prev) => {
+      const exists = prev.some((t) => t.toLowerCase() === tag.toLowerCase());
+      if (exists) {
+        return prev.filter((t) => t.toLowerCase() !== tag.toLowerCase());
+      }
+      return [...prev, tag];
+    });
+  }
+
+  function addTagsFromInput(rawInput: string) {
+    const parts = rawInput
+      .split(',')
+      .map((s) => s.trim().replace(/^#+/, '').trim())
+      .filter(Boolean);
+    if (parts.length === 0) return;
+    setProductTags((prev) => {
+      const next = [...prev];
+      parts.forEach((part) => {
+        if (!next.some((t) => t.toLowerCase() === part.toLowerCase())) {
+          next.push(part);
+        }
+      });
+      return next;
+    });
+    setTagInput('');
+  }
+
+  function toggleFormTag(tag: string) {
+    setProductTags((prev) => {
+      const exists = prev.some((t) => t.toLowerCase() === tag.toLowerCase());
+      if (exists) {
+        return prev.filter((t) => t.toLowerCase() !== tag.toLowerCase());
+      }
+      return [...prev, tag];
+    });
+  }
 
   // Check if a product had stock (> 0) and is completely sold out across all variants (offline available <= 0)
   function isProductSoldOut(prodId: string): boolean {
@@ -313,11 +374,13 @@ export default function ProductsPage() {
   }, [workspaceProducts, variants, allocations]);
 
   const filteredProducts = React.useMemo(() => {
-    const list = workspaceProducts.filter((p) => {
-      const isSoldOut = isProductSoldOut(p.id);
+    const q = searchQuery.trim().toLowerCase();
+    const filtered = workspaceProducts.filter((p) => {
+      const pVars = variants.filter((v) => v.product_id === p.id);
+      const pSummary = calculateProductStock(pVars, allocations);
+      const isSoldOut = pVars.length > 0 && pSummary.total > 0 && pSummary.offlineAvailable <= 0;
       const isArchived = Boolean(p.is_deleted || !p.is_active);
 
-      // Status Filter
       if (statusFilter === 'active') {
         if (isArchived || isSoldOut) return false;
       } else if (statusFilter === 'sold_out') {
@@ -326,97 +389,59 @@ export default function ProductsPage() {
         if (!isArchived) return false;
       }
 
-      // Source Filter
-      if (sourceFilter === 'store' && p.collab_partner) return false;
-      if (sourceFilter === 'collab' && !p.collab_partner) return false;
+      const matchesCat = selectedCategory === 'all' || p.category_id === selectedCategory;
+      const matchesSearch =
+        !q ||
+        p.name.toLowerCase().includes(q) ||
+        (p.tags || []).some((tag) => tag.toLowerCase().includes(q)) ||
+        pVars.some((v) => v.sku.toLowerCase().includes(q));
 
-      // Category Filter
-      if (selectedCategory !== 'all' && p.category_id !== selectedCategory) {
-        return false;
-      }
-
-      const prodVariants = variants.filter((v) => v.product_id === p.id);
-
-      // Price Range Filter
-      const prices = prodVariants.map((v) => v.price).filter((pr) => typeof pr === 'number' && !isNaN(pr));
-      const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
-      if (priceRangeFilter === 'under_100k' && minPrice >= 100000) return false;
-      if (priceRangeFilter === '100k_300k' && (minPrice < 100000 || minPrice > 300000)) return false;
-      if (priceRangeFilter === '300k_500k' && (minPrice < 300000 || minPrice > 500000)) return false;
-      if (priceRangeFilter === 'above_500k' && minPrice <= 500000) return false;
-
-      // Search Query
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const matchesName = p.name.toLowerCase().includes(q);
-        const matchesSku = prodVariants.some(
-          (v) => v.sku.toLowerCase().includes(q) || (v.barcode && v.barcode.toLowerCase().includes(q))
+      const matchesTags =
+        selectedTags.length === 0 ||
+        selectedTags.every((selTag) =>
+          (p.tags || []).some((pt) => pt.toLowerCase() === selTag.toLowerCase())
         );
-        if (!matchesName && !matchesSku) return false;
-      }
 
-      return true;
+      return matchesCat && matchesSearch && matchesTags;
     });
 
-    // Sorting
-    return list.sort((a, b) => {
-      const aVariants = variants.filter((v) => v.product_id === a.id);
-      const bVariants = variants.filter((v) => v.product_id === b.id);
+    if (sortBy === 'default') return filtered;
 
-      if (sortBy === 'newest') {
-        const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
-        const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
-        return bTime - aTime;
+    const getMinPrice = (prodId: string) => {
+      const pVars = variants.filter((v) => v.product_id === prodId);
+      if (pVars.length === 0) return 0;
+      return Math.min(...pVars.map((v) => v.price || 0));
+    };
+
+    const getStockSummary = (prodId: string) => {
+      const pVars = variants.filter((v) => v.product_id === prodId);
+      return calculateProductStock(pVars, allocations);
+    };
+
+    return [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'name_asc':
+          return a.name.localeCompare(b.name, 'vi');
+        case 'name_desc':
+          return b.name.localeCompare(a.name, 'vi');
+        case 'price_asc':
+          return getMinPrice(a.id) - getMinPrice(b.id);
+        case 'price_desc':
+          return getMinPrice(b.id) - getMinPrice(a.id);
+        case 'stock_desc':
+          return getStockSummary(b.id).offlineAvailable - getStockSummary(a.id).offlineAvailable;
+        case 'sold_desc':
+          return getStockSummary(b.id).offlineSold - getStockSummary(a.id).offlineSold;
+        case 'tag_asc': {
+          const tagA = (a.tags?.[0] || 'zzz').toLowerCase();
+          const tagB = (b.tags?.[0] || 'zzz').toLowerCase();
+          return tagA.localeCompare(tagB, 'vi') || a.name.localeCompare(b.name, 'vi');
+        }
+        default:
+          return 0;
       }
-      if (sortBy === 'oldest') {
-        const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
-        const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
-        return aTime - bTime;
-      }
-      if (sortBy === 'name_asc') {
-        return a.name.localeCompare(b.name, 'vi');
-      }
-      if (sortBy === 'name_desc') {
-        return b.name.localeCompare(a.name, 'vi');
-      }
-      if (sortBy === 'price_asc') {
-        const aMin = aVariants.length > 0 ? Math.min(...aVariants.map((v) => v.price)) : 0;
-        const bMin = bVariants.length > 0 ? Math.min(...bVariants.map((v) => v.price)) : 0;
-        return aMin - bMin;
-      }
-      if (sortBy === 'price_desc') {
-        const aMax = aVariants.length > 0 ? Math.max(...aVariants.map((v) => v.price)) : 0;
-        const bMax = bVariants.length > 0 ? Math.max(...bVariants.map((v) => v.price)) : 0;
-        return bMax - aMax;
-      }
-      if (sortBy === 'stock_desc') {
-        const aStock = aVariants.reduce((sum, v) => sum + (v.total_inventory || 0), 0);
-        const bStock = bVariants.reduce((sum, v) => sum + (v.total_inventory || 0), 0);
-        return bStock - aStock;
-      }
-      if (sortBy === 'stock_asc') {
-        const aStock = aVariants.reduce((sum, v) => sum + (v.total_inventory || 0), 0);
-        const bStock = bVariants.reduce((sum, v) => sum + (v.total_inventory || 0), 0);
-        return aStock - bStock;
-      }
-      if (sortBy === 'reserved_desc') {
-        const aRes = aVariants.reduce((sum, v) => sum + (v.reserved_quantity || 0), 0);
-        const bRes = bVariants.reduce((sum, v) => sum + (v.reserved_quantity || 0), 0);
-        return bRes - aRes;
-      }
-      return 0;
     });
-  }, [
-    workspaceProducts,
-    variants,
-    statusFilter,
-    sourceFilter,
-    selectedCategory,
-    priceRangeFilter,
-    searchQuery,
-    sortBy,
-    isProductSoldOut,
-  ]);
+  }, [workspaceProducts, statusFilter, selectedCategory, searchQuery, selectedTags, sortBy, variants, allocations]);
 
   function openCreateModal() {
     setEditingProduct(null);
@@ -428,6 +453,8 @@ export default function ProductsPage() {
     setDescription('');
     setImageUrl('');
     setCollabPartner(isPartner ? (partnerName || '') : '');
+    setProductTags(isPartner && partnerName ? ['Collab', partnerName] : []);
+    setTagInput('');
     setFormVariants([
       {
         name: 'Tiêu chuẩn',
@@ -458,6 +485,8 @@ export default function ProductsPage() {
     setDescription(prod.description || '');
     setImageUrl(prod.image_url || '');
     setCollabPartner(prod.collab_partner || '');
+    setProductTags(prod.tags ? [...prod.tags] : []);
+    setTagInput('');
 
     const prodVariants = variants.filter((v) => v.product_id === prod.id);
     if (prodVariants.length > 0) {
@@ -525,6 +554,20 @@ export default function ProductsPage() {
 
     const effectiveCollabPartner = isPartner ? (partnerName || 'Collab Partner') : collabPartner.trim();
 
+    // Merge any unsubmitted text in tagInput
+    const finalTags = [...productTags];
+    if (tagInput.trim()) {
+      tagInput
+        .split(',')
+        .map((s) => s.trim().replace(/^#+/, '').trim())
+        .filter(Boolean)
+        .forEach((part) => {
+          if (!finalTags.some((t) => t.toLowerCase() === part.toLowerCase())) {
+            finalTags.push(part);
+          }
+        });
+    }
+
     let resolvedCategoryId: string | null = null;
     const catName = categoryInput.trim();
     if (catName) {
@@ -554,6 +597,7 @@ export default function ProductsPage() {
           description: description.trim() || null,
           image_url: imageUrl.trim() || null,
           collab_partner: effectiveCollabPartner || null,
+          tags: finalTags,
         },
         formVariants.map((fv) => ({
           id: fv.id,
@@ -588,6 +632,7 @@ export default function ProductsPage() {
           description: description.trim() || null,
           image_url: imageUrl.trim() || null,
           collab_partner: effectiveCollabPartner || null,
+          tags: finalTags,
           is_active: true,
         },
         formVariants.map((fv) => ({
@@ -614,13 +659,9 @@ export default function ProductsPage() {
   }
 
   function handleDeleteProduct(prod: Product) {
-    if (!canManageProduct(user, prod.collab_partner)) {
-      alert('Bạn chỉ có quyền xóa sản phẩm thuộc thương hiệu Collab của mình. Không thể can thiệp hàng kho Admin.');
-      return;
-    }
     if (
       confirm(
-        `Đưa sản phẩm "${prod.name}" vào hàng chờ xóa ${PRODUCT_RETENTION_DAYS} ngày?\n\nSản phẩm sẽ ngừng hiển thị trên POS & trang khách và tự động xóa vĩnh viễn sau ${PRODUCT_RETENTION_DAYS} ngày (bạn vẫn có thể khôi phục hoặc xóa ngay trong tab Chờ xóa).`
+        `Bạn có chắc muốn ẩn/xóa sản phẩm "${prod.name}"? (Sản phẩm sẽ được ẩn đi chứ không bị xóa vĩnh viễn, bạn có thể khôi phục lại bất kỳ lúc nào).`
       )
     ) {
       deleteProduct(prod.id);
@@ -630,16 +671,12 @@ export default function ProductsPage() {
         action_type: 'delete',
         entity_type: 'product',
         entity_name: prod.name,
-        description: `Đã đưa sản phẩm "${prod.name}" vào hàng chờ xóa ${PRODUCT_RETENTION_DAYS} ngày.`,
+        description: `Đã ẩn/xóa sản phẩm "${prod.name}" khỏi danh mục đang bán (chuyển vào mục Đã ẩn/Đã xóa).`,
       });
     }
   }
 
   function handleRestoreProduct(prod: Product) {
-    if (!canManageProduct(user, prod.collab_partner)) {
-      alert('Bạn chỉ có quyền khôi phục sản phẩm thuộc thương hiệu Collab của mình.');
-      return;
-    }
     restoreProduct(prod.id);
     logActivity({
       actor_name: user?.fullName || 'Người dùng',
@@ -647,42 +684,8 @@ export default function ProductsPage() {
       action_type: 'update',
       entity_type: 'product',
       entity_name: prod.name,
-      description: `Khôi phục sản phẩm "${prod.name}" từ hàng chờ xóa 15 ngày trở lại danh mục mở bán.`,
+      description: `Khôi phục sản phẩm "${prod.name}" trở lại danh mục đang mở bán.`,
     });
-  }
-
-  function handlePermanentDeleteProduct(prod: Product) {
-    if (!canManageProduct(user, prod.collab_partner)) {
-      alert('Bạn chỉ có quyền xóa sản phẩm thuộc thương hiệu Collab của mình. Không thể can thiệp hàng kho Admin.');
-      return;
-    }
-    if (
-      confirm(
-        `XÓA VĨNH VIỄN sản phẩm "${prod.name}" ngay bây giờ?\n\nToàn bộ phân loại và phân bổ kho của sản phẩm này sẽ bị xóa hoàn toàn và KHÔNG thể khôi phục!`
-      )
-    ) {
-      permanentDeleteProduct(prod.id);
-      logActivity({
-        actor_name: user?.fullName || 'Người dùng',
-        actor_role: (user?.role as AuditActorRole) || 'staff',
-        action_type: 'delete',
-        entity_type: 'product',
-        entity_name: prod.name,
-        description: `Đã xóa vĩnh viễn sản phẩm "${prod.name}" khỏi hệ thống.`,
-      });
-    }
-  }
-
-  React.useEffect(() => {
-    purgeExpiredDeletedProducts();
-  }, [purgeExpiredDeletedProducts]);
-
-  function getPurgeCountdownLabel(prod: Product): string {
-    const info = getProductPurgeInfo(prod);
-    if (info.remainingDays <= 1) {
-      return `Chờ xóa • Còn ${Math.max(1, info.remainingHours)} giờ`;
-    }
-    return `Chờ xóa • Còn ${info.remainingDays} ngày`;
   }
 
   const currency = activeWorkspace?.currency || 'VND';
@@ -802,105 +805,105 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Unified Filter, Search & View Mode Toolbar */}
-      <div className="bg-white dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-800 rounded-xl p-2.5 shadow-2xs flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
-        {/* Status Segmented Tabs */}
-        <div className="flex items-center gap-1 p-1 bg-[#F7F7F5] dark:bg-neutral-800 rounded-lg border border-[#E8E8E5] dark:border-neutral-700 text-xs overflow-x-auto no-scrollbar shrink-0 -mx-0.5 px-0.5">
-          <button
-            type="button"
-            onClick={() => setStatusFilter('active')}
-            className={cn(
-              'px-3 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer',
-              statusFilter === 'active'
-                ? 'bg-white dark:bg-neutral-900 text-[#315C4C] dark:text-emerald-400 shadow-2xs'
-                : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124]'
-            )}
-          >
-            <span className="w-2 h-2 rounded-full bg-[#2F7D55]" />
-            <span>Đang bán</span>
-            <span className="text-[10px] bg-[#EBF1EE] dark:bg-emerald-950/40 px-1.5 py-0.2 rounded font-mono text-[#315C4C] dark:text-emerald-400">
-              {activeCount}
-            </span>
-          </button>
+      {/* Unified Filter, Search, Tag & Sort Toolbar */}
+      <div className="bg-white border border-[#E8E8E5] rounded-xl p-2.5 shadow-2xs space-y-2.5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          {/* Status Segmented Tabs */}
+          <div className="flex flex-wrap items-center gap-1 p-1 bg-[#F7F7F5] rounded-lg border border-[#E8E8E5] text-xs">
+            <button
+              type="button"
+              onClick={() => setStatusFilter('active')}
+              className={cn(
+                'px-3 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5',
+                statusFilter === 'active'
+                  ? 'bg-white text-[#315C4C] shadow-2xs'
+                  : 'text-[#737373] hover:text-[#202124]'
+              )}
+            >
+              <span className="w-2 h-2 rounded-full bg-[#2F7D55]" />
+              <span>Đang bán</span>
+              <span className="text-[10px] bg-[#EBF1EE] px-1.5 py-0.2 rounded font-mono text-[#315C4C]">
+                {activeCount}
+              </span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setStatusFilter('sold_out')}
-            className={cn(
-              'px-3 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer',
-              statusFilter === 'sold_out'
-                ? 'bg-white dark:bg-neutral-900 text-[#B7791F] dark:text-amber-400 shadow-2xs'
-                : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124]'
-            )}
-          >
-            <EyeOff className="w-3.5 h-3.5 text-[#B7791F] dark:text-amber-400" />
-            <span>Hết hàng</span>
-            <span className="text-[10px] bg-[#FEF7EC] dark:bg-amber-950/40 px-1.5 py-0.2 rounded font-mono text-[#B7791F] dark:text-amber-400">
-              {soldOutCount}
-            </span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('sold_out')}
+              className={cn(
+                'px-3 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5',
+                statusFilter === 'sold_out'
+                  ? 'bg-white text-[#B7791F] shadow-2xs'
+                  : 'text-[#737373] hover:text-[#202124]'
+              )}
+            >
+              <EyeOff className="w-3.5 h-3.5 text-[#B7791F]" />
+              <span>Hết hàng</span>
+              <span className="text-[10px] bg-[#FEF7EC] px-1.5 py-0.2 rounded font-mono text-[#B7791F]">
+                {soldOutCount}
+              </span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setStatusFilter('archived')}
-            className={cn(
-              'px-3 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer',
-              statusFilter === 'archived'
-                ? 'bg-white dark:bg-neutral-900 text-[#C44536] dark:text-rose-400 shadow-2xs'
-                : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124]'
-            )}
-          >
-            <Clock className="w-3.5 h-3.5 text-[#C44536] dark:text-rose-400" />
-            <span>Chờ xóa (15 ngày)</span>
-            <span className="text-[10px] bg-[#FDF1F0] dark:bg-rose-950/40 px-1.5 py-0.2 rounded font-mono text-[#C44536] dark:text-rose-400">
-              {archivedCount}
-            </span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('archived')}
+              className={cn(
+                'px-3 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5',
+                statusFilter === 'archived'
+                  ? 'bg-white text-[#C44536] shadow-2xs'
+                  : 'text-[#737373] hover:text-[#202124]'
+              )}
+            >
+              <Archive className="w-3.5 h-3.5 text-[#C44536]" />
+              <span>Đã ẩn</span>
+              <span className="text-[10px] bg-[#FDF1F0] px-1.5 py-0.2 rounded font-mono text-[#C44536]">
+                {archivedCount}
+              </span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setStatusFilter('all')}
-            className={cn(
-              'px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer',
-              statusFilter === 'all'
-                ? 'bg-white dark:bg-neutral-900 text-[#202124] dark:text-neutral-100 shadow-2xs font-semibold'
-                : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124]'
-            )}
-          >
-            <span>Tất cả</span>
-            <span className="text-[10px] bg-[#E8E8E5] dark:bg-neutral-700 px-1.5 py-0.2 rounded font-mono text-[#737373] dark:text-neutral-300">
-              {allCount}
-            </span>
-          </button>
-        </div>
-
-        {/* Right: Search + Category Select + View Mode Switcher */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 lg:justify-end">
-          <div className="relative flex-1 sm:max-w-xs">
-            <Search className="w-3.5 h-3.5 text-[#9E9E9C] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <Input
-              placeholder="Tìm tên sản phẩm, mã loại..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-8 pl-8 pr-7 text-xs rounded-lg w-full"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9E9E9C] hover:text-[#202124]"
-                title="Xóa tìm kiếm"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setStatusFilter('all')}
+              className={cn(
+                'px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-1.5',
+                statusFilter === 'all'
+                  ? 'bg-white text-[#202124] shadow-2xs font-semibold'
+                  : 'text-[#737373] hover:text-[#202124]'
+              )}
+            >
+              <span>Tất cả</span>
+              <span className="text-[10px] bg-[#E8E8E5] px-1.5 py-0.2 rounded font-mono text-[#737373]">
+                {allCount}
+              </span>
+            </button>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1 sm:flex-none">
-              <Tag className="w-3.5 h-3.5 text-[#9E9E9C] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          {/* Right: Search + Category Select + Sort Select + View Mode Switcher */}
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+            <div className="relative flex-1 sm:w-56">
+              <Search className="w-3.5 h-3.5 text-[#9E9E9C] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Input
+                placeholder="Tìm tên, SKU, #tag..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-8 pl-8 pr-7 text-xs rounded-lg"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9E9E9C] hover:text-[#202124]"
+                  title="Xóa tìm kiếm"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            <div className="relative flex items-center">
+              <Tag className="w-3.5 h-3.5 text-[#9E9E9C] absolute left-2.5 pointer-events-none" />
               <select
-                className="h-8 w-full sm:w-auto rounded-lg border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-900 pl-8 pr-7 text-xs text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C]"
+                className="h-8 rounded-lg border border-[#E8E8E5] bg-white pl-8 pr-7 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
@@ -912,96 +915,122 @@ export default function ProductsPage() {
                 ))}
               </select>
             </div>
+
+            <div className="relative flex items-center">
+              <ArrowUpDown className="w-3.5 h-3.5 text-[#9E9E9C] absolute left-2.5 pointer-events-none" />
+              <select
+                className="h-8 rounded-lg border border-[#E8E8E5] bg-white pl-8 pr-6 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                value={sortBy}
+                onChange={(e) =>
+                  setSortBy(
+                    e.target.value as
+                      | 'default'
+                      | 'name_asc'
+                      | 'name_desc'
+                      | 'price_asc'
+                      | 'price_desc'
+                      | 'stock_desc'
+                      | 'sold_desc'
+                      | 'tag_asc'
+                  )
+                }
+                title="Sắp xếp danh sách sản phẩm"
+              >
+                <option value="default">Sắp xếp: Mặc định</option>
+                <option value="name_asc">Tên (A → Z)</option>
+                <option value="name_desc">Tên (Z → A)</option>
+                <option value="price_asc">Giá (Thấp → Cao)</option>
+                <option value="price_desc">Giá (Cao → Thấp)</option>
+                <option value="stock_desc">Tồn quầy (Nhiều → Ít)</option>
+                <option value="sold_desc">Bán chạy nhất</option>
+                <option value="tag_asc">Nhóm theo Tag (A → Z)</option>
+              </select>
+            </div>
+
+            {/* View Mode Switcher */}
+            <div className="flex items-center p-0.5 rounded-lg bg-[#F7F7F5] border border-[#E8E8E5] shrink-0">
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                className={cn(
+                  'p-1.5 rounded-md transition-all flex items-center gap-1 text-xs font-medium',
+                  viewMode === 'list'
+                    ? 'bg-white text-[#315C4C] shadow-2xs'
+                    : 'text-[#737373] hover:text-[#202124]'
+                )}
+                title="Chế độ danh sách chi tiết"
+              >
+                <List className="w-3.5 h-3.5" />
+                <span className="hidden xl:inline text-[11px]">Danh sách</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                className={cn(
+                  'p-1.5 rounded-md transition-all flex items-center gap-1 text-xs font-medium',
+                  viewMode === 'grid'
+                    ? 'bg-white text-[#315C4C] shadow-2xs'
+                    : 'text-[#737373] hover:text-[#202124]'
+                )}
+                title="Chế độ lưới thẻ sản phẩm"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span className="hidden xl:inline text-[11px]">Lưới thẻ</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Detailed Sorting & Filter Control Panel */}
-      <div className="bg-white dark:bg-neutral-850 border border-[#E8E8E5] dark:border-neutral-800 rounded-xl p-3 shadow-2xs space-y-2.5">
-        <div className="flex flex-wrap items-center justify-between gap-2.5">
-          <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
-            {/* Sorting Select */}
-            <div className="flex items-center gap-1.5 min-w-[170px]">
-              <ArrowUpDown className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
-              <span className="text-xs font-bold text-[#737373] dark:text-neutral-400 shrink-0">Sắp xếp:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="h-8 rounded-lg border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-900 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] flex-1 sm:flex-none"
-              >
-                <option value="newest">Mới nhất (Mặc định)</option>
-                <option value="oldest">Cũ nhất</option>
-                <option value="name_asc">Tên: A → Z</option>
-                <option value="name_desc">Tên: Z → A</option>
-                <option value="price_asc">Giá: Thấp → Cao</option>
-                <option value="price_desc">Giá: Cao → Thấp</option>
-                <option value="stock_desc">Tổng tồn kho: Nhiều nhất</option>
-                <option value="stock_asc">Tổng tồn kho: Ít nhất</option>
-                <option value="reserved_desc">Hàng Keep / Preorder: Nhiều nhất</option>
-              </select>
-            </div>
-
-            {/* Source Select */}
-            <div className="flex items-center gap-1.5 min-w-[140px]">
-              <Store className="w-3.5 h-3.5 text-[#737373] dark:text-neutral-400 shrink-0" />
-              <span className="text-xs font-bold text-[#737373] dark:text-neutral-400 shrink-0">Nguồn hàng:</span>
-              <select
-                value={sourceFilter}
-                onChange={(e) => setSourceFilter(e.target.value as any)}
-                className="h-8 rounded-lg border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-900 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] flex-1 sm:flex-none"
-              >
-                <option value="all">Tất cả nguồn hàng</option>
-                <option value="store">👑 Shop chính (HikaruStore)</option>
-                <option value="collab">🤝 Gian hàng Collab</option>
-              </select>
-            </div>
-
-            {/* Price Range Select */}
-            <div className="flex items-center gap-1.5 min-w-[140px]">
-              <span className="text-xs font-bold text-[#737373] dark:text-neutral-400 shrink-0">Khoảng giá:</span>
-              <select
-                value={priceRangeFilter}
-                onChange={(e) => setPriceRangeFilter(e.target.value as any)}
-                className="h-8 rounded-lg border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-900 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] flex-1 sm:flex-none"
-              >
-                <option value="all">Tất cả khoảng giá</option>
-                <option value="under_100k">Dưới 100.000 ₫</option>
-                <option value="100k_300k">100.000 ₫ – 300.000 ₫</option>
-                <option value="300k_500k">300.000 ₫ – 500.000 ₫</option>
-                <option value="above_500k">Trên 500.000 ₫</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Result counter & Reset */}
-          <div className="flex items-center gap-2.5 shrink-0 ml-auto">
-            <span className="text-xs text-[#737373] dark:text-neutral-400 font-medium">
-              Đang hiển thị <strong className="text-[#315C4C] dark:text-emerald-400 font-bold">{filteredProducts.length}</strong> / {workspaceProducts.length} sản phẩm
+        {/* Multi-Tag Quick Filter Bar */}
+        {allExistingTags.some((tg) => tg.count > 0) && (
+          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-[#F0F0ED]">
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#737373] mr-1">
+              <Hash className="w-3 h-3 text-[#315C4C]" />
+              <span>Lọc đa Tag:</span>
             </span>
-            {isProductFilterActive && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={resetProductFilters}
-                className="h-7 px-2.5 text-xs text-[#C44536] hover:bg-[#FDF1F0] border-[#F8B4AF] gap-1 font-semibold"
-                title="Đặt lại toàn bộ bộ lọc và sắp xếp về mặc định"
+            {allExistingTags
+              .filter((tg) => tg.count > 0)
+              .map((tg) => {
+                const isSelected = selectedTags.some(
+                  (s) => s.toLowerCase() === tg.name.toLowerCase()
+                );
+                return (
+                  <button
+                    key={tg.name}
+                    type="button"
+                    onClick={() => toggleTagFilter(tg.name)}
+                    className={cn(
+                      'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] border transition-all cursor-pointer',
+                      isSelected
+                        ? 'bg-[#315C4C] text-white border-[#315C4C] font-semibold shadow-2xs'
+                        : 'bg-[#F7F7F5] text-[#494949] border-[#E8E8E5] hover:border-[#315C4C]/50 hover:text-[#202124]'
+                    )}
+                  >
+                    <span>#{tg.name}</span>
+                    <span
+                      className={cn(
+                        'text-[10px] font-mono',
+                        isSelected ? 'text-white/85' : 'text-[#737373]'
+                      )}
+                    >
+                      {tg.count}
+                    </span>
+                  </button>
+                );
+              })}
+            {selectedTags.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setSelectedTags([])}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold text-[#C44536] bg-[#FDF1F0] border border-[#C44536]/25 hover:bg-[#FBE4E2] ml-1 cursor-pointer"
               >
-                <RotateCcw className="w-3 h-3" />
-                <span>Đặt lại</span>
-              </Button>
+                <X className="w-3 h-3" />
+                <span>Xóa lọc ({selectedTags.length})</span>
+              </button>
             )}
           </div>
-        </div>
+        )}
       </div>
-
-      {statusFilter === 'archived' && filteredProducts.length > 0 && (
-        <div className="p-3 rounded-xl bg-[#FDF1F0] dark:bg-rose-950/30 border border-[#C44536]/30 dark:border-rose-800/50 flex items-center gap-2.5 text-xs text-[#A33023] dark:text-rose-300">
-          <Clock className="w-4 h-4 shrink-0" />
-          <span>
-            Sản phẩm trong hàng chờ sẽ <strong>tự động xóa hoàn toàn sau {PRODUCT_RETENTION_DAYS} ngày</strong> kể từ lúc xóa. Bạn có thể bấm <strong>Khôi phục</strong> hoặc <strong>Xóa hẳn</strong> ngay lập tức.
-          </span>
-        </div>
-      )}
 
       {/* Products Content */}
       {filteredProducts.length === 0 ? (
@@ -1018,7 +1047,7 @@ export default function ProductsPage() {
             )}
           </CardContent>
         </Card>
-      ) : (
+      ) : viewMode === 'grid' ? (
         /* =========================================================
            GRID VIEW: Visual Merchandise Cards (2-3 Columns)
            ========================================================= */
@@ -1066,7 +1095,7 @@ export default function ProductsPage() {
                         <img
                           src={prod.image_url}
                           alt={prod.name}
-                          className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
                         <Package className="w-7 h-7 text-[#9E9E9C]" />
@@ -1092,10 +1121,13 @@ export default function ProductsPage() {
                             <span>{prod.collab_partner}</span>
                           </Badge>
                         )}
-                        {prod.is_deleted || !prod.is_active ? (
-                          <Badge variant="error" className="text-[10px] gap-1">
-                            <Clock className="w-2.5 h-2.5" />
-                            <span>{getPurgeCountdownLabel(prod)}</span>
+                        {prod.is_deleted ? (
+                          <Badge variant="error" className="text-[10px]">
+                            Đã xóa
+                          </Badge>
+                        ) : !prod.is_active ? (
+                          <Badge variant="warning" className="text-[10px]">
+                            Đang ẩn
                           </Badge>
                         ) : isSoldOut ? (
                           <Badge variant="warning" className="text-[10px]">
@@ -1118,6 +1150,32 @@ export default function ProductsPage() {
                           </span>
                         )}
                       </div>
+
+                      {prod.tags && prod.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {prod.tags.map((tg) => {
+                            const isTagActive = selectedTags.some(
+                              (s) => s.toLowerCase() === tg.toLowerCase()
+                            );
+                            return (
+                              <button
+                                key={tg}
+                                type="button"
+                                onClick={() => toggleTagFilter(tg)}
+                                className={cn(
+                                  'text-[10px] px-1.5 py-0.2 rounded border transition-colors cursor-pointer',
+                                  isTagActive
+                                    ? 'bg-[#315C4C] text-white border-[#315C4C] font-semibold'
+                                    : 'bg-[#EBF1EE]/70 text-[#315C4C] border-[#315C4C]/20 hover:bg-[#EBF1EE]'
+                                )}
+                                title={`Bấm để lọc theo tag #${tg}`}
+                              >
+                                #{tg}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1223,10 +1281,9 @@ export default function ProductsPage() {
                           size="sm"
                           className="h-7 px-2.5 text-[11px] gap-1 bg-white font-semibold"
                           onClick={() => openEditModal(prod)}
-                          title="Sửa thông tin sản phẩm"
                         >
                           <Edit className="w-3 h-3 text-[#315C4C]" />
-                          <span>Sửa</span>
+                          <span>Sửa & Ảnh</span>
                         </Button>
                         <Button
                           variant="outline"
@@ -1240,36 +1297,39 @@ export default function ProductsPage() {
                       </div>
 
                       <div className="flex items-center gap-1">
-                        {prod.is_deleted || !prod.is_active ? (
+                        {prod.is_deleted ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2 text-[11px] gap-1 text-[#2F7D55]"
+                            onClick={() => handleRestoreProduct(prod)}
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                            <span>Khôi phục</span>
+                          </Button>
+                        ) : (
                           <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 px-2 text-[11px] gap-1 text-[#2F7D55]"
-                              onClick={() => handleRestoreProduct(prod)}
-                              title="Khôi phục sản phẩm trở lại mở bán"
-                            >
-                              <RotateCcw className="w-3 h-3" />
-                              <span>Khôi phục</span>
-                            </Button>
                             <button
                               type="button"
-                              onClick={() => handlePermanentDeleteProduct(prod)}
-                              className="p-1.5 rounded-md text-[#C44536] hover:bg-[#FDF1F0] transition-colors cursor-pointer"
-                              title="Xóa vĩnh viễn ngay lập tức"
+                              onClick={() => toggleProductActive(prod.id)}
+                              className="p-1.5 rounded-md text-[#737373] hover:text-[#202124] hover:bg-white transition-colors"
+                              title={prod.is_active ? 'Tạm ẩn sản phẩm' : 'Hiện lại sản phẩm'}
+                            >
+                              {prod.is_active ? (
+                                <EyeOff className="w-3.5 h-3.5" />
+                              ) : (
+                                <Eye className="w-3.5 h-3.5 text-[#2F7D55]" />
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteProduct(prod)}
+                              className="p-1.5 rounded-md text-[#737373] hover:text-[#C44536] hover:bg-[#FDF1F0] transition-colors"
+                              title="Xóa / Ẩn sản phẩm"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteProduct(prod)}
-                            className="p-1.5 rounded-md text-[#737373] hover:text-[#C44536] hover:bg-[#FDF1F0] transition-colors cursor-pointer"
-                            title="Đưa vào hàng chờ xóa 15 ngày"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
                         )}
                       </div>
                     </>
@@ -1280,6 +1340,433 @@ export default function ProductsPage() {
                     </div>
                   ) : (
                     <span className="text-[11px] text-[#9E9E9C] italic">Chỉ xem</span>
+                  )}
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        /* =========================================================
+           LIST VIEW (Default): Sleek, Zero-Redundancy Catalog Cards
+           ========================================================= */
+        <div className="space-y-3.5">
+          {filteredProducts.map((prod) => {
+            const productVariants = variants.filter((v) => v.product_id === prod.id);
+            const category =
+              categories.find((c) => c.id === prod.category_id) ||
+              allExistingCategories.find((c) => c.id === prod.category_id);
+            const prodSummary = calculateProductStock(productVariants, allocations);
+            const canManageThis = editable && canManageProduct(user, prod.collab_partner);
+            const priceLabel = getProductPriceLabel(productVariants, currency);
+            const isSoldOut = isProductSoldOut(prod.id);
+            const singleVariant = productVariants.length === 1 ? productVariants[0] : null;
+
+            const availPct =
+              prodSummary.total > 0
+                ? Math.min(100, Math.round((prodSummary.offlineAvailable / prodSummary.total) * 100))
+                : 0;
+            const heldPct =
+              prodSummary.total > 0
+                ? Math.min(
+                    100 - availPct,
+                    Math.round(((prodSummary.online + prodSummary.preord) / prodSummary.total) * 100)
+                  )
+                : 0;
+
+            return (
+              <Card
+                key={prod.id}
+                className="border-[#E8E8E5] bg-white rounded-xl shadow-2xs hover:border-[#315C4C]/35 transition-all overflow-hidden"
+              >
+                <div className="p-4 sm:p-5">
+                  <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+                    {/* Left: Thumbnail + Product Identity */}
+                    <div className="flex items-start gap-4 min-w-0 flex-1">
+                      <div
+                        onClick={() => canManageThis && openEditModal(prod)}
+                        className={cn(
+                          'w-[72px] h-[72px] rounded-xl bg-[#F7F7F5] border border-[#E8E8E5] overflow-hidden shrink-0 flex items-center justify-center relative group',
+                          canManageThis ? 'cursor-pointer hover:border-[#315C4C]' : ''
+                        )}
+                        title={canManageThis ? 'Bấm để đổi ảnh hoặc sửa thông tin sản phẩm' : undefined}
+                      >
+                        {prod.image_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={prod.image_url}
+                            alt={prod.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <Package className="w-7 h-7 text-[#9E9E9C]" />
+                        )}
+                        {canManageThis && (
+                          <div className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-semibold">
+                            <Camera className="w-4 h-4 mb-0.5" />
+                            <span>Đổi ảnh</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1 space-y-1.5">
+                        {/* Title + Category + Badges */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-[15px] font-bold text-[#202124] tracking-tight">
+                            {prod.name}
+                          </h3>
+
+                          {category && (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-[#F7F7F5] border border-[#E8E8E5] text-[#737373]">
+                              <Tag className="w-2.5 h-2.5" />
+                              {category.name}
+                            </span>
+                          )}
+
+                          {singleVariant && (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-md bg-[#F7F7F5] border border-[#E8E8E5] text-[#737373]">
+                              Mã: {singleVariant.sku}
+                            </span>
+                          )}
+
+                          {prod.collab_partner && (
+                            <Badge variant="warning" className="text-[10px] gap-1">
+                              <Users2 className="w-2.5 h-2.5" />
+                              <span>Collab: {prod.collab_partner}</span>
+                            </Badge>
+                          )}
+
+                          {prod.is_deleted && (
+                            <Badge variant="error" className="text-[10px] font-semibold">
+                              Đã xóa (Đang ẩn)
+                            </Badge>
+                          )}
+                          {!prod.is_active && !prod.is_deleted && (
+                            <Badge variant="warning" className="text-[10px]">
+                              Tạm ngưng bán
+                            </Badge>
+                          )}
+                          {isSoldOut && !prod.is_deleted && prod.is_active && (
+                            <Badge variant="warning" className="text-[10px] font-semibold">
+                              Hết hàng bán quầy
+                            </Badge>
+                          )}
+                        </div>
+
+                        {/* Price + Description */}
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <span className="text-sm font-extrabold text-[#315C4C] font-mono">
+                            {priceLabel}
+                          </span>
+                          {productVariants.length > 1 && (
+                            <span className="inline-flex items-center gap-1 text-[11px] text-[#737373]">
+                              <Layers className="w-3 h-3" />
+                              {productVariants.length} phân loại
+                            </span>
+                          )}
+                          {prod.description && (
+                            <span className="text-xs text-[#737373] line-clamp-1 max-w-xl">
+                              • {prod.description}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Product Multi-Tags */}
+                        {prod.tags && prod.tags.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-1 pt-0.5">
+                            {prod.tags.map((tg) => {
+                              const isTagActive = selectedTags.some(
+                                (s) => s.toLowerCase() === tg.toLowerCase()
+                              );
+                              return (
+                                <button
+                                  key={tg}
+                                  type="button"
+                                  onClick={() => toggleTagFilter(tg)}
+                                  className={cn(
+                                    'text-[10px] px-2 py-0.5 rounded-full border transition-colors cursor-pointer',
+                                    isTagActive
+                                      ? 'bg-[#315C4C] text-white border-[#315C4C] font-semibold'
+                                      : 'bg-[#EBF1EE]/75 text-[#315C4C] border-[#315C4C]/20 hover:bg-[#DCE7E2]'
+                                  )}
+                                  title={`Bấm để lọc theo tag #${tg}`}
+                                >
+                                  #{tg}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Unified Stock Strip (Harmonious in both Light & Dark Mode) */}
+                        <div className="pt-1 flex flex-wrap items-center gap-2">
+                          <div className="inline-flex flex-wrap items-center gap-x-3.5 gap-y-1 px-3 py-1.5 rounded-lg bg-[#F7F7F5] border border-[#E8E8E5] text-xs">
+                            <span className="inline-flex items-center gap-1.5 text-[#737373]">
+                              <Boxes className="w-3.5 h-3.5 text-[#315C4C]" />
+                              <span>Tổng kho:</span>
+                              <strong className="text-[#202124] font-mono">{prodSummary.total}</strong>
+                            </span>
+
+                            <span className="text-[#E8E8E5] select-none">|</span>
+
+                            <span className="inline-flex items-center gap-1 text-[#737373]">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6]" />
+                              <span>Online:</span>
+                              <strong className="text-[#1D4ED8] font-mono">{prodSummary.online}</strong>
+                            </span>
+
+                            <span className="inline-flex items-center gap-1 text-[#737373]">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]" />
+                              <span>Giữ VIP:</span>
+                              <strong className="text-[#B7791F] font-mono">{prodSummary.preord}</strong>
+                            </span>
+
+                            <span className="inline-flex items-center gap-1 text-[#737373]">
+                              <span>Đã bán:</span>
+                              <strong className="text-[#202124] font-mono">{prodSummary.offlineSold}</strong>
+                            </span>
+                          </div>
+
+                          {/* Primary POS Available Pill */}
+                          <div
+                            className={cn(
+                              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border',
+                              prodSummary.offlineAvailable <= 0
+                                ? 'bg-[#FDF1F0] text-[#C44536] border-[#C44536]/25'
+                                : prodSummary.offlineAvailable <= 10
+                                ? 'bg-[#FEF7EC] text-[#B7791F] border-[#B7791F]/25'
+                                : 'bg-[#EAF4EE] text-[#2F7D55] border-[#2F7D55]/25'
+                            )}
+                          >
+                            <Store className="w-3.5 h-3.5" />
+                            <span>Còn bán quầy:</span>
+                            <span className="font-mono text-[13px] font-extrabold">
+                              {prodSummary.offlineAvailable}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Refined Action Toolbar */}
+                    <div className="flex flex-wrap items-center gap-2 shrink-0 border-t xl:border-t-0 pt-3 xl:pt-0 border-[#F0F0ED]">
+                      {editable && canManageThis ? (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-3 text-xs gap-1.5 rounded-lg font-semibold"
+                            onClick={() => openQuickAdjustModal(prod)}
+                            title="Chỉnh nhanh số lượng tổng kho, tự giữ VIP và đơn khách đặt online"
+                          >
+                            <SlidersHorizontal className="w-3.5 h-3.5 text-[#B7791F]" />
+                            <span>Chỉnh tồn & Đặt trước</span>
+                          </Button>
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-3 text-xs gap-1.5 rounded-lg font-semibold"
+                            onClick={() => openEditModal(prod)}
+                            title="Sửa thông tin, giá bán hoặc đổi ảnh sản phẩm"
+                          >
+                            <Edit className="w-3.5 h-3.5 text-[#315C4C]" />
+                            <span>Sửa & Ảnh</span>
+                          </Button>
+
+                          {prod.is_deleted ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 px-3 text-xs gap-1.5 rounded-lg border-[#2F7D55]/50 text-[#2F7D55] hover:bg-[#EBF1EE] font-semibold"
+                              onClick={() => handleRestoreProduct(prod)}
+                              title="Khôi phục sản phẩm này trở lại mở bán"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              <span>Khôi phục</span>
+                            </Button>
+                          ) : (
+                            <div className="flex items-center gap-1 pl-1 border-l border-[#E8E8E5]">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2.5 text-xs gap-1 text-[#737373] hover:text-[#202124] rounded-lg"
+                                onClick={() => toggleProductActive(prod.id)}
+                                title={prod.is_active ? 'Tạm ẩn khỏi POS' : 'Mở bán lại trên POS'}
+                              >
+                                {prod.is_active ? (
+                                  <>
+                                    <EyeOff className="w-3.5 h-3.5" />
+                                    <span className="hidden sm:inline">Ẩn</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle className="w-3.5 h-3.5 text-[#2F7D55]" />
+                                    <span className="hidden sm:inline text-[#2F7D55] font-semibold">
+                                      Hiện lại
+                                    </span>
+                                  </>
+                                )}
+                              </Button>
+
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-[#737373] hover:text-[#C44536] hover:bg-[#FDF1F0] rounded-lg"
+                                onClick={() => handleDeleteProduct(prod)}
+                                title="Xóa / Ẩn sản phẩm (Có thể khôi phục bất kỳ lúc nào)"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          )}
+                        </>
+                      ) : editable && isPartner ? (
+                        <div
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F7F7F5] border border-[#E8E8E5] text-xs text-[#737373] font-medium"
+                          title="Hàng kho Admin - Bạn không thể chỉnh sửa"
+                        >
+                          <Lock className="w-3.5 h-3.5 text-[#9E9E9C]" />
+                          <span>Kho hàng Admin (Chỉ đọc)</span>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] text-[#9E9E9C] italic">Chỉ xem</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Multi-Variant Breakdown Grid (Only rendered when product has > 1 variant, avoiding duplicate single-variant clutter) */}
+                  {productVariants.length > 1 && (
+                    <div className="mt-4 pt-3.5 border-t border-[#F0F0ED]">
+                      <div className="flex items-center justify-between mb-2.5">
+                        <span className="text-[11px] font-semibold text-[#737373] flex items-center gap-1.5">
+                          <Layers className="w-3.5 h-3.5 text-[#315C4C]" />
+                          <span>Chi tiết theo phân loại ({productVariants.length} biến thể)</span>
+                        </span>
+                        <div className="hidden sm:flex items-center gap-3 text-[10px] text-[#737373]">
+                          <span className="inline-flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-[#2F7D55]" /> Khả dụng quầy
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-[#3B82F6]" /> Khách Online / Giữ VIP
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                        {productVariants.map((v) => {
+                          const vAllocs = allocations.filter(
+                            (a) => a.variant_id === v.id && !a.is_test
+                          );
+                          const vSoldOffline = vAllocs.reduce(
+                            (sum, a) => sum + (a.sold_quantity || 0),
+                            0
+                          );
+                          const vAllocated = vAllocs.reduce(
+                            (sum, a) => sum + (a.allocated_quantity || 0),
+                            0
+                          );
+                          const stock = calculateVariantStock(v, vSoldOffline, vAllocated);
+                          const vAvailPct =
+                            stock.total > 0
+                              ? Math.min(100, Math.round((stock.offlineAvailable / stock.total) * 100))
+                              : 0;
+                          const vHeldPct =
+                            stock.total > 0
+                              ? Math.min(
+                                  100 - vAvailPct,
+                                  Math.round(((stock.online + stock.preord) / stock.total) * 100)
+                                )
+                              : 0;
+
+                          return (
+                            <div
+                              key={v.id}
+                              onClick={() => canManageThis && openQuickAdjustModal(prod)}
+                              className={cn(
+                                'p-3 rounded-xl border border-[#E8E8E5] bg-[#F7F7F5] flex flex-col justify-between gap-2.5 transition-all',
+                                canManageThis ? 'cursor-pointer hover:border-[#315C4C]/40' : ''
+                              )}
+                              title={
+                                canManageThis
+                                  ? 'Bấm để chỉnh nhanh tồn kho & đặt trước của phân loại này'
+                                  : undefined
+                              }
+                            >
+                              {/* Top Row: Variant Name + SKU on left, Price + Single Stock Pill on right */}
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-xs font-bold text-[#202124] truncate">
+                                      {v.name}
+                                    </span>
+                                    <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-white border border-[#E8E8E5] text-[#737373] shrink-0">
+                                      {v.sku}
+                                    </span>
+                                  </div>
+                                  <span className="text-xs font-extrabold text-[#315C4C] font-mono mt-0.5 block">
+                                    {formatCurrency(v.price, currency)}
+                                  </span>
+                                </div>
+
+                                <span
+                                  className={cn(
+                                    'px-2 py-0.5 rounded-md text-[11px] font-bold font-mono shrink-0 border',
+                                    stock.offlineAvailable <= 0
+                                      ? 'bg-[#FDF1F0] text-[#C44536] border-[#C44536]/20'
+                                      : stock.offlineAvailable <= 10
+                                      ? 'bg-[#FEF7EC] text-[#B7791F] border-[#B7791F]/20'
+                                      : 'bg-[#EAF4EE] text-[#2F7D55] border-[#2F7D55]/20'
+                                  )}
+                                >
+                                  Còn {stock.offlineAvailable} quầy
+                                </span>
+                              </div>
+
+                              {/* Mini Progress Bar */}
+                              <div className="h-1.5 w-full rounded-full bg-[#E8E8E5] overflow-hidden flex">
+                                <div
+                                  className="h-full bg-[#2F7D55]"
+                                  style={{ width: `${vAvailPct}%` }}
+                                />
+                                <div
+                                  className="h-full bg-[#3B82F6]"
+                                  style={{ width: `${vHeldPct}%` }}
+                                />
+                              </div>
+
+                              {/* 4-Metric Compact Row (Zero Duplication) */}
+                              <div className="grid grid-cols-4 gap-1 bg-white px-2.5 py-1.5 rounded-lg border border-[#E8E8E5] text-center text-[10px]">
+                                <div>
+                                  <span className="text-[#737373] block">Tổng</span>
+                                  <span className="font-bold text-[#202124] font-mono">
+                                    {stock.total}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-[#1D4ED8] block">Online</span>
+                                  <span className="font-bold text-[#1D4ED8] font-mono">
+                                    {stock.online}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-[#B7791F] block">Giữ VIP</span>
+                                  <span className="font-bold text-[#B7791F] font-mono">
+                                    {stock.preord}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-[#737373] block">Đã bán</span>
+                                  <span className="font-bold text-[#202124] font-mono">
+                                    {stock.offlineSold}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
                 </div>
               </Card>
@@ -1482,6 +1969,88 @@ export default function ProductsPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
+          </div>
+
+          {/* Multi-Tag Manager */}
+          <div className="space-y-2 p-3 rounded-[8px] bg-[#F7F7F5] border border-[#E8E8E5]">
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="prod-tags" className="text-xs font-bold text-[#202124] flex items-center gap-1.5">
+                <Hash className="w-3.5 h-3.5 text-[#315C4C]" />
+                <span>Nhãn phân loại (Tags — Gắn nhiều tag để dễ lọc &amp; sắp xếp)</span>
+              </Label>
+              <span className="text-[10px] text-[#737373]">{productTags.length} tag</span>
+            </div>
+
+            {productTags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {productTags.map((tg) => (
+                  <span
+                    key={tg}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#315C4C] text-white"
+                  >
+                    <span>#{tg}</span>
+                    <button
+                      type="button"
+                      onClick={() => toggleFormTag(tg)}
+                      className="hover:text-[#FDF1F0] cursor-pointer"
+                      title={`Gỡ tag #${tg}`}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Input
+                id="prod-tags"
+                type="text"
+                placeholder="Nhập tag rồi nhấn Enter hoặc dấu phẩy (VD: Limbus, Keychain, Hologram)..."
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault();
+                    addTagsFromInput(tagInput);
+                  }
+                }}
+                className="h-8 text-xs bg-white flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs px-3 shrink-0 bg-white"
+                onClick={() => addTagsFromInput(tagInput)}
+              >
+                + Thêm tag
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+              <span className="text-[10px] text-[#737373]">Gợi ý nhanh:</span>
+              {allExistingTags.slice(0, 10).map((tg) => {
+                const isAdded = productTags.some(
+                  (tItem) => tItem.toLowerCase() === tg.name.toLowerCase()
+                );
+                return (
+                  <button
+                    key={tg.name}
+                    type="button"
+                    onClick={() => toggleFormTag(tg.name)}
+                    className={cn(
+                      'text-[10px] px-2 py-0.5 rounded-full border transition-all cursor-pointer',
+                      isAdded
+                        ? 'bg-[#315C4C] text-white border-[#315C4C] font-semibold'
+                        : 'bg-white text-[#555] border-[#E8E8E5] hover:border-[#315C4C]'
+                    )}
+                  >
+                    #{tg.name}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Dynamic Variants Form */}

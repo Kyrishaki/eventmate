@@ -5,12 +5,15 @@ import { useOrdersStore } from '@/stores/orders-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useDataStore } from '@/stores/data-store';
 import { useAuthStore, canManageOrderLifecycle } from '@/stores/auth-store';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Modal } from '@/components/ui/modal';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, formatTimeOnly } from '@/lib/utils';
+import { playSuccessChime, speakPaymentReceived } from '@/lib/sound';
+import { ProductImageUploader } from '@/components/ui/product-image-uploader';
 import { Order, OrderStatus } from '@/types/database';
 import {
   ShoppingCart,
@@ -26,16 +29,42 @@ import {
   Lock,
   CheckCircle2,
   AlertTriangle,
+  CreditCard,
+  QrCode,
+  Banknote,
+  Save,
+  ShieldCheck,
+  Radio,
+  Volume2,
+  Copy,
+  RefreshCw,
+  Zap,
+  AlertCircle,
+  Wallet,
+  WifiOff,
 } from 'lucide-react';
 import { ReceiptModal } from '@/components/pos/receipt-modal';
 import {
   isTestEvent,
   isTestOrder,
+  isNetRevenueOrder,
   filterRealOrders,
   filterRealEvents,
   getEffectiveOrderStatus,
 } from '@/lib/test-data-filter';
 import { exportEventToExcel } from '@/lib/export-excel';
+
+interface WebhookLogItem {
+  id: string;
+  gateway: string;
+  accountNumber: string;
+  amount: number;
+  content: string;
+  referenceCode: string;
+  transactionDate: string;
+  source: string;
+  receivedAt: string;
+}
 
 const CANCEL_PRESET_REASONS = [
   'Khách đổi ý / Không lấy hàng nữa',
@@ -53,19 +82,102 @@ const REFUND_PRESET_REASONS = [
 
 export default function DashboardOrdersPage() {
   const { activeWorkspace } = useWorkspaceStore();
-  const { orders, cancelOrder, refundOrder, setOrderProofVerified } = useOrdersStore();
+  const { orders, cancelOrder, refundOrder, activeBankConfig, setBankConfig } = useOrdersStore();
   const { events, booths, variants, products } = useDataStore();
   const { user } = useAuthStore();
 
   const canControlOrders = canManageOrderLifecycle(user?.role);
 
+  const [activeTab, setActiveTab] = React.useState<'orders' | 'payments'>('orders');
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab') === 'payments') {
+      const timer = setTimeout(() => setActiveTab('payments'), 0);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  // Payment Configuration States (merged from Payments page)
+  const [bankId, setBankId] = React.useState(activeBankConfig.bankId || 'MB');
+  const [accountNo, setAccountNo] = React.useState(activeBankConfig.accountNo || '');
+  const [accountName, setAccountName] = React.useState(activeBankConfig.accountName || '');
+  const [autoCheckEnabled, setAutoCheckEnabled] = React.useState(
+    activeBankConfig.autoCheckEnabled !== false
+  );
+  const [provider, setProvider] = React.useState<'sepay' | 'casso' | 'webhook_only'>(
+    activeBankConfig.provider || 'sepay'
+  );
+  const [apiToken, setApiToken] = React.useState(activeBankConfig.apiToken || '');
+  const [voiceAnnouncement, setVoiceAnnouncement] = React.useState(
+    activeBankConfig.voiceAnnouncement !== false
+  );
+  const [offlineQrImageUrl, setOfflineQrImageUrl] = React.useState(
+    activeBankConfig.offlineQrImageUrl || ''
+  );
+  const [isSaved, setIsSaved] = React.useState(false);
+
+  const [isTestingApi, setIsTestingApi] = React.useState(false);
+  const [apiTestResult, setApiTestResult] = React.useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
+  const [recentWebhooks, setRecentWebhooks] = React.useState<WebhookLogItem[]>([]);
+  const [isLoadingLogs, setIsLoadingLogs] = React.useState(false);
+  const [simCode, setSimCode] = React.useState('EM8899');
+  const [simAmount, setSimAmount] = React.useState('150000');
+  const [webhookCopied, setWebhookCopied] = React.useState(false);
+
+  const webhookUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/api/payments/webhook`
+      : 'https://your-domain.com/api/payments/webhook';
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      if (activeBankConfig) {
+        setBankId(activeBankConfig.bankId || 'MB');
+        setAccountNo(activeBankConfig.accountNo || '');
+        setAccountName(activeBankConfig.accountName || '');
+        setAutoCheckEnabled(activeBankConfig.autoCheckEnabled !== false);
+        setProvider(activeBankConfig.provider || 'sepay');
+        setApiToken(activeBankConfig.apiToken || '');
+        setVoiceAnnouncement(activeBankConfig.voiceAnnouncement !== false);
+        setOfflineQrImageUrl(activeBankConfig.offlineQrImageUrl || '');
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [activeBankConfig]);
+
+  const fetchWebhookLogs = React.useCallback(async () => {
+    setIsLoadingLogs(true);
+    try {
+      const res = await fetch('/api/payments/webhook');
+      if (res.ok) {
+        const data = await res.json();
+        setRecentWebhooks(Array.isArray(data?.transactions) ? data.transactions : []);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setIsLoadingLogs(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (activeTab !== 'payments') return;
+    const timer = setTimeout(() => {
+      void fetchWebhookLogs();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [activeTab, fetchWebhookLogs]);
+
   const [searchQuery, setSearchQuery] = React.useState('');
   const [filterEvent, setFilterEvent] = React.useState('all');
   const [filterPayment, setFilterPayment] = React.useState('all');
   const [filterStatus, setFilterStatus] = React.useState<'all' | OrderStatus>('all');
-  const [filterProof, setFilterProof] = React.useState<'all' | 'has_proof' | 'unverified'>('all');
   const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
-  const [previewProofImage, setPreviewProofImage] = React.useState<string | null>(null);
   const [isReceiptOpen, setIsReceiptOpen] = React.useState(false);
 
   // Cancel / Void modal state
@@ -97,6 +209,99 @@ export default function DashboardOrdersPage() {
   const realOrders = filterRealOrders(workspaceOrders);
   const testOrders = workspaceOrders.filter((o) => isTestOrder(o));
 
+  // Net Revenue & Payment Method Breakdown (REAL PRODUCTION + NON-CANCELLED/NON-REFUNDED ONLY)
+  const netRealOrders = realOrders.filter(isNetRevenueOrder);
+  const netTestOrders = testOrders.filter(isNetRevenueOrder);
+  const testCashAmount = netTestOrders
+    .filter((o) => o.payment_method === 'cash')
+    .reduce((sum, o) => sum + o.final_amount, 0);
+
+  const cashRevenue = netRealOrders
+    .filter((o) => o.payment_method === 'cash')
+    .reduce((sum, o) => sum + o.final_amount, 0);
+
+  const qrRevenue = netRealOrders
+    .filter((o) => o.payment_method === 'qr_manual')
+    .reduce((sum, o) => sum + o.final_amount, 0);
+
+  const gatewayRevenue = netRealOrders
+    .filter((o) => o.payment_method === 'gateway')
+    .reduce((sum, o) => sum + o.final_amount, 0);
+
+  const totalNetRevenue = cashRevenue + qrRevenue + gatewayRevenue;
+
+  function handleSaveBankConfig(e: React.FormEvent) {
+    e.preventDefault();
+    const updated = {
+      bankId: bankId.toUpperCase(),
+      accountNo: accountNo.trim(),
+      accountName: accountName.trim().toUpperCase(),
+      autoCheckEnabled,
+      provider,
+      apiToken: apiToken.trim(),
+      voiceAnnouncement,
+      offlineQrImageUrl: offlineQrImageUrl.trim() || null,
+    };
+    setBankConfig(updated);
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 3500);
+  }
+
+  async function handleTestApiConnection() {
+    setIsTestingApi(true);
+    setApiTestResult(null);
+    try {
+      const res = await fetch('/api/payments/check-qr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          testConnection: true,
+          provider,
+          apiToken: apiToken.trim(),
+          accountNo: accountNo.trim(),
+        }),
+      });
+      const data = await res.json();
+      setApiTestResult({
+        success: !!data.success,
+        message: data.message || data.error || 'Không thể kết nối API',
+      });
+    } catch (err: unknown) {
+      setApiTestResult({
+        success: false,
+        message: err instanceof Error ? err.message : 'Lỗi kết nối máy chủ',
+      });
+    } finally {
+      setIsTestingApi(false);
+    }
+  }
+
+  async function handleSendSimulatedWebhook() {
+    const numAmount = parseInt(simAmount.replace(/\D/g, ''), 10) || 150000;
+    try {
+      await fetch('/api/payments/webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gateway: bankId,
+          accountNumber: accountNo,
+          transferType: 'in',
+          transferAmount: numAmount,
+          content: `Chuyen khoan don hang ${simCode.trim().toUpperCase()}`,
+          referenceCode: `FT${Date.now().toString().slice(-8)}`,
+          source: 'simulated',
+        }),
+      });
+      playSuccessChime();
+      if (voiceAnnouncement) {
+        speakPaymentReceived(numAmount);
+      }
+      await fetchWebhookLogs();
+    } catch {
+      alert('Không thể gửi tín hiệu thử nghiệm');
+    }
+  }
+
   // Filter orders: Default 'all' excludes test transactions
   const filteredOrders = workspaceOrders.filter((o) => {
     const matchesSearch =
@@ -115,14 +320,8 @@ export default function DashboardOrdersPage() {
     const matchesPayment = filterPayment === 'all' || o.payment_method === filterPayment;
     const effectiveStatus = getEffectiveOrderStatus(o);
     const matchesStatus = filterStatus === 'all' || effectiveStatus === filterStatus;
-    const matchesProof =
-      filterProof === 'all'
-        ? true
-        : filterProof === 'has_proof'
-        ? Boolean(o.proof_image_url)
-        : Boolean(o.proof_image_url && !o.proof_verified);
 
-    return matchesSearch && matchesEvent && matchesPayment && matchesStatus && matchesProof;
+    return matchesSearch && matchesEvent && matchesPayment && matchesStatus;
   });
 
   const openCancelModal = (ord: Order) => {
@@ -218,7 +417,7 @@ export default function DashboardOrdersPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#E8E8E5]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-[#202124]">Đơn hàng & Giao dịch</h1>
+            <h1 className="text-xl font-bold tracking-tight text-[#202124]">Đơn hàng &amp; Thanh toán</h1>
             <Badge variant="outline" className="text-[11px] font-mono">
               {filterEvent === 'all'
                 ? `${realOrders.length} đơn thực tế`
@@ -228,21 +427,110 @@ export default function DashboardOrdersPage() {
             </Badge>
           </div>
           <p className="text-xs text-[#737373] mt-0.5">
-            Lịch sử toàn bộ các giao dịch phát sinh qua máy POS từ tất cả quầy bán của sự kiện.
+            Quản lý toàn bộ giao dịch bán hàng POS, đối soát dòng tiền &amp; cấu hình tự động nhận tiền VietQR.
           </p>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExportExcel}
-          className="gap-1.5 text-xs text-[#2F7D55] border-[#2F7D55]/30 hover:bg-[#EAF4EE] h-8 font-semibold shadow-2xs self-start sm:self-auto"
-          title="Xuất danh sách đơn hàng và dữ liệu vận hành ra file Excel"
-        >
-          <Download className="w-3.5 h-3.5 text-[#2F7D55]" />
-          <span>Xuất Excel (.xlsx)</span>
-        </Button>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportExcel}
+            className="gap-1.5 text-xs text-[#2F7D55] border-[#2F7D55]/30 hover:bg-[#EAF4EE] h-8 font-semibold shadow-2xs"
+            title="Xuất danh sách đơn hàng và dữ liệu vận hành ra file Excel"
+          >
+            <Download className="w-3.5 h-3.5 text-[#2F7D55]" />
+            <span>Xuất Excel (.xlsx)</span>
+          </Button>
+        </div>
       </div>
+
+      {/* Unified Financial KPI Strip (Cash vs VietQR vs Total Net) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+        <Card className="p-4 bg-white border-[#E8E8E5] shadow-2xs">
+          <div className="flex items-center justify-between text-[#737373] mb-1">
+            <span className="text-xs font-medium">Tổng doanh thu thực tế</span>
+            <Wallet className="w-4 h-4 text-[#315C4C]" />
+          </div>
+          <div className="text-xl font-bold text-[#202124] font-mono">
+            {formatCurrency(totalNetRevenue, activeWorkspace?.currency || 'VND')}
+          </div>
+          <p className="text-[10px] text-[#737373] mt-0.5">
+            {netRealOrders.length} đơn hợp lệ (đã loại đơn test &amp; hủy/hoàn)
+          </p>
+        </Card>
+
+        <Card className="p-4 bg-white border-[#E8E8E5] shadow-2xs">
+          <div className="flex items-center justify-between text-[#737373] mb-1">
+            <span className="text-xs font-medium">Chuyển khoản VietQR</span>
+            <QrCode className="w-4 h-4 text-[#315C4C]" />
+          </div>
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="text-xl font-bold text-[#315C4C] font-mono">
+              {formatCurrency(qrRevenue, activeWorkspace?.currency || 'VND')}
+            </span>
+            <button
+              type="button"
+              onClick={() => setActiveTab('payments')}
+              className="text-[10.5px] font-semibold text-[#315C4C] hover:underline cursor-pointer"
+            >
+              Cấu hình QR &rarr;
+            </button>
+          </div>
+          <p className="text-[10px] text-[#737373] mt-0.5">
+            TK: {activeBankConfig.bankId} • {activeBankConfig.accountNo}
+          </p>
+        </Card>
+
+        <Card className="p-4 bg-white border-[#E8E8E5] shadow-2xs">
+          <div className="flex items-center justify-between text-[#737373] mb-1">
+            <span className="text-xs font-medium">Tiền mặt tại két (Cash)</span>
+            <Banknote className="w-4 h-4 text-[#B7791F]" />
+          </div>
+          <div className="text-xl font-bold text-[#B7791F] font-mono">
+            {formatCurrency(cashRevenue, activeWorkspace?.currency || 'VND')}
+          </div>
+          <p className="text-[10px] text-[#737373] mt-0.5">Thu ngân giữ tại quầy thực tế</p>
+        </Card>
+      </div>
+
+      {/* Unified Segmented Tabs: Orders vs Payment Settings */}
+      <div className="flex flex-wrap items-center gap-1 p-1 bg-[#F7F7F5] rounded-xl border border-[#E8E8E5] w-fit">
+        <button
+          type="button"
+          onClick={() => setActiveTab('orders')}
+          className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+            activeTab === 'orders'
+              ? 'bg-white text-[#315C4C] shadow-2xs'
+              : 'text-[#737373] hover:text-[#202124]'
+          }`}
+        >
+          <ShoppingCart className="w-3.5 h-3.5" />
+          <span>Đơn hàng &amp; Giao dịch</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#EBF1EE] text-[#315C4C] font-mono">
+            {realOrders.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('payments')}
+          className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+            activeTab === 'payments'
+              ? 'bg-white text-[#315C4C] shadow-2xs'
+              : 'text-[#737373] hover:text-[#202124]'
+          }`}
+        >
+          <CreditCard className="w-3.5 h-3.5" />
+          <span>Cấu hình VietQR &amp; Tự động nhận tiền</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#EAF4EE] text-[#2F7D55] font-mono">
+            Auto-Bank
+          </span>
+        </button>
+      </div>
+
+      {activeTab === 'orders' ? (
+        <div className="space-y-5">
 
       {/* Sandbox Test Mode Notice Banner */}
       {isTestEvent(filterEvent) && (
@@ -250,7 +538,7 @@ export default function DashboardOrdersPage() {
           <div className="flex items-start sm:items-center gap-2.5">
             <FlaskConical className="w-4 h-4 shrink-0 text-[#B7791F] mt-0.5 sm:mt-0" />
             <span>
-              <strong>Dữ liệu thử nghiệm (Sandbox):</strong> Bạn đang xem {filteredOrders.length} đơn hàng TEST phát sinh khi chạy thử POS. Các đơn hàng này <strong>hoàn toàn không được tính vào doanh thu thực tế</strong>.
+              <strong>Dữ liệu thử nghiệm:</strong> Bạn đang xem {filteredOrders.length} đơn hàng kiểm thử phát sinh khi chạy thử quầy bán hàng. Các đơn hàng này <strong>hoàn toàn không được tính vào doanh thu thực tế</strong>.
             </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -294,86 +582,73 @@ export default function DashboardOrdersPage() {
         <div className="flex items-center gap-2">
           <Lock className="w-3.5 h-3.5 text-[#315C4C] shrink-0" />
           <span>
-            <strong>Nguyên tắc kiểm toán POS:</strong> Không cho phép xóa vĩnh viễn đơn hàng đã phát sinh.{' '}
+            <strong>Nguyên tắc kiểm tra bán hàng:</strong> Không cho phép xóa vĩnh viễn đơn hàng đã phát sinh.{' '}
             {canControlOrders
-              ? 'Bạn có quyền Quản trị tối cao (Owner/Admin) để Hủy đơn (tự động hoàn kho) hoặc Lập biên bản Hoàn tiền.'
-              : 'Nhân viên không có quyền Hủy đơn / Hoàn tiền — liên hệ Owner hoặc Admin khi cần xử lý sai sót.'}
+              ? 'Bạn có quyền Quản trị cao nhất (Chủ cửa hàng / Quản trị viên) để Hủy đơn (tự động hoàn kho) hoặc Lập biên bản Hoàn tiền.'
+              : 'Nhân viên không có quyền Hủy đơn / Hoàn tiền — liên hệ Chủ cửa hàng hoặc Quản trị viên khi cần xử lý sai sót.'}
           </span>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-        <div className="relative flex-1 sm:max-w-xs">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative max-w-xs w-full">
           <Search className="w-4 h-4 text-[#9E9E9C] absolute left-3 top-2.5" />
           <Input
             placeholder="Tìm theo mã đơn, ghi chú, lý do..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-8 text-xs bg-white dark:bg-neutral-900 w-full"
+            className="pl-9 h-8 text-xs bg-white"
           />
         </div>
 
-        <div className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-2 flex-1 sm:flex-none min-w-0">
-          {/* Event Filter */}
-          <select
-            className="h-8 w-full max-w-full truncate rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2.5 text-xs text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C]"
-            value={filterEvent}
-            onChange={(e) => setFilterEvent(e.target.value)}
-          >
-            <option value="all">Tất cả sự kiện</option>
-            <optgroup label="Sự kiện thực tế">
-              {realEvents.map((e) => (
+        {/* Event Filter */}
+        <select
+          className="h-8 rounded-[6px] border border-[#E8E8E5] bg-white px-2.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+          value={filterEvent}
+          onChange={(e) => setFilterEvent(e.target.value)}
+        >
+          <option value="all">Tất cả sự kiện (Dữ liệu thực tế)</option>
+          <optgroup label="Sự kiện thực tế">
+            {realEvents.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.name}
+              </option>
+            ))}
+          </optgroup>
+          {testEvents.length > 0 && (
+            <optgroup label="Thử nghiệm (Tách biệt)">
+              {testEvents.map((e) => (
                 <option key={e.id} value={e.id}>
-                  {e.name}
+                  🧪 {e.name}
                 </option>
               ))}
             </optgroup>
-            {testEvents.length > 0 && (
-              <optgroup label="Thử nghiệm / Sandbox (Tách biệt)">
-                {testEvents.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    🧪 {e.name}
-                  </option>
-                ))}
-              </optgroup>
-            )}
-          </select>
+          )}
+        </select>
 
-          {/* Payment Filter */}
-          <select
-            className="h-8 w-full max-w-full truncate rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2.5 text-xs text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C]"
-            value={filterPayment}
-            onChange={(e) => setFilterPayment(e.target.value)}
-          >
-            <option value="all">Tất cả hình thức</option>
-            <option value="cash">Tiền mặt</option>
-            <option value="qr_manual">Chuyển khoản VietQR</option>
-          </select>
+        {/* Payment Filter */}
+        <select
+          className="h-8 rounded-[6px] border border-[#E8E8E5] bg-white px-2.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+          value={filterPayment}
+          onChange={(e) => setFilterPayment(e.target.value)}
+        >
+          <option value="all">Tất cả hình thức</option>
+          <option value="cash">Tiền mặt</option>
+          <option value="qr_manual">Chuyển khoản VietQR</option>
+        </select>
 
-          {/* Payment Proof Filter */}
-          <select
-            className="h-8 w-full max-w-full truncate rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2.5 text-xs text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C]"
-            value={filterProof}
-            onChange={(e) => setFilterProof(e.target.value as any)}
-          >
-            <option value="all">Tất cả minh chứng</option>
-            <option value="has_proof">📷 Có ảnh minh chứng</option>
-            <option value="unverified">⚠️ Chờ đối soát</option>
-          </select>
-
-          {/* Order Lifecycle Status Filter */}
-          <select
-            className="h-8 w-full max-w-full truncate rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2.5 text-xs text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C]"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as 'all' | OrderStatus)}
-          >
-            <option value="all">Tất cả trạng thái</option>
-            <option value="completed">Hoàn thành (Hợp lệ)</option>
-            <option value="cancelled">Đã hủy (Void)</option>
-            <option value="refunded">Đã hoàn tiền (Refund)</option>
-          </select>
-        </div>
+        {/* Order Lifecycle Status Filter */}
+        <select
+          className="h-8 rounded-[6px] border border-[#E8E8E5] bg-white px-2.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as 'all' | OrderStatus)}
+        >
+          <option value="all">Tất cả trạng thái</option>
+          <option value="completed">Hoàn thành (Hợp lệ)</option>
+          <option value="cancelled">Đã hủy (Void)</option>
+          <option value="refunded">Đã hoàn tiền (Refund)</option>
+        </select>
       </div>
 
       {/* Orders Table */}
@@ -436,22 +711,10 @@ export default function DashboardOrdersPage() {
                             )}
                           </div>
                           {ord.proof_image_url && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setPreviewProofImage(ord.proof_image_url!);
-                              }}
-                              className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded font-semibold border cursor-pointer ${
-                                ord.proof_verified
-                                  ? 'bg-[#EAF4EE] text-[#2F7D55] border-[#2F7D55]/30'
-                                  : 'bg-[#FEF7EC] text-[#B7791F] border-[#B7791F]/30'
-                              }`}
-                              title="Bấm để xem ảnh minh chứng chuyển khoản"
-                            >
+                            <span className="inline-flex items-center gap-1 text-[9px] text-[#2F7D55] bg-[#EBF1EE] px-1 py-0.2 rounded font-semibold border border-[#2F7D55]/20 w-fit">
                               <Camera className="w-2.5 h-2.5" />
-                              <span>{ord.proof_verified ? '✓ Đã khớp tiền' : '📷 Minh chứng CK'}</span>
-                            </button>
+                              Ảnh nhận hàng
+                            </span>
                           )}
                           {isCancelled && ord.cancellation_reason && (
                             <span className="font-sans font-normal text-[10px] text-[#C44536] truncate max-w-[180px]" title={ord.cancellation_reason}>
@@ -594,20 +857,6 @@ export default function DashboardOrdersPage() {
                           Thử nghiệm
                         </Badge>
                       )}
-                      {ord.proof_image_url && (
-                        <button
-                          type="button"
-                          onClick={() => setPreviewProofImage(ord.proof_image_url!)}
-                          className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded font-semibold border cursor-pointer ${
-                            ord.proof_verified
-                              ? 'bg-[#EAF4EE] text-[#2F7D55] border-[#2F7D55]/30'
-                              : 'bg-[#FEF7EC] text-[#B7791F] border-[#B7791F]/30'
-                          }`}
-                        >
-                          <Camera className="w-2.5 h-2.5" />
-                          <span>{ord.proof_verified ? '✓ Đã khớp' : '📷 Minh chứng'}</span>
-                        </button>
-                      )}
                     </div>
                     {isCancelled ? (
                       <Badge variant="error" className="text-[10px]">
@@ -647,69 +896,52 @@ export default function DashboardOrdersPage() {
                     <span className="shrink-0 text-[11px]">{formatDate(ord.created_at)}</span>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-[#F0F0ED] dark:border-neutral-800">
-                    <div className="flex items-center justify-between sm:justify-start gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <Badge variant="outline" className="text-[10px]">
-                          {ord.payment_method === 'cash' ? 'Tiền mặt' : 'VietQR'}
-                        </Badge>
-                        <span className={`text-[10px] font-medium ${ord.sync_status === 'synced' ? 'text-[#2F7D55]' : 'text-[#B7791F]'}`}>
-                          {ord.sync_status === 'synced' ? '• Đã đồng bộ' : '• Chờ đồng bộ'}
-                        </span>
-                      </div>
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-[#F0F0ED]">
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant="outline" className="text-[10px]">
+                        {ord.payment_method === 'cash' ? 'Tiền mặt' : 'VietQR'}
+                      </Badge>
                       <span
-                        className={`text-base font-extrabold sm:hidden ${
-                          isVoidOrRefund ? 'line-through text-[#9E9E9C]' : 'text-[#315C4C] dark:text-emerald-400'
+                        className={`text-base font-bold ${
+                          isVoidOrRefund ? 'line-through text-[#9E9E9C]' : 'text-[#315C4C]'
                         }`}
                       >
                         {formatCurrency(ord.final_amount, activeWorkspace?.currency || 'VND')}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between sm:justify-end gap-2">
-                      <span
-                        className={`text-base font-extrabold hidden sm:block mr-2 ${
-                          isVoidOrRefund ? 'line-through text-[#9E9E9C]' : 'text-[#315C4C] dark:text-emerald-400'
-                        }`}
+                    <div className="flex items-center gap-1.5">
+                      {canControlOrders && !isVoidOrRefund && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2 text-xs text-[#C44536] border-[#C44536]/40 hover:bg-[#FDF1F0]"
+                            onClick={() => openCancelModal(ord)}
+                            title="Hủy đơn"
+                          >
+                            <Ban className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2 text-xs text-[#B7791F] border-[#B7791F]/40 hover:bg-[#FEF7EC]"
+                            onClick={() => openRefundModal(ord)}
+                            title="Hoàn tiền"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                          </Button>
+                        </>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-3 text-xs gap-1 font-semibold"
+                        onClick={() => setSelectedOrder(ord)}
                       >
-                        {formatCurrency(ord.final_amount, activeWorkspace?.currency || 'VND')}
-                      </span>
-
-                      <div className="flex items-center gap-1.5 flex-1 sm:flex-none justify-end">
-                        {canControlOrders && !isVoidOrRefund && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 px-2 text-xs text-[#C44536] border-[#C44536]/40 hover:bg-[#FDF1F0]"
-                              onClick={() => openCancelModal(ord)}
-                              title="Hủy đơn"
-                            >
-                              <Ban className="w-3.5 h-3.5" />
-                              <span className="sm:hidden text-[11px] ml-1">Hủy</span>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 px-2 text-xs text-[#B7791F] border-[#B7791F]/40 hover:bg-[#FEF7EC]"
-                              onClick={() => openRefundModal(ord)}
-                              title="Hoàn tiền"
-                            >
-                              <RotateCcw className="w-3.5 h-3.5" />
-                              <span className="sm:hidden text-[11px] ml-1">Hoàn</span>
-                            </Button>
-                          </>
-                        )}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 px-3 text-xs gap-1 font-semibold flex-1 sm:flex-none justify-center"
-                          onClick={() => setSelectedOrder(ord)}
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>Chi tiết</span>
-                        </Button>
-                      </div>
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Chi tiết</span>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -717,6 +949,427 @@ export default function DashboardOrdersPage() {
             })}
           </div>
         </Card>
+      )}
+        </div>
+      ) : (
+        /* =========================================================
+           TAB 2: PAYMENT & AUTO-BANKING CONFIGURATION (MERGED)
+           ========================================================= */
+        <div className="space-y-6 max-w-4xl">
+          {netTestOrders.length > 0 && (
+            <div className="flex items-center justify-between p-3 rounded-[6px] bg-[#FEF7EC] border border-[#B7791F]/30 text-xs text-[#B7791F] shadow-xs">
+              <div className="flex items-center gap-2">
+                <FlaskConical className="w-4 h-4 shrink-0 text-[#B7791F]" />
+                <span>
+                  Hệ thống đã tự động cách ly <strong>{netTestOrders.length} đơn hàng thử nghiệm ({formatCurrency(testCashAmount, 'VND')})</strong> khỏi dòng tiền thực tế tại quầy để đảm bảo số liệu kế toán chính xác.
+                </span>
+              </div>
+            </div>
+          )}
+
+          {isSaved && (
+            <div className="flex items-center gap-2 p-3 text-xs text-[#2F7D55] bg-[#EAF4EE] border border-[#CEE6D7] rounded-[6px] shadow-xs">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-[#2F7D55]" />
+              <span>
+                <strong>Đã lưu cấu hình VietQR &amp; Tự động nhận tiền thành công!</strong> Toàn bộ các màn hình POS của thu ngân đã được đồng bộ tức thì.
+              </span>
+            </div>
+          )}
+
+          <form onSubmit={handleSaveBankConfig} className="space-y-6">
+            <Card className="border-[#E8E8E5] bg-white shadow-xs">
+              <CardHeader className="border-b border-[#F0F0ED] pb-4">
+                <CardTitle className="text-sm font-semibold text-[#202124] flex items-center gap-2">
+                  <QrCode className="w-4 h-4 text-[#315C4C]" />
+                  1. Tài khoản Ngân hàng Nhận tiền (VietQR) &amp; QR Dự phòng Offline
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Hệ thống tự động nhúng số tiền và mã phiên <code className="font-mono font-bold text-[#315C4C]">EMxxxx</code> vào mã QR. Khách quét là hiện sẵn đúng số tiền và nội dung chuyển khoản.
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent className="space-y-4 pt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="bank-id" required>
+                      Mã Ngân hàng (BIN / Code)
+                    </Label>
+                    <select
+                      id="bank-id"
+                      className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-sm text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                      value={bankId}
+                      onChange={(e) => setBankId(e.target.value)}
+                    >
+                      <option value="MB">MB Bank (Quân Đội)</option>
+                      <option value="VCB">Vietcombank</option>
+                      <option value="TCB">Techcombank</option>
+                      <option value="ACB">ACB</option>
+                      <option value="VPB">VPBank</option>
+                      <option value="TPB">TPBank</option>
+                      <option value="BIDV">BIDV</option>
+                      <option value="CTG">VietinBank</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="acc-no" required>
+                      Số tài khoản nhận tiền
+                    </Label>
+                    <Input
+                      id="acc-no"
+                      required
+                      placeholder="VD: 0987654321"
+                      value={accountNo}
+                      onChange={(e) => setAccountNo(e.target.value)}
+                      className="font-mono text-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="acc-name" required>
+                      Tên Chủ tài khoản (Không dấu)
+                    </Label>
+                    <Input
+                      id="acc-name"
+                      required
+                      placeholder="VD: NGUYEN VAN A"
+                      value={accountName}
+                      onChange={(e) => setAccountName(e.target.value.toUpperCase())}
+                      className="text-sm uppercase"
+                    />
+                  </div>
+                </div>
+
+                {/* Live QR Preview */}
+                <div className="p-4 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[6px] flex flex-col sm:flex-row items-center gap-4">
+                  <div className="w-28 h-28 bg-white p-1 rounded border border-[#E8E8E5] shrink-0 flex items-center justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=50000&addInfo=EM8899&accountName=${encodeURIComponent(
+                        accountName
+                      )}`}
+                      alt="VietQR Demo"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+
+                  <div className="text-xs text-[#737373] space-y-1">
+                    <p className="font-semibold text-[#202124]">Xem trước mã VietQR động tại quầy</p>
+                    <p>
+                      Khi thu ngân bấm thanh toán trên POS, mã QR sẽ gắn sẵn nội dung riêng (ví dụ: <strong>EM8899</strong>) để máy tự động đối soát xem đơn nào đã được thanh toán.
+                    </p>
+                    <div className="flex items-center gap-1.5 text-[#2F7D55] text-[11px] pt-1">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>Chuẩn VietQR liên ngân hàng Napas247</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Offline Fallback Static QR Image */}
+                <div className="p-3.5 rounded-[8px] border border-dashed border-[#B7791F]/40 bg-[#FEF7EC]/40 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#8C5D17]">
+                    <WifiOff className="w-3.5 h-3.5 text-[#B7791F]" />
+                    <span>Ảnh QR tĩnh dự phòng khi mất mạng (Offline Backup QR)</span>
+                  </div>
+                  <p className="text-[11px] text-[#737373]">
+                    Tải lên ảnh chụp mã QR ngân hàng của bạn (lưu cục bộ dạng Base64). Khi máy POS mất Wi-Fi/4G không tải được mã VietQR động, POS sẽ tự động hiển thị ảnh QR tĩnh này để khách quét chuyển khoản ngay lập tức.
+                  </p>
+                  <ProductImageUploader
+                    value={offlineQrImageUrl}
+                    onChange={(val) => setOfflineQrImageUrl(val || '')}
+                    label="Tải ảnh mã QR ngân hàng dự phòng (tùy chọn)"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Section 2: Auto-Banking Verification without Phone */}
+            <Card className="border-[#315C4C]/30 bg-white shadow-xs">
+              <CardHeader className="border-b border-[#F0F0ED] pb-4 bg-[#F7FAF8]">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div>
+                    <CardTitle className="text-sm font-bold text-[#202124] flex items-center gap-2">
+                      <Radio className="w-4 h-4 text-[#2F7D55] animate-pulse" />
+                      2. Tự động nhận diện Tiền về &amp; Báo thành công trên Web (Không cần cầm ĐT)
+                    </CardTitle>
+                    <CardDescription className="text-xs mt-0.5">
+                      Dành cho trường hợp thu ngân tại quầy không cầm điện thoại nhận thông báo ngân hàng. Khi khách chuyển khoản xong, web POS sẽ tự động phát loa đọc số tiền và chuyển sang màn hình <strong>Thanh toán thành công!</strong>
+                    </CardDescription>
+                  </div>
+                  <Badge className="bg-[#EAF4EE] text-[#2F7D55] border border-[#CEE6D7] shrink-0">
+                    Quét 2 giây / lần
+                  </Badge>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-4 pt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <label className="flex items-start gap-3 p-3 rounded-[8px] border border-[#E8E8E5] bg-[#FAFAF8] cursor-pointer hover:border-[#315C4C]/40">
+                    <input
+                      type="checkbox"
+                      checked={autoCheckEnabled}
+                      onChange={(e) => setAutoCheckEnabled(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-[#D5D5D0] text-[#315C4C] focus:ring-[#315C4C]"
+                    />
+                    <div className="text-xs">
+                      <p className="font-bold text-[#202124]">Tự động nhảy &quot;Thanh toán thành công&quot;</p>
+                      <p className="text-[11px] text-[#737373] mt-0.5">
+                        Màn hình POS tự động kiểm tra giao dịch khớp mã <code className="font-mono">EMxxxx</code> và tự động hoàn tất đơn hàng ngay khi nhận được tiền.
+                      </p>
+                    </div>
+                  </label>
+
+                  <div className="flex items-start justify-between gap-2 p-3 rounded-[8px] border border-[#E8E8E5] bg-[#FAFAF8]">
+                    <label className="flex items-start gap-3 cursor-pointer flex-1">
+                      <input
+                        type="checkbox"
+                        checked={voiceAnnouncement}
+                        onChange={(e) => setVoiceAnnouncement(e.target.checked)}
+                        className="mt-0.5 w-4 h-4 rounded border-[#D5D5D0] text-[#315C4C] focus:ring-[#315C4C]"
+                      />
+                      <div className="text-xs">
+                        <p className="font-bold text-[#202124]">Loa đọc thông báo tiền về tại quầy</p>
+                        <p className="text-[11px] text-[#737373] mt-0.5">
+                          Phát tiếng &quot;Ting-ting&quot; và giọng đọc tiếng Việt: <em>&quot;Đã nhận chuyển khoản 150.000 đồng&quot;</em>.
+                        </p>
+                      </div>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playSuccessChime();
+                        speakPaymentReceived(150000);
+                      }}
+                      className="shrink-0 px-2.5 py-1.5 rounded-[6px] bg-white border border-[#D5D5D0] hover:bg-[#F0F0ED] text-[11px] font-semibold text-[#315C4C] flex items-center gap-1 cursor-pointer"
+                      title="Nghe thử âm thanh báo nhận tiền"
+                    >
+                      <Volume2 className="w-3.5 h-3.5" />
+                      <span>Nghe thử</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="auto-provider">Nguồn đọc biến động số dư</Label>
+                    <select
+                      id="auto-provider"
+                      className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-xs font-semibold text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                      value={provider}
+                      onChange={(e) =>
+                        setProvider(e.target.value as 'sepay' | 'casso' | 'webhook_only')
+                      }
+                    >
+                      <option value="sepay">SePay.vn (Khuyên dùng - Miễn phí)</option>
+                      <option value="casso">Casso.vn (API &amp; Webhook)</option>
+                      <option value="webhook_only">Webhook trực tiếp / App đọc thông báo ĐT</option>
+                    </select>
+                  </div>
+
+                  <div className="sm:col-span-2 space-y-1.5">
+                    <Label htmlFor="api-token">
+                      {provider === 'casso'
+                        ? 'Casso API Key (Hoặc để trống nếu chỉ dùng Webhook)'
+                        : 'SePay API Token (Lấy tại my.sepay.vn -> Cấu hình Công ty -> API Access)'}
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="api-token"
+                        type="password"
+                        placeholder={
+                          provider === 'webhook_only'
+                            ? 'Chế độ Webhook không bắt buộc nhập Token'
+                            : 'Nhập API Token để web tự động đọc giao dịch (hoạt động cả trên localhost)...'
+                        }
+                        value={apiToken}
+                        onChange={(e) => setApiToken(e.target.value)}
+                        className="font-mono text-xs flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleTestApiConnection}
+                        disabled={isTestingApi}
+                        isLoading={isTestingApi}
+                        className="shrink-0 text-xs font-semibold"
+                      >
+                        Kiểm tra kết nối
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {apiTestResult && (
+                  <div
+                    className={`p-3 rounded-[6px] border text-xs flex items-center gap-2 ${
+                      apiTestResult.success
+                        ? 'bg-[#EAF4EE] border-[#CEE6D7] text-[#2F7D55]'
+                        : 'bg-[#FDF2E9] border-[#C5221F]/30 text-[#C5221F]'
+                    }`}
+                  >
+                    {apiTestResult.success ? (
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                    )}
+                    <span>{apiTestResult.message}</span>
+                  </div>
+                )}
+
+                <div className="p-3.5 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[8px] space-y-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                      <p className="text-xs font-bold text-[#202124]">
+                        Địa chỉ Webhook nhận thông báo tiền vào (Tức thì):
+                      </p>
+                      <p className="text-[11px] text-[#737373]">
+                        Dán link này vào mục <strong>Tích hợp Webhooks</strong> trên SePay.vn, Casso.vn hoặc ứng dụng đọc thông báo ngân hàng trên điện thoại của bạn.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (typeof navigator !== 'undefined') {
+                          navigator.clipboard.writeText(webhookUrl);
+                          setWebhookCopied(true);
+                          setTimeout(() => setWebhookCopied(false), 2500);
+                        }
+                      }}
+                      className="px-2.5 py-1.5 rounded-[6px] bg-white border border-[#D5D5D0] hover:bg-[#F0F0ED] text-xs font-mono font-bold text-[#315C4C] flex items-center gap-1.5 shrink-0 cursor-pointer"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>{webhookCopied ? 'Đã sao chép!' : 'Sao chép Webhook URL'}</span>
+                    </button>
+                  </div>
+                  <div className="px-3 py-1.5 rounded bg-white border border-[#E8E8E5] font-mono text-xs text-[#202124] select-all overflow-x-auto">
+                    {webhookUrl}
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-[#EAF4EE]/60 border border-[#CEE6D7] rounded-[8px] text-xs space-y-1.5">
+                  <p className="font-bold text-[#202124]">
+                    💡 Hướng dẫn 3 bước để không cầm điện thoại vẫn tự nhảy đơn trên Web:
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1 text-[#333] text-[11.5px]">
+                    <li>
+                      Tạo tài khoản miễn phí tại <strong>my.sepay.vn</strong> (hoặc <strong>casso.vn</strong>) và liên kết với số tài khoản ngân hàng nhận tiền của bạn (chỉ cần làm 1 lần trên điện thoại chủ TK).
+                    </li>
+                    <li>
+                      Vào mục <strong>API Access</strong> trên SePay copy <strong>API Token</strong> dán vào ô bên trên (hoặc dán <strong>Webhook URL</strong> bên trên vào mục Webhooks của SePay).
+                    </li>
+                    <li>
+                      Bấm <strong>Lưu cấu hình</strong> bên dưới. Từ lúc này, tại quầy POS, khi khách quét mã QR và chuyển khoản xong, <strong>màn hình POS sẽ tự động phát loa báo tiền về và nhảy sang &quot;Thanh toán thành công&quot;</strong> sau 1–2 giây!
+                    </li>
+                  </ol>
+                </div>
+
+                <div className="pt-1">
+                  <Button type="submit" variant="primary" size="sm" className="gap-1.5">
+                    <Save className="w-3.5 h-3.5" />
+                    <span>Lưu toàn bộ cấu hình Thanh toán &amp; Tự động</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </form>
+
+          {/* Section 3: Live Webhook / Bank Feed & Simulator */}
+          <Card className="border-[#E8E8E5] bg-white shadow-xs">
+            <CardHeader className="border-b border-[#F0F0ED] pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <CardTitle className="text-sm font-semibold text-[#202124] flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-[#B7791F]" />
+                  3. Bảng theo dõi Tín hiệu Tiền về &amp; Giả lập Chuyển khoản
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Bạn có thể bắn thử một tín hiệu chuyển khoản tại đây trong khi đang mở màn hình POS ở tab bên cạnh để kiểm chứng tính năng tự động nhảy đơn.
+                </CardDescription>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={fetchWebhookLogs}
+                disabled={isLoadingLogs}
+                className="text-xs gap-1.5 shrink-0"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingLogs ? 'animate-spin' : ''}`} />
+                <span>Làm mới</span>
+              </Button>
+            </CardHeader>
+
+            <CardContent className="space-y-4 pt-4">
+              <div className="p-3 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[6px] flex flex-col sm:flex-row items-end gap-3">
+                <div className="w-full sm:w-44 space-y-1">
+                  <Label htmlFor="sim-code" className="text-xs">
+                    Mã nội dung trên QR POS
+                  </Label>
+                  <Input
+                    id="sim-code"
+                    value={simCode}
+                    onChange={(e) => setSimCode(e.target.value.toUpperCase())}
+                    placeholder="VD: EM8899"
+                    className="h-8 font-mono text-xs bg-white uppercase"
+                  />
+                </div>
+                <div className="w-full sm:w-44 space-y-1">
+                  <Label htmlFor="sim-amount" className="text-xs">
+                    Số tiền chuyển (VND)
+                  </Label>
+                  <Input
+                    id="sim-amount"
+                    value={simAmount}
+                    onChange={(e) => setSimAmount(e.target.value)}
+                    placeholder="VD: 150000"
+                    className="h-8 font-mono text-xs bg-white"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={handleSendSimulatedWebhook}
+                  className="w-full sm:w-auto gap-1.5 bg-[#2F7D55] hover:bg-[#256343] text-xs"
+                >
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>Bắn tín hiệu tiền về (Test)</span>
+                </Button>
+              </div>
+
+              {recentWebhooks.length === 0 ? (
+                <div className="p-6 text-center text-xs text-[#737373] border border-dashed border-[#E8E8E5] rounded-[6px]">
+                  Chưa có giao dịch chuyển khoản nào được ghi nhận trong phiên này.
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {recentWebhooks.map((tx) => (
+                    <div
+                      key={tx.id}
+                      className="p-2.5 rounded-[6px] border border-[#E8E8E5] bg-white flex items-center justify-between text-xs"
+                    >
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-[#2F7D55]">
+                            +{formatCurrency(tx.amount, 'VND')}
+                          </span>
+                          <Badge variant="outline" className="text-[10px] font-mono">
+                            {tx.gateway}
+                          </Badge>
+                          <span className="text-[10px] text-[#737373]">
+                            {formatTimeOnly(tx.receivedAt)}
+                          </span>
+                        </div>
+                        <p className="font-mono text-[11px] text-[#202124]">{tx.content}</p>
+                      </div>
+                      <span className="text-[10px] font-mono text-[#737373]">{tx.referenceCode}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Order Detail Modal */}
@@ -798,85 +1451,6 @@ export default function DashboardOrdersPage() {
                 </p>
               </div>
             )}
-
-            {/* Proof of Payment Verification Box */}
-            {selectedOrder.proof_image_url ? (
-              <div className="p-3 bg-white dark:bg-neutral-800 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-700 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#202124] dark:text-neutral-100 flex items-center gap-1.5">
-                    <Camera className="w-4 h-4 text-[#315C4C] dark:text-emerald-400" />
-                    <span>Ảnh minh chứng chuyển khoản:</span>
-                  </span>
-                  {selectedOrder.proof_verified ? (
-                    <Badge variant="success" className="text-[10px]">
-                      ✓ Đã khớp tiền
-                    </Badge>
-                  ) : (
-                    <Badge variant="warning" className="text-[10px]">
-                      Chờ đối soát
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewProofImage(selectedOrder.proof_image_url!)}
-                    className="group relative w-20 h-20 rounded-[6px] overflow-hidden border border-[#D5D5D0] dark:border-neutral-600 shrink-0 cursor-pointer"
-                    title="Bấm để xem phóng to ảnh minh chứng"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={selectedOrder.proof_image_url}
-                      alt="Minh chứng chuyển khoản"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                    />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-[10px] font-bold">
-                      Phóng to
-                    </div>
-                  </button>
-
-                  <div className="flex-1 space-y-2 text-xs">
-                    <p className="text-[11px] text-[#737373] dark:text-neutral-400 leading-relaxed">
-                      Ảnh do Thu ngân chụp/tải lên tại quầy khi khách quét mã VietQR.
-                      {selectedOrder.proof_verified_by && (
-                        <span className="block text-[#2F7D55] dark:text-emerald-400 font-medium mt-0.5">
-                          Đã đối soát bởi {selectedOrder.proof_verified_by}
-                          {selectedOrder.proof_verified_at ? ` lúc ${formatDate(selectedOrder.proof_verified_at)}` : ''}
-                        </span>
-                      )}
-                    </p>
-
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={selectedOrder.proof_verified ? 'outline' : 'primary'}
-                      onClick={() => {
-                        const nextVerified = !selectedOrder.proof_verified;
-                        setOrderProofVerified(selectedOrder.id, nextVerified, user?.fullName || 'Admin');
-                        setSelectedOrder({
-                          ...selectedOrder,
-                          proof_verified: nextVerified,
-                          proof_verified_by: nextVerified ? (user?.fullName || 'Admin') : null,
-                          proof_verified_at: nextVerified ? new Date().toISOString() : null,
-                        });
-                      }}
-                      className="gap-1.5 text-xs h-7.5"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>
-                        {selectedOrder.proof_verified ? 'Hủy xác nhận khớp tiền' : 'Xác nhận đã khớp tiền ✓'}
-                      </span>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ) : selectedOrder.payment_method === 'qr_manual' ? (
-              <div className="p-2.5 bg-[#FEF7EC] dark:bg-amber-950/30 border border-[#F8E3C3] dark:border-amber-900 rounded-[6px] text-xs text-[#8C5D17] dark:text-amber-300 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-[#B7791F]" />
-                <span>Đơn hàng thanh toán qua VietQR này chưa có ảnh minh chứng đính kèm.</span>
-              </div>
-            ) : null}
 
             <div>
               <p className="font-bold text-[#202124] mb-2 uppercase text-[10px] tracking-wider">
@@ -1115,7 +1689,7 @@ export default function DashboardOrdersPage() {
         isOpen={!!refundTargetOrder}
         onClose={() => setRefundTargetOrder(null)}
         title={`Lập Biên Bản Hoàn Tiền: ${refundTargetOrder?.order_number || ''}`}
-        description="Ghi nhận hoàn tiền / trả hàng đối với giao dịch đã thanh toán, giữ nguyên đơn gốc và lưu biên bản hoàn tiền trong Audit Log."
+        description="Ghi nhận hoàn tiền / trả hàng đối với giao dịch đã thanh toán, giữ nguyên đơn gốc và lưu biên bản hoàn tiền vào Nhật ký hoạt động."
       >
         {refundTargetOrder && (
           <form onSubmit={handleConfirmRefund} className="space-y-4 text-xs">
@@ -1233,38 +1807,6 @@ export default function DashboardOrdersPage() {
         isOpen={isReceiptOpen}
         onClose={() => setIsReceiptOpen(false)}
       />
-
-      {/* Lightbox Modal for Payment Proof Photo */}
-      <Modal
-        isOpen={!!previewProofImage}
-        onClose={() => setPreviewProofImage(null)}
-        title="Ảnh minh chứng chuyển khoản (Biên lai)"
-        description="Ảnh chụp màn hình giao dịch do thu ngân tải lên khi khách thanh toán VietQR."
-        maxWidth="xl"
-      >
-        {previewProofImage && (
-          <div className="space-y-4 text-center">
-            <div className="max-h-[70vh] overflow-auto rounded-[8px] border border-[#E8E8E5] dark:border-neutral-700 bg-black/5 flex items-center justify-center p-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={previewProofImage}
-                alt="Minh chứng chuyển khoản full"
-                className="max-h-[65vh] w-auto max-w-full object-contain rounded"
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setPreviewProofImage(null)}
-              >
-                Đóng
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
     </div>
   );
 }

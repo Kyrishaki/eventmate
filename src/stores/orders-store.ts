@@ -35,6 +35,7 @@ export interface BankConfig {
   provider?: 'sepay' | 'casso' | 'webhook_only';
   apiToken?: string;
   voiceAnnouncement?: boolean;
+  offlineQrImageUrl?: string | null;
 }
 
 export function normalizeVietQrBankId(bankId?: string | null): string {

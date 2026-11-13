@@ -133,6 +133,7 @@ export interface Product {
   deleted_at?: string | null;
   scheduled_purge_at?: string | null;
   collab_partner?: string | null;
+  tags?: string[];
   created_at: string;
   updated_at: string;
   category?: ProductCategory;

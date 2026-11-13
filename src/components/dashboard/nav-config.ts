@@ -5,7 +5,6 @@ import {
   Package,
   Boxes,
   ShoppingCart,
-  CreditCard,
   Users,
   BarChart3,
   Settings,
@@ -82,13 +81,6 @@ export const NAV_ITEMS: NavItemConfig[] = [
     tileToneClass: 'bg-[#F3E8FF] text-[#7E22CE]',
   },
   {
-    href: '/dashboard/payments',
-    labelKey: 'payments',
-    icon: CreditCard,
-    group: 'admin',
-    tileToneClass: 'bg-[#EAF4EE] text-[#2F7D55]',
-  },
-  {
     href: '/dashboard/analytics',
     labelKey: 'analytics',
     icon: BarChart3,
@@ -109,7 +101,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
     icon: History,
     group: 'admin',
     hideForCollab: true,
-    badge: 'Admin',
+    badge: 'Quản trị',
     tileToneClass: 'bg-[#F0F0ED] text-[#494949]',
   },
   {

@@ -1,8 +1,15 @@
 // HikaruStore Offline PWA Service Worker
-const CACHE_NAME = 'hikarustore-cache-v3';
+const CACHE_NAME = 'hikarustore-cache-v4';
 
 const STATIC_PRECACHE = [
   '/',
+  '/vi/pos',
+  '/vi/pos/orders',
+  '/vi/pos/sync',
+  '/vi/dashboard',
+  '/vi/dashboard/products',
+  '/vi/dashboard/inventory',
+  '/vi/dashboard/orders',
   '/manifest.json',
   '/logo.png',
   '/icon.png',
@@ -10,54 +17,114 @@ const STATIC_PRECACHE = [
   '/icon-192.png',
   '/icon-512.png',
   '/favicon.ico',
+  '/products/anime-figure-popup.svg',
+  '/products/banner-color-fiesta.svg',
+  '/products/banner-hobby-horizon-hn.svg',
+  '/products/banner-hobby-horizon.svg',
+  '/products/limbus-collab-set.svg',
+  '/products/limbus-diorama-mephi.svg',
+  '/products/limbus-figure-chibi.svg',
+  '/products/limbus-keychain-sinners.svg',
+  '/products/limbus-shaker-keychain.svg',
+  '/products/limbus-standee-ego.svg',
 ];
 
-// Install: precache essential shell assets
+// Install: precache essential shell routes and static assets individually so one 404/redirect never aborts caching
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_PRECACHE).catch((err) => {
-        console.warn('Precache failed for some assets:', err);
-      });
-    }).then(() => self.skipWaiting())
+    caches
+      .open(CACHE_NAME)
+      .then(async (cache) => {
+        await Promise.all(
+          STATIC_PRECACHE.map(async (assetUrl) => {
+            try {
+              const res = await fetch(assetUrl);
+              if (res && res.status === 200) {
+                await cache.put(assetUrl, res);
+              }
+            } catch (err) {
+              console.warn('Precache skipped for asset:', assetUrl, err);
+            }
+          })
+        );
+      })
+      .then(() => self.skipWaiting())
   );
 });
 
 // Activate: clean up older caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((keys) => {
+        return Promise.all(
+          keys.map((key) => {
+            if (key !== CACHE_NAME) {
+              return caches.delete(key);
+            }
+          })
+        );
+      })
+      .then(() => self.clients.claim())
   );
 });
 
-// Fetch: Network-first for navigation, Cache-first for static scripts and styles
+// Fetch: Network-first for navigation/RSC/VietQR, Cache-first for static scripts, styles, and images
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests, cross-origin requests, and browser extensions
-  if (
-    request.method !== 'GET' ||
-    !url.protocol.startsWith('http') ||
-    url.origin !== self.location.origin
-  ) {
+  if (request.method !== 'GET' || !url.protocol.startsWith('http')) {
     return;
   }
 
-  // Skip API routes and Next.js RSC / prefetch payloads so dynamic navigations never fail
-  if (
-    url.pathname.startsWith('/api/') ||
-    request.headers.get('RSC') === '1' ||
-    url.searchParams.has('_rsc')
-  ) {
+  // Allow caching VietQR dynamic images (Network-first with Cache Fallback)
+  if (url.origin === 'https://img.vietqr.io') {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
+          return networkResponse;
+        })
+        .catch(async () => {
+          const cached = await caches.match(request);
+          return cached || new Response('', { status: 504 });
+        })
+    );
+    return;
+  }
+
+  // Skip other cross-origin requests and API routes
+  if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) {
+    return;
+  }
+
+  // Next.js RSC / client-side navigation payloads -> Network-first with Cache Fallback
+  if (request.headers.get('RSC') === '1' || url.searchParams.has('_rsc')) {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
+          return networkResponse;
+        })
+        .catch(async () => {
+          const cached = await caches.match(request);
+          return (
+            cached ||
+            new Response('', {
+              status: 503,
+              headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+            })
+          );
+        })
+    );
     return;
   }
 
@@ -101,18 +168,21 @@ self.addEventListener('fetch', (event) => {
         .catch(async () => {
           const cached = await caches.match(request);
           if (cached) return cached;
-          // Fallback to cached root or POS if specific route not cached
+          // Fallback to cached POS or root if specific route not cached
           const fallback = (await caches.match('/vi/pos')) || (await caches.match('/'));
-          return fallback || new Response('Bạn đang ngoại tuyến. Vui lòng kiểm tra lại kết nối mạng.', {
-            status: 503,
-            headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-          });
+          return (
+            fallback ||
+            new Response('Bạn đang ngoại tuyến. Vui lòng kiểm tra lại kết nối mạng.', {
+              status: 503,
+              headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+            })
+          );
         })
     );
     return;
   }
 
-  // Default: Network with Cache Fallback (never resolve to undefined)
+  // Default: Network with Cache Fallback
   event.respondWith(
     fetch(request)
       .then((networkResponse) => {

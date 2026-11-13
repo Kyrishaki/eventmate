@@ -1226,16 +1226,16 @@ export default function PosTerminalPage() {
 
           {/* Bảng Sắp xếp & Bộ lọc Chi Tiết (Toàn bộ dùng Dropdown chuẩn) */}
           <div className="bg-white dark:bg-neutral-850 border border-[#E8E8E5] dark:border-neutral-700/80 rounded-[8px] p-2.5 mb-3 shadow-2xs space-y-2">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0 w-full sm:w-auto">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
+              <div className="grid grid-cols-2 lg:flex lg:flex-wrap items-start lg:items-center gap-2 flex-1 min-w-0 w-full">
                 {/* 1. Phân loại / Danh mục (Dropdown) */}
-                <div className="flex items-center gap-1.5 min-w-0 w-full sm:w-auto flex-1 sm:flex-none">
+                <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-1 min-w-0 w-full lg:w-auto lg:flex-none">
                   <Tag className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
                   <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Phân loại:</span>
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full sm:w-auto"
+                    className="h-9 lg:h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full min-w-0 lg:w-auto"
                   >
                     <option value="all">Tất cả phân loại ({workspaceCategories.total})</option>
                     {workspaceCategories.list.map((cat) => (
@@ -1251,13 +1251,13 @@ export default function PosTerminalPage() {
                   </select>
                 </div>
 
-                <label className="flex items-center gap-1.5 min-w-0 w-full sm:w-auto flex-1 sm:flex-none">
+                <label className="flex flex-col lg:flex-row items-stretch lg:items-center gap-1 min-w-0 w-full lg:w-auto lg:flex-none">
                   <Tag className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
                   <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Tag:</span>
                   <select
                     value={posTagFilter}
                     onChange={(e) => setPosTagFilter(e.target.value)}
-                    className="h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full sm:w-auto"
+                    className="h-9 lg:h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full min-w-0 lg:w-auto"
                   >
                     <option value="">Tất cả tag ({tagProducts.length})</option>
                     {productTags.map((tag) => (
@@ -1267,13 +1267,13 @@ export default function PosTerminalPage() {
                 </label>
 
                 {/* 2. Sắp xếp (Sorting Dropdown) */}
-                <div className="flex items-center gap-1.5 min-w-0 w-full sm:w-auto flex-1 sm:flex-none">
+                <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-1 min-w-0 w-full lg:w-auto lg:flex-none">
                   <ArrowUpDown className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
                   <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Sắp xếp:</span>
                   <select
                     value={posSortBy}
                     onChange={(e) => setPosSortBy(e.target.value as any)}
-                    className="h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full sm:w-auto"
+                    className="h-9 lg:h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full min-w-0 lg:w-auto"
                   >
                     <option value="default">Mặc định</option>
                     <option value="name_asc">Tên: A → Z</option>
@@ -1288,13 +1288,13 @@ export default function PosTerminalPage() {
                 </div>
 
                 {/* 3. Nguồn hàng (Source Dropdown) */}
-                <div className="flex items-center gap-1.5 min-w-0 w-full sm:w-auto flex-1 sm:flex-none">
+                <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-1 min-w-0 w-full lg:w-auto lg:flex-none">
                   <Store className="w-3.5 h-3.5 text-[#737373] dark:text-neutral-400 shrink-0" />
                   <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Nguồn:</span>
                   <select
                     value={posSourceFilter}
                     onChange={(e) => setPosSourceFilter(e.target.value as any)}
-                    className="h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full sm:w-auto"
+                    className="h-9 lg:h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full min-w-0 lg:w-auto"
                   >
                     <option value="all">Tất cả nguồn hàng</option>
                     <option value="store">👑 Shop chính (HikaruStore)</option>
@@ -1306,7 +1306,7 @@ export default function PosTerminalPage() {
               </div>
 
               {/* Result counter & Reset Filter */}
-              <div className="flex items-center gap-2 shrink-0 self-end sm:self-center ml-auto">
+              <div className="flex items-center gap-2 self-end lg:self-center lg:ml-auto">
                 <span className="text-xs text-[#737373] dark:text-neutral-400 font-medium">
                   Hiển thị <strong className="text-[#315C4C] dark:text-emerald-400 font-bold">{filteredProducts.length}</strong> / {activeProducts.length} sản phẩm
                 </span>

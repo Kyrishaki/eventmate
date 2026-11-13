@@ -1227,9 +1227,9 @@ export default function PosTerminalPage() {
           {/* Bảng Sắp xếp & Bộ lọc Chi Tiết (Toàn bộ dùng Dropdown chuẩn) */}
           <div className="bg-white dark:bg-neutral-850 border border-[#E8E8E5] dark:border-neutral-700/80 rounded-[8px] p-2.5 mb-3 shadow-2xs space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[280px]">
+              <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0 w-full sm:w-auto">
                 {/* 1. Phân loại / Danh mục (Dropdown) */}
-                <div className="flex items-center gap-1.5 min-w-[160px] flex-1 sm:flex-none">
+                <div className="flex items-center gap-1.5 min-w-0 w-full sm:w-auto flex-1 sm:flex-none">
                   <Tag className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
                   <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Phân loại:</span>
                   <select
@@ -1252,7 +1252,7 @@ export default function PosTerminalPage() {
                 </div>
 
                 {/* 2. Sắp xếp (Sorting Dropdown) */}
-                <div className="flex items-center gap-1.5 min-w-[155px] flex-1 sm:flex-none">
+                <div className="flex items-center gap-1.5 min-w-0 w-full sm:w-auto flex-1 sm:flex-none">
                   <ArrowUpDown className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
                   <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Sắp xếp:</span>
                   <select
@@ -1273,7 +1273,7 @@ export default function PosTerminalPage() {
                 </div>
 
                 {/* 3. Nguồn hàng (Source Dropdown) */}
-                <div className="flex items-center gap-1.5 min-w-[140px] flex-1 sm:flex-none">
+                <div className="flex items-center gap-1.5 min-w-0 w-full sm:w-auto flex-1 sm:flex-none">
                   <Store className="w-3.5 h-3.5 text-[#737373] dark:text-neutral-400 shrink-0" />
                   <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Nguồn:</span>
                   <select
@@ -1287,7 +1287,7 @@ export default function PosTerminalPage() {
                   </select>
                 </div>
 
-                <label className="flex items-center gap-1.5 min-w-[140px] flex-1 sm:flex-none">
+                <label className="flex items-center gap-1.5 min-w-0 w-full sm:w-auto flex-1 sm:flex-none">
                   <Tag className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
                   <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Tag:</span>
                   <select

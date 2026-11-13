@@ -5,6 +5,7 @@ allowBuilds:
   '@parcel/watcher': false
   '@swc/core': false
   sharp: false
+  supabase: true
   unrs-resolver: false
 minimumReleaseAgeExclude:
   - '@next/env@16.4.6'

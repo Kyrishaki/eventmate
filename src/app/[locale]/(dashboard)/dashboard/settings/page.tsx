@@ -33,6 +33,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { EventItem, Workspace } from '@/types/database';
+import TeamManagement from '@/components/dashboard/team-management';
 import { ThemeSelector } from '@/components/ui/theme-toggle';
 
 const POPULAR_BANKS = [
@@ -252,6 +253,13 @@ export default function SettingsPage() {
           </p>
         </div>
       </div>
+
+      <Button
+        variant="outline"
+        onClick={() => document.getElementById('team-management')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+      >
+        Đội ngũ &amp; tài khoản
+      </Button>
 
       {/* Auto-Sync Explanation Banner */}
       <div className="flex items-start gap-3 p-3.5 bg-[#EBF1EE] dark:bg-emerald-950/30 border border-[#315C4C]/30 rounded-[8px] text-xs text-[#202124] dark:text-neutral-200">
@@ -722,6 +730,9 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+      <section id="team-management" aria-label="Đội ngũ và tài khoản" className="scroll-mt-20">
+        <TeamManagement />
+      </section>
     </div>
   );
 }

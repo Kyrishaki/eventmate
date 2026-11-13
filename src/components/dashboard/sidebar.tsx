@@ -4,7 +4,6 @@ import * as React from 'react';
 import { usePathname, Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/stores/auth-store';
-import { useThemeStore } from '@/stores/theme-store';
 import { cn } from '@/lib/utils';
 import { getGroupedNavSections, isNavRouteActive } from './nav-config';
 import {
@@ -34,7 +33,6 @@ export function Sidebar({
   const pathname = usePathname();
   const t = useTranslations('nav');
   const { user } = useAuthStore();
-  const { resolvedTheme, setTheme } = useThemeStore();
 
   const isCollab = user?.role === 'collab_partner';
   const sections = React.useMemo(() => getGroupedNavSections(isCollab), [isCollab]);
@@ -231,7 +229,7 @@ export function Sidebar({
           </nav>
         </div>
 
-        {/* Footer Area: Sáng/Tối toggle & User profile chip */}
+        {/* Footer Area: User profile chip */}
         <div
           className={cn(
             'p-3.5 border-t border-[#2E2E32] flex flex-col gap-3 shrink-0',
@@ -239,42 +237,8 @@ export function Sidebar({
             isCollapsed ? 'lg:hidden' : 'lg:flex'
           )}
         >
-          {/* Sáng / Tối segment toggle button */}
-          <div
-            role="group"
-            aria-label="Chế độ hiển thị"
-            className="grid grid-cols-2 gap-1 p-1 bg-[#0F0F10] border border-[#2E2E32] rounded-[12px]"
-          >
-            <button
-              type="button"
-              onClick={() => setTheme('light')}
-              aria-pressed={resolvedTheme === 'light'}
-              className={cn(
-                'h-9 rounded-[8px] text-[13.5px] font-medium transition-all cursor-pointer flex items-center justify-center',
-                resolvedTheme === 'light'
-                  ? 'bg-[#F4F4F2] text-[#0F0F10] font-bold shadow-xs'
-                  : 'text-[#A3A3A0] hover:text-[#F4F4F2] bg-transparent'
-              )}
-            >
-              Sáng
-            </button>
-            <button
-              type="button"
-              onClick={() => setTheme('dark')}
-              aria-pressed={resolvedTheme === 'dark'}
-              className={cn(
-                'h-9 rounded-[8px] text-[13.5px] font-medium transition-all cursor-pointer flex items-center justify-center',
-                resolvedTheme === 'dark'
-                  ? 'bg-[#F4F4F2] text-[#0F0F10] font-bold shadow-xs'
-                  : 'text-[#A3A3A0] hover:text-[#F4F4F2] bg-transparent'
-              )}
-            >
-              Tối
-            </button>
-          </div>
-
           {/* User Profile Chip (Initial Avatar + Name + Role) */}
-          <div className="pt-2 border-t border-[#2E2E32]/70 flex items-center gap-2.5 min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0">
             <span
               aria-hidden="true"
               className="w-9 h-9 rounded-full bg-[#232326] text-[#F4F4F2] flex items-center justify-center text-[14px] font-bold shrink-0 border border-[#2E2E32]"

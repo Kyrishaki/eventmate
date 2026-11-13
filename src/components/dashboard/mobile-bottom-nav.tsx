@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/stores/auth-store';
 import { cn } from '@/lib/utils';
 import { WorkspaceSwitcher } from './workspace-switcher';
-import { DensityToggle } from '@/components/ui/density-toggle';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import {
@@ -330,7 +329,6 @@ export function MobileBottomNav({
                   <span className="text-[11px] font-semibold text-[#737373]">Hiển thị:</span>
                   <div className="flex items-center gap-2">
                     <ThemeToggle />
-                    <DensityToggle />
                     <LanguageSwitcher />
                   </div>
                 </div>

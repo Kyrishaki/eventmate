@@ -147,16 +147,16 @@ export default function DashboardOverviewPage() {
   };
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-5 bg-[#0F0F10] text-[#F4F4F2] font-sans">
+    <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-5 bg-[#0F0F10] text-[#F4F4F2] font-sans">
       {/* Top Filter & Quick Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-[#19191B] border border-[#2E2E32] rounded-[14px]">
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 min-w-0 flex-1">
           <Filter className="w-4 h-4 text-[#F5B301] shrink-0" />
           <span className="text-[13px] font-semibold text-[#A3A3A0] shrink-0">Lọc sự kiện:</span>
           <select
             value={selectedEventId}
             onChange={(e) => handleEventChange(e.target.value)}
-            className="h-9 px-3 text-[13px] font-medium text-[#F4F4F2] bg-[#232326] border border-[#2E2E32] rounded-[8px] focus:outline-none focus:border-[#F5B301] cursor-pointer max-w-xs"
+            className="h-9 min-w-0 flex-1 sm:flex-none sm:w-auto px-3 text-[13px] font-medium text-[#F4F4F2] bg-[#232326] border border-[#2E2E32] rounded-[8px] focus:outline-none focus:border-[#F5B301] cursor-pointer sm:max-w-xs"
           >
             <option value="all">Tất cả sự kiện (Số liệu thực tế)</option>
             {realEvents.map((evt) => (
@@ -186,11 +186,11 @@ export default function DashboardOverviewPage() {
           )}
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="grid grid-cols-2 sm:flex items-center gap-2 shrink-0 w-full sm:w-auto">
           <button
             type="button"
             onClick={handleExportExcel}
-            className="h-9 px-3.5 rounded-[10px] border border-[#4A4A4F] bg-transparent hover:bg-[#232326] text-[#F4F4F2] text-[13px] font-semibold flex items-center gap-2 transition-all cursor-pointer"
+            className="h-9 justify-center px-2.5 sm:px-3.5 rounded-[10px] border border-[#4A4A4F] bg-transparent hover:bg-[#232326] text-[#F4F4F2] text-[12px] sm:text-[13px] font-semibold flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap"
             title="Xuất file Excel"
           >
             <Download className="w-3.5 h-3.5 text-[#4CC38A]" />
@@ -198,7 +198,7 @@ export default function DashboardOverviewPage() {
           </button>
           <Link
             href="/pos"
-            className="h-9 px-4 rounded-[10px] bg-[#F5B301] hover:bg-[#E5A500] text-[#1A1300] text-[13px] font-bold flex items-center gap-2 transition-all"
+            className="h-9 justify-center px-2.5 sm:px-4 rounded-[10px] bg-[#F5B301] hover:bg-[#E5A500] text-[#1A1300] text-[12px] sm:text-[13px] font-bold flex items-center gap-1.5 sm:gap-2 transition-all whitespace-nowrap"
           >
             <TabletSmartphone className="w-4 h-4" />
             <span>Mở POS bán hàng</span>
@@ -226,23 +226,23 @@ export default function DashboardOverviewPage() {
       )}
 
       {/* SECTION 1: Cần xử lý (Matching C01-Today.dc.html) */}
-      <section className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] px-5 py-2">
-        <div className="flex items-center justify-between py-2.5">
+      <section className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] px-4 sm:px-5 py-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-2.5">
           <h2 className="text-[13px] text-[#A3A3A0] font-semibold uppercase tracking-wider m-0">
             Cần xử lý
           </h2>
           <Link
             href="/pos"
-            className="h-9 px-3.5 rounded-[10px] border border-[#4A4A4F] hover:border-[#F5B301] bg-transparent text-[#F4F4F2] text-[13px] font-semibold flex items-center gap-1.5 transition-colors"
+            className="h-9 w-full sm:w-auto justify-center px-3.5 rounded-[10px] border border-[#4A4A4F] hover:border-[#F5B301] bg-transparent text-[#F4F4F2] text-[13px] font-semibold flex items-center gap-1.5 transition-colors"
           >
             <span>Mở màn bán hàng</span>
           </Link>
         </div>
 
         {/* Row 1: Đơn giữ chờ đối soát */}
-        <div className="flex items-center gap-3 py-3 border-t border-[#2E2E32]">
+        <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 py-3 border-t border-[#2E2E32]">
           <span className="w-2.5 h-2.5 rounded-full bg-[#F5B301] shrink-0" />
-          <span className="flex-1 text-[14.5px]">
+          <span className="flex-1 min-w-0 text-[13px] sm:text-[14.5px] leading-5">
             <strong className="font-semibold text-[#F4F4F2]">
               {pendingPreordersCount} đơn giữ
             </strong>{' '}
@@ -250,16 +250,16 @@ export default function DashboardOverviewPage() {
           </span>
           <Link
             href="/dashboard/payments"
-            className="h-9 px-4 rounded-[10px] bg-[#F4F4F2] text-[#0F0F10] hover:bg-white text-[13px] font-semibold flex items-center transition-all"
+            className="h-9 shrink-0 self-center px-3 sm:px-4 rounded-[10px] bg-[#F4F4F2] text-[#0F0F10] hover:bg-white text-[12px] sm:text-[13px] font-semibold flex items-center transition-all"
           >
             Đối soát
           </Link>
         </div>
 
         {/* Row 2: Kho tổng chưa cấp */}
-        <div className="flex items-center gap-3 py-3 border-t border-[#2E2E32]">
+        <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 py-3 border-t border-[#2E2E32]">
           <span className="w-2.5 h-2.5 rounded-full bg-[#A3A3A0] shrink-0" />
-          <span className="flex-1 text-[14.5px]">
+          <span className="flex-1 min-w-0 text-[13px] sm:text-[14.5px] leading-5">
             <strong className="font-semibold text-[#F4F4F2]">
               {unallocatedInventoryCount} món
             </strong>{' '}
@@ -267,7 +267,7 @@ export default function DashboardOverviewPage() {
           </span>
           <Link
             href="/dashboard/inventory"
-            className="h-9 px-4 rounded-[10px] border border-[#4A4A4F] hover:border-[#F5B301] bg-transparent text-[#F4F4F2] text-[13px] font-semibold flex items-center transition-all"
+            className="h-9 shrink-0 self-center px-3 sm:px-4 rounded-[10px] border border-[#4A4A4F] hover:border-[#F5B301] bg-transparent text-[#F4F4F2] text-[12px] sm:text-[13px] font-semibold flex items-center transition-all"
           >
             Xem kho
           </Link>
@@ -275,27 +275,27 @@ export default function DashboardOverviewPage() {
       </section>
 
       {/* SECTION 2: 4 Thẻ chỉ số chính (.g4 - Matching C01-Today.dc.html) */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Metric 1: Doanh thu */}
-        <div className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-4.5 flex flex-col gap-1.5">
+        <div className="min-w-0 bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-3.5 sm:p-4.5 flex flex-col gap-1.5">
           <span className="text-[13px] text-[#A3A3A0]">Doanh thu</span>
-          <span className="text-[26px] sm:text-[28px] font-bold text-[#F4F4F2] tracking-tight">
+          <span className="text-xl sm:text-[28px] font-bold text-[#F4F4F2] tracking-tight break-words">
             {formatCurrency(totalRevenue, 'VND')}
           </span>
         </div>
 
         {/* Metric 2: Đơn hoàn tất */}
-        <div className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-4.5 flex flex-col gap-1.5">
+        <div className="min-w-0 bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-3.5 sm:p-4.5 flex flex-col gap-1.5">
           <span className="text-[13px] text-[#A3A3A0]">Đơn hoàn tất</span>
-          <span className="text-[26px] sm:text-[28px] font-bold text-[#F4F4F2] tracking-tight">
+          <span className="text-xl sm:text-[28px] font-bold text-[#F4F4F2] tracking-tight">
             {netOrders.length}
           </span>
         </div>
 
         {/* Metric 3: Quầy đang hoạt động */}
-        <div className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-4.5 flex flex-col gap-1.5">
+        <div className="min-w-0 bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-3.5 sm:p-4.5 flex flex-col gap-1.5">
           <span className="text-[13px] text-[#A3A3A0]">Quầy đang hoạt động</span>
-          <span className="text-[26px] sm:text-[28px] font-bold text-[#F4F4F2] tracking-tight">
+          <span className="text-xl sm:text-[28px] font-bold text-[#F4F4F2] tracking-tight">
             {activeBoothsCount}{' '}
             <span className="text-[14px] text-[#A3A3A0] font-normal">
               / {filteredBooths.length} quầy
@@ -304,9 +304,9 @@ export default function DashboardOverviewPage() {
         </div>
 
         {/* Metric 4: Tiền mặt trong két */}
-        <div className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-4.5 flex flex-col gap-1.5">
+        <div className="min-w-0 bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-3.5 sm:p-4.5 flex flex-col gap-1.5">
           <span className="text-[13px] text-[#A3A3A0]">Tiền mặt trong két</span>
-          <span className="text-[26px] sm:text-[28px] font-bold text-[#F4F4F2] tracking-tight">
+          <span className="text-xl sm:text-[28px] font-bold text-[#F4F4F2] tracking-tight break-words">
             {formatCurrency(cashInDrawer, 'VND')}
           </span>
         </div>

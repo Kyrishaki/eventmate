@@ -5,7 +5,6 @@ import { useAuthStore, getVietnameseRoleLabel } from '@/stores/auth-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { DensityToggle } from '@/components/ui/density-toggle';
 import { SyncStatusBadge } from '@/components/ui/sync-status-badge';
 import { fetchCloudSnapshot } from '@/lib/cloud-sync';
 import { Badge } from '@/components/ui/badge';
@@ -72,7 +71,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
         </div>
       </div>
 
-      {/* Right: Sync Status, Language, Theme, Scale, Guest Preview, Profile & Logout */}
+      {/* Right: Sync Status, Language, Theme, Guest Preview, Profile & Logout */}
       <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
         <SyncStatusBadge
           status={syncState}
@@ -84,7 +83,6 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
 
         <div className="hidden md:flex items-center gap-2">
           <LanguageSwitcher />
-          <DensityToggle />
         </div>
 
         <ThemeToggle />

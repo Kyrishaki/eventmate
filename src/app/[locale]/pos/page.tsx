@@ -23,7 +23,6 @@ import { ReceiptModal } from '@/components/pos/receipt-modal';
 import { CameraBarcodeScanner } from '@/components/pos/camera-barcode-scanner';
 import { useShiftStore } from '@/stores/shift-store';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { DensityToggle } from '@/components/ui/density-toggle';
 import { usePreorderStore } from '@/stores/preorder-store';
 import { useRealtimeCartSync } from '@/stores/realtime-cart-sync';
 import { initCloudSync, fetchCloudSnapshot } from '@/lib/cloud-sync';
@@ -1094,7 +1093,6 @@ export default function PosTerminalPage() {
 
             <ThemeToggle />
 
-            <DensityToggle />
           </div>
         </div>
 
@@ -2842,8 +2840,7 @@ export default function PosTerminalPage() {
             </p>
             <div className="flex items-center justify-between">
               <span className="text-xs text-[#202124]">Tỉ lệ màn hình:</span>
-              <DensityToggle />
-            </div>
+              </div>
             <div className="flex items-center justify-between pt-1 border-t border-[#E8E8E5]">
               <span className="text-xs text-[#202124]">Chế độ sáng / tối:</span>
               <ThemeToggle />

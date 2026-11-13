@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { Selector } from '@astryxdesign/core/Selector';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { useDataStore } from '@/stores/data-store';
@@ -337,19 +338,13 @@ export default function PosTerminalPage() {
   const [posSortBy, setPosSortBy] = React.useState<
     'default' | 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc' | 'stock_desc' | 'stock_asc' | 'reserved_desc' | 'newest'
   >('default');
-  const [posStockFilter, setPosStockFilter] = React.useState<
-    'all' | 'in_stock' | 'low_stock' | 'out_of_stock' | 'has_preorder'
-  >('all');
-  const [posPriceFilter, setPosPriceFilter] = React.useState<
-    'all' | 'under_50k' | '50k_150k' | '150k_300k' | 'above_300k'
-  >('all');
+  const [posTagFilter, setPosTagFilter] = React.useState('');
   const [hideSoldOut, setHideSoldOut] = React.useState(false);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = React.useState(false);
 
   const isPosFilterActive =
     posSortBy !== 'default' ||
-    posStockFilter !== 'all' ||
-    posPriceFilter !== 'all' ||
+    posTagFilter !== '' ||
     posSourceFilter !== 'all' ||
     selectedCategory !== 'all' ||
     Boolean(searchQuery.trim()) ||
@@ -357,8 +352,7 @@ export default function PosTerminalPage() {
 
   const resetPosFilters = React.useCallback(() => {
     setPosSortBy('default');
-    setPosStockFilter('all');
-    setPosPriceFilter('all');
+    setPosTagFilter('');
     setPosSourceFilter('all');
     setSelectedCategory('all');
     setSearchQuery('');
@@ -518,6 +512,10 @@ export default function PosTerminalPage() {
     return { list, total: baseProducts.length, uncategorizedCount };
   }, [activeProducts, categories, activeWorkspace, posSourceFilter]);
 
+  const productTags = [...new Set(activeProducts.flatMap((product) => product.tags || []))]
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, 'vi'));
+
   const filteredProducts = React.useMemo(() => {
     const list = activeProducts.filter((p) => {
       // 1. Source filter
@@ -535,26 +533,14 @@ export default function PosTerminalPage() {
 
       const prodVariants = variants.filter((v) => v.product_id === p.id);
       const totalAvailable = prodVariants.reduce((sum, v) => sum + getVariantAvailableStock(v.id), 0);
-      const totalReserved = prodVariants.reduce((sum, v) => sum + (v.reserved_quantity || 0), 0);
 
       // 3. Hide sold out toggle
       if (hideSoldOut && totalAvailable <= 0) {
         return false;
       }
 
-      // 4. Stock status filter
-      if (posStockFilter === 'in_stock' && totalAvailable <= 0) return false;
-      if (posStockFilter === 'low_stock' && (totalAvailable <= 0 || totalAvailable > 5)) return false;
-      if (posStockFilter === 'out_of_stock' && totalAvailable > 0) return false;
-      if (posStockFilter === 'has_preorder' && totalReserved <= 0) return false;
-
-      // 5. Price range filter
-      const prices = prodVariants.map((v) => v.price).filter((pr) => typeof pr === 'number' && !isNaN(pr));
-      const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
-      if (posPriceFilter === 'under_50k' && minPrice >= 50000) return false;
-      if (posPriceFilter === '50k_150k' && (minPrice < 50000 || minPrice > 150000)) return false;
-      if (posPriceFilter === '150k_300k' && (minPrice < 150000 || minPrice > 300000)) return false;
-      if (posPriceFilter === 'above_300k' && minPrice <= 300000) return false;
+      // Filter by the product's existing tags.
+      if (posTagFilter && !p.tags?.includes(posTagFilter)) return false;
 
       // 6. Search query
       if (searchQuery.trim()) {
@@ -573,6 +559,11 @@ export default function PosTerminalPage() {
     return list.sort((a, b) => {
       const aVariants = variants.filter((v) => v.product_id === a.id);
       const bVariants = variants.filter((v) => v.product_id === b.id);
+
+      // Always keep sellable products ahead of sold-out products.
+      const aInStock = aVariants.some((v) => getVariantAvailableStock(v.id) > 0);
+      const bInStock = bVariants.some((v) => getVariantAvailableStock(v.id) > 0);
+      if (aInStock !== bInStock) return aInStock ? -1 : 1;
 
       if (posSortBy === 'name_asc') {
         return a.name.localeCompare(b.name, 'vi');
@@ -618,11 +609,12 @@ export default function PosTerminalPage() {
     selectedCategory,
     variants,
     hideSoldOut,
-    posStockFilter,
-    posPriceFilter,
+    posTagFilter,
     searchQuery,
     posSortBy,
     allocations,
+    cart,
+    getRemoteHeldQty,
     selectedBoothId,
     effectiveBooths,
     booths,
@@ -1290,37 +1282,16 @@ export default function PosTerminalPage() {
                   </select>
                 </div>
 
-                {/* 4. Tình trạng hàng (Stock filter Dropdown) */}
-                <div className="flex items-center gap-1.5 min-w-[140px] flex-1 sm:flex-none">
-                  <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Tình trạng:</span>
-                  <select
-                    value={posStockFilter}
-                    onChange={(e) => setPosStockFilter(e.target.value as any)}
-                    className="h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full sm:w-auto"
-                  >
-                    <option value="all">Tất cả trạng thái</option>
-                    <option value="in_stock">Còn hàng khả dụng</option>
-                    <option value="low_stock">Sắp hết hàng (≤ 5)</option>
-                    <option value="out_of_stock">Hết hàng (0)</option>
-                    <option value="has_preorder">Có hàng Keep</option>
-                  </select>
-                </div>
-
-                {/* 5. Khoảng giá (Price range Dropdown) */}
-                <div className="flex items-center gap-1.5 min-w-[130px] flex-1 sm:flex-none">
-                  <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Giá:</span>
-                  <select
-                    value={posPriceFilter}
-                    onChange={(e) => setPosPriceFilter(e.target.value as any)}
-                    className="h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full sm:w-auto"
-                  >
-                    <option value="all">Tất cả mức giá</option>
-                    <option value="under_50k">Dưới 50.000 ₫</option>
-                    <option value="50k_150k">50.000 ₫ – 150.000 ₫</option>
-                    <option value="150k_300k">150.000 ₫ – 300.000 ₫</option>
-                    <option value="above_300k">Trên 300.000 ₫</option>
-                  </select>
-                </div>
+                <Selector
+                  label="Tag"
+                  size="sm"
+                  value={posTagFilter}
+                  onChange={setPosTagFilter}
+                  options={[
+                    { value: '', label: 'Tất cả tag' },
+                    ...productTags.map((tag) => ({ value: tag, label: tag })),
+                  ]}
+                />
               </div>
 
               {/* Result counter & Reset Filter */}
@@ -1387,7 +1358,7 @@ export default function PosTerminalPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
               {filteredProducts.map((prod) => {
                 const prodVariants = variants.filter((v) => v.product_id === prod.id);
-                const activeVarId = selectedVariantMap[prod.id] || prodVariants[0]?.id;
+                const activeVarId = selectedVariantMap[prod.id] || prodVariants.find((v) => getVariantAvailableStock(v.id) > 0)?.id || prodVariants[0]?.id;
                 const activeVariant =
                   prodVariants.find((v) => v.id === activeVarId) || prodVariants[0];
 

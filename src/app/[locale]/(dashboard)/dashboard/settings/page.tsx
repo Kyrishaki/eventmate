@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useDataStore } from '@/stores/data-store';
-import { useOrdersStore, normalizeVietQrBankId } from '@/stores/orders-store';
+import { useOrdersStore, normalizeVietQrBankId, getBankDisplayName } from '@/stores/orders-store';
 import { usePreorderStore } from '@/stores/preorder-store';
 import { useAuditStore } from '@/stores/audit-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -124,7 +124,7 @@ export default function SettingsPage() {
     setEmail(activeWorkspace.email || 'contact@hikarustore.vn');
     setAddress(activeWorkspace.address || 'Gian Hàng HikaruStore, Khu phức hợp Sự kiện, Q.1, TP. Hồ Chí Minh');
     setSocialLink(activeWorkspace.social_link || 'https://zalo.me/0988776655');
-    setBankId(activeWorkspace.bank_name || activeBankConfig.bankId || 'MB');
+    setBankId(normalizeVietQrBankId(activeWorkspace.bank_name || activeBankConfig.bankId));
     setAccountNo(activeWorkspace.bank_account_no || activeBankConfig.accountNo || '0988776655');
     setAccountName(activeWorkspace.bank_account_name || activeBankConfig.accountName || 'NGUYEN VAN TUAN');
   }
@@ -544,7 +544,7 @@ export default function SettingsPage() {
                   <span>Mã QR Xem Trước Của Bạn</span>
                 </p>
                 <p className="text-[11px] text-[#737373] dark:text-neutral-400">
-                  Ngân hàng: <strong>{bankId}</strong> • Số TK:{' '}
+                  Ngân hàng: <strong>{getBankDisplayName(bankId)}</strong> • Số TK:{' '}
                   <strong className="font-mono text-[#202124] dark:text-neutral-200">{accountNo || '(Chưa nhập)'}</strong>
                 </p>
                 <p className="text-[11px] text-[#737373] dark:text-neutral-400">

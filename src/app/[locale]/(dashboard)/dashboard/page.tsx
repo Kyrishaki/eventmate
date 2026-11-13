@@ -6,7 +6,6 @@ import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useDataStore } from '@/stores/data-store';
 import { useOrdersStore } from '@/stores/orders-store';
 import { usePreorderStore } from '@/stores/preorder-store';
-import { useShiftStore } from '@/stores/shift-store';
 import { useAuthStore, canManageSandboxData } from '@/stores/auth-store';
 import { Link } from '@/i18n/routing';
 import { formatCurrency } from '@/lib/utils';
@@ -43,7 +42,6 @@ export default function DashboardOverviewPage() {
   const { events, booths, variants, allocations, products } = useDataStore();
   const { orders } = useOrdersStore();
   const { preorders } = usePreorderStore();
-  const { activeShift } = useShiftStore();
   const { user } = useAuthStore();
   const isCollab = user?.role === 'collab_partner';
   const isOwnerOrAdmin = canManageSandboxData(user?.role);
@@ -126,12 +124,15 @@ export default function DashboardOverviewPage() {
       return sum + Math.max(0, variant.total_inventory - allocated);
     }, 0);
 
-  // Cash in drawer
-  const cashInDrawer = activeShift
-    ? activeShift.startingCashFloat + activeShift.totalCashSales
-    : netOrders
-        .filter((o) => o.payment_method === 'cash')
-        .reduce((sum, o) => sum + o.final_amount, 0);
+  // Stock sent to the selected event's booths, after completed sales.
+  const productsAddedToBooths = filteredAllocations.reduce(
+    (sum, allocation) => sum + allocation.allocated_quantity,
+    0
+  );
+  const productsRemainingAtBooths = filteredAllocations.reduce(
+    (sum, allocation) => sum + Math.max(0, allocation.allocated_quantity - allocation.sold_quantity),
+    0
+  );
 
   const handleExportExcel = () => {
     exportEventToExcel({
@@ -303,11 +304,12 @@ export default function DashboardOverviewPage() {
           </span>
         </div>
 
-        {/* Metric 4: Tiền mặt trong két */}
+        {/* Metric 4: Stock remaining at booths */}
         <div className="min-w-0 bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-3.5 sm:p-4.5 flex flex-col gap-1.5">
-          <span className="text-[13px] text-[#A3A3A0]">Tiền mặt trong két</span>
+          <span className="text-[13px] text-[#A3A3A0]">Sản phẩm còn lại / đã thêm</span>
           <span className="text-xl sm:text-[28px] font-bold text-[#F4F4F2] tracking-tight break-words">
-            {formatCurrency(cashInDrawer, 'VND')}
+            {productsRemainingAtBooths.toLocaleString('vi-VN')} / {productsAddedToBooths.toLocaleString('vi-VN')}
+            <span className="ml-1 text-[13px] text-[#A3A3A0] font-normal">món</span>
           </span>
         </div>
       </section>

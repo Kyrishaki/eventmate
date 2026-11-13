@@ -284,13 +284,7 @@ export default function ProductsPage() {
   }, [workspaceProducts]);
 
   function toggleTagFilter(tag: string) {
-    setSelectedTags((prev) => {
-      const exists = prev.some((t) => t.toLowerCase() === tag.toLowerCase());
-      if (exists) {
-        return prev.filter((t) => t.toLowerCase() !== tag.toLowerCase());
-      }
-      return [...prev, tag];
-    });
+    setSelectedTags((previous) => previous[0]?.toLowerCase() === tag.toLowerCase() ? [] : [tag]);
   }
 
   function addTagsFromInput(rawInput: string) {
@@ -369,6 +363,36 @@ export default function ProductsPage() {
       preordCount,
     };
   }, [workspaceProducts, variants, allocations]);
+
+  const matchesOtherFilters = (p: Product) => {
+    const archived = Boolean(p.is_deleted || !p.is_active);
+    const summary = calculateProductStock(variants.filter((v) => v.product_id === p.id), allocations);
+    const soldOut = summary.total > 0 && summary.offlineAvailable <= 0;
+    if (statusFilter === 'active' && (archived || soldOut)) return false;
+    if (statusFilter === 'sold_out' && (archived || !soldOut)) return false;
+    if (statusFilter === 'archived' && !archived) return false;
+    const query = searchQuery.trim().toLowerCase();
+    return !query || p.name.toLowerCase().includes(query) ||
+      (p.tags || []).some((tag) => tag.toLowerCase().includes(query)) ||
+      variants.some((v) => v.product_id === p.id && v.sku.toLowerCase().includes(query));
+  };
+  const categoryOptions = workspaceProducts.filter((p) => matchesOtherFilters(p) &&
+    (!selectedTags.length || (p.tags || []).some((tag) => tag.toLowerCase() === selectedTags[0].toLowerCase())));
+  const tagOptions = workspaceProducts.filter((p) => matchesOtherFilters(p) &&
+    (selectedCategory === 'all' || p.category_id === selectedCategory));
+  const categoryOptionCounts = new Map<string, number>();
+  categoryOptions.forEach((p) => {
+    if (p.category_id) categoryOptionCounts.set(p.category_id, (categoryOptionCounts.get(p.category_id) || 0) + 1);
+  });
+  const tagOptionCounts = new Map<string, { name: string; count: number }>();
+  tagOptions.forEach((p) => {
+    new Set((p.tags || []).map((tag) => tag.trim().toLowerCase()).filter(Boolean)).forEach((key) => {
+      const name = (p.tags || []).find((tag) => tag.trim().toLowerCase() === key)!.trim();
+      const current = tagOptionCounts.get(key);
+      tagOptionCounts.set(key, { name: current?.name || name, count: (current?.count || 0) + 1 });
+    });
+  });
+  const availableTags = [...tagOptionCounts.values()].sort((a, b) => a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' }));
 
   const filteredProducts = React.useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -904,14 +928,30 @@ export default function ProductsPage() {
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
-                <option value="all">{t('allCategories')}</option>
-                {allExistingCategories.map((c) => (
+                <option value="all">{t('allCategories')} ({categoryOptions.length})</option>
+                {allExistingCategories.filter((c) => categoryOptionCounts.has(c.id) || c.id === selectedCategory).map((c) => (
                   <option key={c.id || c.name} value={c.id}>
-                    {c.name} {c.count > 0 ? `(${c.count})` : ''}
+                    {c.name} ({categoryOptionCounts.get(c.id) || 0})
                   </option>
                 ))}
               </select>
             </div>
+
+            <label className="flex items-center gap-1.5 min-w-0">
+              <Tag className="w-3.5 h-3.5 text-[#315C4C] shrink-0" />
+              <span className="text-[11px] font-bold text-[#737373] shrink-0">Tag:</span>
+              <select
+                value={selectedTags[0] || ''}
+                onChange={(event) => setSelectedTags(event.target.value ? [event.target.value] : [])}
+                className="h-8 rounded-lg border border-[#E8E8E5] bg-white px-2 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C] max-w-36 sm:max-w-48"
+              >
+                <option value="">Tất cả tag ({tagOptions.length})</option>
+                {availableTags.map((tag) => <option key={tag.name} value={tag.name}>{tag.name} ({tag.count})</option>)}
+                {selectedTags[0] && !availableTags.some((tag) => tag.name.toLowerCase() === selectedTags[0].toLowerCase()) && (
+                  <option value={selectedTags[0]}>{selectedTags[0]} (0)</option>
+                )}
+              </select>
+            </label>
 
             <div className="relative flex items-center">
               <ArrowUpDown className="w-3.5 h-3.5 text-[#9E9E9C] absolute left-2.5 pointer-events-none" />
@@ -948,55 +988,7 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        {/* Multi-Tag Quick Filter Bar */}
-        {allExistingTags.some((tg) => tg.count > 0) && (
-          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-[#F0F0ED]">
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#737373] mr-1">
-              <Hash className="w-3 h-3 text-[#315C4C]" />
-              <span>Lọc đa Tag:</span>
-            </span>
-            {allExistingTags
-              .filter((tg) => tg.count > 0)
-              .map((tg) => {
-                const isSelected = selectedTags.some(
-                  (s) => s.toLowerCase() === tg.name.toLowerCase()
-                );
-                return (
-                  <button
-                    key={tg.name}
-                    type="button"
-                    onClick={() => toggleTagFilter(tg.name)}
-                    className={cn(
-                      'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] border transition-all cursor-pointer',
-                      isSelected
-                        ? 'bg-[#315C4C] text-white border-[#315C4C] font-semibold shadow-2xs'
-                        : 'bg-[#F7F7F5] text-[#494949] border-[#E8E8E5] hover:border-[#315C4C]/50 hover:text-[#202124]'
-                    )}
-                  >
-                    <span>#{tg.name}</span>
-                    <span
-                      className={cn(
-                        'text-[10px] font-mono',
-                        isSelected ? 'text-white/85' : 'text-[#737373]'
-                      )}
-                    >
-                      {tg.count}
-                    </span>
-                  </button>
-                );
-              })}
-            {selectedTags.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setSelectedTags([])}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold text-[#C44536] bg-[#FDF1F0] border border-[#C44536]/25 hover:bg-[#FBE4E2] ml-1 cursor-pointer"
-              >
-                <X className="w-3 h-3" />
-                <span>Xóa lọc ({selectedTags.length})</span>
-              </button>
-            )}
-          </div>
-        )}
+
       </div>
 
       {/* Products Content */}

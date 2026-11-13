@@ -70,6 +70,7 @@ import {
   ArrowUpDown,
   Filter,
   RotateCcw,
+  Maximize2,
 } from 'lucide-react';
 import { playSuccessChime, speakPaymentReceived } from '@/lib/sound';
 import { FeedbackModal } from '@/components/feedback/feedback-modal';
@@ -374,6 +375,8 @@ export default function PosTerminalPage() {
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>('qr_manual');
   const [tenderedCash, setTenderedCash] = React.useState<number>(0);
   const [cashInputValue, setCashInputValue] = React.useState('');
+  const [qrTemplate, setQrTemplate] = React.useState<'compact2' | 'qr_only'>('compact2');
+  const [isQrZoomOpen, setIsQrZoomOpen] = React.useState(false);
 
   const applyCashPreset = React.useCallback((amount: number) => {
     setTenderedCash(amount);
@@ -1983,15 +1986,63 @@ export default function PosTerminalPage() {
                   </p>
                 </div>
               ) : (
-                <div className="w-48 h-48 sm:w-52 sm:h-52 mx-auto bg-white p-2.5 rounded-[10px] border-2 border-[#315C4C]/20 shadow-xs flex items-center justify-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-compact2.png?amount=${cartTotal}&addInfo=HKTS-${qrSessionRef}&accountName=${encodeURIComponent(
-                      activeBankConfig.accountName
-                    )}`}
-                    alt="VietQR code"
-                    className="w-full h-full object-contain"
-                  />
+                <div className="flex flex-col items-center gap-2.5">
+                  <div
+                    onClick={() => setIsQrZoomOpen(true)}
+                    className="w-full max-w-[320px] sm:max-w-[360px] aspect-square mx-auto bg-white p-3 sm:p-4 rounded-2xl border-2 border-amber-500/40 shadow-md flex items-center justify-center relative cursor-pointer group hover:border-amber-500 transition-all"
+                    title="Nhấn để phóng to toàn màn hình cho khách quét"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-${qrTemplate}.png?amount=${cartTotal}&addInfo=HKTS-${qrSessionRef}&accountName=${encodeURIComponent(
+                        activeBankConfig.accountName
+                      )}`}
+                      alt="VietQR code"
+                      className="w-full h-full object-contain"
+                    />
+                    <div className="absolute inset-x-0 bottom-2.5 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-neutral-900/90 text-white px-3 py-1 rounded-full shadow-md">
+                        <Maximize2 className="w-3.5 h-3.5 text-amber-400" />
+                        Chạm để phóng to QR
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* QR Controls: Template Switcher & Fullscreen Trigger */}
+                  <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => setQrTemplate('compact2')}
+                      className={`px-2.5 py-1 rounded-[6px] text-[11px] font-bold transition-colors cursor-pointer ${
+                        qrTemplate === 'compact2'
+                          ? 'bg-amber-500 text-neutral-950 shadow-2xs'
+                          : 'bg-[#F0F0ED] dark:bg-neutral-800 text-[#737373] dark:text-neutral-300 hover:text-[#202124]'
+                      }`}
+                    >
+                      Kèm logo ngân hàng
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setQrTemplate('qr_only')}
+                      className={`px-2.5 py-1 rounded-[6px] text-[11px] font-bold transition-colors cursor-pointer ${
+                        qrTemplate === 'qr_only'
+                          ? 'bg-amber-500 text-neutral-950 shadow-2xs'
+                          : 'bg-[#F0F0ED] dark:bg-neutral-800 text-[#737373] dark:text-neutral-300 hover:text-[#202124]'
+                      }`}
+                      title="Chỉ hiển thị ô mã QR to kín khung, không viền chữ để máy quét nhanh nhất"
+                    >
+                      Mã QR Siêu to (Dễ quét)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsQrZoomOpen(true)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[6px] text-[11px] font-bold bg-amber-500/15 text-amber-800 dark:text-amber-300 hover:bg-amber-500/25 border border-amber-500/30 transition-colors cursor-pointer"
+                      title="Mở toàn màn hình cho khách quét từ xa"
+                    >
+                      <Maximize2 className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                      <span>Phóng to</span>
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -2334,6 +2385,72 @@ export default function PosTerminalPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Modal Phóng To QR Siêu Lớn Cho Khách Quét */}
+      {isQrZoomOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200 select-none cursor-pointer"
+          onClick={() => setIsQrZoomOpen(false)}
+        >
+          <div
+            className="relative bg-white rounded-3xl p-5 sm:p-7 max-w-sm sm:max-w-md w-full shadow-2xl flex flex-col items-center text-center space-y-4 cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setIsQrZoomOpen(false)}
+              className="absolute top-3.5 right-3.5 p-2 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 transition-colors cursor-pointer"
+              aria-label="Đóng"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1">
+              <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                Quét mã VietQR thanh toán
+              </span>
+              <h3 className="font-extrabold text-xl text-neutral-950">
+                {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}
+              </h3>
+            </div>
+
+            {/* Giant QR Matrix - Max Clear Resolution */}
+            <div className="w-full max-w-[320px] sm:max-w-[360px] aspect-square bg-white border-2 border-neutral-200 rounded-2xl flex items-center justify-center p-2 shadow-inner">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-${qrTemplate}.png?amount=${cartTotal}&addInfo=HKTS-${qrSessionRef}&accountName=${encodeURIComponent(
+                  activeBankConfig.accountName
+                )}`}
+                alt="VietQR Fullscreen"
+                className="w-full h-full object-contain"
+              />
+            </div>
+
+            {/* Bank details summary */}
+            <div className="w-full bg-neutral-50 border border-neutral-200 rounded-xl p-3 text-neutral-900 space-y-1 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-500">Nội dung CK:</span>
+                <span className="font-mono font-black text-sm bg-amber-100 text-amber-950 px-2 py-0.5 rounded border border-amber-300">
+                  HKTS-{qrSessionRef}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-neutral-600 pt-1 border-t border-neutral-200">
+                <span>{activeBankConfig.bankId} • {activeBankConfig.accountNo}</span>
+                <span className="font-semibold">{activeBankConfig.accountName}</span>
+              </div>
+            </div>
+
+            <Button
+              variant="primary"
+              size="md"
+              className="w-full font-black text-sm"
+              onClick={() => setIsQrZoomOpen(false)}
+            >
+              Đóng phóng to [ESC]
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Order Confirmed Screen Modal */}
       <Modal

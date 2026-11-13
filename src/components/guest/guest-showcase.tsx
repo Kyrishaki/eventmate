@@ -1311,9 +1311,9 @@ export function GuestShowcase() {
                   </div>
 
                   {/* VietQR & Bank Details Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center bg-white dark:bg-neutral-900 p-3 rounded-lg border border-[#E8E8E5] dark:border-neutral-800">
-                    <div className="sm:col-span-5 flex flex-col items-center justify-center p-1.5 bg-[#FAF5FF] dark:bg-purple-950/40 rounded-lg border border-[#A855F7]/20">
-                      <div className="w-36 h-36 bg-white p-1.5 rounded-md border border-[#E8E8E5] flex items-center justify-center">
+                  <div className="flex flex-col sm:flex-row gap-4 items-center bg-white dark:bg-neutral-900 p-3 sm:p-4 rounded-xl border border-[#E8E8E5] dark:border-neutral-800">
+                    <div className="flex flex-col items-center justify-center p-2.5 bg-amber-500/10 dark:bg-amber-500/15 rounded-xl border border-amber-500/30 shrink-0 w-full sm:w-auto">
+                      <div className="w-52 h-52 sm:w-60 sm:h-60 max-w-full aspect-square bg-white p-2.5 rounded-xl border border-amber-500/40 shadow-sm flex items-center justify-center">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={`https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-compact2.png?amount=${bagTotal}&addInfo=${encodeURIComponent(
@@ -1323,12 +1323,12 @@ export function GuestShowcase() {
                           className="w-full h-full object-contain"
                         />
                       </div>
-                      <span className="text-[10px] text-[#7E22CE] dark:text-purple-400 font-semibold mt-1">
+                      <span className="text-[11px] text-amber-800 dark:text-amber-300 font-bold mt-1.5 text-center">
                         Quét mã VietQR tự khớp số tiền
                       </span>
                     </div>
 
-                    <div className="sm:col-span-7 space-y-2 text-xs">
+                    <div className="flex-1 space-y-2 text-xs w-full">
                       <div>
                         <span className="text-[10.5px] text-[#737373] block">Ngân hàng thụ hưởng:</span>
                         <span className="font-bold text-[#202124] dark:text-neutral-100 font-mono">

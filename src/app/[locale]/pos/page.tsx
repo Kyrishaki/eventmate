@@ -484,41 +484,41 @@ export default function PosTerminalPage() {
     return !prodVariants.some((v) => getVariantAvailableStock(v.id) > 0);
   }).length;
 
-  // Categories available in the current workspace (for Product Category Filter)
-  const workspaceCategories = React.useMemo(() => {
-    const baseProducts = activeProducts.filter((p) => {
-      if (posSourceFilter === 'store' && p.collab_partner) return false;
-      if (posSourceFilter === 'collab' && !p.collab_partner) return false;
-      return true;
-    });
-    const counts = new Map<string, number>();
-    let uncategorizedCount = 0;
-
-    baseProducts.forEach((p) => {
-      if (p.category_id) {
-        counts.set(p.category_id, (counts.get(p.category_id) || 0) + 1);
-      } else {
-        uncategorizedCount += 1;
-      }
-    });
-
-    const list = categories
-      .filter((c) => !activeWorkspace || c.workspace_id === activeWorkspace.id)
-      .filter((c) => (counts.get(c.id) || 0) > 0)
+  // Each selector shows counts after applying the other selector and shared filters.
+  const matchesSharedFilters = (p: Product) => {
+    if (posSourceFilter === 'store' && p.collab_partner) return false;
+    if (posSourceFilter === 'collab' && !p.collab_partner) return false;
+    if (hideSoldOut && !variants.some((v) => v.product_id === p.id && getVariantAvailableStock(v.id) > 0)) return false;
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return true;
+    return p.name.toLowerCase().includes(query) || variants.some((v) =>
+      v.product_id === p.id && (v.sku.toLowerCase().includes(query) || v.barcode?.toLowerCase().includes(query))
+    );
+  };
+  const sharedProducts = activeProducts.filter(matchesSharedFilters);
+  const categoryProducts = sharedProducts.filter((p) => !posTagFilter || p.tags?.includes(posTagFilter));
+  const tagProducts = sharedProducts.filter((p) =>
+    selectedCategory === 'all' || (selectedCategory === 'uncategorized' ? !p.category_id : p.category_id === selectedCategory)
+  );
+  const categoryCounts = new Map<string, number>();
+  categoryProducts.forEach((p) => {
+    if (p.category_id) categoryCounts.set(p.category_id, (categoryCounts.get(p.category_id) || 0) + 1);
+  });
+  const workspaceCategories = {
+    list: categories
+      .filter((c) => (!activeWorkspace || c.workspace_id === activeWorkspace.id) && (categoryCounts.has(c.id) || c.id === selectedCategory))
       .sort((a, b) => a.sort_order - b.sort_order)
-      .map((c) => ({ id: c.id, name: c.name, count: counts.get(c.id) || 0 }));
-
-    return { list, total: baseProducts.length, uncategorizedCount };
-  }, [activeProducts, categories, activeWorkspace, posSourceFilter]);
-
+      .map((c) => ({ id: c.id, name: c.name, count: categoryCounts.get(c.id) || 0 })),
+    total: categoryProducts.length,
+    uncategorizedCount: categoryProducts.filter((p) => !p.category_id).length,
+  };
   const tagCounts = new Map<string, number>();
-  activeProducts.forEach((product) => {
-    // Count products, including those with the same tag repeated in their data, once per tag.
+  tagProducts.forEach((product) => {
     new Set(product.tags || []).forEach((tag) => {
       if (tag) tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
     });
   });
-  const productTags = [...tagCounts.keys()]
+  const productTags = [...new Set([...tagCounts.keys(), ...(posTagFilter ? [posTagFilter] : [])])]
     .sort((a, b) => a.localeCompare(b, 'vi', { sensitivity: 'base' }));
 
   const filteredProducts = React.useMemo(() => {
@@ -1251,6 +1251,21 @@ export default function PosTerminalPage() {
                   </select>
                 </div>
 
+                <label className="flex items-center gap-1.5 min-w-0 w-full sm:w-auto flex-1 sm:flex-none">
+                  <Tag className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
+                  <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Tag:</span>
+                  <select
+                    value={posTagFilter}
+                    onChange={(e) => setPosTagFilter(e.target.value)}
+                    className="h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full sm:w-auto"
+                  >
+                    <option value="">Tất cả tag ({tagProducts.length})</option>
+                    {productTags.map((tag) => (
+                      <option key={tag} value={tag}>{tag} ({tagCounts.get(tag)})</option>
+                    ))}
+                  </select>
+                </label>
+
                 {/* 2. Sắp xếp (Sorting Dropdown) */}
                 <div className="flex items-center gap-1.5 min-w-0 w-full sm:w-auto flex-1 sm:flex-none">
                   <ArrowUpDown className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
@@ -1287,20 +1302,7 @@ export default function PosTerminalPage() {
                   </select>
                 </div>
 
-                <label className="flex items-center gap-1.5 min-w-0 w-full sm:w-auto flex-1 sm:flex-none">
-                  <Tag className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
-                  <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Tag:</span>
-                  <select
-                    value={posTagFilter}
-                    onChange={(e) => setPosTagFilter(e.target.value)}
-                    className="h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full sm:w-auto"
-                  >
-                    <option value="">Tất cả tag ({activeProducts.length})</option>
-                    {productTags.map((tag) => (
-                      <option key={tag} value={tag}>{tag} ({tagCounts.get(tag)})</option>
-                    ))}
-                  </select>
-                </label>
+
               </div>
 
               {/* Result counter & Reset Filter */}

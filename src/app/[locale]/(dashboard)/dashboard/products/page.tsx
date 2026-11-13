@@ -1223,9 +1223,10 @@ export default function ProductsPage() {
                           size="sm"
                           className="h-7 px-2.5 text-[11px] gap-1 bg-white font-semibold"
                           onClick={() => openEditModal(prod)}
+                          title="Sửa thông tin sản phẩm"
                         >
                           <Edit className="w-3 h-3 text-[#315C4C]" />
-                          <span>Sửa & Ảnh</span>
+                          <span>Sửa</span>
                         </Button>
                         <Button
                           variant="outline"

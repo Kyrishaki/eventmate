@@ -484,16 +484,26 @@ export default function PosTerminalPage() {
     return !prodVariants.some((v) => getVariantAvailableStock(v.id) > 0);
   }).length;
 
+  const normalizeSearchText = (value: string) => value
+    .toLocaleLowerCase('vi')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd');
+  const matchesProductSearch = (p: Product) => {
+    const query = normalizeSearchText(searchQuery.trim().replace(/^#/, ''));
+    if (!query) return true;
+    const categoryName = categories.find((category) => category.id === p.category_id)?.name || '';
+    return [p.name, categoryName, ...(p.tags || [])].some((value) => normalizeSearchText(value).includes(query)) ||
+      variants.some((variant) => variant.product_id === p.id &&
+        [variant.sku, variant.barcode || ''].some((value) => normalizeSearchText(value).includes(query)));
+  };
+
   // Each selector shows counts after applying the other selector and shared filters.
   const matchesSharedFilters = (p: Product) => {
     if (posSourceFilter === 'store' && p.collab_partner) return false;
     if (posSourceFilter === 'collab' && !p.collab_partner) return false;
     if (hideSoldOut && !variants.some((v) => v.product_id === p.id && getVariantAvailableStock(v.id) > 0)) return false;
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return true;
-    return p.name.toLowerCase().includes(query) || variants.some((v) =>
-      v.product_id === p.id && (v.sku.toLowerCase().includes(query) || v.barcode?.toLowerCase().includes(query))
-    );
+    return matchesProductSearch(p);
   };
   const sharedProducts = activeProducts.filter(matchesSharedFilters);
   const categoryProducts = sharedProducts.filter((p) => !posTagFilter || p.tags?.includes(posTagFilter));
@@ -547,15 +557,7 @@ export default function PosTerminalPage() {
       // Filter by the product's existing tags.
       if (posTagFilter && !p.tags?.includes(posTagFilter)) return false;
 
-      // 6. Search query
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const matchesName = p.name.toLowerCase().includes(q);
-        const matchesSku = prodVariants.some(
-          (v) => v.sku.toLowerCase().includes(q) || (v.barcode && v.barcode.toLowerCase().includes(q))
-        );
-        if (!matchesName && !matchesSku) return false;
-      }
+      if (!matchesProductSearch(p)) return false;
 
       return true;
     });

@@ -484,13 +484,20 @@ export async function pushFullStateToCloud(workspaceId = DEFAULT_WORKSPACE_ID): 
 
   try {
     const supabase = createClient();
-    const { error } = await supabase.from('app_sync_state').upsert(snapshot, {
-      onConflict: 'workspace_id',
-    });
+    const { error: updateError, data: updateData } = await supabase
+      .from('app_sync_state')
+      .update(snapshot)
+      .eq('workspace_id', workspaceId)
+      .select('workspace_id');
 
-    if (error) {
-      console.warn('[CloudSync] Upsert to app_sync_state skipped (run migration SQL to enable table storage):', error.message);
-      return false;
+    if (updateError || !updateData || updateData.length === 0) {
+      const { error: upsertError } = await supabase.from('app_sync_state').upsert(snapshot, {
+        onConflict: 'workspace_id',
+      });
+      if (upsertError) {
+        console.warn('[CloudSync] Save to app_sync_state skipped:', upsertError.message);
+        return false;
+      }
     }
 
     workspaceStore.setSyncState('synced');

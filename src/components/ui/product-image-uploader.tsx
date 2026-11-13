@@ -16,7 +16,7 @@ interface ProductImageUploaderProps {
  * lightweight JPEG base64 data URL (< 150KB) to ensure lightning-fast loading
  * and prevent localStorage budget overflows on mobile devices.
  */
-function compressImageFile(file: File, maxDim = 1000, quality = 0.84): Promise<string> {
+function compressImageFile(file: File, maxDim = 400, quality = 0.72): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = () => reject(new Error('Không thể đọc tệp ảnh'));

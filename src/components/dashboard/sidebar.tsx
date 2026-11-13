@@ -191,7 +191,7 @@ export function Sidebar({
               <span
                 className={cn(
                   'w-7 h-7 rounded-[6px] text-white flex items-center justify-center text-xs font-bold',
-                  activeWorkspace?.is_collab ? 'bg-[#B7791F]' : 'bg-[#315C4C]'
+                  activeWorkspace?.is_collab ? 'bg-red-600' : 'bg-amber-500 text-neutral-950 font-black'
                 )}
               >
                 {activeWorkspace?.is_collab ? (
@@ -206,7 +206,7 @@ export function Sidebar({
           {/* Primary 1-Click POS Terminal Launch at reachable top zone */}
           <div
             className={cn(
-              'border-b border-[#E8E8E5]',
+              'border-b border-[#E8E8E5] dark:border-neutral-800',
               isOpen ? 'md:px-3 md:py-2.5' : 'md:px-2 md:py-2',
               isCollapsed ? 'lg:px-2 lg:py-2' : 'lg:px-3 lg:py-2.5'
             )}
@@ -216,7 +216,7 @@ export function Sidebar({
               onClick={onClose}
               title={t('posTerminal')}
               className={cn(
-                'flex items-center rounded-[8px] bg-[#315C4C] text-white hover:bg-[#284A3D] transition-all shadow-xs active:scale-[0.98]',
+                'flex items-center rounded-[8px] bg-amber-500 text-neutral-950 hover:bg-amber-400 font-black transition-all shadow-xs active:scale-[0.98] border border-amber-600/20',
                 isOpen
                   ? 'md:flex-row md:justify-between md:px-3 md:py-2.5'
                   : 'md:flex-col md:justify-center md:px-1 md:py-2 md:gap-0.5',
@@ -232,10 +232,10 @@ export function Sidebar({
                   isCollapsed ? 'lg:flex-col lg:gap-0.5' : 'lg:flex-row lg:gap-2.5'
                 )}
               >
-                <TabletSmartphone className="w-4 h-4 shrink-0 text-white" />
+                <TabletSmartphone className="w-4 h-4 shrink-0 text-neutral-950" />
                 <span
                   className={cn(
-                    'font-bold leading-tight truncate text-xs',
+                    'font-black leading-tight truncate text-xs',
                     isOpen ? 'md:inline' : 'md:hidden',
                     isCollapsed ? 'lg:hidden' : 'lg:inline'
                   )}
@@ -244,7 +244,7 @@ export function Sidebar({
                 </span>
                 <span
                   className={cn(
-                    'font-bold leading-tight truncate text-[10px]',
+                    'font-black leading-tight truncate text-[10px]',
                     isOpen ? 'md:hidden' : 'md:inline',
                     isCollapsed ? 'lg:inline' : 'lg:hidden'
                   )}
@@ -254,7 +254,7 @@ export function Sidebar({
               </div>
               <span
                 className={cn(
-                  'text-[9.5px] bg-white/20 px-1.5 py-0.5 rounded text-white font-mono font-bold shrink-0',
+                  'text-[9.5px] bg-red-600 px-1.5 py-0.5 rounded text-white font-mono font-black shrink-0 shadow-2xs',
                   isOpen ? 'md:inline-block' : 'md:hidden',
                   isCollapsed ? 'lg:hidden' : 'lg:inline-block'
                 )}
@@ -308,8 +308,8 @@ export function Sidebar({
                           ? cn(
                               'md:flex-row md:gap-2.5 md:px-2.5 md:py-2',
                               isActive
-                                ? 'md:bg-[#EBF1EE] md:text-[#315C4C] md:font-semibold'
-                                : 'md:bg-transparent md:text-[#5F6368] md:hover:text-[#202124] md:hover:bg-[#F7F7F5]'
+                                ? 'md:bg-amber-500/15 md:text-amber-800 dark:md:text-amber-300 md:font-bold md:border-l-2 md:border-amber-500'
+                                : 'md:bg-transparent md:text-[#5F6368] dark:md:text-neutral-400 md:hover:text-[#202124] dark:md:hover:text-neutral-100 md:hover:bg-[#F7F7F5] dark:md:hover:bg-neutral-800/60'
                             )
                           : 'md:flex-col md:justify-center md:px-1 md:py-1 md:gap-0.5 md:bg-transparent',
                         isCollapsed
@@ -317,8 +317,8 @@ export function Sidebar({
                           : cn(
                               'lg:flex-row lg:gap-2.5 lg:px-2.5 lg:py-2',
                               isActive
-                                ? 'lg:bg-[#EBF1EE] lg:text-[#315C4C] lg:font-semibold'
-                                : 'lg:bg-transparent lg:text-[#5F6368] lg:hover:text-[#202124] lg:hover:bg-[#F7F7F5]'
+                                ? 'lg:bg-amber-500/15 lg:text-amber-800 dark:lg:text-amber-300 lg:font-bold lg:border-l-2 lg:border-amber-500'
+                                : 'lg:bg-transparent lg:text-[#5F6368] dark:lg:text-neutral-400 lg:hover:text-[#202124] dark:lg:hover:text-neutral-100 lg:hover:bg-[#F7F7F5] dark:lg:hover:bg-neutral-800/60'
                             )
                       )}
                     >
@@ -331,18 +331,18 @@ export function Sidebar({
                             : cn(
                                 'md:px-3 md:py-1 md:rounded-full',
                                 isActive
-                                  ? 'md:bg-[#EBF1EE] md:text-[#315C4C]'
+                                  ? 'md:bg-amber-500/20 md:text-amber-600 dark:md:text-amber-400'
                                   : 'md:text-[#737373] md:group-hover:bg-[#F0F0ED] md:group-hover:text-[#202124]'
                               ),
                           isCollapsed
                             ? cn(
                                 'lg:px-3 lg:py-1 lg:rounded-full',
                                 isActive
-                                  ? 'lg:bg-[#EBF1EE] lg:text-[#315C4C]'
+                                  ? 'lg:bg-amber-500/20 lg:text-amber-600 dark:lg:text-amber-400'
                                   : 'lg:text-[#737373] lg:group-hover:bg-[#F0F0ED] lg:group-hover:text-[#202124]'
                               )
                             : 'lg:px-0 lg:py-0 lg:rounded-none lg:bg-transparent',
-                          isActive ? 'text-[#315C4C]' : 'text-[#737373] group-hover:text-[#202124]'
+                          isActive ? 'text-amber-600 dark:text-amber-400' : 'text-[#737373] group-hover:text-[#202124]'
                         )}
                       >
                         <Icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2.25 : 1.9} />

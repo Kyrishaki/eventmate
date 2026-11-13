@@ -50,20 +50,20 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
         </Link>
 
         {/* Desktop/Tablet Active Page Icon (md+) */}
-        <div className="hidden md:flex w-8 h-8 rounded-[8px] bg-[#EBF1EE] text-[#315C4C] items-center justify-center shrink-0">
+        <div className="hidden md:flex w-8 h-8 rounded-[8px] bg-amber-500/15 text-amber-600 dark:text-amber-400 items-center justify-center shrink-0 border border-amber-500/20">
           <PageIcon className="w-4 h-4" />
         </div>
 
         {/* Dynamic Page Title & Tappable Mobile Workspace Chip */}
         <div className="flex flex-col min-w-0">
-          <span className="font-bold text-sm sm:text-[15px] text-[#202124] leading-tight truncate">
+          <span className="font-bold text-sm sm:text-[15px] text-[#202124] dark:text-neutral-100 leading-tight truncate">
             {pageTitle}
           </span>
           {onOpenMobileMenu && (
             <button
               type="button"
               onClick={onOpenMobileMenu}
-              className="md:hidden inline-flex items-center gap-1 text-[10.5px] font-medium text-[#737373] hover:text-[#315C4C] leading-none mt-0.5 text-left truncate max-w-[160px] cursor-pointer"
+              className="md:hidden inline-flex items-center gap-1 text-[10.5px] font-medium text-[#737373] hover:text-amber-600 dark:hover:text-amber-400 leading-none mt-0.5 text-left truncate max-w-[160px] cursor-pointer"
               title="Đổi không gian hoặc mở menu"
             >
               <span className="truncate">{activeWorkspace?.name || 'HikaruStore'}</span>
@@ -98,7 +98,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
               exitCollabPreview();
               router.push('/dashboard');
             }}
-            className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-[6px] text-xs font-semibold bg-[#FAF5FF] dark:bg-purple-950/60 border border-[#A855F7]/40 text-[#6B21A8] dark:text-purple-300 hover:bg-[#A855F7]/10 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-[6px] text-xs font-bold bg-red-500/15 dark:bg-red-950/60 border border-red-500/40 text-red-600 dark:text-red-300 hover:bg-red-500/25 transition-colors cursor-pointer"
             title="Thoát chế độ xem thử Collab và trở lại tài khoản Quản trị"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
@@ -113,7 +113,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
           onClick={() => {
             useAuthStore.getState().enterGuestPreview();
           }}
-          className="hidden lg:inline-flex items-center gap-1.5 h-8 px-2.5 rounded-[6px] text-xs font-semibold border border-[#315C4C]/30 text-[#315C4C] hover:bg-[#EBF1EE] transition-colors cursor-pointer"
+          className="hidden lg:inline-flex items-center gap-1.5 h-8 px-2.5 rounded-[6px] text-xs font-bold border border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10 transition-colors cursor-pointer"
           title="Xem thử giao diện Gian hàng Khách xem (Chỉ xem sản phẩm & Keep đồ)"
         >
           <Eye className="w-3.5 h-3.5" />

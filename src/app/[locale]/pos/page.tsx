@@ -1967,15 +1967,17 @@ export default function PosTerminalPage() {
 
               {/* Real dynamic VietQR image with offline fallback */}
               {!isOnline ? (
-                <div className="p-4 bg-[#FEF7EC] border border-[#F8E3C3] rounded-[8px] text-left space-y-2">
-                  <div className="flex items-center gap-2 text-[#8C5D17] font-bold text-xs">
-                    <WifiOff className="w-4 h-4 shrink-0 text-[#B7791F]" />
-                    <span>Thiết bị đang ngoại tuyến (Offline)</span>
-                  </div>
-                  <p className="text-[11px] text-[#737373] leading-relaxed">
-                    Ảnh mã QR tự động từ máy chủ tạm thời không tải được do không có mạng Internet. Khách hàng có thể chuyển khoản bằng STK bên dưới hoặc quét mã QR in sẵn tại quầy:
-                  </p>
-                </div>
+                <figure className="flex flex-col items-center gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/offline-transfer-qr.png"
+                    alt="QR chuyển khoản VietinBank — NGUYEN BAO THUONG — 109876880260"
+                    className="w-full max-w-sm rounded-xl object-contain"
+                  />
+                  <figcaption className="text-xs text-amber-700 dark:text-amber-400 text-center">
+                    Đang offline: nhập số tiền và nội dung HKTS-{qrSessionRef} khi chuyển khoản.
+                  </figcaption>
+                </figure>
               ) : (
                 <div className="flex flex-col items-center gap-2.5">
                   <div
@@ -2409,9 +2411,9 @@ export default function PosTerminalPage() {
             <div className="w-full max-w-[320px] sm:max-w-[360px] aspect-square bg-white border-2 border-neutral-200 rounded-2xl flex items-center justify-center p-2 shadow-inner">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={`https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-${qrTemplate}.png?amount=${cartTotal}&addInfo=HKTS-${qrSessionRef}&accountName=${encodeURIComponent(
-                  activeBankConfig.accountName
-                )}`}
+                src={isOnline
+                  ? `https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-${qrTemplate}.png?amount=${cartTotal}&addInfo=HKTS-${qrSessionRef}&accountName=${encodeURIComponent(activeBankConfig.accountName)}`
+                  : '/offline-transfer-qr.png'}
                 alt="VietQR Fullscreen"
                 className="w-full h-full object-contain"
               />

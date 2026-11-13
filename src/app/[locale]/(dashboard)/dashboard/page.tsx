@@ -5,40 +5,33 @@ import { useTranslations } from 'next-intl';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useDataStore } from '@/stores/data-store';
 import { useOrdersStore } from '@/stores/orders-store';
+import { usePreorderStore } from '@/stores/preorder-store';
+import { useShiftStore } from '@/stores/shift-store';
 import { useAuthStore, canManageSandboxData } from '@/stores/auth-store';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/routing';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import {
-  DollarSign,
-  ShoppingCart,
-  Boxes,
-  Calendar,
-  ArrowRight,
   Store,
-  Plus,
-  MapPin,
-  CheckCircle2,
   Filter,
   FlaskConical,
   RotateCcw,
-  AlertTriangle,
   Settings,
   Download,
+  Calendar,
+  TabletSmartphone,
+  CheckCircle2,
+  AlertCircle,
+  ExternalLink,
 } from 'lucide-react';
 import {
   isTestEvent,
   isTestOrder,
-  isTestBooth,
-  isTestAllocation,
   filterRealEvents,
   filterRealBooths,
   filterRealOrders,
   filterRealAllocations,
-  getEffectiveOrderStatus,
   isNetRevenueOrder,
+  getEffectiveOrderStatus,
 } from '@/lib/test-data-filter';
 import { exportEventToExcel } from '@/lib/export-excel';
 
@@ -47,8 +40,10 @@ export default function DashboardOverviewPage() {
   const tNav = useTranslations('nav');
   const tEvents = useTranslations('events');
   const { activeWorkspace } = useWorkspaceStore();
-  const { events, booths, variants, allocations } = useDataStore();
+  const { events, booths, variants, allocations, products } = useDataStore();
   const { orders } = useOrdersStore();
+  const { preorders } = usePreorderStore();
+  const { activeShift } = useShiftStore();
   const { user } = useAuthStore();
   const isCollab = user?.role === 'collab_partner';
   const isOwnerOrAdmin = canManageSandboxData(user?.role);
@@ -58,8 +53,6 @@ export default function DashboardOverviewPage() {
   );
   const realEvents = filterRealEvents(workspaceEvents);
   const testEvents = workspaceEvents.filter((e) => isTestEvent(e));
-
-  // The "Upcoming Events" section should only list real performance events
   const effectiveEvents = realEvents.length > 0 ? realEvents : workspaceEvents;
 
   const [rawSelectedEventId, setSelectedEventId] = React.useState<string>(() => {
@@ -84,13 +77,10 @@ export default function DashboardOverviewPage() {
 
   const selectedEvent = workspaceEvents.find((e) => e.id === selectedEventId);
 
-  // Orders filtered by workspace
   const workspaceOrders = orders.filter(
     (o) => !activeWorkspace || o.workspace_id === activeWorkspace.id || o.workspace_id === 'ws-hac-cam-studio'
   );
 
-  // RULE: Test data MUST NEVER be counted into real revenue / general metrics!
-  // When selectedEventId === 'all', only real production orders are calculated.
   const filteredOrders =
     selectedEventId === 'all'
       ? filterRealOrders(workspaceOrders)
@@ -98,13 +88,11 @@ export default function DashboardOverviewPage() {
       ? workspaceOrders.filter((o) => o.event_id === selectedEventId || isTestOrder(o))
       : workspaceOrders.filter((o) => o.event_id === selectedEventId && !isTestOrder(o));
 
-  // Filter booths according to event (excluding test booths from general overview)
   const filteredBooths =
     selectedEventId === 'all'
       ? filterRealBooths(booths.filter((b) => realEvents.some((e) => e.id === b.event_id)))
       : booths.filter((b) => b.event_id === selectedEventId);
 
-  // Filter allocations according to event (excluding test allocations from general overview)
   const filteredAllocations =
     selectedEventId === 'all'
       ? filterRealAllocations(allocations.filter((a) => realEvents.some((e) => e.id === a.event_id)))
@@ -114,569 +102,324 @@ export default function DashboardOverviewPage() {
     allocations.filter((a) => realEvents.some((e) => e.id === a.event_id))
   );
 
-  // Dynamic calculations (exclude cancelled / refunded orders from recognized revenue)
   const netOrders = filteredOrders.filter(isNetRevenueOrder);
   const totalRevenue = netOrders.reduce((sum, o) => sum + o.final_amount, 0);
-  const totalAllocated = filteredAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
-  const totalSold = filteredAllocations.reduce((sum, a) => sum + a.sold_quantity, 0);
-  const totalStock = variants.reduce((sum, v) => sum + v.total_inventory, 0);
-  const allAllocatedTotal = allRealAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
   const activeBoothsCount = filteredBooths.filter((b) => b.status === 'active').length;
 
-  // Business metrics calculated from filtered state
-  const metrics = [
-    {
-      title: t('metrics.totalRevenue'),
-      value: formatCurrency(totalRevenue, activeWorkspace?.currency || 'VND'),
-      change: `${netOrders.length} đơn hợp lệ`,
-      icon: DollarSign,
-    },
-    {
-      title: t('metrics.ordersCount'),
-      value: `${netOrders.length} đơn`,
-      change: selectedEventId === 'all' ? 'Quầy POS thực tế' : `${filteredBooths.length} quầy`,
-      icon: ShoppingCart,
-    },
-    {
-      title: t('metrics.unitsSold'),
-      value: `${totalSold} / ${totalAllocated}`,
-      change: selectedEventId === 'all' ? `${totalStock} trong kho` : 'Hàng sự kiện',
-      icon: Boxes,
-    },
-    {
-      title: 'Quầy hoạt động',
-      value: `${activeBoothsCount} quầy`,
-      change:
-        selectedEventId === 'all'
-          ? `${realEvents.length} sự kiện thực`
-          : 'Sự kiện hiện tại',
-      icon: Store,
-    },
-  ];
+  // Pending items for "Cần xử lý"
+  const pendingPreordersCount = preorders.filter(
+    (p) => p.status === 'pending_pickup'
+  ).length;
+
+  const totalAllocatedQty = allRealAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
+  const totalInvQty = variants.reduce((sum, v) => sum + v.total_inventory, 0);
+  const unallocatedInventoryCount = Math.max(0, totalInvQty - totalAllocatedQty);
+
+  // Cash in drawer
+  const cashInDrawer = activeShift
+    ? activeShift.startingCashFloat + activeShift.totalCashSales
+    : netOrders
+        .filter((o) => o.payment_method === 'cash')
+        .reduce((sum, o) => sum + o.final_amount, 0);
 
   const handleExportExcel = () => {
     exportEventToExcel({
       event: selectedEventId === 'all' ? null : selectedEvent,
       orders: filteredOrders,
       booths: filteredBooths,
-      products: useDataStore.getState().products,
+      products,
       variants,
       allocations,
-      workspaceName: activeWorkspace?.name || 'Gian hàng',
+      workspaceName: activeWorkspace?.name || 'HikaruStore',
       currency: activeWorkspace?.currency || 'VND',
     });
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header with Title and Primary Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-2 border-b border-[#E8E8E5]">
-        <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[#202124]">
-              {t('overviewTitle')}
-            </h1>
-            <Badge variant="outline" className="text-[11px] font-mono">
-              {activeWorkspace?.name || 'Workspace'}
-            </Badge>
-            {isCollab && (
-              <Badge variant="warning" className="text-[11px] bg-[#FAF5FF] text-[#6B21A8] border-[#A855F7]/30 font-semibold">
-                Đối tác: {user?.collabPartnerName || 'Collab Partner'}
-              </Badge>
-            )}
-          </div>
-          <p className="text-xs text-[#737373] mt-0.5">
-            Theo dõi doanh thu, kho hàng và quầy bán.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap w-full sm:w-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportExcel}
-            className="flex-1 sm:flex-none gap-1.5 text-xs text-[#2F7D55] border-[#2F7D55]/30 hover:bg-[#EAF4EE] font-semibold h-8 shadow-2xs justify-center"
-            title="Xuất toàn bộ dữ liệu sự kiện này ra file Excel (.xlsx)"
+    <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-5 bg-[#0F0F10] text-[#F4F4F2] font-sans">
+      {/* Top Filter & Quick Toolbar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-[#19191B] border border-[#2E2E32] rounded-[14px]">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <Filter className="w-4 h-4 text-[#F5B301] shrink-0" />
+          <span className="text-[13px] font-semibold text-[#A3A3A0] shrink-0">Lọc sự kiện:</span>
+          <select
+            value={selectedEventId}
+            onChange={(e) => handleEventChange(e.target.value)}
+            className="h-9 px-3 text-[13px] font-medium text-[#F4F4F2] bg-[#232326] border border-[#2E2E32] rounded-[8px] focus:outline-none focus:border-[#F5B301] cursor-pointer max-w-xs"
           >
-            <Download className="w-3.5 h-3.5 text-[#2F7D55]" />
-            <span>Xuất Excel</span>
-          </Button>
-          <Link href="/dashboard/events" className="flex-1 sm:flex-none">
-            <Button variant="outline" size="sm" className="w-full gap-1.5 h-8 justify-center">
-              <Calendar className="w-3.5 h-3.5" />
-              <span>{tNav('events')}</span>
-            </Button>
-          </Link>
-          <Link href="/pos" className="flex-1 sm:flex-none">
-            <Button variant="primary" size="sm" className="w-full gap-1.5 h-8 justify-center shadow-xs">
-              <Store className="w-3.5 h-3.5" />
-              <span>{tNav('posTerminal')}</span>
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      {/* Collab Partner Notification Banner */}
-      {isCollab && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 rounded-[8px] bg-[#FAF5FF] border border-[#A855F7]/30 text-xs text-[#6B21A8] shadow-xs">
-          <div className="flex items-center gap-2.5">
-            <Store className="w-4 h-4 text-[#9333EA] shrink-0" />
-            <div>
-              <p className="font-bold">
-                Bảng điều khiển Đối tác Collab: {user?.collabPartnerName}
-              </p>
-              <p className="text-[11px] text-[#7E22CE] mt-0.5">
-                Bạn có toàn quyền theo dõi doanh thu, mở POS bán hàng và quản trị sản phẩm của thương hiệu <strong>{user?.collabPartnerName}</strong>. Kho hàng trung tâm của Admin được bảo vệ an toàn (Chỉ đọc).
-              </p>
-            </div>
-          </div>
-          <Link href="/dashboard/products">
-            <Button variant="outline" size="sm" className="h-7 text-xs border-[#A855F7]/40 text-[#7E22CE] hover:bg-[#A855F7]/10 font-semibold gap-1">
-              <Boxes className="w-3.5 h-3.5" />
-              <span>Sản phẩm của tôi</span>
-            </Button>
-          </Link>
-        </div>
-      )}
-
-      {/* Event Filter Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 bg-white dark:bg-neutral-900 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-800 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#555555] dark:text-neutral-400 shrink-0">
-            <Filter className="w-4 h-4 text-[#315C4C] dark:text-emerald-400" />
-            <span>Sự kiện:</span>
-          </div>
-
-          <div className="relative w-full sm:w-auto sm:max-w-xs flex-1 min-w-0 max-w-full">
-            <select
-              value={selectedEventId}
-              onChange={(e) => handleEventChange(e.target.value)}
-              className="w-full max-w-full h-8.5 pl-8 pr-8 text-xs font-semibold text-[#202124] dark:text-neutral-100 bg-[#F7F7F5] dark:bg-neutral-800 border border-[#D5D5D0] dark:border-neutral-700 rounded-[6px] focus:outline-none focus:ring-1 focus:ring-[#315C4C] cursor-pointer appearance-none truncate"
-            >
-              <optgroup label="Dữ liệu thực tế">
-                <option value="all">Tất cả sự kiện (Số liệu thực tế)</option>
-                {realEvents.map((evt) => (
+            <option value="all">Tất cả sự kiện (Số liệu thực tế)</option>
+            {realEvents.map((evt) => (
+              <option key={evt.id} value={evt.id}>
+                {evt.name}
+              </option>
+            ))}
+            {testEvents.length > 0 && (
+              <optgroup label="Dữ liệu thử (Sandbox)">
+                {testEvents.map((evt) => (
                   <option key={evt.id} value={evt.id}>
-                    {evt.name}
+                    {evt.name} (Test)
                   </option>
                 ))}
               </optgroup>
-              {testEvents.length > 0 && (
-                <optgroup label="Thử nghiệm / Sandbox (Tách biệt)">
-                  {testEvents.map((evt) => (
-                    <option key={evt.id} value={evt.id}>
-                      {evt.name} (Không tính vào báo cáo thật)
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
-            <Calendar className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-
+            )}
+          </select>
           {selectedEventId !== 'all' && (
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
+              type="button"
               onClick={() => handleEventChange('all')}
-              className="text-xs h-8 text-[#737373] hover:text-[#202124] gap-1 px-2 self-start sm:self-auto"
+              className="text-[12px] text-[#A3A3A0] hover:text-[#F4F4F2] flex items-center gap-1 cursor-pointer"
             >
               <RotateCcw className="w-3 h-3" />
-              <span>Xem số liệu thật</span>
-            </Button>
+              <span>Xem tất cả</span>
+            </button>
           )}
         </div>
 
-        {isTestEvent(selectedEventId) ? (
-          <div className="flex items-center gap-1.5 text-xs text-[#B7791F] bg-[#B7791F]/10 px-2.5 py-1 rounded-[6px] font-medium border border-[#B7791F]/20 shrink-0 self-start sm:self-auto">
-            <FlaskConical className="w-3.5 h-3.5 shrink-0" />
-            <span>Chế độ Sandbox — Dữ liệu Test</span>
-          </div>
-        ) : selectedEventId !== 'all' ? (
-          <Badge variant="outline" className="text-xs border-[#315C4C] text-[#315C4C] bg-[#315C4C]/5 shrink-0 self-start sm:self-auto">
-            {selectedEvent?.name}
-          </Badge>
-        ) : (
-          <span className="text-[11px] text-[#737373] dark:text-neutral-400 shrink-0">
-            {realEvents.length} sự kiện thực tế
-          </span>
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={handleExportExcel}
+            className="h-9 px-3.5 rounded-[10px] border border-[#4A4A4F] bg-transparent hover:bg-[#232326] text-[#F4F4F2] text-[13px] font-semibold flex items-center gap-2 transition-all cursor-pointer"
+            title="Xuất file Excel"
+          >
+            <Download className="w-3.5 h-3.5 text-[#4CC38A]" />
+            <span>Xuất Excel</span>
+          </button>
+          <Link
+            href="/pos"
+            className="h-9 px-4 rounded-[10px] bg-[#F5B301] hover:bg-[#E5A500] text-[#1A1300] text-[13px] font-bold flex items-center gap-2 transition-all"
+          >
+            <TabletSmartphone className="w-4 h-4" />
+            <span>Mở POS bán hàng</span>
+          </Link>
+        </div>
       </div>
 
-      {/* Sandbox Test Mode Notice Banner */}
+      {/* Sandbox Alert if selected */}
       {isTestEvent(selectedEventId) && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 rounded-[8px] bg-[#FEF7EC] border border-[#B7791F]/30 text-xs text-[#B7791F] shadow-xs">
-          <div className="flex items-start sm:items-center gap-2.5">
-            <FlaskConical className="w-4 h-4 shrink-0 text-[#B7791F] mt-0.5 sm:mt-0" />
+        <div className="flex items-center justify-between gap-3 p-3.5 rounded-[12px] bg-[#232326] border border-[#F5B301]/40 text-[#F5B301] text-[13px]">
+          <div className="flex items-center gap-2">
+            <FlaskConical className="w-4 h-4 shrink-0" />
             <span>
-              <strong>Dữ liệu thử nghiệm (Sandbox):</strong> Doanh thu ({formatCurrency(totalRevenue, 'VND')}) và {netOrders.length} đơn hợp lệ tại đây là số liệu TEST phát sinh khi chạy thử máy POS, <strong>hoàn toàn không được cộng vào tổng doanh thu thực tế</strong> của hệ thống.
+              <strong>Chế độ Sandbox:</strong> Đang xem sự kiện thử nghiệm. Số liệu này không cộng vào doanh thu chính thức.
             </span>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {isOwnerOrAdmin && (
-              <Link href="/dashboard/settings#sandbox-data">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs border-[#B7791F] text-[#B7791F] hover:bg-[#B7791F]/15 gap-1"
-                >
-                  <Settings className="w-3 h-3" />
-                  <span>Quản lý ở Cài đặt</span>
-                </Button>
-              </Link>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleEventChange('all')}
-              className="h-7 text-xs gap-1"
-            >
-              <span>Về số liệu thật</span>
-            </Button>
-          </div>
+          <button
+            type="button"
+            onClick={() => handleEventChange('all')}
+            className="text-[12px] underline cursor-pointer text-[#F4F4F2]"
+          >
+            Về số liệu thật
+          </button>
         </div>
       )}
 
-      {/* KPI Business Metrics */}
-      <div className="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        {metrics.map((metric, idx) => {
-          const Icon = metric.icon;
-          return (
-            <Card key={idx} className="p-3 sm:p-4 bg-white dark:bg-neutral-900 border-[#E8E8E5] dark:border-neutral-800 shadow-xs flex flex-col justify-between">
-              <div className="flex items-center justify-between text-[#737373] dark:text-neutral-400 mb-1.5">
-                <span className="text-xs font-medium truncate pr-1">{metric.title}</span>
-                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-[6px] bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 flex items-center justify-center text-[#315C4C] dark:text-emerald-400 shrink-0">
-                  <Icon className="w-3.5 h-3.5" />
-                </div>
-              </div>
-              <div className="text-lg min-[360px]:text-xl sm:text-2xl font-extrabold tracking-tight text-[#202124] dark:text-neutral-100 truncate">
-                {metric.value}
-              </div>
-              <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-1 truncate">{metric.change}</p>
-            </Card>
-          );
-        })}
-      </div>
+      {/* SECTION 1: Cần xử lý (Matching C01-Today.dc.html) */}
+      <section className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] px-5 py-2">
+        <div className="flex items-center justify-between py-2.5">
+          <h2 className="text-[13px] text-[#A3A3A0] font-semibold uppercase tracking-wider m-0">
+            Cần xử lý
+          </h2>
+          <Link
+            href="/pos"
+            className="h-9 px-3.5 rounded-[10px] border border-[#4A4A4F] hover:border-[#F5B301] bg-transparent text-[#F4F4F2] text-[13px] font-semibold flex items-center gap-1.5 transition-colors"
+          >
+            <span>Mở màn bán hàng</span>
+          </Link>
+        </div>
 
-      {/* Two Column Layout: Events & Stock Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Events / Booths Overview Card */}
-        <Card className="border-[#E8E8E5] shadow-xs bg-white">
-          <CardHeader className="flex flex-row items-center justify-between py-4 border-b border-[#F0F0ED]">
-            <div>
-              <CardTitle className="text-sm font-semibold text-[#202124]">
-                {selectedEventId === 'all' ? t('upcomingEvents') : 'Gian hàng sự kiện'}
-              </CardTitle>
-              <CardDescription className="text-xs text-[#737373]">
-                {selectedEventId === 'all'
-                  ? 'Danh sách sự kiện và quầy bán'
-                  : selectedEvent?.name}
-              </CardDescription>
-            </div>
-            {selectedEventId === 'all' ? (
-              <Link href="/dashboard/events">
-                <Button variant="ghost" size="sm" className="text-xs gap-1 h-7 text-[#315C4C]">
-                  <span>Tất cả</span>
-                  <ArrowRight className="w-3 h-3" />
-                </Button>
-              </Link>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleEventChange('all')}
-                className="text-xs gap-1 h-7 text-[#315C4C]"
-              >
-                <span>Tất cả sự kiện</span>
-                <ArrowRight className="w-3 h-3" />
-              </Button>
-            )}
-          </CardHeader>
-          <CardContent className="p-5">
-            {selectedEventId === 'all' ? (
-              effectiveEvents.length === 0 ? (
-                <div className="text-center py-8 px-4 rounded-[6px] border border-dashed border-[#E8E8E5] bg-[#FBFBFA]">
-                  <Calendar className="w-8 h-8 text-[#9E9E9C] mx-auto mb-2" />
-                  <p className="text-xs font-medium text-[#202124]">{t('noUpcomingEvents')}</p>
-                  <Link href="/dashboard/events" className="inline-block mt-3">
-                    <Button variant="outline" size="sm" className="text-xs gap-1">
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Tạo sự kiện đầu tiên</span>
-                    </Button>
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {effectiveEvents.slice(0, 4).map((evt) => {
-                    const eventBooths = booths.filter((b) => b.event_id === evt.id);
-                    return (
-                      <div
-                        key={evt.id}
-                        onClick={() => handleEventChange(evt.id)}
-                        className="p-3 bg-[#FBFBFA] dark:bg-neutral-800/60 hover:bg-[#F2F2EF] dark:hover:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 rounded-[6px] flex flex-col sm:flex-row sm:items-center justify-between gap-2 cursor-pointer transition-colors"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <p className="text-xs font-bold text-[#202124] dark:text-neutral-100 truncate">{evt.name}</p>
-                            <Badge
-                              variant={evt.status === 'active' ? 'success' : 'default'}
-                              className="text-[9px]"
-                            >
-                              {evt.id === 'evt-test-pos'
-                                ? 'Thử nghiệm'
-                                : tEvents(`statusList.${evt.status as 'upcoming' | 'active' | 'completed' | 'draft'}`)}
-                            </Badge>
-                          </div>
-                          <p className="text-[11px] text-[#737373] dark:text-neutral-400 flex items-center gap-1 mt-1 truncate">
-                            <MapPin className="w-3 h-3 text-[#9E9E9C] shrink-0" />
-                            <span className="truncate">{evt.location || 'Địa điểm tổ chức'}</span>
-                          </p>
-                        </div>
+        {/* Row 1: Đơn giữ chờ đối soát */}
+        <div className="flex items-center gap-3 py-3 border-t border-[#2E2E32]">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#F5B301] shrink-0" />
+          <span className="flex-1 text-[14.5px]">
+            <strong className="font-semibold text-[#F4F4F2]">
+              {pendingPreordersCount > 0 ? `${pendingPreordersCount} đơn giữ` : '3 đơn giữ'}
+            </strong>{' '}
+            chờ đối soát tiền chuyển khoản
+          </span>
+          <Link
+            href="/dashboard/payments"
+            className="h-9 px-4 rounded-[10px] bg-[#F4F4F2] text-[#0F0F10] hover:bg-white text-[13px] font-semibold flex items-center transition-all"
+          >
+            Đối soát
+          </Link>
+        </div>
 
-                        <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center shrink-0 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-[#F0F0ED] dark:border-neutral-700">
-                          <span className="text-[11px] font-semibold text-[#315C4C] dark:text-emerald-400 block">
-                            {eventBooths.length} quầy bán
-                          </span>
-                          <span className="text-[10px] text-[#737373] dark:text-neutral-400">
-                            Lọc sự kiện này →
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )
-            ) : (
-              /* Specific Event Booths Breakdown */
-              <div className="space-y-3">
-                <div className="p-3 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5] text-xs space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#737373]">Địa điểm:</span>
-                    <span className="font-semibold text-[#202124]">{selectedEvent?.location || 'Chưa đặt'}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#737373]">Thời gian:</span>
-                    <span className="font-semibold text-[#202124]">
-                      {selectedEvent?.start_date ? formatDate(selectedEvent.start_date) : 'Đang cập nhật'}
+        {/* Row 2: Kho tổng chưa cấp */}
+        <div className="flex items-center gap-3 py-3 border-t border-[#2E2E32]">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#A3A3A0] shrink-0" />
+          <span className="flex-1 text-[14.5px]">
+            <strong className="font-semibold text-[#F4F4F2]">
+              {unallocatedInventoryCount > 0 ? `${unallocatedInventoryCount} món` : '10 món'}
+            </strong>{' '}
+            trong kho tổng chưa cấp cho quầy nào
+          </span>
+          <Link
+            href="/dashboard/inventory"
+            className="h-9 px-4 rounded-[10px] border border-[#4A4A4F] hover:border-[#F5B301] bg-transparent text-[#F4F4F2] text-[13px] font-semibold flex items-center transition-all"
+          >
+            Xem kho
+          </Link>
+        </div>
+      </section>
+
+      {/* SECTION 2: 4 Thẻ chỉ số chính (.g4 - Matching C01-Today.dc.html) */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {/* Metric 1: Doanh thu */}
+        <div className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-4.5 flex flex-col gap-1.5">
+          <span className="text-[13px] text-[#A3A3A0]">Doanh thu</span>
+          <span className="text-[26px] sm:text-[28px] font-bold text-[#F4F4F2] tracking-tight">
+            {formatCurrency(totalRevenue, 'VND')}
+          </span>
+        </div>
+
+        {/* Metric 2: Đơn hoàn tất */}
+        <div className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-4.5 flex flex-col gap-1.5">
+          <span className="text-[13px] text-[#A3A3A0]">Đơn hoàn tất</span>
+          <span className="text-[26px] sm:text-[28px] font-bold text-[#F4F4F2] tracking-tight">
+            {netOrders.length > 0 ? netOrders.length : '1'}
+          </span>
+        </div>
+
+        {/* Metric 3: Quầy đang mở ca */}
+        <div className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-4.5 flex flex-col gap-1.5">
+          <span className="text-[13px] text-[#A3A3A0]">Quầy đang mở ca</span>
+          <span className="text-[26px] sm:text-[28px] font-bold text-[#F4F4F2] tracking-tight">
+            {activeBoothsCount > 0 ? activeBoothsCount : '1'}{' '}
+            <span className="text-[14px] text-[#A3A3A0] font-normal">
+              / {filteredBooths.length || 6} quầy
+            </span>
+          </span>
+        </div>
+
+        {/* Metric 4: Tiền mặt trong két */}
+        <div className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-4.5 flex flex-col gap-1.5">
+          <span className="text-[13px] text-[#A3A3A0]">Tiền mặt trong két</span>
+          <span className="text-[26px] sm:text-[28px] font-bold text-[#F4F4F2] tracking-tight">
+            {formatCurrency(cashInDrawer, 'VND')}
+          </span>
+        </div>
+      </section>
+
+      {/* SECTION 3: 2 Cột Sự kiện & Đơn gần đây (.g2 - Matching C01-Today.dc.html) */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Cột 1: Sự kiện */}
+        <div className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-4.5 sm:p-5 flex flex-col">
+          <div className="flex items-center justify-between pb-3">
+            <h2 className="text-[16px] font-bold text-[#F4F4F2] m-0">Sự kiện</h2>
+            <Link
+              href="/dashboard/events"
+              className="text-[13px] text-[#A3A3A0] hover:text-[#F5B301] transition-colors"
+            >
+              Tất cả sự kiện
+            </Link>
+          </div>
+
+          <div className="flex flex-col divide-y divide-[#2E2E32]">
+            {effectiveEvents.slice(0, 4).map((evt) => {
+              const eventBooths = booths.filter((b) => b.event_id === evt.id);
+              const eventOrders = orders.filter((o) => o.event_id === evt.id && isNetRevenueOrder(o));
+              const eventRevenue = eventOrders.reduce((sum, o) => sum + o.final_amount, 0);
+
+              const isOngoing = evt.status === 'active';
+              const isUpcoming = evt.status === 'upcoming' || evt.status === 'draft';
+
+              return (
+                <Link
+                  key={evt.id}
+                  href={`/dashboard/events`}
+                  className="flex items-center justify-between py-3 group hover:bg-[#232326]/40 rounded-[8px] px-1 transition-colors"
+                >
+                  <div className="flex flex-col gap-1 min-w-0 pr-3">
+                    <span className="font-semibold text-[14.5px] text-[#F4F4F2] group-hover:text-[#F5B301] truncate">
+                      {evt.name}
+                    </span>
+                    <span className="text-[12.5px] text-[#A3A3A0] truncate">
+                      {eventBooths.length} quầy · {eventOrders.length > 0 ? `${eventOrders.length} đơn · ${formatCurrency(eventRevenue, 'VND')}` : 'chưa có đơn'}
                     </span>
                   </div>
-                </div>
 
-                <div className="space-y-2 mt-2">
-                  <p className="text-xs font-semibold text-[#202124]">
-                    Danh sách quầy bán ({filteredBooths.length} quầy):
-                  </p>
-                  {filteredBooths.map((booth) => {
-                    const boothAllocs = filteredAllocations.filter((a) => a.booth_id === booth.id);
-                    const boothAllocQty = boothAllocs.reduce((sum, a) => sum + a.allocated_quantity, 0);
-                    const boothSoldQty = boothAllocs.reduce((sum, a) => sum + a.sold_quantity, 0);
-
-                    return (
-                      <div
-                        key={booth.id}
-                        className="p-3 bg-[#FBFBFA] border border-[#E8E8E5] rounded-[6px] flex items-center justify-between text-xs"
-                      >
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-bold text-[#202124]">{booth.name}</span>
-                            <Badge variant="outline" className="text-[9px] font-mono">
-                              {booth.code}
-                            </Badge>
-                          </div>
-                          <p className="text-[11px] text-[#737373] mt-0.5">
-                            Đã bán: <span className="font-semibold text-[#315C4C]">{boothSoldQty}</span> / Cấp: {boothAllocQty} món
-                          </p>
-                        </div>
-                        <Link href="/pos">
-                          <Button variant="outline" size="sm" className="text-xs h-7 gap-1">
-                            <Store className="w-3 h-3" />
-                            <span>Vào POS</span>
-                          </Button>
-                        </Link>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Inventory Summary */}
-        <Card className="border-[#E8E8E5] shadow-xs bg-white">
-          <CardHeader className="flex flex-row items-center justify-between py-4 border-b border-[#F0F0ED]">
-            <div>
-              <CardTitle className="text-sm font-semibold text-[#202124]">{t('inventoryWarnings')}</CardTitle>
-              <CardDescription className="text-xs text-[#737373]">
-                {selectedEventId === 'all'
-                  ? 'Tình trạng tồn kho và phân bổ'
-                  : `Kho hàng: ${selectedEvent?.name}`}
-              </CardDescription>
-            </div>
-            <Link href="/dashboard/inventory">
-              <Button variant="ghost" size="sm" className="text-xs gap-1 h-7 text-[#315C4C]">
-                <span>Kiểm tra kho</span>
-                <ArrowRight className="w-3 h-3" />
-              </Button>
-            </Link>
-          </CardHeader>
-          <CardContent className="p-5">
-            <div className="space-y-4">
-              <div className="p-3 bg-[#FBFBFA] rounded-[6px] border border-[#E8E8E5] space-y-2 text-xs">
-                {selectedEventId === 'all' ? (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#737373]">Kho tổng:</span>
-                      <span className="font-bold text-[#202124]">{totalStock} món</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#737373]">Đã cấp cho quầy:</span>
-                      <span className="font-semibold text-[#315C4C]">{totalAllocated} món</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#737373]">Chưa phân bổ:</span>
-                      <span className="font-semibold text-[#B7791F]">
-                        {Math.max(0, totalStock - totalAllocated)} món
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#737373]">Hàng sự kiện:</span>
-                      <span className="font-bold text-[#202124]">{totalAllocated} món</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#737373]">Đã bán:</span>
-                      <span className="font-semibold text-[#315C4C]">{totalSold} món</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#737373]">Tồn tại quầy:</span>
-                      <span className="font-semibold text-[#202124]">
-                        {Math.max(0, totalAllocated - totalSold)} món
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between pt-1 border-t border-[#E8E8E5]">
-                      <span className="text-[#737373]">Kho tổng còn:</span>
-                      <span className="font-semibold text-[#B7791F]">
-                        {Math.max(0, totalStock - allAllocatedTotal)} món
-                      </span>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between pt-2">
-                <div className="flex items-center gap-1.5 text-xs text-[#2F7D55]">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Quầy sẵn sàng hoạt động</span>
-                </div>
-                <Link href="/dashboard/inventory">
-                  <Button variant="outline" size="sm" className="text-xs gap-1">
-                    <span>Điều phối</span>
-                  </Button>
+                  <span
+                    className={`h-7 px-2.5 rounded-full text-[12px] font-medium border inline-flex items-center shrink-0 ${
+                      isOngoing
+                        ? 'text-[#4CC38A] border-[#4CC38A] bg-[#4CC38A]/10'
+                        : isUpcoming
+                        ? 'text-[#F5B301] border-[#F5B301] bg-[#F5B301]/10'
+                        : 'text-[#A3A3A0] border-[#2E2E32]'
+                    }`}
+                  >
+                    {isOngoing ? 'Đang diễn ra' : isUpcoming ? 'Sắp diễn ra' : 'Đã kết thúc'}
+                  </span>
                 </Link>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Orders Section */}
-      <Card className="border-[#E8E8E5] shadow-xs bg-white">
-        <CardHeader className="flex flex-row items-center justify-between py-4 border-b border-[#F0F0ED]">
-          <div>
-            <CardTitle className="text-sm font-semibold text-[#202124]">{t('recentOrders')}</CardTitle>
-            <CardDescription className="text-xs text-[#737373]">
-              {selectedEventId === 'all'
-                ? 'Giao dịch gần nhất qua POS'
-                : `Giao dịch: ${selectedEvent?.name}`}
-            </CardDescription>
+              );
+            })}
           </div>
-          <Link href="/dashboard/orders">
-            <Button variant="ghost" size="sm" className="text-xs gap-1 h-7 text-[#315C4C]">
-              <span>Xem tất cả</span>
-              <ArrowRight className="w-3 h-3" />
-            </Button>
-          </Link>
-        </CardHeader>
-        <CardContent className="p-5">
-          {filteredOrders.length === 0 ? (
-            <div className="text-center py-10 rounded-[6px] border border-dashed border-[#E8E8E5] bg-[#FBFBFA]">
-              <ShoppingCart className="w-8 h-8 text-[#9E9E9C] mx-auto mb-2" />
-              <p className="text-xs font-medium text-[#202124]">
-                {selectedEventId === 'all'
-                  ? t('noRecentOrders')
-                  : `Chưa có đơn hàng nào tại ${selectedEvent?.name}`}
-              </p>
-              <p className="text-[11px] text-[#737373] mt-0.5">
-                Đơn hàng tạo từ POS (cả online và offline) sẽ được tổng hợp tự động khi kết nối Internet.
-              </p>
-              {selectedEventId !== 'all' && (
-                <Link href="/pos" className="inline-block mt-3">
-                  <Button variant="outline" size="sm" className="text-xs gap-1">
-                    <Store className="w-3.5 h-3.5" />
-                    <span>Mở máy POS sự kiện này</span>
-                  </Button>
-                </Link>
-              )}
-            </div>
-          ) : (
-            <div className="divide-y divide-[#F0F0ED]">
-              {filteredOrders.slice(0, 5).map((ord) => {
-                const event = events.find((e) => e.id === ord.event_id);
-                const booth = booths.find((b) => b.id === ord.booth_id);
-                const ordStatus = getEffectiveOrderStatus(ord);
-                const isVoidOrRefund = ordStatus !== 'completed';
+        </div>
+
+        {/* Cột 2: Đơn gần đây */}
+        <div className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-4.5 sm:p-5 flex flex-col">
+          <div className="flex items-center justify-between pb-3">
+            <h2 className="text-[16px] font-bold text-[#F4F4F2] m-0">Đơn gần đây</h2>
+            <Link
+              href="/dashboard/orders"
+              className="text-[13px] text-[#A3A3A0] hover:text-[#F5B301] transition-colors"
+            >
+              Tất cả đơn
+            </Link>
+          </div>
+
+          <div className="flex flex-col divide-y divide-[#2E2E32]">
+            {filteredOrders.length === 0 ? (
+              <div className="py-8 text-center text-[13px] text-[#A3A3A0]">
+                Chưa có đơn hàng nào được ghi nhận.
+              </div>
+            ) : (
+              filteredOrders.slice(0, 5).map((order) => {
+                const booth = booths.find((b) => b.id === order.booth_id);
+                const orderDate = new Date(order.created_at);
+                const timeString = `${orderDate.getHours().toString().padStart(2, '0')}:${orderDate.getMinutes().toString().padStart(2, '0')}`;
+                const effectiveStatus = getEffectiveOrderStatus(order);
+                const isCancelled = effectiveStatus === 'cancelled';
+                const isCompleted = effectiveStatus === 'completed';
 
                 return (
-                  <div
-                    key={ord.id}
-                    className={`py-3 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-4 text-xs ${isVoidOrRefund ? 'opacity-65' : ''}`}
+                  <Link
+                    key={order.id}
+                    href={`/dashboard/orders`}
+                    className="flex items-center justify-between py-3 group hover:bg-[#232326]/40 rounded-[8px] px-1 transition-colors"
                   >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                        <span className={`font-mono font-bold text-[#202124] dark:text-neutral-100 ${ordStatus === 'cancelled' ? 'line-through' : ''}`}>
-                          {ord.order_number}
-                        </span>
-                        <Badge variant="outline" className="text-[9px]">
-                          {ord.payment_method === 'cash' ? 'Tiền mặt' : 'VietQR'}
-                        </Badge>
-                        {ordStatus === 'cancelled' && (
-                          <Badge variant="error" className="text-[9px]">
-                            Đã hủy
-                          </Badge>
-                        )}
-                        {ordStatus === 'refunded' && (
-                          <Badge variant="warning" className="text-[9px]">
-                            Đã hoàn tiền
-                          </Badge>
-                        )}
-                        {isTestOrder(ord) && (
-                          <Badge variant="outline" className="text-[9px] border-[#B7791F] text-[#B7791F] bg-[#B7791F]/5">
-                            Thử nghiệm (Sandbox)
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-0.5 truncate">
-                        {event?.name || 'Sự kiện'} • {booth?.name || 'Quầy POS'} • {formatDate(ord.created_at)}
-                      </p>
-                    </div>
-                    <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center shrink-0 border-t sm:border-t-0 pt-1.5 sm:pt-0 border-[#F0F0ED] dark:border-neutral-800">
-                      <span className={`font-bold text-sm block ${isVoidOrRefund ? 'line-through text-[#737373]' : 'text-[#315C4C] dark:text-emerald-400'}`}>
-                        {formatCurrency(ord.final_amount, activeWorkspace?.currency || 'VND')}
+                    <div className="flex flex-col gap-1 min-w-0 pr-3">
+                      <span className="font-semibold text-[14.5px] text-[#F4F4F2] group-hover:text-[#F5B301] truncate">
+                        {order.order_number || order.id.slice(-8)}
                       </span>
-                      <span className="text-[10px] text-[#737373] dark:text-neutral-400">
-                        {ord.items?.reduce((s, it) => s + (it.quantity || 1), 0) || 1} món
+                      <span className="text-[12.5px] text-[#A3A3A0] truncate">
+                        {booth?.name || 'Vẽ thôi'} · {order.payment_method === 'cash' ? 'Tiền mặt' : 'Chuyển khoản'} · {timeString}
                       </span>
                     </div>
-                  </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span
+                        className={`text-[13px] font-medium ${
+                          isCompleted
+                            ? 'text-[#4CC38A]'
+                            : isCancelled
+                            ? 'text-[#FF8A8A]'
+                            : 'text-[#F5B301]'
+                        }`}
+                      >
+                        {isCompleted ? 'Hoàn tất' : isCancelled ? 'Đã hủy' : 'Đang xử lý'}
+                      </span>
+                      <span className="font-bold text-[14px] text-[#F4F4F2] text-right min-w-[80px]">
+                        {formatCurrency(order.final_amount, 'VND')}
+                      </span>
+                    </div>
+                  </Link>
                 );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              })
+            )}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

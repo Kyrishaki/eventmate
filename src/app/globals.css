@@ -50,40 +50,40 @@
 html.dark {
   color-scheme: dark;
 
-  /* Dark Mode: Deep Obsidian Black Canvas, Slate-Black Surfaces, Glowing Gold Objects, Crimson Red Accents */
-  --background: #090A0D;
-  --surface: #121318;
-  --surface-hover: #1A1C23;
-  --foreground: #F4F5F7;
-  --muted: #9CA3AF;
-  --muted-light: #161820;
-  --border: #242731;
-  --border-strong: #363A48;
+  /* Dark Mode: Handover Specification */
+  --background: #0F0F10;
+  --surface: #19191B;
+  --surface-hover: #232326;
+  --foreground: #F4F4F2;
+  --muted: #A3A3A0;
+  --muted-light: #232326;
+  --border: #2E2E32;
+  --border-strong: #4A4A4F;
 
-  /* Vàng (Glowing Gold) - Màu chủ đạo của vật thể */
-  --primary: #F59E0B;
-  --primary-hover: #FBBF24;
-  --primary-foreground: #0A0A0C;
-  --gold: #F59E0B;
-  --gold-hover: #FBBF24;
-  --gold-text: #FBBF24;
-  --gold-bg: rgba(245, 158, 11, 0.16);
+  /* Vàng (Hikaru Gold) - Hành động chính, đang chọn, cảnh báo */
+  --primary: #F5B301;
+  --primary-hover: #E5A500;
+  --primary-foreground: #1A1300;
+  --gold: #F5B301;
+  --gold-hover: #E5A500;
+  --gold-text: #F5B301;
+  --gold-bg: rgba(245, 179, 1, 0.15);
 
   /* Đỏ (Crimson Red) - Màu phụ */
-  --secondary: #EF4444;
-  --secondary-hover: #F87171;
-  --secondary-foreground: #FFFFFF;
-  --red: #EF4444;
-  --red-hover: #F87171;
-  --red-bg: rgba(239, 68, 68, 0.18);
+  --secondary: #FF8A8A;
+  --secondary-hover: #FF7070;
+  --secondary-foreground: #1A1300;
+  --red: #FF8A8A;
+  --red-hover: #FF7070;
+  --red-bg: rgba(255, 138, 138, 0.15);
 
-  /* Status Colors */
-  --success: #22C55E;
-  --success-bg: #052E16;
-  --warning: #F59E0B;
-  --warning-bg: #2B1802;
-  --error: #EF4444;
-  --error-bg: #2B0D0D;
+  /* Status Colors Handover */
+  --success: #4CC38A;
+  --success-bg: rgba(76, 195, 138, 0.15);
+  --warning: #F5B301;
+  --warning-bg: rgba(245, 179, 1, 0.15);
+  --error: #FF8A8A;
+  --error-bg: rgba(255, 138, 138, 0.15);
 }
 
 @theme {

@@ -36,8 +36,8 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
   }
 
   return (
-    <header className="h-14 sm:h-16 border-b border-[#E8E8E5] bg-white/95 dark:bg-neutral-900/95 backdrop-blur-sm px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-2xs print:hidden">
-      {/* Left: Dynamic Context Header (Mobile: Logo + Title + Workspace pill | Desktop/Tablet: Icon + Page Title) */}
+    <header className="h-14 sm:h-16 border-b border-[#2E2E32] bg-[#19191B]/95 backdrop-blur-sm px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs print:hidden">
+      {/* Left: Dynamic Context Header */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 pr-2">
         {/* Mobile Brand Icon (< md) */}
         <Link href="/dashboard" className="md:hidden shrink-0 flex items-center" title="Về Tổng quan">
@@ -45,28 +45,27 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
           <img
             src="/logo.png"
             alt="HikaruStore Logo"
-            className="h-9 w-auto max-w-[44px] object-contain"
+            className="h-8 w-auto max-w-[36px] object-contain"
           />
         </Link>
 
         {/* Desktop/Tablet Active Page Icon (md+) */}
-        <div className="hidden md:flex w-8 h-8 rounded-[var(--radius-container,8px)] bg-[var(--color-accent,#315C4C)]/10 text-[var(--color-accent,#315C4C)] dark:text-[#5ED69D] items-center justify-center shrink-0 border border-[var(--color-accent,#315C4C)]/20">
+        <div className="hidden md:flex w-8 h-8 rounded-[8px] bg-[#232326] text-[#F5B301] items-center justify-center shrink-0 border border-[#2E2E32]">
           <PageIcon className="w-4 h-4" />
         </div>
 
-        {/* Dynamic Page Title & Tappable Mobile Workspace Chip */}
+        {/* Dynamic Page Title & Mobile Open Menu Button */}
         <div className="flex flex-col min-w-0">
-          <span className="font-bold text-sm sm:text-[15px] text-[#202124] dark:text-neutral-100 leading-tight truncate">
+          <span className="font-bold text-sm sm:text-[15px] text-[#F4F4F2] leading-tight truncate">
             {pageTitle}
           </span>
           {onOpenMobileMenu && (
             <button
               type="button"
               onClick={onOpenMobileMenu}
-              className="md:hidden inline-flex items-center gap-1 text-[10.5px] font-medium text-[#737373] hover:text-amber-600 dark:hover:text-amber-400 leading-none mt-0.5 text-left truncate max-w-[160px] cursor-pointer"
-              title="Đổi không gian hoặc mở menu"
+              className="md:hidden inline-flex items-center gap-1 text-[11px] font-medium text-[#A3A3A0] hover:text-[#F5B301] leading-none mt-0.5 text-left truncate cursor-pointer"
             >
-              <span className="truncate">{activeWorkspace?.name || 'HikaruStore'}</span>
+              <span>HikaruStore · Menu</span>
               <ChevronDown className="w-3 h-3 shrink-0" />
             </button>
           )}

@@ -1,134 +1,120 @@
 import {
   LayoutDashboard,
   CalendarDays,
-  Store,
   Package,
   Boxes,
-  ShoppingCart,
-  Users,
-  BarChart3,
+  CreditCard,
+  Coins,
+  Handshake,
   Settings,
-  History,
-  MessageSquarePlus,
   LucideIcon,
 } from 'lucide-react';
 
-export type NavGroupId = 'operations' | 'catalog' | 'admin';
+export type NavGroupId = 'operations' | 'catalog' | 'finance' | 'admin';
 
 export interface NavItemConfig {
   href: string;
   labelKey: string;
+  defaultLabel: string;
   shortLabelKey?: string;
   icon: LucideIcon;
   group: NavGroupId;
   hideForCollab?: boolean;
   badge?: string;
-  tileToneClass: string;
+  badgeCountKey?: string;
+  tileToneClass?: string;
 }
 
 export interface NavGroupConfig {
   id: NavGroupId;
   labelKey: string;
+  defaultLabel: string;
 }
 
 export const NAV_GROUPS: NavGroupConfig[] = [
-  { id: 'operations', labelKey: 'groupOperations' },
-  { id: 'catalog', labelKey: 'groupCatalog' },
-  { id: 'admin', labelKey: 'groupSystem' },
+  { id: 'operations', labelKey: 'groupOperations', defaultLabel: 'Vận hành' },
+  { id: 'catalog', labelKey: 'groupCatalog', defaultLabel: 'Hàng hóa và kho' },
+  { id: 'finance', labelKey: 'groupFinance', defaultLabel: 'Đơn và tiền' },
+  { id: 'admin', labelKey: 'groupSystem', defaultLabel: 'Hệ thống' },
 ];
 
 export const NAV_ITEMS: NavItemConfig[] = [
+  // 1. Vận hành
   {
     href: '/dashboard',
     labelKey: 'dashboard',
+    defaultLabel: 'Tổng quan',
     icon: LayoutDashboard,
     group: 'operations',
-    tileToneClass: 'bg-[#EBF1EE] text-[#315C4C]',
-  },
-  {
-    href: '/dashboard/orders',
-    labelKey: 'orders',
-    icon: ShoppingCart,
-    group: 'operations',
-    tileToneClass: 'bg-[#EAF4EE] text-[#2F7D55]',
   },
   {
     href: '/dashboard/events',
     labelKey: 'events',
+    defaultLabel: 'Sự kiện',
     icon: CalendarDays,
     group: 'operations',
-    tileToneClass: 'bg-[#EEF2FF] text-[#3B5BDB]',
   },
+
+  // 2. Hàng hóa và kho
   {
-    href: '/dashboard/booths',
-    labelKey: 'booths',
-    icon: Store,
-    group: 'operations',
-    tileToneClass: 'bg-[#FEF7EC] text-[#B7791F]',
+    href: '/dashboard/products',
+    labelKey: 'products',
+    defaultLabel: 'Sản phẩm',
+    icon: Package,
+    group: 'catalog',
   },
   {
     href: '/dashboard/inventory',
     labelKey: 'inventory',
+    defaultLabel: 'Kho tổng',
     icon: Boxes,
     group: 'catalog',
-    tileToneClass: 'bg-[#EBF1EE] text-[#315C4C]',
+  },
+
+  // 3. Đơn và tiền
+  {
+    href: '/dashboard/payments',
+    labelKey: 'recon',
+    defaultLabel: 'Đối soát chuyển khoản',
+    icon: CreditCard,
+    group: 'finance',
+    badgeCountKey: 'pendingTransfers',
   },
   {
-    href: '/dashboard/products',
-    labelKey: 'products',
-    icon: Package,
-    group: 'catalog',
-    tileToneClass: 'bg-[#F3E8FF] text-[#7E22CE]',
-  },
-  {
-    href: '/dashboard/analytics',
-    labelKey: 'analytics',
-    icon: BarChart3,
-    group: 'admin',
-    tileToneClass: 'bg-[#E0F2FE] text-[#0369A1]',
-  },
-  {
-    href: '/dashboard/team',
-    labelKey: 'team',
-    icon: Users,
-    group: 'admin',
+    href: '/dashboard/shifts',
+    labelKey: 'shifts',
+    defaultLabel: 'Ca và két',
+    icon: Coins,
+    group: 'finance',
     hideForCollab: true,
-    tileToneClass: 'bg-[#FEF7EC] text-[#B7791F]',
   },
   {
-    href: '/dashboard/logs',
-    labelKey: 'logs',
-    icon: History,
-    group: 'admin',
+    href: '/dashboard/partners',
+    labelKey: 'partners',
+    defaultLabel: 'Chia doanh thu đối tác',
+    icon: Handshake,
+    group: 'finance',
     hideForCollab: true,
-    badge: 'Quản trị',
-    tileToneClass: 'bg-[#F0F0ED] text-[#494949]',
   },
-  {
-    href: '/dashboard/feedback',
-    labelKey: 'feedback',
-    shortLabelKey: 'feedbackShort',
-    icon: MessageSquarePlus,
-    group: 'admin',
-    tileToneClass: 'bg-[#FDF1F0] text-[#C44536]',
-  },
+
+  // 4. Hệ thống
   {
     href: '/dashboard/settings',
     labelKey: 'settings',
+    defaultLabel: 'Thiết lập',
     icon: Settings,
     group: 'admin',
     hideForCollab: true,
-    tileToneClass: 'bg-[#F0F0ED] text-[#494949]',
   },
 ];
 
-export const BOTTOM_PRIMARY_HREFS = ['/dashboard', '/dashboard/inventory', '/dashboard/orders'] as const;
+export const BOTTOM_PRIMARY_HREFS = ['/dashboard', '/dashboard/events', '/dashboard/inventory', '/dashboard/payments'] as const;
 
 export function isNavRouteActive(pathname: string, href: string): boolean {
   if (href === '/dashboard') {
-    return pathname === '/dashboard';
+    return pathname === '/dashboard' || pathname === '/vi/dashboard' || pathname === '/en/dashboard';
   }
-  return pathname === href || pathname.startsWith(`${href}/`);
+  return pathname.includes(href);
 }
 
 export function getVisibleNavItems(isCollab: boolean): NavItemConfig[] {

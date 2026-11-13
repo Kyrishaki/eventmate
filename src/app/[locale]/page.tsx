@@ -1,4 +1,6 @@
-import { redirect } from '@/i18n/routing';
+import * as React from 'react';
+import { setRequestLocale } from 'next-intl/server';
+import { GuestShowcase } from '@/components/guest/guest-showcase';
 
 interface Props {
   params: Promise<{ locale: string }>;
@@ -6,5 +8,7 @@ interface Props {
 
 export default async function RootPage({ params }: Props) {
   const { locale } = await params;
-  redirect({ href: '/dashboard', locale: (locale as 'vi' | 'en') || 'vi' });
+  setRequestLocale(locale);
+
+  return <GuestShowcase />;
 }

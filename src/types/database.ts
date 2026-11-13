@@ -247,6 +247,8 @@ export interface PreorderReservation {
   remaining_amount: number;
   notes?: string;
   proof_image_url?: string;     // MANDATORY PHOTO PROOF (Base64 data or URL)
+  receipt_image_url?: string;   // MANDATORY TRANSFER RECEIPT SCREENSHOT
+  expires_at?: string;          // 30-minute hold expiration timestamp
   picked_up_at?: string;
   picked_up_by?: string;        // Cashier name or Staff ID
   cancelled_at?: string;

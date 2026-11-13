@@ -201,12 +201,15 @@ export const usePreorderStore = create<PreorderStoreState>()(
         const id = `pre-${Date.now()}`;
         const prefix = data.preorder_type === 'vip_hold' ? 'PRE' : 'HKTS';
         const code = `${prefix}-${Date.now().toString().slice(-4)}`;
-        const nowIso = new Date().toISOString();
+        const now = new Date();
+        const nowIso = now.toISOString();
+        const expiresAtIso = new Date(now.getTime() + 30 * 60 * 1000).toISOString(); // 30-minute hold limit
 
         const newPreorder: PreorderReservation = {
           ...data,
           id,
           code,
+          expires_at: data.expires_at || expiresAtIso,
           created_at: nowIso,
           updated_at: nowIso,
         };

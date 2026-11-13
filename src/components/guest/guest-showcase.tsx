@@ -51,6 +51,7 @@ import {
   Tag,
   Store,
   RotateCcw,
+  Clock,
 } from 'lucide-react';
 
 interface GuestBagItem {
@@ -129,6 +130,24 @@ export function GuestShowcase() {
   const [proofImage, setProofImage] = React.useState<string | null>(null);
   const [isProcessingProof, setIsProcessingProof] = React.useState(false);
   const [copiedBankField, setCopiedBankField] = React.useState<string | null>(null);
+  const [countdownSeconds, setCountdownSeconds] = React.useState(30 * 60);
+
+  React.useEffect(() => {
+    if (!bagOpen) {
+      setCountdownSeconds(30 * 60);
+      return;
+    }
+    const timer = setInterval(() => {
+      setCountdownSeconds((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [bagOpen]);
+
+  const formatCountdown = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
 
   const handleProofFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -1309,6 +1328,20 @@ export function GuestShowcase() {
                       </p>
                     </div>
                   </div>
+
+                  {/* 30-Minute Hold Expiration Countdown Timer */}
+                  <div className="flex items-center justify-between p-3 rounded-[12px] bg-[#19191B] border border-[#F5B301]/40 text-[#F5B301]">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 shrink-0 animate-pulse text-[#F5B301]" />
+                      <span className="text-[13px] font-semibold">Thời gian giữ chỗ còn lại:</span>
+                    </div>
+                    <span className="font-mono font-bold text-[16px] tracking-wider text-[#F5B301]">
+                      {formatCountdown(countdownSeconds)}
+                    </span>
+                  </div>
+                  <span className="text-[11.5px] text-[#A3A3A0] text-center block">
+                    Hàng được giữ 30 phút trong lúc chờ bạn chuyển khoản và tải ảnh minh chứng biên lai.
+                  </span>
 
                   {/* VietQR & Bank Details Grid */}
                   <div className="flex flex-col sm:flex-row gap-4 items-center bg-white dark:bg-neutral-900 p-3 sm:p-4 rounded-xl border border-[#E8E8E5] dark:border-neutral-800">

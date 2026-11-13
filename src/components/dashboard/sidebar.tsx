@@ -4,16 +4,14 @@ import * as React from 'react';
 import { usePathname, Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/stores/auth-store';
-import { useWorkspaceStore } from '@/stores/workspace-store';
+import { useThemeStore } from '@/stores/theme-store';
 import { cn } from '@/lib/utils';
-import { WorkspaceSwitcher } from './workspace-switcher';
 import { getGroupedNavSections, isNavRouteActive } from './nav-config';
 import {
-  TabletSmartphone,
   X,
   PanelLeftClose,
   PanelLeftOpen,
-  Users2,
+  TabletSmartphone,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -36,52 +34,50 @@ export function Sidebar({
   const pathname = usePathname();
   const t = useTranslations('nav');
   const { user } = useAuthStore();
-  const { activeWorkspace } = useWorkspaceStore();
+  const { resolvedTheme, setTheme } = useThemeStore();
 
   const isCollab = user?.role === 'collab_partner';
   const sections = React.useMemo(() => getGroupedNavSections(isCollab), [isCollab]);
 
+  const userInitial = user?.fullName ? user.fullName.charAt(0).toUpperCase() : 'T';
+  const userDisplayName = user?.fullName || 'Tuấn Admin VIP Pro';
+  const userRoleDisplay = user?.role === 'owner' ? 'Chủ sở hữu' : user?.role === 'collab_partner' ? 'Đối tác Collab' : 'Quản trị';
+
   return (
     <>
-      {/* Tablet Drawer Backdrop (md to < lg when expanded) */}
+      {/* Tablet Drawer Backdrop */}
       {isOpen && (
         <div
-          className="hidden md:block lg:hidden fixed inset-0 bg-black/35 backdrop-blur-[1px] z-40"
+          className="hidden md:block lg:hidden fixed inset-0 bg-black/50 backdrop-blur-[2px] z-40"
           onClick={onClose}
         />
       )}
 
-      {/* Adaptive NavigationRail (md / collapsed lg) <-> NavigationDrawer (lg / open md) */}
+      {/* Admin Sidebar Navigation Frame (matching AdminNav.dc.html) */}
       <aside
         className={cn(
-          'hidden md:flex fixed inset-y-0 left-0 z-50 bg-white dark:bg-neutral-900 border-r border-[#E8E8E5] flex-col justify-between transition-[width,box-shadow] duration-200 select-none print:hidden',
-          isOpen ? 'md:w-64 md:shadow-2xl lg:shadow-none' : 'md:w-[76px]',
-          isCollapsed ? 'lg:w-[76px]' : 'lg:w-64'
+          'fixed inset-y-0 left-0 z-50 flex flex-col justify-between transition-all duration-200 select-none print:hidden',
+          'bg-[#19191B] text-[#F4F4F2] border-r border-[#2E2E32] font-sans',
+          isOpen ? 'md:w-[240px] md:shadow-2xl lg:shadow-none' : 'md:w-[76px]',
+          isCollapsed ? 'lg:w-[76px]' : 'lg:w-[240px]',
+          'hidden md:flex'
         )}
       >
-        <div className="flex flex-col flex-1 min-h-0">
-          {/* Header & Brand + Collapse/Expand Toggle */}
-          <div
-            className={cn(
-              'h-14 sm:h-16 border-b border-[#E8E8E5] flex items-center shrink-0',
-              isOpen ? 'md:px-4 md:justify-between' : 'md:px-2 md:justify-center',
-              isCollapsed ? 'lg:px-2 lg:justify-center' : 'lg:px-4 lg:justify-between'
-            )}
-          >
+        <div className="flex flex-col flex-1 min-h-0 p-3.5 gap-3.5">
+          {/* Logo Header */}
+          <div className="flex items-center justify-between px-2 shrink-0 h-12">
             <Link
               href="/dashboard"
               onClick={onClose}
-              className="flex items-center gap-2.5 text-[#202124] group min-w-0"
-              title="HikaruStore"
+              className="flex items-center gap-2.5 text-[#F4F4F2] group min-w-0"
+              title="HikaruStore Quản trị"
             >
-              <div className="h-10 w-auto flex items-center justify-center shrink-0">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/logo.png"
-                  alt="HikaruStore Logo"
-                  className="h-10 w-auto max-w-[48px] object-contain transition-transform group-hover:scale-105"
-                />
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo.png"
+                alt="Logo HikaruStore"
+                className="w-10 h-10 object-contain shrink-0 transition-transform group-hover:scale-105"
+              />
               <div
                 className={cn(
                   'flex-col min-w-0',
@@ -89,51 +85,65 @@ export function Sidebar({
                   isCollapsed ? 'lg:hidden' : 'lg:flex'
                 )}
               >
-                <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-[15px] tracking-tight text-[#202124] truncate">
-                    HikaruStore
-                  </span>
-                  <span className="text-[9px] text-[#737373] border border-[#E8E8E5] px-1 rounded font-mono font-semibold shrink-0">
-                    v1.0
-                  </span>
-                </div>
-                <span className="text-[10.5px] text-[#737373] leading-none mt-0.5 truncate">
-                  Event Merchandise
+                <span className="text-[17px] font-bold tracking-tight text-[#F4F4F2] truncate">
+                  HikaruStore
+                </span>
+                <span className="text-[12px] text-[#A3A3A0] leading-none mt-0.5">
+                  Quản trị
                 </span>
               </div>
             </Link>
 
-            {/* Tablet Close Button (when tablet drawer is expanded) */}
+            {/* Close / Collapse triggers */}
             {isOpen && onClose && (
               <button
                 type="button"
                 onClick={onClose}
-                className="hidden md:flex lg:hidden p-1.5 rounded-[6px] text-[#737373] hover:text-[#202124] hover:bg-[#F0F0ED] cursor-pointer"
-                aria-label="Thu gọn menu"
-                title="Thu gọn thành thanh icon"
+                className="hidden md:flex lg:hidden p-1.5 rounded-[8px] text-[#A3A3A0] hover:text-[#F4F4F2] hover:bg-[#232326] cursor-pointer"
+                aria-label="Đóng menu"
               >
                 <X className="w-4 h-4" />
               </button>
             )}
 
-            {/* Desktop Collapse Toggle Button (when expanded) */}
             {onToggleCollapse && !isCollapsed && (
               <button
                 type="button"
                 onClick={onToggleCollapse}
-                className="hidden lg:flex p-1.5 rounded-[6px] text-[#737373] hover:text-[#202124] hover:bg-[#F0F0ED] transition-colors cursor-pointer"
-                aria-label="Thu gọn thanh bên"
-                title="Thu gọn thanh điều hướng (chế độ Icon Rail)"
+                className="hidden lg:flex p-1.5 rounded-[8px] text-[#A3A3A0] hover:text-[#F4F4F2] hover:bg-[#232326] transition-colors cursor-pointer"
+                aria-label="Thu gọn thanh điều hướng"
+                title="Thu gọn thanh điều hướng"
               >
                 <PanelLeftClose className="w-4 h-4" />
               </button>
             )}
           </div>
 
-          {/* Expand Trigger in Rail Mode (Desktop collapsed or Tablet rail) */}
+          {/* Quick POS Launch Button */}
           <div
             className={cn(
-              'px-2 pt-2 justify-center',
+              isOpen ? 'md:block' : 'md:hidden',
+              isCollapsed ? 'lg:hidden' : 'lg:block'
+            )}
+          >
+            <Link
+              href="/pos"
+              className="h-10 px-3 rounded-[10px] bg-[#232326] hover:bg-[#2E2E32] text-[#F5B301] border border-[#2E2E32] hover:border-[#F5B301]/40 text-[13.5px] font-semibold flex items-center justify-between transition-all"
+            >
+              <span className="flex items-center gap-2">
+                <TabletSmartphone className="w-4 h-4" />
+                <span>Mở bán hàng POS</span>
+              </span>
+              <span className="text-[11px] px-1.5 py-0.5 rounded bg-[#F5B301]/15 text-[#F5B301] font-bold">
+                POS
+              </span>
+            </Link>
+          </div>
+
+          {/* Expand Trigger in Rail Mode */}
+          <div
+            className={cn(
+              'justify-center pt-1',
               isOpen ? 'md:hidden' : 'md:flex',
               isCollapsed ? 'lg:flex' : 'lg:hidden'
             )}
@@ -147,240 +157,67 @@ export function Sidebar({
                   onOpenDrawer?.();
                 }
               }}
-              className="w-12 h-9 rounded-[8px] border border-[#E8E8E5] bg-[#F7F7F5] hover:bg-[#EBF1EE] text-[#737373] hover:text-[#315C4C] flex items-center justify-center transition-colors cursor-pointer"
-              aria-label="Mở rộng thanh điều hướng"
-              title="Mở rộng thanh điều hướng"
+              className="w-10 h-10 rounded-[10px] bg-[#232326] text-[#A3A3A0] hover:text-[#F4F4F2] flex items-center justify-center transition-colors cursor-pointer"
+              title="Mở rộng menu"
             >
               <PanelLeftOpen className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Workspace Switcher (Expanded) / Compact Avatar Pill (Rail) */}
-          <div
-            className={cn(
-              'border-b border-[#E8E8E5]',
-              isOpen ? 'md:p-3' : 'md:p-2',
-              isCollapsed ? 'lg:p-2' : 'lg:p-3'
-            )}
-          >
-            <div
-              className={cn(
-                isOpen ? 'md:block' : 'md:hidden',
-                isCollapsed ? 'lg:hidden' : 'lg:block'
-              )}
-            >
-              <WorkspaceSwitcher />
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
-                  onToggleCollapse?.();
-                } else {
-                  onOpenDrawer?.();
-                }
-              }}
-              title={`Không gian: ${activeWorkspace?.name || 'HikaruStore'} (Nhấn để chuyển)`}
-              className={cn(
-                'mx-auto w-11 h-10 rounded-[8px] border border-[#E8E8E5] bg-[#F7F7F5] hover:bg-[#EBF1EE] items-center justify-center transition-colors cursor-pointer',
-                isOpen ? 'md:hidden' : 'md:flex',
-                isCollapsed ? 'lg:flex' : 'lg:hidden'
-              )}
-            >
-              <span
-                className={cn(
-                  'w-7 h-7 rounded-[6px] text-white flex items-center justify-center text-xs font-bold',
-                  activeWorkspace?.is_collab ? 'bg-red-600' : 'bg-amber-500 text-neutral-950 font-black'
-                )}
-              >
-                {activeWorkspace?.is_collab ? (
-                  <Users2 className="w-3.5 h-3.5" />
-                ) : (
-                  activeWorkspace?.name.charAt(0) || 'H'
-                )}
-              </span>
-            </button>
-          </div>
-
-          {/* Primary 1-Click POS Terminal Launch at reachable top zone */}
-          <div
-            className={cn(
-              'border-b border-[#E8E8E5] dark:border-neutral-800',
-              isOpen ? 'md:px-3 md:py-2.5' : 'md:px-2 md:py-2',
-              isCollapsed ? 'lg:px-2 lg:py-2' : 'lg:px-3 lg:py-2.5'
-            )}
-          >
-            <Link
-              href="/pos"
-              onClick={onClose}
-              title={t('posTerminal')}
-              className={cn(
-                'flex items-center rounded-[var(--radius-container,8px)] bg-[#315C4C] text-white hover:bg-[#284A3D] font-bold transition-all shadow-xs active:scale-[0.98] border border-[#315C4C]/25',
-                isOpen
-                  ? 'md:flex-row md:justify-between md:px-3 md:py-2.5'
-                  : 'md:flex-col md:justify-center md:px-1 md:py-2 md:gap-0.5',
-                isCollapsed
-                  ? 'lg:flex-col lg:justify-center lg:px-1 lg:py-2 lg:gap-0.5'
-                  : 'lg:flex-row lg:justify-between lg:px-3 lg:py-2.5'
-              )}
-            >
-              <div
-                className={cn(
-                  'flex items-center min-w-0',
-                  isOpen ? 'md:flex-row md:gap-2.5' : 'md:flex-col md:gap-0.5',
-                  isCollapsed ? 'lg:flex-col lg:gap-0.5' : 'lg:flex-row lg:gap-2.5'
-                )}
-              >
-                <TabletSmartphone className="w-4 h-4 shrink-0 text-amber-300" />
-                <span
-                  className={cn(
-                    'font-bold leading-tight truncate text-xs',
-                    isOpen ? 'md:inline' : 'md:hidden',
-                    isCollapsed ? 'lg:hidden' : 'lg:inline'
-                  )}
-                >
-                  {t('posTerminal')}
-                </span>
-                <span
-                  className={cn(
-                    'font-bold leading-tight truncate text-[10px]',
-                    isOpen ? 'md:hidden' : 'md:inline',
-                    isCollapsed ? 'lg:inline' : 'lg:hidden'
-                  )}
-                >
-                  {t('posShort')}
-                </span>
-              </div>
-              <span
-                className={cn(
-                  'text-[9.5px] bg-red-600 px-1.5 py-0.5 rounded text-white font-mono font-black shrink-0 shadow-2xs',
-                  isOpen ? 'md:inline-block' : 'md:hidden',
-                  isCollapsed ? 'lg:hidden' : 'lg:inline-block'
-                )}
-              >
-                Bán hàng
-              </span>
-            </Link>
-          </div>
-
-          {/* Categorized Navigation Links */}
-          <nav className="flex-1 overflow-y-auto py-2.5 space-y-3 px-2">
-            {sections.map((section, idx) => (
-              <div key={section.id} className="space-y-1">
-                {/* Group Header (Expanded) */}
+          {/* Categorized Navigation Sections (Matching AdminNav 4 groups) */}
+          <nav className="flex-1 overflow-y-auto space-y-4 pr-0.5 custom-scrollbar">
+            {sections.map((section) => (
+              <div key={section.id} className="flex flex-col gap-1">
+                {/* Group Title */}
                 <div
                   className={cn(
-                    'px-2.5 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-[#8C8C88]',
+                    'px-3 pb-1 text-[11px] font-bold tracking-wider uppercase text-[#A3A3A0]',
                     isOpen ? 'md:block' : 'md:hidden',
                     isCollapsed ? 'lg:hidden' : 'lg:block'
                   )}
                 >
-                  {t(section.labelKey)}
+                  {section.defaultLabel}
                 </div>
-
-                {/* Group Divider (Rail Mode) */}
-                {idx > 0 && (
-                  <div
-                    className={cn(
-                      'mx-3 my-1.5 border-t border-[#E8E8E5]',
-                      isOpen ? 'md:hidden' : 'md:block',
-                      isCollapsed ? 'lg:block' : 'lg:hidden'
-                    )}
-                  />
-                )}
 
                 {section.items.map((item) => {
                   const Icon = item.icon;
                   const isActive = isNavRouteActive(pathname, item.href);
-                  const fullLabel = t(item.labelKey);
-                  const shortLabel = t(item.shortLabelKey || item.labelKey);
 
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       onClick={onClose}
-                      title={fullLabel}
+                      title={item.defaultLabel}
                       className={cn(
-                        'group flex items-center transition-colors select-none rounded-[8px]',
-                        isOpen
-                          ? cn(
-                              'md:flex-row md:gap-2.5 md:px-2.5 md:py-2',
-                              isActive
-                                ? 'md:bg-[#315C4C]/10 md:text-[#315C4C] dark:md:text-[#5ED69D] md:font-bold md:border-l-2 md:border-[#315C4C] dark:md:border-[#5ED69D]'
-                                : 'md:bg-transparent md:text-[#5F6368] dark:md:text-[#9BA1A6] md:hover:text-[#202124] dark:md:hover:text-white md:hover:bg-[#F0F0ED] dark:md:hover:bg-[#25282F]'
-                            )
-                          : 'md:flex-col md:justify-center md:px-1 md:py-1 md:gap-0.5 md:bg-transparent',
-                        isCollapsed
-                          ? 'lg:flex-col lg:justify-center lg:px-1 lg:py-1 lg:gap-0.5 lg:bg-transparent'
-                          : cn(
-                              'lg:flex-row lg:gap-2.5 lg:px-2.5 lg:py-2',
-                              isActive
-                                ? 'lg:bg-[#315C4C]/10 lg:text-[#315C4C] dark:lg:text-[#5ED69D] lg:font-bold lg:border-l-2 lg:border-[#315C4C] dark:lg:border-[#5ED69D]'
-                                : 'lg:bg-transparent lg:text-[#5F6368] dark:lg:text-[#9BA1A6] lg:hover:text-[#202124] dark:lg:hover:text-white lg:hover:bg-[#F0F0ED] dark:lg:hover:bg-[#25282F]'
-                            )
+                        'h-[42px] px-3 rounded-[10px] text-[14px] flex items-center transition-colors select-none',
+                        isActive
+                          ? 'bg-[#232326] text-[#F4F4F2] font-semibold'
+                          : 'text-[#A3A3A0] hover:text-[#F4F4F2] hover:bg-[#232326]/60 font-normal',
+                        isOpen ? 'md:justify-between' : 'md:justify-center md:px-0',
+                        isCollapsed ? 'lg:justify-center lg:px-0' : 'lg:justify-between'
                       )}
                     >
-                      {/* Icon Wrapper (Astryx Pill in Rail Mode, standard icon in Expanded Mode) */}
-                      <span
-                        className={cn(
-                          'relative flex items-center justify-center shrink-0 transition-colors',
-                          isOpen
-                            ? 'md:px-0 md:py-0 md:rounded-none md:bg-transparent'
-                            : cn(
-                                'md:px-3 md:py-1 md:rounded-full',
-                                isActive
-                                  ? 'md:bg-[#315C4C]/15 md:text-[#315C4C] dark:md:text-[#5ED69D]'
-                                  : 'md:text-[#737373] md:group-hover:bg-[#F0F0ED] md:group-hover:text-[#202124]'
-                              ),
-                          isCollapsed
-                            ? cn(
-                                'lg:px-3 lg:py-1 lg:rounded-full',
-                                isActive
-                                  ? 'lg:bg-[#315C4C]/15 lg:text-[#315C4C] dark:lg:text-[#5ED69D]'
-                                  : 'lg:text-[#737373] lg:group-hover:bg-[#F0F0ED] lg:group-hover:text-[#202124]'
-                              )
-                            : 'lg:px-0 lg:py-0 lg:rounded-none lg:bg-transparent',
-                          isActive ? 'text-[#315C4C] dark:text-[#5ED69D]' : 'text-[#737373] group-hover:text-[#202124]'
-                        )}
-                      >
-                        <Icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2.25 : 1.9} />
-                      </span>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Icon className={cn('w-[18px] h-[18px] shrink-0', isActive ? 'text-[#F5B301]' : 'text-[#A3A3A0]')} />
+                        <span
+                          className={cn(
+                            'truncate',
+                            isOpen ? 'md:inline' : 'md:hidden',
+                            isCollapsed ? 'lg:hidden' : 'lg:inline'
+                          )}
+                        >
+                          {item.defaultLabel}
+                        </span>
+                      </div>
 
-                      {/* Full label (Expanded Drawer) */}
-                      <span
-                        className={cn(
-                          'truncate flex-1 text-[13px]',
-                          isOpen ? 'md:inline' : 'md:hidden',
-                          isCollapsed ? 'lg:hidden' : 'lg:inline',
-                          isActive
-                            ? 'font-semibold text-[#315C4C] dark:text-[#5ED69D]'
-                            : 'font-medium text-[#5F6368] dark:text-[#9BA1A6] group-hover:text-[#202124] dark:group-hover:text-white'
-                        )}
-                      >
-                        {fullLabel}
-                      </span>
-
-                      {/* Short micro-label (NavigationRail) */}
-                      <span
-                        className={cn(
-                          'text-[10px] leading-tight truncate max-w-[66px] text-center',
-                          isOpen ? 'md:hidden' : 'md:block',
-                          isCollapsed ? 'lg:block' : 'lg:hidden',
-                          isActive ? 'font-bold text-[#315C4C]' : 'font-medium text-[#737373]'
-                        )}
-                      >
-                        {shortLabel}
-                      </span>
-
-                      {/* Badge (Expanded Drawer only) */}
+                      {/* Badge if present */}
                       {item.badge && (
                         <span
                           className={cn(
-                            'text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#B7791F]/15 text-[#8C5D17] border border-[#B7791F]/30 uppercase tracking-wider shrink-0',
-                            isOpen ? 'md:inline-block' : 'md:hidden',
-                            isCollapsed ? 'lg:hidden' : 'lg:inline-block'
+                            'min-w-[20px] h-[20px] px-1.5 rounded-full bg-[#F5B301] text-[#1A1300] text-[11px] font-bold inline-flex items-center justify-center shrink-0',
+                            isOpen ? 'md:inline-flex' : 'md:hidden',
+                            isCollapsed ? 'lg:hidden' : 'lg:inline-flex'
                           )}
                         >
                           {item.badge}
@@ -394,20 +231,65 @@ export function Sidebar({
           </nav>
         </div>
 
-        {/* Subtle Footer Workspace Chip (Expanded) */}
+        {/* Footer Area: Sáng/Tối toggle & User profile chip */}
         <div
           className={cn(
-            'p-2.5 border-t border-[#E8E8E5] bg-[#FAFAF8] text-[10.5px] text-[#737373] items-center justify-between',
+            'p-3.5 border-t border-[#2E2E32] flex flex-col gap-3 shrink-0',
             isOpen ? 'md:flex' : 'md:hidden',
             isCollapsed ? 'lg:hidden' : 'lg:flex'
           )}
         >
-          <span className="truncate font-medium">
-            {activeWorkspace?.name || 'HikaruStore'}
-          </span>
-          <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-white border border-[#E8E8E5]">
-            {activeWorkspace?.currency || 'VND'}
-          </span>
+          {/* Sáng / Tối segment toggle button */}
+          <div
+            role="group"
+            aria-label="Chế độ hiển thị"
+            className="grid grid-cols-2 gap-1 p-1 bg-[#0F0F10] border border-[#2E2E32] rounded-[12px]"
+          >
+            <button
+              type="button"
+              onClick={() => setTheme('light')}
+              aria-pressed={resolvedTheme === 'light'}
+              className={cn(
+                'h-9 rounded-[8px] text-[13.5px] font-medium transition-all cursor-pointer flex items-center justify-center',
+                resolvedTheme === 'light'
+                  ? 'bg-[#F4F4F2] text-[#0F0F10] font-bold shadow-xs'
+                  : 'text-[#A3A3A0] hover:text-[#F4F4F2] bg-transparent'
+              )}
+            >
+              Sáng
+            </button>
+            <button
+              type="button"
+              onClick={() => setTheme('dark')}
+              aria-pressed={resolvedTheme === 'dark'}
+              className={cn(
+                'h-9 rounded-[8px] text-[13.5px] font-medium transition-all cursor-pointer flex items-center justify-center',
+                resolvedTheme === 'dark'
+                  ? 'bg-[#F4F4F2] text-[#0F0F10] font-bold shadow-xs'
+                  : 'text-[#A3A3A0] hover:text-[#F4F4F2] bg-transparent'
+              )}
+            >
+              Tối
+            </button>
+          </div>
+
+          {/* User Profile Chip (Initial Avatar + Name + Role) */}
+          <div className="pt-2 border-t border-[#2E2E32]/70 flex items-center gap-2.5 min-w-0">
+            <span
+              aria-hidden="true"
+              className="w-9 h-9 rounded-full bg-[#232326] text-[#F4F4F2] flex items-center justify-center text-[14px] font-bold shrink-0 border border-[#2E2E32]"
+            >
+              {userInitial}
+            </span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[13.5px] font-semibold text-[#F4F4F2] truncate">
+                {userDisplayName}
+              </span>
+              <span className="text-[12px] text-[#A3A3A0] truncate">
+                {userRoleDisplay}
+              </span>
+            </div>
+          </div>
         </div>
       </aside>
     </>

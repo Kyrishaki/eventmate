@@ -26,12 +26,10 @@ import {
   Users2,
   Download,
   Sparkles,
-  Image as ImageIcon,
 } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { useOrdersStore } from '@/stores/orders-store';
 import { exportEventToExcel } from '@/lib/export-excel';
-import { AiEventPosterModal } from '@/components/events/ai-event-poster-modal';
 
 export default function EventsPage() {
   const t = useTranslations('events');
@@ -42,7 +40,6 @@ export default function EventsPage() {
   const editable = canEditData() && user?.role !== 'collab_partner';
 
   const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [isAiModalOpen, setIsAiModalOpen] = React.useState(false);
   const [editingEvent, setEditingEvent] = React.useState<EventItem | null>(null);
 
   // Form states
@@ -170,15 +167,6 @@ export default function EventsPage() {
 
         {editable ? (
           <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 sm:flex-none justify-center gap-1.5 border-[#315C4C]/40 text-[#315C4C] hover:bg-[#EAF4EE] font-semibold shadow-2xs h-8 text-xs"
-              onClick={() => setIsAiModalOpen(true)}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#315C4C]" />
-              <span>Quét ảnh Poster (AI)</span>
-            </Button>
             <Button variant="primary" size="sm" className="flex-1 sm:flex-none justify-center gap-1.5 h-8 text-xs font-semibold" onClick={openCreateModal}>
               <Plus className="w-3.5 h-3.5" />
               <span>{t('createButton')}</span>
@@ -211,17 +199,6 @@ export default function EventsPage() {
             <h3 className="text-sm font-semibold text-[#202124]">{t('noEvents')}</h3>
             <p className="text-xs text-[#737373] mt-1 max-w-sm mx-auto">{t('noEventsDesc')}</p>
             <div className="mt-4 flex items-center justify-center gap-2">
-              {editable && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 border-[#315C4C]/40 text-[#315C4C] hover:bg-[#EAF4EE] font-semibold"
-                  onClick={() => setIsAiModalOpen(true)}
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-[#315C4C]" />
-                  <span>Quét ảnh Poster (AI)</span>
-                </Button>
-              )}
               <Button variant="outline" size="sm" className="gap-1" onClick={openCreateModal}>
                 <Plus className="w-3.5 h-3.5" />
                 <span>{t('createButton')}</span>
@@ -357,31 +334,6 @@ export default function EventsPage() {
         description="Thông tin sự kiện được đồng bộ trực tiếp với các quầy POS và quản lý kho."
       >
         <form onSubmit={handleSave} className="space-y-4">
-          {/* Quick AI Fill banner in Create Mode */}
-          {!editingEvent && (
-            <div className="p-2.5 bg-[#FAFAF8] rounded-[6px] border border-dashed border-[#315C4C]/40 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 text-xs text-[#202124]">
-                <Sparkles className="w-4 h-4 text-[#315C4C] shrink-0" />
-                <span className="text-[11px] text-[#737373]">
-                  Có ảnh poster sự kiện? AI sẽ tự động tách tên, ngày tháng năm & địa điểm.
-                </span>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setIsAiModalOpen(true);
-                }}
-                className="h-7 text-xs gap-1 text-[#315C4C] border-[#315C4C]/40 hover:bg-[#EAF4EE] shrink-0 font-semibold"
-              >
-                <Sparkles className="w-3 h-3 text-[#315C4C]" />
-                <span>Nhập ảnh AI</span>
-              </Button>
-            </div>
-          )}
-
           {/* Banner Preview if available */}
           {bannerUrl && (
             <div className="relative rounded-[6px] overflow-hidden border border-[#E8E8E5] max-h-36 bg-[#121212]">
@@ -488,11 +440,6 @@ export default function EventsPage() {
         </form>
       </Modal>
 
-      {/* AI Event Poster Import Modal */}
-      <AiEventPosterModal
-        isOpen={isAiModalOpen}
-        onClose={() => setIsAiModalOpen(false)}
-      />
     </div>
   );
 }

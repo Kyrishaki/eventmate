@@ -1165,8 +1165,8 @@ export default function ProductsPage() {
                                 className={cn(
                                   'text-[10px] px-1.5 py-0.2 rounded border transition-colors cursor-pointer',
                                   isTagActive
-                                    ? 'bg-[#315C4C] text-white border-[#315C4C] font-semibold'
-                                    : 'bg-[#EBF1EE]/70 text-[#315C4C] border-[#315C4C]/20 hover:bg-[#EBF1EE]'
+                                    ? 'bg-amber-500 text-neutral-950 border-amber-600 font-semibold dark:bg-amber-400 dark:border-amber-300'
+                                    : 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100 dark:bg-neutral-800 dark:text-amber-200 dark:border-amber-700 dark:hover:bg-neutral-700'
                                 )}
                                 title={`Bấm để lọc theo tag #${tg}`}
                               >
@@ -1486,8 +1486,8 @@ export default function ProductsPage() {
                                   className={cn(
                                     'text-[10px] px-2 py-0.5 rounded-full border transition-colors cursor-pointer',
                                     isTagActive
-                                      ? 'bg-[#315C4C] text-white border-[#315C4C] font-semibold'
-                                      : 'bg-[#EBF1EE]/75 text-[#315C4C] border-[#315C4C]/20 hover:bg-[#DCE7E2]'
+                                      ? 'bg-amber-500 text-neutral-950 border-amber-600 font-semibold dark:bg-amber-400 dark:border-amber-300'
+                                      : 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100 dark:bg-neutral-800 dark:text-amber-200 dark:border-amber-700 dark:hover:bg-neutral-700'
                                   )}
                                   title={`Bấm để lọc theo tag #${tg}`}
                                 >

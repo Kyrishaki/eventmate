@@ -216,7 +216,7 @@ export function Sidebar({
               onClick={onClose}
               title={t('posTerminal')}
               className={cn(
-                'flex items-center rounded-[8px] bg-amber-500 text-neutral-950 hover:bg-amber-400 font-black transition-all shadow-xs active:scale-[0.98] border border-amber-600/20',
+                'flex items-center rounded-[var(--radius-container,8px)] bg-[#315C4C] text-white hover:bg-[#284A3D] font-bold transition-all shadow-xs active:scale-[0.98] border border-[#315C4C]/25',
                 isOpen
                   ? 'md:flex-row md:justify-between md:px-3 md:py-2.5'
                   : 'md:flex-col md:justify-center md:px-1 md:py-2 md:gap-0.5',
@@ -232,10 +232,10 @@ export function Sidebar({
                   isCollapsed ? 'lg:flex-col lg:gap-0.5' : 'lg:flex-row lg:gap-2.5'
                 )}
               >
-                <TabletSmartphone className="w-4 h-4 shrink-0 text-neutral-950" />
+                <TabletSmartphone className="w-4 h-4 shrink-0 text-amber-300" />
                 <span
                   className={cn(
-                    'font-black leading-tight truncate text-xs',
+                    'font-bold leading-tight truncate text-xs',
                     isOpen ? 'md:inline' : 'md:hidden',
                     isCollapsed ? 'lg:hidden' : 'lg:inline'
                   )}
@@ -244,7 +244,7 @@ export function Sidebar({
                 </span>
                 <span
                   className={cn(
-                    'font-black leading-tight truncate text-[10px]',
+                    'font-bold leading-tight truncate text-[10px]',
                     isOpen ? 'md:hidden' : 'md:inline',
                     isCollapsed ? 'lg:inline' : 'lg:hidden'
                   )}
@@ -259,7 +259,7 @@ export function Sidebar({
                   isCollapsed ? 'lg:hidden' : 'lg:inline-block'
                 )}
               >
-                POS
+                Bán hàng
               </span>
             </Link>
           </div>
@@ -308,8 +308,8 @@ export function Sidebar({
                           ? cn(
                               'md:flex-row md:gap-2.5 md:px-2.5 md:py-2',
                               isActive
-                                ? 'md:bg-amber-500/15 md:text-amber-800 dark:md:text-amber-300 md:font-bold md:border-l-2 md:border-amber-500'
-                                : 'md:bg-transparent md:text-[#5F6368] dark:md:text-neutral-400 md:hover:text-[#202124] dark:md:hover:text-neutral-100 md:hover:bg-[#F7F7F5] dark:md:hover:bg-neutral-800/60'
+                                ? 'md:bg-[#315C4C]/10 md:text-[#315C4C] dark:md:text-[#5ED69D] md:font-bold md:border-l-2 md:border-[#315C4C] dark:md:border-[#5ED69D]'
+                                : 'md:bg-transparent md:text-[#5F6368] dark:md:text-[#9BA1A6] md:hover:text-[#202124] dark:md:hover:text-white md:hover:bg-[#F0F0ED] dark:md:hover:bg-[#25282F]'
                             )
                           : 'md:flex-col md:justify-center md:px-1 md:py-1 md:gap-0.5 md:bg-transparent',
                         isCollapsed
@@ -317,12 +317,12 @@ export function Sidebar({
                           : cn(
                               'lg:flex-row lg:gap-2.5 lg:px-2.5 lg:py-2',
                               isActive
-                                ? 'lg:bg-amber-500/15 lg:text-amber-800 dark:lg:text-amber-300 lg:font-bold lg:border-l-2 lg:border-amber-500'
-                                : 'lg:bg-transparent lg:text-[#5F6368] dark:lg:text-neutral-400 lg:hover:text-[#202124] dark:lg:hover:text-neutral-100 lg:hover:bg-[#F7F7F5] dark:lg:hover:bg-neutral-800/60'
+                                ? 'lg:bg-[#315C4C]/10 lg:text-[#315C4C] dark:lg:text-[#5ED69D] lg:font-bold lg:border-l-2 lg:border-[#315C4C] dark:lg:border-[#5ED69D]'
+                                : 'lg:bg-transparent lg:text-[#5F6368] dark:lg:text-[#9BA1A6] lg:hover:text-[#202124] dark:lg:hover:text-white lg:hover:bg-[#F0F0ED] dark:lg:hover:bg-[#25282F]'
                             )
                       )}
                     >
-                      {/* Icon Wrapper (Material 3 Pill in Rail Mode, standard icon in Expanded Mode) */}
+                      {/* Icon Wrapper (Astryx Pill in Rail Mode, standard icon in Expanded Mode) */}
                       <span
                         className={cn(
                           'relative flex items-center justify-center shrink-0 transition-colors',
@@ -331,18 +331,18 @@ export function Sidebar({
                             : cn(
                                 'md:px-3 md:py-1 md:rounded-full',
                                 isActive
-                                  ? 'md:bg-amber-500/20 md:text-amber-600 dark:md:text-amber-400'
+                                  ? 'md:bg-[#315C4C]/15 md:text-[#315C4C] dark:md:text-[#5ED69D]'
                                   : 'md:text-[#737373] md:group-hover:bg-[#F0F0ED] md:group-hover:text-[#202124]'
                               ),
                           isCollapsed
                             ? cn(
                                 'lg:px-3 lg:py-1 lg:rounded-full',
                                 isActive
-                                  ? 'lg:bg-amber-500/20 lg:text-amber-600 dark:lg:text-amber-400'
+                                  ? 'lg:bg-[#315C4C]/15 lg:text-[#315C4C] dark:lg:text-[#5ED69D]'
                                   : 'lg:text-[#737373] lg:group-hover:bg-[#F0F0ED] lg:group-hover:text-[#202124]'
                               )
                             : 'lg:px-0 lg:py-0 lg:rounded-none lg:bg-transparent',
-                          isActive ? 'text-amber-600 dark:text-amber-400' : 'text-[#737373] group-hover:text-[#202124]'
+                          isActive ? 'text-[#315C4C] dark:text-[#5ED69D]' : 'text-[#737373] group-hover:text-[#202124]'
                         )}
                       >
                         <Icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2.25 : 1.9} />
@@ -355,8 +355,8 @@ export function Sidebar({
                           isOpen ? 'md:inline' : 'md:hidden',
                           isCollapsed ? 'lg:hidden' : 'lg:inline',
                           isActive
-                            ? 'font-semibold text-[#315C4C]'
-                            : 'font-medium text-[#5F6368] group-hover:text-[#202124]'
+                            ? 'font-semibold text-[#315C4C] dark:text-[#5ED69D]'
+                            : 'font-medium text-[#5F6368] dark:text-[#9BA1A6] group-hover:text-[#202124] dark:group-hover:text-white'
                         )}
                       >
                         {fullLabel}

@@ -12,7 +12,7 @@ import { useWorkspaceStore } from '@/stores/workspace-store';
 import { CheckCircle2, ShieldCheck, Users } from 'lucide-react';
 import { WorkspaceRole } from '@/types/database';
 
-export default function AcceptInvitationPage() {
+function AcceptInvitationContent() {
   const t = useTranslations('auth');
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -106,5 +106,13 @@ export default function AcceptInvitationPage() {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+export default function AcceptInvitationPage() {
+  return (
+    <React.Suspense fallback={<div className="p-8 text-center text-xs text-neutral-500">Đang tải thư mời...</div>}>
+      <AcceptInvitationContent />
+    </React.Suspense>
   );
 }

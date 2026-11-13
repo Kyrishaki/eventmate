@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import * as React from 'react';
 import { WorkspaceRole } from '@/types/database';
 
 export interface AuthUser {
@@ -12,6 +13,8 @@ export interface AuthUser {
   collabPartnerName?: string;
   collabBoothId?: string;
   sessionEpoch?: number;
+  passwordVersion?: number;
+  sessionPassword?: string;
 }
 
 export interface UserAccount {
@@ -24,6 +27,7 @@ export interface UserAccount {
   collabPartnerName?: string;
   collabBoothId?: string;
   sessionEpoch?: number;
+  passwordVersion?: number;
   createdAt: string;
 }
 
@@ -36,50 +40,87 @@ function secureHash(str: string): string {
   return (hash >>> 0).toString(16);
 }
 
-// Pre-configured Primary Admin & Demo Accounts
+// Bảng tài khoản Quản trị & Đối tác mặc định — giữ nguyên tên đăng nhập & mật khẩu, không đảo ngẫu nhiên
 export const MASTER_ACCOUNTS: UserAccount[] = [
   {
     id: 'admin-tuan',
     username: 'Tuanadminvippro666',
     email: 'tuanadmin@eventmate.app',
     password: 'Tu@n1121314151',
-    fullName: 'Tuấn Admin VIP Pro',
+    passwordVersion: 1,
+    sessionEpoch: 1,
+    fullName: 'Tuấn Quản Trị Hệ Thống',
     role: 'owner',
     createdAt: '2026-01-01T00:00:00Z',
   },
   {
     id: 'admin-hkt',
-    username: 'HKT83@123',
-    email: 'hkt83@eventmate.app',
-    password: 'HKT@998304',
-    fullName: 'HKT Super Admin',
+    username: 'HKT87@123',
+    email: 'hkt87@eventmate.app',
+    password: 'HKT@997804',
+    passwordVersion: 1,
+    sessionEpoch: 1,
+    fullName: 'HKT Quản Trị Cấp Cao',
     role: 'owner',
     createdAt: '2026-01-01T00:00:00Z',
   },
+  {
+    id: 'collab-genz',
+    username: 'collab_genz',
+    email: 'collab@genzfashion.vn',
+    password: 'Collab@123',
+    passwordVersion: 1,
+    sessionEpoch: 1,
+    fullName: 'Đối Tác GenZ Official',
+    role: 'collab_partner',
+    collabPartnerName: 'GenZ Official',
+    createdAt: '2026-01-01T00:00:00Z',
+  },
 ];
+
+export function getVietnameseRoleLabel(role?: WorkspaceRole | string | null): string {
+  if (!role) return 'Khách xem';
+  switch (role) {
+    case 'owner':
+      return 'Quản trị tối cao';
+    case 'admin':
+      return 'Quản trị viên';
+    case 'manager':
+      return 'Quản lý quầy';
+    case 'cashier':
+      return 'Thu ngân';
+    case 'inventory_staff':
+      return 'Nhân viên kho';
+    case 'collab_partner':
+      return 'Đối tác gian hàng';
+    case 'viewer':
+      return 'Khách xem';
+    default:
+      return role;
+  }
+}
 
 /**
  * Helper to get the human-readable password for displaying or copying in the Admin Staff list
  */
 export function getDisplayPassword(account?: UserAccount | null): string {
   if (!account) return '';
-  // If the account password is plain text, return it directly
   if (account.password && !account.password.startsWith('hash:')) {
     return account.password;
   }
-  if (account.password === 'hash:558f1e4a' || account.username?.toLowerCase() === 'tuanadminvippro666') {
+  if (account.id === 'admin-tuan' || account.username?.toLowerCase() === 'tuanadminvippro666') {
     return 'Tu@n1121314151';
   }
   if (
-    account.password === 'hash:d36d654f' ||
-    account.password === 'hash:1a7415b5' ||
-    account.username?.toLowerCase() === 'hkt83@123' ||
-    account.username?.toLowerCase() === 'hkt87@123'
+    account.id === 'admin-hkt' ||
+    account.username?.toLowerCase() === 'hkt87@123' ||
+    account.username?.toLowerCase() === 'hkt83@123'
   ) {
-    return 'HKT@998304';
+    return 'HKT@997804';
   }
-  if (account.id === 'admin-tuan') return 'Tu@n1121314151';
-  if (account.id === 'admin-hkt') return 'HKT@998304';
+  if (account.id === 'collab-genz' || account.username?.toLowerCase() === 'collab_genz') {
+    return 'Collab@123';
+  }
   return account.password || '';
 }
 
@@ -184,7 +225,8 @@ export const useAuthStore = create<AuthState>()(
           (found.password.startsWith('hash:') && found.password === inputHash) ||
           (found.id === 'admin-tuan' && (password === 'Tu@n1121314151' || inputHash === 'hash:558f1e4a')) ||
           (found.id === 'admin-hkt' &&
-            (password === 'HKT@998304' || inputHash === 'hash:d36d654f' || password === 'HKT@997804'));
+            (password === 'HKT@997804' || password === 'HKT@998304' || inputHash === 'hash:1a7415b5' || inputHash === 'hash:d36d654f')) ||
+          (found.id === 'collab-genz' && (password === 'Collab@123' || inputHash === 'hash:15fb0680'));
 
         if (!isMatch) {
           return { success: false, message: 'Mật khẩu không chính xác.' };
@@ -200,11 +242,14 @@ export const useAuthStore = create<AuthState>()(
           collabPartnerName: found.collabPartnerName,
           collabBoothId: found.collabBoothId,
           sessionEpoch: found.sessionEpoch || Date.now(),
+          passwordVersion: found.passwordVersion ?? 1,
+          sessionPassword: found.password,
         };
 
         set({
           user: authUser,
           isAuthenticated: true,
+          isGuestPreview: false,
         });
 
         return { success: true };
@@ -379,7 +424,11 @@ export const useAuthStore = create<AuthState>()(
         const cleanEmail = data.email !== undefined ? data.email.trim() : target.email;
         const cleanRole = data.role || target.role;
 
-        const updatedAccounts = accounts.map((acc) => {
+        const isPasswordChanged = !!cleanPassword && cleanPassword !== target.password;
+        const newVersion = isPasswordChanged ? (target.passwordVersion ?? 1) + 1 : target.passwordVersion ?? 1;
+        const newEpoch = isPasswordChanged ? Date.now() : target.sessionEpoch;
+
+        const updatedAccounts: UserAccount[] = accounts.map((acc) => {
           if (acc.id !== data.accountId) return acc;
           return {
             ...acc,
@@ -388,6 +437,8 @@ export const useAuthStore = create<AuthState>()(
             email: cleanEmail,
             role: cleanRole,
             password: cleanPassword ? cleanPassword : acc.password,
+            passwordVersion: newVersion,
+            sessionEpoch: newEpoch,
             collabPartnerName:
               data.collabPartnerName !== undefined ? data.collabPartnerName.trim() || undefined : acc.collabPartnerName,
             collabBoothId:
@@ -395,9 +446,37 @@ export const useAuthStore = create<AuthState>()(
           };
         });
 
-        // Update active session user if currently logged in as this account
+        const isCurrentSession = user && user.id === data.accountId;
+
+        if (isPasswordChanged) {
+          if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+            try {
+              const bc = new BroadcastChannel('eventmate_auth_events');
+              bc.postMessage({
+                type: 'FORCE_LOGOUT_ACCOUNT',
+                accountId: target.id,
+                username: target.username,
+                newSessionEpoch: newEpoch,
+              });
+              bc.close();
+            } catch {}
+          }
+
+          if (isCurrentSession) {
+            set({
+              accounts: updatedAccounts,
+              user: null,
+              isAuthenticated: false,
+            });
+            if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+              window.location.href = '/login?reason=password_changed';
+            }
+            return { success: true };
+          }
+        }
+
         let updatedUser = user;
-        if (user && user.id === data.accountId) {
+        if (isCurrentSession) {
           updatedUser = {
             ...user,
             username: cleanUsername,
@@ -430,6 +509,12 @@ export const useAuthStore = create<AuthState>()(
       },
 
       randomizeAccountCredentials: (data) => {
+        if (data.accountId === 'admin-tuan' || data.accountId === 'admin-hkt') {
+          return {
+            success: false,
+            message: 'Tài khoản Quản trị viên (Admin) không được phép đảo ngẫu nhiên.',
+          };
+        }
         const { accounts, user } = get();
         if (user && user.role !== 'owner' && user.role !== 'admin') {
           return {
@@ -460,23 +545,18 @@ export const useAuthStore = create<AuthState>()(
         });
 
         // Broadcast force logout signal to peers and local tabs
-        try {
-          const { broadcastForceLogout } = require('@/lib/cloud-sync');
-          broadcastForceLogout(target.id, target.username, newSessionEpoch);
-        } catch {
-          if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
-            try {
-              const bc = new BroadcastChannel('eventmate_auth_events');
-              bc.postMessage({
-                type: 'FORCE_LOGOUT_ACCOUNT',
-                accountId: target.id,
-                username: target.username,
-                newSessionEpoch,
-              });
-              bc.close();
-            } catch {
-              // ignore
-            }
+        if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+          try {
+            const bc = new BroadcastChannel('eventmate_auth_events');
+            bc.postMessage({
+              type: 'FORCE_LOGOUT_ACCOUNT',
+              accountId: target.id,
+              username: target.username,
+              newSessionEpoch,
+            });
+            bc.close();
+          } catch {
+            // ignore
           }
         }
 
@@ -577,10 +657,22 @@ export const useAuthStore = create<AuthState>()(
           }
         }
         if (!state) return;
-        // Keep only valid accounts and ensure the 2 primary Admin accounts are always up-to-date
-        state.accounts = state.accounts.filter((a) => a.id !== 'collab-genz');
+
+        // 1. Chuẩn hóa accounts và bảo đảm tài khoản Quản trị & Đối tác luôn tồn tại với mật khẩu chuẩn
+        const accounts: UserAccount[] = (state.accounts || []).map((acc) => {
+          let plainPass = acc.password;
+          if (plainPass === 'hash:558f1e4a') plainPass = 'Tu@n1121314151';
+          if (plainPass === 'hash:1a7415b5' || plainPass === 'hash:d36d654f') plainPass = 'HKT@997804';
+          if (plainPass === 'hash:15fb0680') plainPass = 'Collab@123';
+          return {
+            ...acc,
+            password: plainPass,
+            passwordVersion: acc.passwordVersion ?? 1,
+          };
+        });
+
         MASTER_ACCOUNTS.forEach((master) => {
-          const idx = state.accounts.findIndex(
+          const idx = accounts.findIndex(
             (a) =>
               a.id === master.id ||
               a.username.toLowerCase() === master.username.toLowerCase() ||
@@ -590,47 +682,71 @@ export const useAuthStore = create<AuthState>()(
                   a.username.toLowerCase() === 'hkt83@123'))
           );
           if (idx >= 0) {
-            const existing = state.accounts[idx];
-            let resolvedPassword = existing.password;
-            if (resolvedPassword?.startsWith('hash:')) {
-              if (resolvedPassword === 'hash:558f1e4a') resolvedPassword = 'Tu@n1121314151';
-              else if (resolvedPassword === 'hash:d36d654f' || resolvedPassword === 'hash:1a7415b5') resolvedPassword = 'HKT@998304';
-              else resolvedPassword = master.password;
-            }
-            state.accounts[idx] = {
-              ...existing,
+            accounts[idx] = {
+              ...accounts[idx],
               id: master.id,
-              username: existing.username || master.username,
-              email: existing.email || master.email,
-              fullName: existing.fullName || master.fullName,
-              password: resolvedPassword || master.password,
-              role: existing.role || master.role,
-              collabPartnerName: master.collabPartnerName || existing.collabPartnerName,
-              collabBoothId: master.collabBoothId || existing.collabBoothId,
+              username: master.username,
+              fullName: accounts[idx].fullName || master.fullName,
+              role: master.role,
+              password: accounts[idx].password || master.password,
+              passwordVersion: accounts[idx].passwordVersion ?? master.passwordVersion ?? 1,
+              collabPartnerName: master.collabPartnerName || accounts[idx].collabPartnerName,
+              collabBoothId: master.collabBoothId || accounts[idx].collabBoothId,
             };
-            if (state.user && state.user.id === master.id) {
-              state.user = {
-                ...state.user,
-                username: state.accounts[idx].username,
-                email: state.accounts[idx].email,
-                fullName: state.accounts[idx].fullName,
-              };
-            }
           } else {
-            state.accounts.push(master);
+            accounts.push(master);
           }
         });
 
-        // Check if current user session has been revoked by sessionEpoch
-        if (state && state.user && state.accounts) {
-          const matched = state.accounts.find((a) => a.id === state.user?.id);
-          if (matched && matched.sessionEpoch && state.user.sessionEpoch) {
-            if (state.user.sessionEpoch < matched.sessionEpoch) {
+        state.accounts = accounts;
+
+        // 2. KIỂM TRA PHIÊN ĐĂNG NHẬP KHI TẢI LẠI TRANG (F5):
+        //    Giữ nguyên phiên đăng nhập trừ khi mật khẩu tài khoản bị thay đổi!
+        if (state.isAuthenticated && state.user) {
+          if (state.isGuestPreview || state.user.role === 'viewer') {
+            return;
+          }
+
+          const matched = accounts.find(
+            (a) =>
+              a.id === state.user?.id ||
+              (state.user?.username && a.username.toLowerCase() === state.user.username.toLowerCase())
+          );
+
+          if (!matched) {
+            state.user = null;
+            state.isAuthenticated = false;
+          } else {
+            const versionMismatch =
+              state.user.passwordVersion !== undefined &&
+              matched.passwordVersion !== undefined &&
+              state.user.passwordVersion !== matched.passwordVersion;
+            const passwordMismatch =
+              state.user.sessionPassword !== undefined &&
+              matched.password !== undefined &&
+              state.user.sessionPassword !== matched.password;
+
+            if (versionMismatch || passwordMismatch) {
               state.user = null;
               state.isAuthenticated = false;
               if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-                window.location.href = '/login?reason=forced_logout';
+                window.location.href = '/login?reason=password_changed';
               }
+            } else {
+              // MẬT KHẨU KHÔNG THAY ĐỔI -> GIỮ NGUYÊN PHIÊN ĐĂNG NHẬP
+              state.user = {
+                ...state.user,
+                id: matched.id,
+                username: matched.username,
+                email: matched.email,
+                fullName: matched.fullName,
+                role: matched.role,
+                collabPartnerName: matched.collabPartnerName,
+                collabBoothId: matched.collabBoothId,
+                passwordVersion: matched.passwordVersion ?? 1,
+                sessionPassword: matched.password,
+              };
+              state.isAuthenticated = true;
             }
           }
         }
@@ -724,4 +840,14 @@ export function canManageProduct(
     return productCollabPartner.trim().toLowerCase() === user.collabPartnerName.trim().toLowerCase();
   }
   return false;
+}
+
+const emptySubscribe = () => () => {};
+
+export function useAuthHydrated(): boolean {
+  return React.useSyncExternalStore(
+    emptySubscribe,
+    () => useAuthStore.persist?.hasHydrated?.() ?? true,
+    () => false
+  );
 }

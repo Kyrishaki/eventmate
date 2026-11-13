@@ -6,35 +6,56 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'gold' | 'red';
   size?: 'sm' | 'md' | 'lg' | 'icon';
   isLoading?: boolean;
+  elevation?: 'none' | 'low' | 'med' | 'high';
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', size = 'md', isLoading = false, disabled, type = 'button', children, ...props }, ref) => {
+  (
+    {
+      className,
+      variant = 'primary',
+      size = 'md',
+      isLoading = false,
+      elevation = 'none',
+      disabled,
+      type = 'button',
+      children,
+      ...props
+    },
+    ref
+  ) => {
     const baseStyles =
-      'inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none select-none rounded-[6px] cursor-pointer';
+      'astryx-button relative inline-flex items-center justify-center font-semibold text-center select-none transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--color-accent,#315C4C)] disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98] cursor-pointer rounded-[var(--radius-container,8px)]';
 
     const variants = {
       primary:
-        'bg-amber-500 text-neutral-950 font-bold hover:bg-amber-400 active:bg-amber-600 dark:bg-amber-500 dark:text-neutral-950 dark:hover:bg-amber-400 shadow-xs border border-amber-600/20',
+        'bg-[#315C4C] hover:bg-[#284A3D] text-white shadow-xs border border-[#315C4C]/20 dark:bg-[#3E7A65] dark:hover:bg-[#4C8E77]',
       gold:
-        'bg-amber-500 text-neutral-950 font-bold hover:bg-amber-400 active:bg-amber-600 dark:bg-amber-500 dark:text-neutral-950 dark:hover:bg-amber-400 shadow-xs border border-amber-600/20',
+        'bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-neutral-950 font-bold shadow-xs border border-amber-600/30 dark:bg-amber-500 dark:hover:bg-amber-400',
       secondary:
-        'bg-neutral-900 text-white hover:bg-neutral-800 active:bg-neutral-950 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700 border border-neutral-800 dark:border-neutral-700',
+        'bg-[var(--color-surface,#FFFFFF)] hover:bg-[var(--color-surface-hover,#F0F0ED)] text-[var(--color-text-primary,#202124)] border border-[var(--color-border,#E8E8E5)] dark:bg-[#1B1D22] dark:hover:bg-[#24272E] dark:border-[#2C3038] dark:text-[#F2F3F5] shadow-2xs',
       red:
-        'bg-red-600 text-white font-bold hover:bg-red-500 active:bg-red-700 shadow-xs border border-red-700/30',
+        'bg-[#C44536] hover:bg-[#AB3C2E] active:bg-[#923326] text-white font-bold shadow-xs border border-[#C44536]/30',
       outline:
-        'border border-[#E5E7EB] dark:border-neutral-800 bg-white dark:bg-neutral-900 text-[#111827] dark:text-neutral-100 hover:bg-[#F3F4F6] dark:hover:bg-neutral-800/80 active:bg-[#E5E7EB]',
+        'border border-[var(--color-border,#E8E8E5)] dark:border-[#2C3038] bg-transparent text-[var(--color-text-primary,#202124)] hover:bg-[var(--color-surface-hover,#F0F0ED)] dark:text-[#F2F3F5] dark:hover:bg-[#24272E]',
       ghost:
-        'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800',
+        'bg-transparent text-[var(--color-text-secondary,#737373)] hover:text-[var(--color-text-primary,#202124)] hover:bg-[var(--color-surface-hover,#F0F0ED)] dark:text-[#9BA1A6] dark:hover:text-white dark:hover:bg-[#24272E]',
       destructive:
         'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 active:bg-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-950/70',
     };
 
+    const elevations = {
+      none: '',
+      low: 'shadow-xs',
+      med: 'shadow-md',
+      high: 'shadow-xl',
+    };
+
     const sizes = {
-      sm: 'h-8 px-2.5 text-xs gap-1.5',
-      md: 'h-9 px-3.5 text-sm gap-2',
-      lg: 'h-10 px-4.5 text-sm gap-2.5',
-      icon: 'h-9 w-9 p-0',
+      sm: 'h-8 px-3 text-xs gap-1.5',
+      md: 'h-9 px-4 text-sm gap-2',
+      lg: 'h-11 px-5 text-base gap-2.5',
+      icon: 'h-9 w-9 p-0 aspect-square',
     };
 
     return (
@@ -42,7 +63,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         type={type}
         disabled={disabled || isLoading}
-        className={cn(baseStyles, variants[variant], sizes[size], className)}
+        aria-busy={isLoading}
+        data-astryx-component="button"
+        data-variant={variant}
+        data-size={size}
+        data-elevation={elevation}
+        className={cn(baseStyles, variants[variant], sizes[size], elevations[elevation], className)}
         {...props}
       >
         {isLoading && <Loader2 className="w-4 h-4 animate-spin shrink-0" />}
@@ -51,4 +77,5 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     );
   }
 );
+
 Button.displayName = 'Button';

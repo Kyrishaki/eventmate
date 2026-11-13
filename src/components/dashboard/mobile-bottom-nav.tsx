@@ -97,8 +97,8 @@ export function MobileBottomNav({
                   className={cn(
                     'flex items-center justify-center px-3.5 py-1 rounded-full transition-colors',
                     active
-                      ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-                      : 'text-[#737373] hover:text-[#202124]'
+                      ? 'bg-[#315C4C]/15 text-[#315C4C] dark:bg-[#3E7A65]/25 dark:text-[#5ED69D]'
+                      : 'text-[#737373] hover:text-[#202124] dark:text-[#9BA1A6] dark:hover:text-white'
                   )}
                 >
                   <Icon className="w-[19px] h-[19px]" strokeWidth={active ? 2.4 : 2} />
@@ -106,7 +106,7 @@ export function MobileBottomNav({
                 <span
                   className={cn(
                     'text-[10.5px] leading-tight truncate max-w-[68px]',
-                    active ? 'font-bold text-amber-700 dark:text-amber-400' : 'font-medium text-[#737373]'
+                    active ? 'font-bold text-[#315C4C] dark:text-[#5ED69D]' : 'font-medium text-[#737373] dark:text-[#9BA1A6]'
                   )}
                 >
                   {tab.label}
@@ -121,10 +121,10 @@ export function MobileBottomNav({
             onClick={onCloseMenu}
             className="flex flex-col items-center justify-center pb-1 min-h-[56px] gap-0.5 select-none active:scale-95 transition-transform"
           >
-            <span className="flex items-center justify-center w-12 h-9 -mt-3 rounded-2xl bg-amber-500 text-neutral-950 shadow-md ring-4 ring-white dark:ring-[#090A0D] border border-amber-600/30">
-              <TabletSmartphone className="w-5 h-5 text-neutral-950" />
+            <span className="flex items-center justify-center w-12 h-9 -mt-3 rounded-2xl bg-[#315C4C] dark:bg-[#3E7A65] text-amber-300 shadow-md ring-4 ring-white dark:ring-[#111215] border border-[#315C4C]/30">
+              <TabletSmartphone className="w-5 h-5 text-amber-300" />
             </span>
-            <span className="text-[10.5px] font-black text-amber-700 dark:text-amber-400 leading-tight">
+            <span className="text-[10.5px] font-black text-[#315C4C] dark:text-[#5ED69D] leading-tight">
               {t('posShort')}
             </span>
           </Link>
@@ -143,8 +143,8 @@ export function MobileBottomNav({
                   className={cn(
                     'flex items-center justify-center px-3.5 py-1 rounded-full transition-colors',
                     active
-                      ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-                      : 'text-[#737373] hover:text-[#202124]'
+                      ? 'bg-[#315C4C]/15 text-[#315C4C] dark:bg-[#3E7A65]/25 dark:text-[#5ED69D]'
+                      : 'text-[#737373] hover:text-[#202124] dark:text-[#9BA1A6] dark:hover:text-white'
                   )}
                 >
                   <Icon className="w-[19px] h-[19px]" strokeWidth={active ? 2.4 : 2} />
@@ -152,7 +152,7 @@ export function MobileBottomNav({
                 <span
                   className={cn(
                     'text-[10.5px] leading-tight truncate max-w-[68px]',
-                    active ? 'font-bold text-amber-700 dark:text-amber-400' : 'font-medium text-[#737373]'
+                    active ? 'font-bold text-[#315C4C] dark:text-[#5ED69D]' : 'font-medium text-[#737373] dark:text-[#9BA1A6]'
                   )}
                 >
                   {trailingTab.label}

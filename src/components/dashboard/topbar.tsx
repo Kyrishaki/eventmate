@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuthStore, getVietnameseRoleLabel } from '@/stores/auth-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
@@ -50,7 +50,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
         </Link>
 
         {/* Desktop/Tablet Active Page Icon (md+) */}
-        <div className="hidden md:flex w-8 h-8 rounded-[8px] bg-amber-500/15 text-amber-600 dark:text-amber-400 items-center justify-center shrink-0 border border-amber-500/20">
+        <div className="hidden md:flex w-8 h-8 rounded-[var(--radius-container,8px)] bg-[var(--color-accent,#315C4C)]/10 text-[var(--color-accent,#315C4C)] dark:text-[#5ED69D] items-center justify-center shrink-0 border border-[var(--color-accent,#315C4C)]/20">
           <PageIcon className="w-4 h-4" />
         </div>
 
@@ -113,7 +113,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
           onClick={() => {
             useAuthStore.getState().enterGuestPreview();
           }}
-          className="hidden lg:inline-flex items-center gap-1.5 h-8 px-2.5 rounded-[6px] text-xs font-bold border border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10 transition-colors cursor-pointer"
+          className="hidden lg:inline-flex items-center gap-1.5 h-8 px-2.5 rounded-[var(--radius-container,6px)] text-xs font-semibold border border-[var(--color-border,#E8E8E5)] dark:border-[#2C3038] text-[var(--color-text-secondary,#737373)] dark:text-[#9BA1A6] hover:text-[var(--color-text-primary,#202124)] dark:hover:text-white hover:bg-[var(--color-surface-hover,#F0F0ED)] dark:hover:bg-[#25282F] transition-colors cursor-pointer"
           title="Xem thử giao diện Gian hàng Khách xem (Chỉ xem sản phẩm & Keep đồ)"
         >
           <Eye className="w-3.5 h-3.5" />
@@ -133,16 +133,16 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
 
           <div className="hidden sm:block text-left">
             <p className="text-xs font-medium text-[#202124] leading-tight truncate max-w-[120px]">
-              {user?.fullName || 'Artist Tour Crew'}
+              {user?.fullName || 'Thành viên ban tổ chức'}
             </p>
             <div className="flex items-center gap-1">
               {user?.role === 'collab_partner' ? (
                 <Badge variant="warning" className="text-[9px] px-1 py-0 bg-[#FAF5FF] text-[#6B21A8] border-[#A855F7]/30 font-semibold">
-                  {user?.collabPartnerName ? `Collab: ${user.collabPartnerName}` : 'Collab Partner'}
+                  {user?.collabPartnerName ? `Đối tác: ${user.collabPartnerName}` : 'Đối tác gian hàng'}
                 </Badge>
               ) : (
-                <Badge variant="neutral" className="text-[9px] px-1 py-0 capitalize">
-                  {user?.role || 'owner'}
+                <Badge variant="neutral" className="text-[9px] px-1 py-0">
+                  {getVietnameseRoleLabel(user?.role)}
                 </Badge>
               )}
             </div>

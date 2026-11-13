@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useDataStore, DataStoreState } from '@/stores/data-store';
 import { useOrdersStore } from '@/stores/orders-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
+import { useAuthStore } from '@/stores/auth-store';
 import { Order } from '@/types/database';
 
 export interface CloudCatalogPayload {
@@ -104,8 +105,10 @@ export function initCloudSync(workspaceId = DEFAULT_WORKSPACE_ID) {
       { event: 'REQUEST_CATALOG_SYNC' },
       ({ payload }: { payload: { clientId: string } }) => {
         if (payload && payload.clientId !== clientId) {
-          // Send our current catalog to the requesting new peer
-          broadcastFullState();
+          // Send our current catalog to the requesting new peer only if authorized editor
+          if (useAuthStore.getState().canEditData()) {
+            broadcastFullState(workspaceId);
+          }
         }
       }
     );
@@ -176,6 +179,10 @@ function setupStoreSubscribers(workspaceId: string) {
   useDataStore.subscribe((state, prevState) => {
     if (isApplyingRemoteUpdate) return;
 
+    // Guard: Only authenticated users with edit permissions can push catalog changes to cloud/peers
+    const authState = useAuthStore.getState();
+    if (!authState.canEditData()) return;
+
     const hasCatalogChanged =
       state.products !== prevState.products ||
       state.variants !== prevState.variants ||
@@ -202,6 +209,11 @@ function setupStoreSubscribers(workspaceId: string) {
   // Listen to useOrdersStore (Orders)
   useOrdersStore.subscribe((state, prevState) => {
     if (isApplyingRemoteUpdate) return;
+
+    // Guard: Only logged-in users with order creation permission can sync orders
+    const authUser = useAuthStore.getState().user;
+    const canSyncOrder = authUser && ['owner', 'admin', 'manager', 'cashier', 'collab_partner'].includes(authUser.role);
+    if (!canSyncOrder) return;
 
     if (state.orders !== prevState.orders && state.orders.length > 0) {
       const newest = state.orders[0];
@@ -299,74 +311,44 @@ export function applyCloudSnapshot(snapshot: CloudSyncSnapshot) {
 }
 
 /**
- * Merge partial catalog updates into useDataStore
+ * Apply authoritative catalog updates into useDataStore (Overwrites cleanly so deletions propagate)
  */
 export function applyCatalogDelta(delta: CloudCatalogPayload) {
   isApplyingRemoteUpdate = true;
   try {
-    const dataStore = useDataStore.getState();
     const updates: Partial<DataStoreState> = {};
 
-    if (delta.products && delta.products.length > 0) {
-      const mergedMap = new Map<string, any>();
-      delta.products.forEach((p) => mergedMap.set(p.id, p));
-      dataStore.products.forEach((p) => {
-        if (!mergedMap.has(p.id)) mergedMap.set(p.id, p);
-      });
-      updates.products = Array.from(mergedMap.values());
+    if (Array.isArray(delta.products)) {
+      updates.products = delta.products;
     }
 
-    if (delta.variants && delta.variants.length > 0) {
-      const mergedMap = new Map<string, any>();
-      delta.variants.forEach((v) => mergedMap.set(v.id, v));
-      dataStore.variants.forEach((v) => {
-        if (!mergedMap.has(v.id)) mergedMap.set(v.id, v);
-      });
-      updates.variants = Array.from(mergedMap.values());
+    if (Array.isArray(delta.variants)) {
+      updates.variants = delta.variants;
     }
 
-    if (delta.categories && delta.categories.length > 0) {
-      const mergedMap = new Map<string, any>();
-      delta.categories.forEach((c) => mergedMap.set(c.id, c));
-      dataStore.categories.forEach((c) => {
-        if (!mergedMap.has(c.id)) mergedMap.set(c.id, c);
-      });
-      updates.categories = Array.from(mergedMap.values());
+    if (Array.isArray(delta.categories)) {
+      updates.categories = delta.categories;
     }
 
-    if (delta.events && delta.events.length > 0) {
-      const mergedMap = new Map<string, any>();
-      delta.events.forEach((e) => mergedMap.set(e.id, e));
-      dataStore.events.forEach((e) => {
-        if (!mergedMap.has(e.id)) mergedMap.set(e.id, e);
-      });
-      updates.events = Array.from(mergedMap.values());
+    if (Array.isArray(delta.events)) {
+      updates.events = delta.events;
     }
 
-    if (delta.booths && delta.booths.length > 0) {
-      const mergedMap = new Map<string, any>();
-      delta.booths.forEach((b) => mergedMap.set(b.id, b));
-      dataStore.booths.forEach((b) => {
-        if (!mergedMap.has(b.id)) mergedMap.set(b.id, b);
-      });
-      updates.booths = Array.from(mergedMap.values());
+    if (Array.isArray(delta.booths)) {
+      updates.booths = delta.booths;
     }
 
-    if (delta.allocations && delta.allocations.length > 0) {
-      const mergedMap = new Map<string, any>();
-      delta.allocations.forEach((a) => mergedMap.set(`${a.booth_id}::${a.variant_id}`, a));
-      dataStore.allocations.forEach((a) => {
-        const key = `${a.booth_id}::${a.variant_id}`;
-        if (!mergedMap.has(key)) mergedMap.set(key, a);
-      });
-      updates.allocations = Array.from(mergedMap.values());
+    if (Array.isArray(delta.allocations)) {
+      updates.allocations = delta.allocations;
     }
 
-    useDataStore.setState(updates);
+    if (Object.keys(updates).length > 0) {
+      useDataStore.setState(updates);
+    }
   } finally {
     setTimeout(() => {
       isApplyingRemoteUpdate = false;
-    }, 100);
+    }, 150);
   }
 }
 
@@ -474,6 +456,12 @@ export function syncOrderCreated(order: Order, workspaceId = DEFAULT_WORKSPACE_I
  * Push entire local snapshot into Supabase table
  */
 export async function pushFullStateToCloud(workspaceId = DEFAULT_WORKSPACE_ID): Promise<boolean> {
+  const authState = useAuthStore.getState();
+  if (!authState.canEditData()) {
+    // Unauthenticated or viewer/guest sessions cannot overwrite cloud catalog
+    return false;
+  }
+
   const clientId = getOrCreateClientId();
   const dataStore = useDataStore.getState();
   const ordersStore = useOrdersStore.getState();

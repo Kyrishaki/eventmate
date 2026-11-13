@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { useDataStore } from '@/stores/data-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuthStore, useAuthHydrated } from '@/stores/auth-store';
 import { useOrdersStore, CartItem, normalizeVietQrBankId } from '@/stores/orders-store';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -856,6 +856,17 @@ export default function PosTerminalPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isCheckoutOpen, paymentMethod, isSubmitting, proofImage]);
+
+  const hasAuthHydrated = useAuthHydrated();
+
+  if (!hasAuthHydrated) {
+    return (
+      <div className="min-h-screen bg-[#F7F7F5] flex flex-col items-center justify-center p-4">
+        <div className="w-8 h-8 border-3 border-[#315C4C] border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs text-[#737373] mt-3 font-medium">Đang khôi phục ca bán hàng...</span>
+      </div>
+    );
+  }
 
   if (!isAuthenticated || !user) {
     return (

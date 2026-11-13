@@ -805,12 +805,12 @@ const safeLocalStorage: StateStorage = {
 export const useDataStore = create<DataStoreState>()(
   persist(
     (set, get) => ({
-      events: defaultEvents,
-      booths: defaultBooths,
+      events: [],
+      booths: [],
       categories: defaultCategories,
       products: defaultProducts,
       variants: defaultVariants,
-      allocations: defaultAllocations,
+      allocations: [],
       members: defaultMembers,
       invitations: defaultInvitations,
 
@@ -1539,24 +1539,20 @@ export const useDataStore = create<DataStoreState>()(
         ]);
 
         if (state.events?.some((e) => legacyEventIds.has(e.id))) {
-          state.events = defaultEvents;
+          state.events = [];
         }
         if (state.products?.some((p) => legacyProductIds.has(p.id))) {
           state.products = defaultProducts;
           state.variants = defaultVariants;
           state.categories = defaultCategories;
-          state.booths = defaultBooths;
-          state.allocations = defaultAllocations;
+          state.booths = [];
+          state.allocations = [];
         }
 
-        // Self-heal and deduplicate events (including cleaning up any duplicate auto-created collab events)
-        if (!state.events || state.events.length === 0) {
-          state.events = defaultEvents;
+        // Deduplicate events without forcing demo/test events
+        if (!state.events) {
+          state.events = [];
         } else {
-          if (!state.events.some((e) => e.id === 'evt-test-pos')) {
-            const testEvt = defaultEvents.find((e) => e.id === 'evt-test-pos');
-            if (testEvt) state.events = [testEvt, ...state.events];
-          }
           const seenEventIds = new Set<string>();
           const seenCollabEventNames = new Set<string>();
           state.events = state.events
@@ -1578,18 +1574,10 @@ export const useDataStore = create<DataStoreState>()(
             );
         }
 
-        // Self-heal and deduplicate booths
-        if (!state.booths || state.booths.length === 0) {
-          state.booths = defaultBooths;
+        // Deduplicate booths without forcing demo/test booths
+        if (!state.booths) {
+          state.booths = [];
         } else {
-          if (!state.booths.some((b) => b.id === 'booth-test-1')) {
-            const testBooth = defaultBooths.find((b) => b.id === 'booth-test-1');
-            if (testBooth) state.booths = [testBooth, ...state.booths];
-          }
-          if (!state.booths.some((b) => b.id === 'booth-collab-genz')) {
-            const collabBooth = defaultBooths.find((b) => b.id === 'booth-collab-genz');
-            if (collabBooth) state.booths = [...state.booths, collabBooth];
-          }
           const seenBoothIds = new Set<string>();
           const seenCollabBoothKeys = new Set<string>();
           state.booths = state.booths
@@ -1615,18 +1603,10 @@ export const useDataStore = create<DataStoreState>()(
             );
         }
 
-        // Self-heal and deduplicate allocations by (booth_id, variant_id)
-        if (!state.allocations || state.allocations.length === 0) {
-          state.allocations = defaultAllocations;
+        // Deduplicate allocations by (booth_id, variant_id) without forcing demo allocs
+        if (!state.allocations) {
+          state.allocations = [];
         } else {
-          if (!state.allocations.some((a) => a.event_id === 'evt-test-pos')) {
-            const testAllocs = defaultAllocations.filter((a) => a.event_id === 'evt-test-pos');
-            state.allocations = [...state.allocations, ...testAllocs];
-          }
-          if (!state.allocations.some((a) => a.id === 'alloc-collab-genz-1')) {
-            const collabAlloc = defaultAllocations.find((a) => a.id === 'alloc-collab-genz-1');
-            if (collabAlloc) state.allocations = [...state.allocations, collabAlloc];
-          }
           const allocMap = new Map<string, InventoryAllocation>();
           for (const raw of state.allocations) {
             if (!raw || !raw.booth_id || !raw.variant_id) continue;
@@ -1656,10 +1636,6 @@ export const useDataStore = create<DataStoreState>()(
         if (!state.products || state.products.length === 0) {
           state.products = defaultProducts;
         } else {
-          if (!state.products.some((p) => p.id === 'prod-collab-genz-bag')) {
-            const collabProd = defaultProducts.find((p) => p.id === 'prod-collab-genz-bag');
-            if (collabProd) state.products = [...state.products, collabProd];
-          }
           // Backfill default tags for existing default products if missing
           const defaultProdTagMap = new Map(defaultProducts.map((dp) => [dp.id, dp.tags || []]));
           state.products = state.products.map((p) => {
@@ -1675,9 +1651,6 @@ export const useDataStore = create<DataStoreState>()(
 
         if (!state.variants || state.variants.length === 0) {
           state.variants = defaultVariants;
-        } else if (!state.variants.some((v) => v.id === 'var-collab-genz-bag-std')) {
-          const collabVar = defaultVariants.find((v) => v.id === 'var-collab-genz-bag-std');
-          if (collabVar) state.variants = [...state.variants, collabVar];
         }
         if (!state.categories || state.categories.length === 0) state.categories = defaultCategories;
         if (!state.members || state.members.length === 0) state.members = defaultMembers;

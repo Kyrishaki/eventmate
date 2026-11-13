@@ -220,8 +220,19 @@ export default function TeamPage() {
   }
 
   function openRecycleModal(account?: UserAccount | null) {
-    const target = account || accounts[0] || null;
+    const target =
+      account ||
+      accounts.find((a) => a.id !== 'admin-tuan' && a.id !== 'admin-hkt') ||
+      accounts[0] ||
+      null;
     if (!target) return;
+    if (target.id === 'admin-tuan' || target.id === 'admin-hkt' || target.role === 'owner') {
+      setActionFeedback({
+        type: 'error',
+        message: 'Tài khoản Quản trị viên (Admin) được cố định thông tin, không được phép đảo ngẫu nhiên mật khẩu.',
+      });
+      return;
+    }
     setRecycleTargetId(target.id);
     setRecycleNewName(target.fullName);
     setRecycleNewPassword(generateStaffPassword());
@@ -298,19 +309,19 @@ export default function TeamPage() {
   function getRoleLabel(r: WorkspaceRole): string {
     switch (r) {
       case 'owner':
-        return 'Chủ sở hữu (Owner)';
+        return 'Chủ sở hữu hệ thống';
       case 'admin':
-        return 'Quản trị viên (Admin)';
+        return 'Quản trị viên';
       case 'manager':
-        return 'Quản lý quầy (Manager)';
+        return 'Quản lý quầy';
       case 'cashier':
-        return 'Thu ngân POS (Cashier)';
+        return 'Thu ngân';
       case 'inventory_staff':
-        return 'Nhân viên kho (Inventory)';
+        return 'Nhân viên kho';
       case 'collab_partner':
-        return 'Đối tác Collab (Quản trị độc lập)';
+        return 'Đối tác gian hàng';
       case 'viewer':
-        return 'Khách xem (Viewer)';
+        return 'Khách xem';
       default:
         return r;
     }
@@ -498,8 +509,8 @@ export default function TeamPage() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 shrink-0 self-stretch sm:self-auto justify-end pt-2 md:pt-0 border-t md:border-t-0 border-[#F0F0ED] flex-wrap">
-                  {/* Button: Đảo MK & Đăng xuất thiết bị (Tái sử dụng) */}
-                  {isAdmin && (
+                  {/* Button: Đảo MK & Đăng xuất thiết bị (Tái sử dụng) - Chỉ áp dụng cho Nhân viên, không đảo Admin */}
+                  {isAdmin && !isMaster && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -522,7 +533,7 @@ export default function TeamPage() {
                       title="Đổi tên đăng nhập, mật khẩu tùy ý và vai trò của tài khoản này"
                     >
                       <Pencil className="w-3.5 h-3.5" />
-                      <span>Đổi TK/MK</span>
+                      <span>Đổi mật khẩu / Thông tin</span>
                     </Button>
                   )}
 

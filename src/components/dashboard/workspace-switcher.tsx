@@ -76,7 +76,7 @@ export function WorkspaceSwitcher() {
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <p className="text-xs font-semibold text-[#202124] dark:text-neutral-200 truncate leading-tight">
-                  {activeWorkspace?.name || 'Select Workspace'}
+                  {activeWorkspace?.name || 'Chọn Không Gian Làm Việc'}
                 </p>
                 {activeWorkspace?.is_collab && (
                   <Badge variant="warning" className="text-[9px] px-1 py-0 shrink-0">
@@ -216,11 +216,10 @@ export function WorkspaceSwitcher() {
             <select
               id="create-ws-curr"
               className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-sm text-[#202124] focus:outline-none focus:border-[#315C4C]"
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
+              value="VND"
+              disabled
             >
               <option value="VND">VND (Việt Nam Đồng - ₫)</option>
-              <option value="USD">USD (US Dollar - $)</option>
             </select>
           </div>
 

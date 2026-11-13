@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuthStore, useAuthHydrated } from '@/stores/auth-store';
 import { useAuditStore, logActivity } from '@/stores/audit-store';
 import { useDataStore } from '@/stores/data-store';
 import { useOrdersStore } from '@/stores/orders-store';
@@ -476,6 +476,17 @@ export default function AuditLogsPage() {
   // =========================================================================
   // ACCESS DENIED VIEW: NON-ADMIN USERS
   // =========================================================================
+  const hasAuthHydrated = useAuthHydrated();
+
+  if (!hasAuthHydrated) {
+    return (
+      <div className="max-w-2xl mx-auto py-12 px-4 flex flex-col items-center justify-center gap-3">
+        <div className="w-8 h-8 border-3 border-[#315C4C] border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs text-[#737373] font-medium">Đang kiểm tra quyền hạn hệ thống...</span>
+      </div>
+    );
+  }
+
   if (!isAdmin) {
     return (
       <div className="max-w-2xl mx-auto py-12 px-4 text-center space-y-6">

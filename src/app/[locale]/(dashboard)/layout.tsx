@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { Topbar } from '@/components/dashboard/topbar';
 import { MobileBottomNav } from '@/components/dashboard/mobile-bottom-nav';
-import { useAuthStore, isViewerOnly } from '@/stores/auth-store';
+import { useAuthStore, isViewerOnly, useAuthHydrated } from '@/stores/auth-store';
 import { FloatingFeedbackWidget } from '@/components/feedback/feedback-modal';
 import { GuestShowcase } from '@/components/guest/guest-showcase';
 import { initCloudSync } from '@/lib/cloud-sync';
@@ -43,15 +43,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const { isAuthenticated, user, isGuestPreview } = useAuthStore();
   const hasMounted = useMounted();
+  const hasAuthHydrated = useAuthHydrated();
 
   React.useEffect(() => {
     initCloudSync();
   }, []);
 
-  if (!hasMounted) {
+  if (!hasMounted || !hasAuthHydrated) {
     return (
-      <div className="min-h-screen bg-[#F7F7F5] dark:bg-neutral-950 flex items-center justify-center">
+      <div className="min-h-screen bg-[#F7F7F5] dark:bg-neutral-950 flex flex-col items-center justify-center gap-3">
         <div className="w-6 h-6 border-2 border-[#315C4C] border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs text-[#737373] font-medium">Đang khôi phục phiên đăng nhập...</span>
       </div>
     );
   }

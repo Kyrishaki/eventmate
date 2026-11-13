@@ -1,4 +1,7 @@
+strictDepBuilds: false
 allowBuilds:
+  '@astryxdesign/cli': true
+  '@astryxdesign/core': true
   '@parcel/watcher': false
   '@swc/core': false
   sharp: false

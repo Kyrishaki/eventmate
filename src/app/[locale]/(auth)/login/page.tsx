@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +9,6 @@ import { useAuthStore } from '@/stores/auth-store';
 import { AlertCircle, Lock, User, Eye, EyeOff, UserCheck, AlertTriangle } from 'lucide-react';
 
 export default function LoginPage() {
-  const router = useRouter();
   const {
     login,
     loginAsGuest,
@@ -27,12 +25,15 @@ export default function LoginPage() {
   const [isForcedLogout, setIsForcedLogout] = React.useState(false);
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const reason = new URLSearchParams(window.location.search).get('reason');
-      if (reason === 'forced_logout') {
-        setIsForcedLogout(true);
+    const timer = setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        const reason = new URLSearchParams(window.location.search).get('reason');
+        if (reason === 'forced_logout' || reason === 'password_changed') {
+          setIsForcedLogout(true);
+        }
       }
-    }
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // If the user lands on login page with a Guest session, clear preview mode so they can log in freely

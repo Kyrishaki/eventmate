@@ -79,7 +79,7 @@ export function compressImage(file: File, maxDimension = 1000, quality = 0.75): 
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
-      const img = new (window as any).Image();
+      const img = new Image();
       img.onload = () => {
         let width = img.width;
         let height = img.height;

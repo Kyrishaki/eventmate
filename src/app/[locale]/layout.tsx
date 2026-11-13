@@ -1,11 +1,18 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Be_Vietnam_Pro } from 'next/font/google';
+import { Inter, Be_Vietnam_Pro, Figtree } from 'next/font/google';
 import '../globals.css';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { PwaRegister } from '@/components/pwa/pwa-register';
+import { AstryxProvider } from '@/components/providers/astryx-provider';
+
+const figtree = Figtree({
+  subsets: ['latin'],
+  variable: '--font-figtree',
+  display: 'swap',
+});
 
 const inter = Inter({
   subsets: ['latin'],
@@ -69,8 +76,16 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={`${inter.variable} ${beVietnamPro.variable}`} suppressHydrationWarning>
+    <html
+      lang={locale}
+      data-astryx-theme="neutral"
+      className={`${figtree.variable} ${inter.variable} ${beVietnamPro.variable}`}
+      suppressHydrationWarning
+    >
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -78,10 +93,13 @@ export default async function LocaleLayout({
                 try {
                   var saved = localStorage.getItem('eventmate-theme');
                   var isDark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                  var root = document.documentElement;
                   if (isDark) {
-                    document.documentElement.classList.add('dark');
+                    root.classList.add('dark');
+                    root.setAttribute('data-theme', 'dark');
                   } else {
-                    document.documentElement.classList.remove('dark');
+                    root.classList.remove('dark');
+                    root.setAttribute('data-theme', 'light');
                   }
                 } catch (e) {}
               })();
@@ -89,11 +107,13 @@ export default async function LocaleLayout({
           }}
         />
       </head>
-      <body className="bg-[#F7F7F5] text-[#202124] min-h-screen antialiased selection:bg-[#315C4C]/15 selection:text-[#315C4C]">
-        <PwaRegister />
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
-        </NextIntlClientProvider>
+      <body className="bg-[var(--color-background-body,#F7F7F5)] text-[var(--color-text-primary,#202124)] min-h-screen antialiased selection:bg-[#315C4C]/15 selection:text-[#315C4C]">
+        <AstryxProvider>
+          <PwaRegister />
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            {children}
+          </NextIntlClientProvider>
+        </AstryxProvider>
       </body>
     </html>
   );

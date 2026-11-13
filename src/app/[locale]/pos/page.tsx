@@ -71,7 +71,7 @@ import {
   RotateCcw,
   Maximize2,
 } from 'lucide-react';
-import { playSuccessChime, speakPaymentReceived } from '@/lib/sound';
+import { playSuccessChime } from '@/lib/sound';
 import { FeedbackModal } from '@/components/feedback/feedback-modal';
 
 function subscribeOnline(callback: () => void) {
@@ -727,9 +727,6 @@ export default function PosTerminalPage() {
       setProofImage(null);
       useShiftStore.getState().recordOrderInShift(paymentMethod, order.final_amount);
       playSuccessChime();
-      if (paymentMethod === 'qr_manual' && activeBankConfig.voiceAnnouncement !== false) {
-        speakPaymentReceived(order.final_amount);
-      }
       setIsCheckoutOpen(false);
       setIsMobileCartOpen(false);
       setTenderedCash(0);
@@ -741,100 +738,6 @@ export default function PosTerminalPage() {
       setIsSubmitting(false);
     }
   }
-
-  // Real-time Auto-Banking Verification (SePay / Casso / Webhook Polling)
-  const [isCheckingBankTx, setIsCheckingBankTx] = React.useState(false);
-  const [lastBankCheckTime, setLastBankCheckTime] = React.useState<string | null>(null);
-  const hasAutoCompletedRef = React.useRef(false);
-
-  React.useEffect(() => {
-    if (isCheckoutOpen) {
-      hasAutoCompletedRef.current = false;
-    }
-  }, [isCheckoutOpen, qrSessionRef]);
-
-  const checkBankTransferNow = React.useCallback(async () => {
-    if (
-      !isCheckoutOpen ||
-      paymentMethod !== 'qr_manual' ||
-      !isOnline ||
-      isSubmitting ||
-      hasAutoCompletedRef.current ||
-      cartTotal <= 0
-    ) {
-      return;
-    }
-
-    setIsCheckingBankTx(true);
-    try {
-      const res = await fetch('/api/payments/check-qr', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          transferCode: `HKTS-${qrSessionRef}`,
-          expectedAmount: cartTotal,
-          provider: activeBankConfig.provider || 'sepay',
-          apiToken: activeBankConfig.apiToken || '',
-          accountNo: activeBankConfig.accountNo || '',
-        }),
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      setLastBankCheckTime(new Date().toLocaleTimeString('vi-VN'));
-
-      if (data?.matched && !hasAutoCompletedRef.current && proofImage && proofImage.trim()) {
-        hasAutoCompletedRef.current = true;
-        const txRef = data.transaction?.referenceCode || `HKTS-${qrSessionRef}`;
-        await handleCompleteOrder(`[Tự động khớp CK: HKTS-${qrSessionRef} - GD: ${txRef}]`);
-      }
-    } catch {
-      // Ignore transient network errors while polling
-    } finally {
-      setIsCheckingBankTx(false);
-    }
-  }, [
-    isCheckoutOpen,
-    paymentMethod,
-    isOnline,
-    isSubmitting,
-    cartTotal,
-    qrSessionRef,
-    proofImage,
-    activeBankConfig.provider,
-    activeBankConfig.apiToken,
-    activeBankConfig.accountNo,
-  ]);
-
-  // Poll /api/payments/check-qr every 2.5 seconds while VietQR modal is open
-  React.useEffect(() => {
-    if (
-      !isCheckoutOpen ||
-      paymentMethod !== 'qr_manual' ||
-      !isOnline ||
-      activeBankConfig.autoCheckEnabled === false
-    ) {
-      return;
-    }
-
-    const immediateTimer = setTimeout(() => {
-      checkBankTransferNow();
-    }, 800);
-
-    const pollTimer = setInterval(() => {
-      checkBankTransferNow();
-    }, 2500);
-
-    return () => {
-      clearTimeout(immediateTimer);
-      clearInterval(pollTimer);
-    };
-  }, [
-    isCheckoutOpen,
-    paymentMethod,
-    isOnline,
-    activeBankConfig.autoCheckEnabled,
-    checkBankTransferNow,
-  ]);
 
   // Keyboard Shortcut: Enter to confirm QR payment (only after transfer proof photo is captured)
   React.useEffect(() => {
@@ -1187,7 +1090,6 @@ export default function PosTerminalPage() {
                 aria-label="Quét mã vạch Camera"
               >
                 <Scan className="w-4 h-4" />
-                <span className="hidden sm:inline">Quét mã</span>
               </button>
             </div>
 
@@ -1961,8 +1863,6 @@ export default function PosTerminalPage() {
                 <span>
                   {proofImage
                     ? 'Đã có ảnh minh chứng CK • Bấm nút xanh hoặc [Enter] để hoàn tất'
-                    : activeBankConfig.autoCheckEnabled !== false && lastBankCheckTime
-                    ? `Quét mã CK HKTS-${qrSessionRef} (${lastBankCheckTime}) • Bắt buộc chụp ảnh minh chứng`
                     : 'Quét mã VietQR • Chụp/tải ảnh minh chứng CK để xác nhận đơn'}
                 </span>
               </div>

@@ -236,10 +236,6 @@ export default function DashboardOrdersPage() {
       bankId: bankId.toUpperCase(),
       accountNo: accountNo.trim(),
       accountName: accountName.trim().toUpperCase(),
-      autoCheckEnabled,
-      provider,
-      apiToken: apiToken.trim(),
-      voiceAnnouncement,
       offlineQrImageUrl: offlineQrImageUrl.trim() || null,
     };
     setBankConfig(updated);
@@ -971,7 +967,7 @@ export default function DashboardOrdersPage() {
             <div className="flex items-center gap-2 p-3 text-xs text-[#2F7D55] bg-[#EAF4EE] border border-[#CEE6D7] rounded-[6px] shadow-xs">
               <CheckCircle2 className="w-4 h-4 shrink-0 text-[#2F7D55]" />
               <span>
-                <strong>Đã lưu cấu hình VietQR &amp; Tự động nhận tiền thành công!</strong> Toàn bộ các màn hình POS của thu ngân đã được đồng bộ tức thì.
+                <strong>Đã lưu cấu hình VietQR thành công!</strong> Toàn bộ các màn hình POS của thu ngân đã được đồng bộ tức thì.
               </span>
             </div>
           )}
@@ -984,7 +980,7 @@ export default function DashboardOrdersPage() {
                   1. Tài khoản Ngân hàng Nhận tiền (VietQR) &amp; QR Dự phòng Offline
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Hệ thống tự động nhúng số tiền và mã phiên <code className="font-mono font-bold text-[#315C4C]">EMxxxx</code> vào mã QR. Khách quét là hiện sẵn đúng số tiền và nội dung chuyển khoản.
+                  Hệ thống nhúng sẵn số tiền và mã phiên <code className="font-mono font-bold text-[#315C4C]">EMxxxx</code> vào mã QR. Sau khi khách chuyển khoản, thu ngân cần chụp bill làm minh chứng trước khi xác nhận đơn.
                 </CardDescription>
               </CardHeader>
 
@@ -1080,9 +1076,17 @@ export default function DashboardOrdersPage() {
                     label="Tải ảnh mã QR ngân hàng dự phòng (tùy chọn)"
                   />
                 </div>
+                <div className="pt-1">
+                  <Button type="submit" variant="primary" size="sm" className="gap-1.5">
+                    <Save className="w-3.5 h-3.5" />
+                    <span>Lưu cấu hình VietQR</span>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
+            {false && (
+              <>
             {/* Section 2: Auto-Banking Verification without Phone */}
             <Card className="border-[#315C4C]/30 bg-white shadow-xs">
               <CardHeader className="border-b border-[#F0F0ED] pb-4 bg-[#F7FAF8]">
@@ -1203,17 +1207,17 @@ export default function DashboardOrdersPage() {
                 {apiTestResult && (
                   <div
                     className={`p-3 rounded-[6px] border text-xs flex items-center gap-2 ${
-                      apiTestResult.success
+                      apiTestResult!.success
                         ? 'bg-[#EAF4EE] border-[#CEE6D7] text-[#2F7D55]'
                         : 'bg-[#FDF2E9] border-[#C5221F]/30 text-[#C5221F]'
                     }`}
                   >
-                    {apiTestResult.success ? (
+                    {apiTestResult!.success ? (
                       <CheckCircle2 className="w-4 h-4 shrink-0" />
                     ) : (
                       <AlertCircle className="w-4 h-4 shrink-0" />
                     )}
-                    <span>{apiTestResult.message}</span>
+                    <span>{apiTestResult!.message}</span>
                   </div>
                 )}
 
@@ -1272,8 +1276,12 @@ export default function DashboardOrdersPage() {
                 </div>
               </CardContent>
             </Card>
+              </>
+            )}
           </form>
 
+          {false && (
+            <>
           {/* Section 3: Live Webhook / Bank Feed & Simulator */}
           <Card className="border-[#E8E8E5] bg-white shadow-xs">
             <CardHeader className="border-b border-[#F0F0ED] pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -1369,6 +1377,8 @@ export default function DashboardOrdersPage() {
               )}
             </CardContent>
           </Card>
+            </>
+          )}
         </div>
       )}
 

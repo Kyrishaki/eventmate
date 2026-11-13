@@ -5,7 +5,7 @@ import { Link } from '@/i18n/routing';
 import { useDataStore } from '@/stores/data-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { usePreorderStore } from '@/stores/preorder-store';
-import { useOrdersStore, normalizeVietQrBankId } from '@/stores/orders-store';
+import { getBankDisplayName, useOrdersStore, normalizeVietQrBankId } from '@/stores/orders-store';
 import { calculateVariantStock, VariantStockBreakdown } from '@/lib/stock-status';
 import { formatCurrency, compressImage } from '@/lib/utils';
 import { filterRealEvents, filterRealBooths } from '@/lib/test-data-filter';
@@ -1365,7 +1365,7 @@ export function GuestShowcase() {
                       <div>
                         <span className="text-[10.5px] text-[#737373] block">Ngân hàng thụ hưởng:</span>
                         <span className="font-bold text-[#202124] dark:text-neutral-100 font-mono">
-                          {activeBankConfig.bankId} (VietinBank)
+                          {getBankDisplayName(activeBankConfig.bankId)}
                         </span>
                       </div>
 
@@ -1571,7 +1571,7 @@ export function GuestShowcase() {
                   </div>
                   <div className="space-y-0.5 text-[11px]">
                     <p className="font-bold text-[#202124] dark:text-neutral-100">
-                      Chuyển khoản {activeBankConfig.bankId}
+                      Chuyển khoản {getBankDisplayName(activeBankConfig.bankId)}
                     </p>
                     <p className="font-mono font-bold text-[#315C4C] dark:text-emerald-400">
                       {activeBankConfig.accountNo}
@@ -1768,7 +1768,7 @@ export function GuestShowcase() {
                   Thông tin chuyển khoản chính thức
                 </p>
                 <p className="text-[#737373] dark:text-neutral-300">
-                  Ngân hàng: <strong>{activeBankConfig.bankId}</strong> • STK:{' '}
+                  Ngân hàng: <strong>{getBankDisplayName(activeBankConfig.bankId)}</strong> • STK:{' '}
                   <strong className="font-mono text-[#202124] dark:text-white">
                     {activeBankConfig.accountNo}
                   </strong>

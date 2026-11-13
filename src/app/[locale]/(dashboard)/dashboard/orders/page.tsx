@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useOrdersStore } from '@/stores/orders-store';
+import { getBankDisplayName, useOrdersStore } from '@/stores/orders-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useDataStore } from '@/stores/data-store';
 import { useAuthStore, canManageOrderLifecycle } from '@/stores/auth-store';
@@ -478,7 +478,7 @@ export default function DashboardOrdersPage() {
             </button>
           </div>
           <p className="text-[10px] text-[#737373] mt-0.5">
-            TK: {activeBankConfig.bankId} • {activeBankConfig.accountNo}
+            TK: {getBankDisplayName(activeBankConfig.bankId)} • {activeBankConfig.accountNo}
           </p>
         </Card>
 

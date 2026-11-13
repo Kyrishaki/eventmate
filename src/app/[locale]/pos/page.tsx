@@ -6,7 +6,7 @@ import { Link } from '@/i18n/routing';
 import { useDataStore } from '@/stores/data-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useAuthStore, useAuthHydrated } from '@/stores/auth-store';
-import { useOrdersStore, CartItem, normalizeVietQrBankId } from '@/stores/orders-store';
+import { getBankDisplayName, useOrdersStore, CartItem, normalizeVietQrBankId } from '@/stores/orders-store';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -2042,7 +2042,7 @@ export default function PosTerminalPage() {
               <div className="text-[11px] text-[#737373] space-y-1 bg-white p-2.5 rounded-[6px] border border-[#E8E8E5]">
                 <div className="flex items-center justify-between">
                   <span>Ngân hàng:</span>
-                  <span className="font-bold text-[#202124]">{activeBankConfig.bankId}</span>
+                  <span className="font-bold text-[#202124]">{getBankDisplayName(activeBankConfig.bankId)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Số tài khoản:</span>
@@ -2428,7 +2428,7 @@ export default function PosTerminalPage() {
                 </span>
               </div>
               <div className="flex items-center justify-between text-[11px] text-neutral-600 pt-1 border-t border-neutral-200">
-                <span>{activeBankConfig.bankId} • {activeBankConfig.accountNo}</span>
+                <span>{getBankDisplayName(activeBankConfig.bankId)} • {activeBankConfig.accountNo}</span>
                 <span className="font-semibold">{activeBankConfig.accountName}</span>
               </div>
             </div>

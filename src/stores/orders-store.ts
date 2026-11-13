@@ -46,6 +46,12 @@ export function normalizeVietQrBankId(bankId?: string | null): string {
   return clean;
 }
 
+/** Human-readable bank name; keep the normalized ID for VietQR requests. */
+export function getBankDisplayName(bankId?: string | null): string {
+  const normalized = normalizeVietQrBankId(bankId);
+  return normalized === 'ICB' ? 'VietinBank' : normalized;
+}
+
 export const DEFAULT_BANK_CONFIG: BankConfig = {
   bankId: 'ICB',
   accountNo: '109876880260',

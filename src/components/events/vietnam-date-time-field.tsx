@@ -143,7 +143,7 @@ export function VietnamDateTimeField({ id, label, value, minDate, required, onCh
         </div>
 
         {/* Time Input constrained inside a fixed-width container */}
-        <div className="w-28 sm:w-32 shrink-0">
+        <div className="w-32 sm:w-36 shrink-0">
           <Input
             id={`${id}-time`}
             type="time"
@@ -159,7 +159,7 @@ export function VietnamDateTimeField({ id, label, value, minDate, required, onCh
         </div>
       </div>
 
-      <div className="flex items-center justify-between text-[11px] text-muted">
+      <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-muted">
         <span>Định dạng: Ngày/Tháng/Năm & Giờ</span>
         {minDateText && <span className="text-primary/80">Từ {minDateText}</span>}
       </div>

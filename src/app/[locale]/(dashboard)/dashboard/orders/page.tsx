@@ -12,7 +12,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Modal } from '@/components/ui/modal';
 import { formatCurrency, formatDate, formatTimeOnly } from '@/lib/utils';
-import { playSuccessChime, speakPaymentReceived } from '@/lib/sound';
 import { ProductImageUploader } from '@/components/ui/product-image-uploader';
 import { Order, OrderStatus } from '@/types/database';
 import {
@@ -54,18 +53,6 @@ import {
 } from '@/lib/test-data-filter';
 import { exportEventToExcel } from '@/lib/export-excel';
 
-interface WebhookLogItem {
-  id: string;
-  gateway: string;
-  accountNumber: string;
-  amount: number;
-  content: string;
-  referenceCode: string;
-  transactionDate: string;
-  source: string;
-  receivedAt: string;
-}
-
 const CANCEL_PRESET_REASONS = [
   'Khách đổi ý / Không lấy hàng nữa',
   'Thu ngân nhập nhầm món hoặc sai số lượng',
@@ -103,36 +90,10 @@ export default function DashboardOrdersPage() {
   const [bankId, setBankId] = React.useState(activeBankConfig.bankId || 'MB');
   const [accountNo, setAccountNo] = React.useState(activeBankConfig.accountNo || '');
   const [accountName, setAccountName] = React.useState(activeBankConfig.accountName || '');
-  const [autoCheckEnabled, setAutoCheckEnabled] = React.useState(
-    activeBankConfig.autoCheckEnabled !== false
-  );
-  const [provider, setProvider] = React.useState<'sepay' | 'casso' | 'webhook_only'>(
-    activeBankConfig.provider || 'sepay'
-  );
-  const [apiToken, setApiToken] = React.useState(activeBankConfig.apiToken || '');
-  const [voiceAnnouncement, setVoiceAnnouncement] = React.useState(
-    activeBankConfig.voiceAnnouncement !== false
-  );
   const [offlineQrImageUrl, setOfflineQrImageUrl] = React.useState(
     activeBankConfig.offlineQrImageUrl || ''
   );
   const [isSaved, setIsSaved] = React.useState(false);
-
-  const [isTestingApi, setIsTestingApi] = React.useState(false);
-  const [apiTestResult, setApiTestResult] = React.useState<{
-    success: boolean;
-    message: string;
-  } | null>(null);
-  const [recentWebhooks, setRecentWebhooks] = React.useState<WebhookLogItem[]>([]);
-  const [isLoadingLogs, setIsLoadingLogs] = React.useState(false);
-  const [simCode, setSimCode] = React.useState('EM8899');
-  const [simAmount, setSimAmount] = React.useState('150000');
-  const [webhookCopied, setWebhookCopied] = React.useState(false);
-
-  const webhookUrl =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/api/payments/webhook`
-      : 'https://your-domain.com/api/payments/webhook';
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -140,38 +101,11 @@ export default function DashboardOrdersPage() {
         setBankId(activeBankConfig.bankId || 'MB');
         setAccountNo(activeBankConfig.accountNo || '');
         setAccountName(activeBankConfig.accountName || '');
-        setAutoCheckEnabled(activeBankConfig.autoCheckEnabled !== false);
-        setProvider(activeBankConfig.provider || 'sepay');
-        setApiToken(activeBankConfig.apiToken || '');
-        setVoiceAnnouncement(activeBankConfig.voiceAnnouncement !== false);
         setOfflineQrImageUrl(activeBankConfig.offlineQrImageUrl || '');
       }
     }, 0);
     return () => clearTimeout(timer);
   }, [activeBankConfig]);
-
-  const fetchWebhookLogs = React.useCallback(async () => {
-    setIsLoadingLogs(true);
-    try {
-      const res = await fetch('/api/payments/webhook');
-      if (res.ok) {
-        const data = await res.json();
-        setRecentWebhooks(Array.isArray(data?.transactions) ? data.transactions : []);
-      }
-    } catch {
-      // ignore
-    } finally {
-      setIsLoadingLogs(false);
-    }
-  }, []);
-
-  React.useEffect(() => {
-    if (activeTab !== 'payments') return;
-    const timer = setTimeout(() => {
-      void fetchWebhookLogs();
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [activeTab, fetchWebhookLogs]);
 
   const [searchQuery, setSearchQuery] = React.useState('');
   const [filterEvent, setFilterEvent] = React.useState('all');
@@ -204,7 +138,7 @@ export default function DashboardOrdersPage() {
   const testEvents = workspaceEvents.filter((e) => isTestEvent(e));
 
   const workspaceOrders = orders.filter(
-    (o) => !activeWorkspace || o.workspace_id === activeWorkspace.id || o.workspace_id === 'ws-hac-cam-studio'
+    (o) => !activeWorkspace || o.workspace_id === activeWorkspace.id
   );
   const realOrders = filterRealOrders(workspaceOrders);
   const testOrders = workspaceOrders.filter((o) => isTestOrder(o));
@@ -241,61 +175,6 @@ export default function DashboardOrdersPage() {
     setBankConfig(updated);
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 3500);
-  }
-
-  async function handleTestApiConnection() {
-    setIsTestingApi(true);
-    setApiTestResult(null);
-    try {
-      const res = await fetch('/api/payments/check-qr', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          testConnection: true,
-          provider,
-          apiToken: apiToken.trim(),
-          accountNo: accountNo.trim(),
-        }),
-      });
-      const data = await res.json();
-      setApiTestResult({
-        success: !!data.success,
-        message: data.message || data.error || 'Không thể kết nối API',
-      });
-    } catch (err: unknown) {
-      setApiTestResult({
-        success: false,
-        message: err instanceof Error ? err.message : 'Lỗi kết nối máy chủ',
-      });
-    } finally {
-      setIsTestingApi(false);
-    }
-  }
-
-  async function handleSendSimulatedWebhook() {
-    const numAmount = parseInt(simAmount.replace(/\D/g, ''), 10) || 150000;
-    try {
-      await fetch('/api/payments/webhook', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          gateway: bankId,
-          accountNumber: accountNo,
-          transferType: 'in',
-          transferAmount: numAmount,
-          content: `Chuyen khoan don hang ${simCode.trim().toUpperCase()}`,
-          referenceCode: `FT${Date.now().toString().slice(-8)}`,
-          source: 'simulated',
-        }),
-      });
-      playSuccessChime();
-      if (voiceAnnouncement) {
-        speakPaymentReceived(numAmount);
-      }
-      await fetchWebhookLogs();
-    } catch {
-      alert('Không thể gửi tín hiệu thử nghiệm');
-    }
   }
 
   // Filter orders: Default 'all' excludes test transactions
@@ -423,7 +302,7 @@ export default function DashboardOrdersPage() {
             </Badge>
           </div>
           <p className="text-xs text-muted mt-0.5">
-            Quản lý toàn bộ giao dịch bán hàng POS, đối soát dòng tiền &amp; cấu hình tự động nhận tiền VietQR.
+            Quản lý giao dịch bán hàng POS và cấu hình mã chuyển khoản VietQR.
           </p>
         </div>
 
@@ -1052,7 +931,7 @@ export default function DashboardOrdersPage() {
                   <div className="text-xs text-muted space-y-1">
                     <p className="font-semibold text-foreground">Xem trước mã VietQR động tại quầy</p>
                     <p>
-                      Khi thu ngân bấm thanh toán trên POS, mã QR sẽ gắn sẵn nội dung riêng (ví dụ: <strong>EM8899</strong>) để máy tự động đối soát xem đơn nào đã được thanh toán.
+                      Khi thu ngân bấm thanh toán trên POS, mã QR sẽ gắn sẵn nội dung riêng (ví dụ: <strong>EM8899</strong>) để thu ngân kiểm tra giao dịch khi xác nhận thanh toán.
                     </p>
                     <div className="flex items-center gap-1.5 text-primary text-[11px] pt-1">
                       <ShieldCheck className="w-3.5 h-3.5" />
@@ -1085,300 +964,8 @@ export default function DashboardOrdersPage() {
               </CardContent>
             </Card>
 
-            {false && (
-              <>
-            {/* Section 2: Auto-Banking Verification without Phone */}
-            <Card className="border-primary/30 bg-surface shadow-xs">
-              <CardHeader className="border-b border-border pb-4 bg-[#F7FAF8]">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <div>
-                    <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-                      <Radio className="w-4 h-4 text-primary animate-pulse" />
-                      2. Tự động nhận diện Tiền về &amp; Báo thành công trên Web (Không cần cầm ĐT)
-                    </CardTitle>
-                    <CardDescription className="text-xs mt-0.5">
-                      Dành cho trường hợp thu ngân tại quầy không cầm điện thoại nhận thông báo ngân hàng. Khi khách chuyển khoản xong, web POS sẽ tự động phát loa đọc số tiền và chuyển sang màn hình <strong>Thanh toán thành công!</strong>
-                    </CardDescription>
-                  </div>
-                  <Badge className="bg-success-bg text-primary border border-[#CEE6D7] shrink-0">
-                    Quét 2 giây / lần
-                  </Badge>
-                </div>
-              </CardHeader>
-
-              <CardContent className="space-y-4 pt-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <label className="flex items-start gap-3 p-3 rounded-lg border border-border bg-background cursor-pointer hover:border-primary/40">
-                    <input
-                      type="checkbox"
-                      checked={autoCheckEnabled}
-                      onChange={(e) => setAutoCheckEnabled(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-border-strong text-primary focus:ring-primary"
-                    />
-                    <div className="text-xs">
-                      <p className="font-bold text-foreground">Tự động nhảy &quot;Thanh toán thành công&quot;</p>
-                      <p className="text-[11px] text-muted mt-0.5">
-                        Màn hình POS tự động kiểm tra giao dịch khớp mã <code className="font-mono">EMxxxx</code> và tự động hoàn tất đơn hàng ngay khi nhận được tiền.
-                      </p>
-                    </div>
-                  </label>
-
-                  <div className="flex items-start justify-between gap-2 p-3 rounded-lg border border-border bg-background">
-                    <label className="flex items-start gap-3 cursor-pointer flex-1">
-                      <input
-                        type="checkbox"
-                        checked={voiceAnnouncement}
-                        onChange={(e) => setVoiceAnnouncement(e.target.checked)}
-                        className="mt-0.5 w-4 h-4 rounded border-border-strong text-primary focus:ring-primary"
-                      />
-                      <div className="text-xs">
-                        <p className="font-bold text-foreground">Loa đọc thông báo tiền về tại quầy</p>
-                        <p className="text-[11px] text-muted mt-0.5">
-                          Phát tiếng &quot;Ting-ting&quot; và giọng đọc tiếng Việt: <em>&quot;Đã nhận chuyển khoản 150.000 đồng&quot;</em>.
-                        </p>
-                      </div>
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        playSuccessChime();
-                        speakPaymentReceived(150000);
-                      }}
-                      className="shrink-0 px-2.5 py-1.5 rounded-lg bg-surface border border-border-strong hover:bg-surface-hover text-[11px] font-semibold text-primary flex items-center gap-1 cursor-pointer"
-                      title="Nghe thử âm thanh báo nhận tiền"
-                    >
-                      <Volume2 className="w-3.5 h-3.5" />
-                      <span>Nghe thử</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="auto-provider">Nguồn đọc biến động số dư</Label>
-                    <select
-                      id="auto-provider"
-                      className="flex h-9 w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-foreground focus:outline-none focus:border-primary"
-                      value={provider}
-                      onChange={(e) =>
-                        setProvider(e.target.value as 'sepay' | 'casso' | 'webhook_only')
-                      }
-                    >
-                      <option value="sepay">SePay.vn (Khuyên dùng - Miễn phí)</option>
-                      <option value="casso">Casso.vn (API &amp; Webhook)</option>
-                      <option value="webhook_only">Webhook trực tiếp / App đọc thông báo ĐT</option>
-                    </select>
-                  </div>
-
-                  <div className="sm:col-span-2 space-y-1.5">
-                    <Label htmlFor="api-token">
-                      {provider === 'casso'
-                        ? 'Casso API Key (Hoặc để trống nếu chỉ dùng Webhook)'
-                        : 'SePay API Token (Lấy tại my.sepay.vn -> Cấu hình Công ty -> API Access)'}
-                    </Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="api-token"
-                        type="password"
-                        placeholder={
-                          provider === 'webhook_only'
-                            ? 'Chế độ Webhook không bắt buộc nhập Token'
-                            : 'Nhập API Token để web tự động đọc giao dịch (hoạt động cả trên localhost)...'
-                        }
-                        value={apiToken}
-                        onChange={(e) => setApiToken(e.target.value)}
-                        className="font-mono text-xs flex-1"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleTestApiConnection}
-                        disabled={isTestingApi}
-                        isLoading={isTestingApi}
-                        className="shrink-0 text-xs font-semibold"
-                      >
-                        Kiểm tra kết nối
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                {apiTestResult && (
-                  <div
-                    className={`p-3 rounded-lg border text-xs flex items-center gap-2 ${
-                      apiTestResult!.success
-                        ? 'bg-success-bg border-[#CEE6D7] text-primary'
-                        : 'bg-warning-bg border-error/30 text-error'
-                    }`}
-                  >
-                    {apiTestResult!.success ? (
-                      <CheckCircle2 className="w-4 h-4 shrink-0" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 shrink-0" />
-                    )}
-                    <span>{apiTestResult!.message}</span>
-                  </div>
-                )}
-
-                <div className="p-3.5 bg-background border border-border rounded-lg space-y-2">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <div>
-                      <p className="text-xs font-bold text-foreground">
-                        Địa chỉ Webhook nhận thông báo tiền vào (Tức thì):
-                      </p>
-                      <p className="text-[11px] text-muted">
-                        Dán link này vào mục <strong>Tích hợp Webhooks</strong> trên SePay.vn, Casso.vn hoặc ứng dụng đọc thông báo ngân hàng trên điện thoại của bạn.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (typeof navigator !== 'undefined') {
-                          navigator.clipboard.writeText(webhookUrl);
-                          setWebhookCopied(true);
-                          setTimeout(() => setWebhookCopied(false), 2500);
-                        }
-                      }}
-                      className="px-2.5 py-1.5 rounded-lg bg-surface border border-border-strong hover:bg-surface-hover text-xs font-mono font-bold text-primary flex items-center gap-1.5 shrink-0 cursor-pointer"
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>{webhookCopied ? 'Đã sao chép!' : 'Sao chép Webhook URL'}</span>
-                    </button>
-                  </div>
-                  <div className="px-3 py-1.5 rounded bg-surface border border-border font-mono text-xs text-foreground select-all overflow-x-auto">
-                    {webhookUrl}
-                  </div>
-                </div>
-
-                <div className="p-3.5 bg-success-bg/60 border border-[#CEE6D7] rounded-lg text-xs space-y-1.5">
-                  <p className="font-bold text-foreground">
-                    💡 Hướng dẫn 3 bước để không cầm điện thoại vẫn tự nhảy đơn trên Web:
-                  </p>
-                  <ol className="list-decimal list-inside space-y-1 text-[#333] text-[11.5px]">
-                    <li>
-                      Tạo tài khoản miễn phí tại <strong>my.sepay.vn</strong> (hoặc <strong>casso.vn</strong>) và liên kết với số tài khoản ngân hàng nhận tiền của bạn (chỉ cần làm 1 lần trên điện thoại chủ TK).
-                    </li>
-                    <li>
-                      Vào mục <strong>API Access</strong> trên SePay copy <strong>API Token</strong> dán vào ô bên trên (hoặc dán <strong>Webhook URL</strong> bên trên vào mục Webhooks của SePay).
-                    </li>
-                    <li>
-                      Bấm <strong>Lưu cấu hình</strong> bên dưới. Từ lúc này, tại quầy POS, khi khách quét mã QR và chuyển khoản xong, <strong>màn hình POS sẽ tự động phát loa báo tiền về và nhảy sang &quot;Thanh toán thành công&quot;</strong> sau 1–2 giây!
-                    </li>
-                  </ol>
-                </div>
-
-                <div className="pt-1">
-                  <Button type="submit" variant="primary" size="sm" className="gap-1.5">
-                    <Save className="w-3.5 h-3.5" />
-                    <span>Lưu toàn bộ cấu hình Thanh toán &amp; Tự động</span>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-              </>
-            )}
           </form>
 
-          {false && (
-            <>
-          {/* Section 3: Live Webhook / Bank Feed & Simulator */}
-          <Card className="border-border bg-surface shadow-xs">
-            <CardHeader className="border-b border-border pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div>
-                <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-warning" />
-                  3. Bảng theo dõi Tín hiệu Tiền về &amp; Giả lập Chuyển khoản
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Bạn có thể bắn thử một tín hiệu chuyển khoản tại đây trong khi đang mở màn hình POS ở tab bên cạnh để kiểm chứng tính năng tự động nhảy đơn.
-                </CardDescription>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={fetchWebhookLogs}
-                disabled={isLoadingLogs}
-                className="text-xs gap-1.5 shrink-0"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingLogs ? 'animate-spin' : ''}`} />
-                <span>Làm mới</span>
-              </Button>
-            </CardHeader>
-
-            <CardContent className="space-y-4 pt-4">
-              <div className="p-3 bg-background border border-border rounded-lg flex flex-col sm:flex-row items-end gap-3">
-                <div className="w-full sm:w-44 space-y-1">
-                  <Label htmlFor="sim-code" className="text-xs">
-                    Mã nội dung trên QR POS
-                  </Label>
-                  <Input
-                    id="sim-code"
-                    value={simCode}
-                    onChange={(e) => setSimCode(e.target.value.toUpperCase())}
-                    placeholder="VD: EM8899"
-                    className="h-8 font-mono text-xs bg-surface uppercase"
-                  />
-                </div>
-                <div className="w-full sm:w-44 space-y-1">
-                  <Label htmlFor="sim-amount" className="text-xs">
-                    Số tiền chuyển (VND)
-                  </Label>
-                  <Input
-                    id="sim-amount"
-                    value={simAmount}
-                    onChange={(e) => setSimAmount(e.target.value)}
-                    placeholder="VD: 150000"
-                    className="h-8 font-mono text-xs bg-surface"
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="sm"
-                  onClick={handleSendSimulatedWebhook}
-                  className="w-full sm:w-auto gap-1.5 bg-primary hover:bg-[#256343] text-xs"
-                >
-                  <Zap className="w-3.5 h-3.5" />
-                  <span>Bắn tín hiệu tiền về (Test)</span>
-                </Button>
-              </div>
-
-              {recentWebhooks.length === 0 ? (
-                <div className="p-6 text-center text-xs text-muted border border-dashed border-border rounded-lg">
-                  Chưa có giao dịch chuyển khoản nào được ghi nhận trong phiên này.
-                </div>
-              ) : (
-                <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {recentWebhooks.map((tx) => (
-                    <div
-                      key={tx.id}
-                      className="p-2.5 rounded-lg border border-border bg-surface flex items-center justify-between text-xs"
-                    >
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-primary">
-                            +{formatCurrency(tx.amount, 'VND')}
-                          </span>
-                          <Badge variant="outline" className="text-[10px] font-mono">
-                            {tx.gateway}
-                          </Badge>
-                          <span className="text-[10px] text-muted">
-                            {formatTimeOnly(tx.receivedAt)}
-                          </span>
-                        </div>
-                        <p className="font-mono text-[11px] text-foreground">{tx.content}</p>
-                      </div>
-                      <span className="text-[10px] font-mono text-muted">{tx.referenceCode}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-            </>
-          )}
         </div>
       )}
 

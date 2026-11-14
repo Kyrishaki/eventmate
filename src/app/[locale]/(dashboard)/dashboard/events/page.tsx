@@ -90,7 +90,6 @@ export default function EventsPage() {
   const [startDate, setStartDate] = React.useState('');
   const [endDate, setEndDate] = React.useState('');
   const [timeError, setTimeError] = React.useState('');
-  const [status, setStatus] = React.useState<EventStatus>('upcoming');
   const [bannerUrl, setBannerUrl] = React.useState<string | null>(null);
   const [bannerError, setBannerError] = React.useState('');
   const [isBannerProcessing, setIsBannerProcessing] = React.useState(false);
@@ -116,7 +115,6 @@ export default function EventsPage() {
     setStartDate(toVietnamDateTimeInput(now));
     setEndDate(toVietnamDateTimeInput(new Date(now.getTime() + 4 * 3600000)));
     setTimeError('');
-    setStatus('upcoming');
     setBannerUrl(null);
     setBannerError('');
     setIsModalOpen(true);
@@ -130,7 +128,6 @@ export default function EventsPage() {
     setStartDate(toVietnamDateTimeInput(event.start_date));
     setEndDate(toVietnamDateTimeInput(event.end_date));
     setTimeError('');
-    setStatus(event.status);
     setBannerUrl(event.banner_url || null);
     setBannerError('');
     setIsModalOpen(true);
@@ -163,9 +160,7 @@ export default function EventsPage() {
 
     const startIso = fromVietnamDateTimeInput(startDate);
     const endIso = fromVietnamDateTimeInput(endDate);
-    const savedStatus: EventStatus = status === 'draft' || status === 'cancelled'
-      ? status
-      : getScheduledEventStatus(startIso, endIso);
+    const savedStatus = getScheduledEventStatus(startIso, endIso);
 
     if (editingEvent) {
       updateEvent(editingEvent.id, {
@@ -344,7 +339,7 @@ export default function EventsPage() {
                     {evt.location && (
                       <div className="flex items-center gap-2">
                         <MapPin className="w-3.5 h-3.5 text-muted shrink-0" />
-                        <span className="truncate">{evt.location}</span>
+                        <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(evt.location)}`} target="_blank" rel="noopener noreferrer" className="truncate text-primary hover:underline">{evt.location}</a>
                       </div>
                     )}
                     <div className="flex items-center gap-2">
@@ -353,9 +348,9 @@ export default function EventsPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Store className="w-3.5 h-3.5 text-muted shrink-0" />
-                      <span>
+                      <Link href="/dashboard/booths" className="text-primary hover:underline">
                         {eventBooths.length} gian hàng đã thiết lập
-                      </span>
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -392,7 +387,10 @@ export default function EventsPage() {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link href="/dashboard/booths" className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold text-primary hover:bg-surface-hover">
+                      Quản lý gian hàng
+                    </Link>
                     <Button
                       variant="outline"
                       size="sm"
@@ -430,7 +428,7 @@ export default function EventsPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={editingEvent ? t('editButton') : t('createButton')}
-        maxWidth="xl"
+        maxWidth="2xl"
         description="Thông tin sự kiện được đồng bộ trực tiếp với các quầy POS và quản lý kho."
       >
         <form onSubmit={handleSave} className="space-y-4">
@@ -547,6 +545,15 @@ export default function EventsPage() {
               />
               <MapPin className="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.trim() || 'Việt Nam')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+            >
+              Tìm vị trí trên Google Maps
+            </a>
+            <p className="text-xs text-muted">Tìm vị trí trên Maps, sau đó sao chép địa chỉ đầy đủ hoặc tọa độ vào ô Địa điểm. Địa điểm đã lưu có thể bấm để mở bản đồ.</p>
           </div>
 
           {/* Date & Time Section */}
@@ -554,7 +561,7 @@ export default function EventsPage() {
             <div className="flex items-center justify-between pb-1 border-b border-border/60">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
                 <CalendarDays className="w-4 h-4 text-primary" />
-                <span>Thời gian diễn ra (Giờ Việt Nam · UTC+7)</span>
+                <span>Thời gian diễn ra</span>
               </div>
               {(() => {
                 if (!startDate || !endDate) return null;
@@ -579,7 +586,7 @@ export default function EventsPage() {
               })()}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-1 gap-4">
               <VietnamDateTimeField
                 id="evt-start"
                 label={t('startDate')}
@@ -605,89 +612,6 @@ export default function EventsPage() {
             )}
           </div>
 
-          {/* Event Status Mode */}
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold text-foreground">
-              {t('status')}
-            </Label>
-            
-            {/* 3-State Mode Selector: Auto, Draft, Cancelled */}
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  const startIso = fromVietnamDateTimeInput(startDate);
-                  const endIso = fromVietnamDateTimeInput(endDate);
-                  setStatus(getScheduledEventStatus(startIso, endIso));
-                }}
-                className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
-                  status !== 'draft' && status !== 'cancelled'
-                    ? 'border-primary bg-primary/10 text-primary font-semibold shadow-2xs'
-                    : 'border-border bg-surface hover:bg-surface-hover text-muted hover:text-foreground'
-                }`}
-              >
-                <span className="text-xs flex items-center gap-1">
-                  ⚡ Tự động
-                </span>
-                <span className="text-[10px] opacity-75 mt-0.5">Theo ngày giờ</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setStatus('draft')}
-                className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
-                  status === 'draft'
-                    ? 'border-primary bg-primary/10 text-primary font-semibold shadow-2xs'
-                    : 'border-border bg-surface hover:bg-surface-hover text-muted hover:text-foreground'
-                }`}
-              >
-                <span className="text-xs flex items-center gap-1">
-                  📝 Bản nháp
-                </span>
-                <span className="text-[10px] opacity-75 mt-0.5">Chưa mở bán</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setStatus('cancelled')}
-                className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
-                  status === 'cancelled'
-                    ? 'border-error bg-error-bg text-error font-semibold shadow-2xs'
-                    : 'border-border bg-surface hover:bg-surface-hover text-muted hover:text-foreground'
-                }`}
-              >
-                <span className="text-xs flex items-center gap-1">
-                  🚫 Đã hủy
-                </span>
-                <span className="text-[10px] opacity-75 mt-0.5">Dừng sự kiện</span>
-              </button>
-            </div>
-
-            {/* Status Helper Description */}
-            <div className="text-[11px] text-muted flex items-center gap-1.5 pt-0.5">
-              {status === 'draft' ? (
-                <span>Sự kiện lưu nháp sẽ ẩn khỏi quầy POS và trang khách mua.</span>
-              ) : status === 'cancelled' ? (
-                <span className="text-error">Sự kiện đã bị hủy, các quầy POS sẽ ngưng phục vụ bán hàng.</span>
-              ) : (
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span>Trạng thái tự động hiện tại:</span>
-                  {(() => {
-                    const startIso = fromVietnamDateTimeInput(startDate);
-                    const endIso = fromVietnamDateTimeInput(endDate);
-                    const currentAuto = getScheduledEventStatus(startIso, endIso);
-                    return (
-                      <Badge variant={statusBadgeVariant(currentAuto)} className="text-[10px] py-0 px-1.5 capitalize">
-                        {t(`statusList.${currentAuto}`)}
-                      </Badge>
-                    );
-                  })()}
-                  <span className="text-muted">· Hệ thống tự cập nhật theo ngày giờ.</span>
-                </div>
-              )}
-            </div>
-          </div>
-
           {/* Description */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
@@ -707,7 +631,7 @@ export default function EventsPage() {
           </div>
 
           {/* Sticky Modal Actions Footer */}
-          <div className="sticky bottom-0 -mx-6 -mb-6 mt-6 p-4 bg-surface border-t border-border flex items-center justify-between gap-3 rounded-b-xl z-10 shadow-lg">
+          <div className="mt-6 pt-4 bg-surface border-t border-border flex flex-wrap items-center justify-between gap-3">
             <div className="text-[11px] text-muted hidden sm:flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-primary" />
               <span>Đồng bộ tự động dữ liệu lên các quầy POS</span>

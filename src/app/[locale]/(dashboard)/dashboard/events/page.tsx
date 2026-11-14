@@ -428,11 +428,29 @@ export default function EventsPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={editingEvent ? t('editButton') : t('createButton')}
+        maxWidth="xl"
         description="Thông tin sự kiện được đồng bộ trực tiếp với các quầy POS và quản lý kho."
       >
         <form onSubmit={handleSave} className="space-y-4">
-          <section className="space-y-2">
-            <Label>Ảnh banner (không bắt buộc)</Label>
+          {/* Banner Upload Section */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold text-foreground">
+                Ảnh banner sự kiện
+                <span className="text-muted font-normal ml-1">(không bắt buộc)</span>
+              </Label>
+              {bannerUrl && (
+                <button
+                  type="button"
+                  onClick={() => setBannerUrl(null)}
+                  className="text-xs text-error hover:underline inline-flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  Gỡ banner
+                </button>
+              )}
+            </div>
+
             <input
               ref={bannerInputRef}
               type="file"
@@ -440,39 +458,63 @@ export default function EventsPage() {
               className="sr-only"
               onChange={handleBannerFileChange}
             />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={isBannerProcessing}
-              onClick={() => bannerInputRef.current?.click()}
-            >
-              {isBannerProcessing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImagePlus className="w-3.5 h-3.5" />}
-              {isBannerProcessing ? 'Đang xử lý ảnh…' : bannerUrl ? 'Đổi ảnh banner' : 'Chọn ảnh banner'}
-            </Button>
-            {bannerError && <p className="text-xs text-error" role="alert">{bannerError}</p>}
-          </section>
 
-          {/* Banner Preview if available */}
-          {bannerUrl && (
-            <div className="relative rounded-lg overflow-hidden border border-border max-h-36 bg-[#121212]">
-              <img
-                src={bannerUrl}
-                alt="Banner preview"
-                className="w-full h-28 object-cover"
-              />
+            {bannerUrl ? (
+              <div className="group relative rounded-xl overflow-hidden border border-border bg-surface shadow-xs">
+                <img
+                  src={bannerUrl}
+                  alt="Banner preview"
+                  className="w-full h-36 sm:h-40 object-cover transition-transform duration-200 group-hover:scale-[1.01]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end justify-between p-3.5">
+                  <span className="text-xs text-white/90 drop-shadow-xs hidden sm:inline">
+                    Ảnh banner hiển thị trên quầy POS & Khách mua hàng
+                  </span>
+                  <div className="flex items-center gap-2 ml-auto">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={isBannerProcessing}
+                      onClick={() => bannerInputRef.current?.click()}
+                      className="h-7 text-xs bg-black/60 hover:bg-black text-white border-white/20 gap-1.5 shadow-xs"
+                    >
+                      <ImagePlus className="w-3.5 h-3.5" />
+                      Đổi ảnh banner
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
               <button
                 type="button"
-                onClick={() => setBannerUrl(null)}
-                className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 hover:bg-black text-white text-[10px]"
+                disabled={isBannerProcessing}
+                onClick={() => bannerInputRef.current?.click()}
+                className="w-full border-2 border-dashed border-border hover:border-primary/50 hover:bg-surface-hover/40 rounded-xl p-5 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-2 group"
               >
-                Gỡ ảnh banner
+                <div className="w-10 h-10 rounded-full bg-surface-subtle flex items-center justify-center text-muted group-hover:text-primary transition-colors">
+                  {isBannerProcessing ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  ) : (
+                    <ImagePlus className="w-5 h-5" />
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-foreground">
+                    {isBannerProcessing ? 'Đang nén và xử lý ảnh...' : 'Tải lên ảnh banner sự kiện'}
+                  </p>
+                  <p className="text-[11px] text-muted mt-0.5">
+                    Khuyến nghị tỉ lệ 16:9 hoặc 3:1 (JPG, PNG, WebP dưới 10MB)
+                  </p>
+                </div>
               </button>
-            </div>
-          )}
+            )}
+            {bannerError && <p className="text-xs text-error" role="alert">{bannerError}</p>}
+          </div>
 
+          {/* Event Name */}
           <div className="space-y-1.5">
-            <Label htmlFor="evt-name" required>
+            <Label htmlFor="evt-name" required className="text-xs font-semibold text-foreground">
               {t('name')}
             </Label>
             <Input
@@ -481,81 +523,213 @@ export default function EventsPage() {
               placeholder={t('namePlaceholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
+              className="text-sm"
             />
           </div>
 
+          {/* Venue Location */}
           <div className="space-y-1.5">
-            <Label htmlFor="evt-location">{t('location')}</Label>
-            <Input
-              id="evt-location"
-              placeholder={t('locationPlaceholder')}
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-            />
+            <div className="flex items-center justify-between">
+              <Label htmlFor="evt-location" className="text-xs font-semibold text-foreground">
+                {t('location')}
+              </Label>
+              <span className="text-[11px] text-muted">Không bắt buộc</span>
+            </div>
+            <div className="relative">
+              <Input
+                id="evt-location"
+                placeholder={t('locationPlaceholder')}
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="text-sm pl-9"
+              />
+              <MapPin className="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <VietnamDateTimeField
-              id="evt-start"
-              label={t('startDate')}
-              value={startDate}
-              minDate={!editingEvent ? getVietnamToday() : undefined}
-              required
-              onChange={(value) => { setStartDate(value); setTimeError(''); }}
-            />
-            <VietnamDateTimeField
-              id="evt-end"
-              label={t('endDate')}
-              value={endDate}
-              minDate={startDate.slice(0, 10) || (!editingEvent ? getVietnamToday() : undefined)}
-              required
-              onChange={(value) => { setEndDate(value); setTimeError(''); }}
-            />
+          {/* Date & Time Section */}
+          <div className="space-y-3 rounded-xl border border-border bg-surface-subtle/50 p-3.5">
+            <div className="flex items-center justify-between pb-1 border-b border-border/60">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                <CalendarDays className="w-4 h-4 text-primary" />
+                <span>Thời gian diễn ra (Giờ Việt Nam · UTC+7)</span>
+              </div>
+              {(() => {
+                if (!startDate || !endDate) return null;
+                const s = new Date(`${startDate}:00+07:00`).getTime();
+                const e = new Date(`${endDate}:00+07:00`).getTime();
+                if (Number.isNaN(s) || Number.isNaN(e) || e <= s) return null;
+                const diffHours = Math.round((e - s) / 3600000);
+                let durationText = '';
+                if (diffHours < 24) {
+                  durationText = `${diffHours} giờ`;
+                } else {
+                  const days = Math.floor(diffHours / 24);
+                  const remHours = diffHours % 24;
+                  durationText = remHours > 0 ? `${days} ngày ${remHours}h` : `${days} ngày`;
+                }
+                return (
+                  <Badge variant="outline" className="text-[10px] font-mono gap-1 border-primary/40 text-primary bg-primary/5">
+                    <Clock className="w-2.5 h-2.5" />
+                    <span>{durationText}</span>
+                  </Badge>
+                );
+              })()}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <VietnamDateTimeField
+                id="evt-start"
+                label={t('startDate')}
+                value={startDate}
+                minDate={!editingEvent ? getVietnamToday() : undefined}
+                required
+                onChange={(value) => { setStartDate(value); setTimeError(''); }}
+              />
+              <VietnamDateTimeField
+                id="evt-end"
+                label={t('endDate')}
+                value={endDate}
+                minDate={startDate.slice(0, 10) || (!editingEvent ? getVietnamToday() : undefined)}
+                required
+                onChange={(value) => { setEndDate(value); setTimeError(''); }}
+              />
+            </div>
+
+            {timeError && (
+              <p className="text-xs text-error font-medium pt-1" role="alert">
+                ⚠️ {timeError}
+              </p>
+            )}
           </div>
 
-          {timeError && <p className="text-xs text-error" role="alert">{timeError}</p>}
+          {/* Event Status Mode */}
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold text-foreground">
+              {t('status')}
+            </Label>
+            
+            {/* 3-State Mode Selector: Auto, Draft, Cancelled */}
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const startIso = fromVietnamDateTimeInput(startDate);
+                  const endIso = fromVietnamDateTimeInput(endDate);
+                  setStatus(getScheduledEventStatus(startIso, endIso));
+                }}
+                className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                  status !== 'draft' && status !== 'cancelled'
+                    ? 'border-primary bg-primary/10 text-primary font-semibold shadow-2xs'
+                    : 'border-border bg-surface hover:bg-surface-hover text-muted hover:text-foreground'
+                }`}
+              >
+                <span className="text-xs flex items-center gap-1">
+                  ⚡ Tự động
+                </span>
+                <span className="text-[10px] opacity-75 mt-0.5">Theo ngày giờ</span>
+              </button>
 
+              <button
+                type="button"
+                onClick={() => setStatus('draft')}
+                className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                  status === 'draft'
+                    ? 'border-primary bg-primary/10 text-primary font-semibold shadow-2xs'
+                    : 'border-border bg-surface hover:bg-surface-hover text-muted hover:text-foreground'
+                }`}
+              >
+                <span className="text-xs flex items-center gap-1">
+                  📝 Bản nháp
+                </span>
+                <span className="text-[10px] opacity-75 mt-0.5">Chưa mở bán</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStatus('cancelled')}
+                className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                  status === 'cancelled'
+                    ? 'border-error bg-error-bg text-error font-semibold shadow-2xs'
+                    : 'border-border bg-surface hover:bg-surface-hover text-muted hover:text-foreground'
+                }`}
+              >
+                <span className="text-xs flex items-center gap-1">
+                  🚫 Đã hủy
+                </span>
+                <span className="text-[10px] opacity-75 mt-0.5">Dừng sự kiện</span>
+              </button>
+            </div>
+
+            {/* Status Helper Description */}
+            <div className="text-[11px] text-muted flex items-center gap-1.5 pt-0.5">
+              {status === 'draft' ? (
+                <span>Sự kiện lưu nháp sẽ ẩn khỏi quầy POS và trang khách mua.</span>
+              ) : status === 'cancelled' ? (
+                <span className="text-error">Sự kiện đã bị hủy, các quầy POS sẽ ngưng phục vụ bán hàng.</span>
+              ) : (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span>Trạng thái tự động hiện tại:</span>
+                  {(() => {
+                    const startIso = fromVietnamDateTimeInput(startDate);
+                    const endIso = fromVietnamDateTimeInput(endDate);
+                    const currentAuto = getScheduledEventStatus(startIso, endIso);
+                    return (
+                      <Badge variant={statusBadgeVariant(currentAuto)} className="text-[10px] py-0 px-1.5 capitalize">
+                        {t(`statusList.${currentAuto}`)}
+                      </Badge>
+                    );
+                  })()}
+                  <span className="text-muted">· Hệ thống tự cập nhật theo ngày giờ.</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Description */}
           <div className="space-y-1.5">
-            <Label htmlFor="evt-status">{t('status')}</Label>
-            <select
-              id="evt-status"
-              className="flex h-9 w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-foreground focus:outline-none focus:border-primary"
-              value={status}
-              onChange={(e) => setStatus(e.target.value as EventStatus)}
-            >
-              <option value="draft">{t('statusList.draft')}</option>
-              <option value="upcoming" disabled>{t('statusList.upcoming')} · Tự động</option>
-              <option value="active" disabled>{t('statusList.active')} · Tự động</option>
-              <option value="completed" disabled>{t('statusList.completed')} · Tự động</option>
-              <option value="cancelled">{t('statusList.cancelled')}</option>
-            </select>
-            <p className="text-[11px] text-muted">Sắp diễn ra, đang diễn ra và đã kết thúc sẽ tự cập nhật theo ngày giờ sự kiện. Bản nháp và Đã hủy là trạng thái thủ công.</p>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="evt-desc">{t('descriptionLabel')}</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="evt-desc" className="text-xs font-semibold text-foreground">
+                {t('descriptionLabel')}
+              </Label>
+              <span className="text-[11px] text-muted">Không bắt buộc</span>
+            </div>
             <textarea
               id="evt-desc"
               rows={3}
-              className="flex w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+              className="flex w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary placeholder:text-muted transition-colors"
               placeholder={t('descriptionPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setIsModalOpen(false)}
-            >
-              {tCommon('cancel')}
-            </Button>
-            <Button type="submit" variant="primary" size="sm" disabled={isBannerProcessing}>
-              {tCommon('save')}
-            </Button>
+          {/* Sticky Modal Actions Footer */}
+          <div className="sticky bottom-0 -mx-6 -mb-6 mt-6 p-4 bg-surface border-t border-border flex items-center justify-between gap-3 rounded-b-xl z-10 shadow-lg">
+            <div className="text-[11px] text-muted hidden sm:flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              <span>Đồng bộ tự động dữ liệu lên các quầy POS</span>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsModalOpen(false)}
+                className="h-9 px-4 text-xs flex-1 sm:flex-none justify-center"
+              >
+                {tCommon('cancel')}
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                disabled={isBannerProcessing}
+                className="h-9 px-5 text-xs font-semibold flex-1 sm:flex-none justify-center gap-1.5 shadow-xs"
+              >
+                {editingEvent ? t('editButton') : t('createButton')}
+              </Button>
+            </div>
           </div>
         </form>
       </Modal>

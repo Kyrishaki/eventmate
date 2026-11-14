@@ -5,7 +5,7 @@ import {
   Boxes,
   CreditCard,
   Coins,
-  Handshake,
+  Store,
   Settings,
   LucideIcon,
 } from 'lucide-react';
@@ -55,6 +55,14 @@ export const NAV_ITEMS: NavItemConfig[] = [
     group: 'operations',
   },
 
+  {
+    href: '/dashboard/booths',
+    labelKey: 'booths',
+    defaultLabel: 'Gian hàng',
+    icon: Store,
+    group: 'operations',
+  },
+
   // 2. Hàng hóa và kho
   {
     href: '/dashboard/products',
@@ -88,14 +96,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
     group: 'finance',
     hideForCollab: true,
   },
-  {
-    href: '/dashboard/partners',
-    labelKey: 'partners',
-    defaultLabel: 'Chia doanh thu đối tác',
-    icon: Handshake,
-    group: 'finance',
-    hideForCollab: true,
-  },
+
 
   // 4. Hệ thống
   {

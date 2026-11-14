@@ -31,6 +31,28 @@ import { Link } from '@/i18n/routing';
 import { useOrdersStore } from '@/stores/orders-store';
 import { exportEventToExcel } from '@/lib/export-excel';
 
+const EVENT_TIME_ZONE = 'Asia/Ho_Chi_Minh';
+
+function toVietnamDateTimeInput(value: string | Date): string {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: EVENT_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date);
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value || '';
+  return `${part('year')}-${part('month')}-${part('day')}T${part('hour')}:${part('minute')}`;
+}
+
+function fromVietnamDateTimeInput(value: string): string {
+  return new Date(`${value}:00+07:00`).toISOString();
+}
+
 export default function EventsPage() {
   const t = useTranslations('events');
   const tCommon = useTranslations('common');
@@ -48,6 +70,7 @@ export default function EventsPage() {
   const [description, setDescription] = React.useState('');
   const [startDate, setStartDate] = React.useState('');
   const [endDate, setEndDate] = React.useState('');
+  const [timeError, setTimeError] = React.useState('');
   const [status, setStatus] = React.useState<EventStatus>('upcoming');
   const [bannerUrl, setBannerUrl] = React.useState<string | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -67,8 +90,10 @@ export default function EventsPage() {
     setName('');
     setLocation('');
     setDescription('');
-    setStartDate(new Date().toISOString().substring(0, 16));
-    setEndDate(new Date(Date.now() + 4 * 3600000).toISOString().substring(0, 16));
+    const now = new Date();
+    setStartDate(toVietnamDateTimeInput(now));
+    setEndDate(toVietnamDateTimeInput(new Date(now.getTime() + 4 * 3600000)));
+    setTimeError('');
     setStatus('upcoming');
     setBannerUrl(null);
     setIsModalOpen(true);
@@ -79,8 +104,9 @@ export default function EventsPage() {
     setName(event.name);
     setLocation(event.location || '');
     setDescription(event.description || '');
-    setStartDate(new Date(event.start_date).toISOString().substring(0, 16));
-    setEndDate(new Date(event.end_date).toISOString().substring(0, 16));
+    setStartDate(toVietnamDateTimeInput(event.start_date));
+    setEndDate(toVietnamDateTimeInput(event.end_date));
+    setTimeError('');
     setStatus(event.status);
     setBannerUrl(event.banner_url || null);
     setIsModalOpen(true);
@@ -94,13 +120,25 @@ export default function EventsPage() {
     }
     if (!name.trim() || !activeWorkspace) return;
 
+    const startInstant = new Date(`${startDate}:00+07:00`);
+    const endInstant = new Date(`${endDate}:00+07:00`);
+    if (!startDate || !endDate || Number.isNaN(startInstant.getTime()) || Number.isNaN(endInstant.getTime())) {
+      setTimeError('Vui lòng nhập đầy đủ ngày và giờ bắt đầu, kết thúc.');
+      return;
+    }
+    if (endInstant <= startInstant) {
+      setTimeError('Thời gian kết thúc phải sau thời gian bắt đầu.');
+      return;
+    }
+    setTimeError('');
+
     if (editingEvent) {
       updateEvent(editingEvent.id, {
         name,
         location: location.trim() || null,
         description: description.trim() || null,
-        start_date: new Date(startDate).toISOString(),
-        end_date: new Date(endDate).toISOString(),
+        start_date: fromVietnamDateTimeInput(startDate),
+        end_date: fromVietnamDateTimeInput(endDate),
         status,
         banner_url: bannerUrl,
       });
@@ -110,8 +148,8 @@ export default function EventsPage() {
         name,
         location: location.trim() || null,
         description: description.trim() || null,
-        start_date: new Date(startDate).toISOString(),
-        end_date: new Date(endDate).toISOString(),
+        start_date: fromVietnamDateTimeInput(startDate),
+        end_date: fromVietnamDateTimeInput(endDate),
         status,
         banner_url: bannerUrl,
       });
@@ -377,12 +415,16 @@ export default function EventsPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="evt-start">{t('startDate')}</Label>
+              <Label htmlFor="evt-start">{t('startDate')} · Giờ Việt Nam (UTC+7)</Label>
               <Input
                 id="evt-start"
                 type="datetime-local"
+                required
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setTimeError('');
+                }}
               />
             </div>
             <div className="space-y-1.5">
@@ -390,11 +432,17 @@ export default function EventsPage() {
               <Input
                 id="evt-end"
                 type="datetime-local"
+                required
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setTimeError('');
+                }}
               />
             </div>
           </div>
+
+          {timeError && <p className="text-xs text-error" role="alert">{timeError}</p>}
 
           <div className="space-y-1.5">
             <Label htmlFor="evt-status">{t('status')}</Label>

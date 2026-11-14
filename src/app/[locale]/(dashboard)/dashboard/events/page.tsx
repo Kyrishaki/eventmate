@@ -33,6 +33,7 @@ import { Link } from '@/i18n/routing';
 import { useOrdersStore } from '@/stores/orders-store';
 import { exportEventToExcel } from '@/lib/export-excel';
 import { compressImage } from '@/lib/utils';
+import { VietnamDateTimeField } from '@/components/events/vietnam-date-time-field';
 
 const EVENT_TIME_ZONE = 'Asia/Ho_Chi_Minh';
 
@@ -246,8 +247,6 @@ export default function EventsPage() {
       currency: activeWorkspace?.currency || 'VND',
     });
   };
-
-  const minimumEventDateTime = `${getVietnamToday()}T00:00`;
 
   return (
     <div className="space-y-6">
@@ -495,41 +494,23 @@ export default function EventsPage() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="evt-start">{t('startDate')} · Giờ Việt Nam (UTC+7)</Label>
-              <Input
-                id="evt-start"
-                type="datetime-local"
-                required
-                min={!editingEvent ? minimumEventDateTime : undefined}
-                value={startDate}
-                onClick={(event) => {
-                  try { event.currentTarget.showPicker(); } catch { /* Browser picker may already be open. */ }
-                }}
-                onChange={(e) => {
-                  setStartDate(e.target.value);
-                  setTimeError('');
-                }}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="evt-end">{t('endDate')} · Giờ Việt Nam (UTC+7)</Label>
-              <Input
-                id="evt-end"
-                type="datetime-local"
-                required
-                min={startDate || (!editingEvent ? minimumEventDateTime : undefined)}
-                value={endDate}
-                onClick={(event) => {
-                  try { event.currentTarget.showPicker(); } catch { /* Browser picker may already be open. */ }
-                }}
-                onChange={(e) => {
-                  setEndDate(e.target.value);
-                  setTimeError('');
-                }}
-              />
-            </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <VietnamDateTimeField
+              id="evt-start"
+              label={t('startDate')}
+              value={startDate}
+              minDate={!editingEvent ? getVietnamToday() : undefined}
+              required
+              onChange={(value) => { setStartDate(value); setTimeError(''); }}
+            />
+            <VietnamDateTimeField
+              id="evt-end"
+              label={t('endDate')}
+              value={endDate}
+              minDate={startDate.slice(0, 10) || (!editingEvent ? getVietnamToday() : undefined)}
+              required
+              onChange={(value) => { setEndDate(value); setTimeError(''); }}
+            />
           </div>
 
           {timeError && <p className="text-xs text-error" role="alert">{timeError}</p>}

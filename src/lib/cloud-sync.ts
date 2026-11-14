@@ -300,7 +300,7 @@ export function applyCloudSnapshot(snapshot: CloudSyncSnapshot) {
   try {
     const { catalog_data, orders_data } = snapshot;
     if (catalog_data) {
-      applyCatalogDelta(catalog_data);
+      applyCatalogDelta(catalog_data, snapshot.workspace_id);
     }
 
     if (orders_data && Array.isArray(orders_data)) {
@@ -340,8 +340,9 @@ export function applyCloudSnapshot(snapshot: CloudSyncSnapshot) {
 /**
  * Apply authoritative catalog updates into useDataStore (Overwrites cleanly so deletions propagate)
  */
-export function applyCatalogDelta(delta: CloudCatalogPayload) {
+export function applyCatalogDelta(delta: CloudCatalogPayload, workspaceId = DEFAULT_WORKSPACE_ID) {
   isApplyingRemoteUpdate = true;
+  let repairCompletedEvents = false;
   try {
     const updates: Partial<DataStoreState> = {};
 
@@ -358,7 +359,23 @@ export function applyCatalogDelta(delta: CloudCatalogPayload) {
     }
 
     if (Array.isArray(delta.events)) {
-      updates.events = delta.events;
+      const localEvents = useDataStore.getState().events;
+      const localEventsById = new Map(localEvents.map((event) => [event.id, event]));
+      updates.events = delta.events.map((incomingEvent) => {
+        const localEvent = localEventsById.get(incomingEvent.id);
+        const sameSchedule = localEvent &&
+          Date.parse(localEvent.start_date) === Date.parse(incomingEvent.start_date) &&
+          Date.parse(localEvent.end_date) === Date.parse(incomingEvent.end_date);
+
+        // A stale snapshot from another device must not reopen an event that this
+        // device already marked completed for the same schedule.
+        if (sameSchedule && localEvent.status === 'completed' && incomingEvent.status !== 'completed') {
+          repairCompletedEvents = true;
+          return localEvent;
+        }
+
+        return incomingEvent;
+      });
     }
 
     if (Array.isArray(delta.booths)) {
@@ -375,6 +392,7 @@ export function applyCatalogDelta(delta: CloudCatalogPayload) {
   } finally {
     setTimeout(() => {
       isApplyingRemoteUpdate = false;
+      if (repairCompletedEvents) syncCatalogChange(undefined, workspaceId);
     }, 150);
   }
 }

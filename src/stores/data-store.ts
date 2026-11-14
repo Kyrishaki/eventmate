@@ -856,6 +856,7 @@ export const useDataStore = create<DataStoreState>()(
           const end = new Date(event.end_date).getTime();
           if (!Number.isFinite(start) || !Number.isFinite(end)) return event;
           const status: EventStatus = now < start ? 'upcoming' : now < end ? 'active' : 'completed';
+          if (event.status === 'completed' && status !== 'completed') return event;
           if (status === event.status) return event;
           changed = true;
           return { ...event, status, updated_at: updatedAt };

@@ -54,7 +54,9 @@ function toVietnamDateTimeInput(value: string | Date): string {
 }
 
 function fromVietnamDateTimeInput(value: string): string {
-  return new Date(`${value}:00+07:00`).toISOString();
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return '';
+  const date = new Date(`${value}:00+07:00`);
+  return Number.isFinite(date.getTime()) ? date.toISOString() : '';
 }
 
 function getVietnamToday(): string {

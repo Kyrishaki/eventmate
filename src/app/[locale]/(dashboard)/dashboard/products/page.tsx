@@ -100,6 +100,39 @@ export default function ProductsPage() {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [editingProduct, setEditingProduct] = React.useState<Product | null>(null);
 
+  const [addTarget, setAddTarget] = React.useState<{ product: Product; mode: 'online' | 'vip' } | null>(null);
+  const [addAmounts, setAddAmounts] = React.useState<Record<string, string>>({});
+
+  function openAddQuantity(product: Product, mode: 'online' | 'vip') {
+    setAddAmounts({});
+    setAddTarget({ product, mode });
+  }
+
+  function saveAddedQuantity(event: React.FormEvent) {
+    event.preventDefault();
+    if (!addTarget || !canEditData() || !canManageProduct(user, addTarget.product.collab_partner)) return;
+    const current = useDataStore.getState();
+    const targets = current.variants.filter((variant) => variant.product_id === addTarget.product.id);
+    for (const variant of targets) {
+      const amount = Number(addAmounts[variant.id] || 0);
+      if (!Number.isSafeInteger(amount) || amount < 0) return;
+      const sold = current.allocations.filter((allocation) => allocation.variant_id === variant.id && !allocation.is_test)
+        .reduce((sum, allocation) => sum + allocation.sold_quantity, 0);
+      if (amount > Math.max(0, variant.total_inventory - sold - (variant.reserved_quantity || 0) - (variant.online_preorder_quantity || 0))) {
+        alert(`Số lượng cộng thêm vượt tồn khả dụng của ${variant.name}.`);
+        return;
+      }
+    }
+    for (const variant of targets) {
+      const amount = Number(addAmounts[variant.id] || 0);
+      if (!amount) continue;
+      updateVariantPreorders(variant.id, addTarget.mode === 'online'
+        ? { onlinePreorderQuantity: (variant.online_preorder_quantity || 0) + amount }
+        : { reservedQuantity: (variant.reserved_quantity || 0) + amount });
+    }
+    setAddTarget(null);
+  }
+
   // Quick Pre-order / Reservation Adjustment Modal
   const [quickAdjustProduct, setQuickAdjustProduct] = React.useState<Product | null>(null);
   const [quickVariants, setQuickVariants] = React.useState<
@@ -1234,7 +1267,7 @@ export default function ProductsPage() {
                 <div className="px-4 py-2.5 bg-background border-t border-border flex items-center justify-between gap-2">
                   {editable && canManageThis ? (
                     <>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex flex-wrap items-center gap-1.5">
                         <Button
                           variant="outline"
                           size="sm"
@@ -1242,7 +1275,7 @@ export default function ProductsPage() {
                           onClick={() => openEditModal(prod)}
                         >
                           <Edit className="w-3 h-3 text-primary" />
-                          <span>Sửa & Ảnh</span>
+                          Sửa
                         </Button>
                         <Button
                           variant="outline"
@@ -1253,6 +1286,8 @@ export default function ProductsPage() {
                           <SlidersHorizontal className="w-3 h-3 text-warning" />
                           <span>Chỉnh tồn</span>
                         </Button>
+                        <Button variant="outline" size="sm" onClick={() => openAddQuantity(prod, 'online')}>+ Online</Button>
+                        <Button variant="outline" size="sm" onClick={() => openAddQuantity(prod, 'vip')}>+ VIP</Button>
                       </div>
 
                       <div className="flex items-center gap-1">
@@ -1761,6 +1796,19 @@ export default function ProductsPage() {
               {editingProduct ? 'Lưu cập nhật & Đổi ảnh' : tCommon('save')}
             </Button>
           </div>
+        </form>
+      </Modal>
+
+      <Modal isOpen={!!addTarget} onClose={() => setAddTarget(null)} title={`Cộng số lượng ${addTarget?.mode === 'online' ? 'Online' : 'VIP'} — ${addTarget?.product.name || ''}`}>
+        <form onSubmit={saveAddedQuantity}>
+          {variants.filter((variant) => variant.product_id === addTarget?.product.id).map((variant) => (
+            <fieldset key={variant.id} className="mb-4">
+              <Label htmlFor={`add-${variant.id}`}>{variant.name} ({variant.sku}) — hiện có {addTarget?.mode === 'online' ? variant.online_preorder_quantity || 0 : variant.reserved_quantity || 0}</Label>
+              <Input id={`add-${variant.id}`} type="number" min="0" step="1" placeholder="Số lượng cộng thêm" value={addAmounts[variant.id] || ''} onChange={(event) => setAddAmounts((previous) => ({ ...previous, [variant.id]: event.target.value }))} />
+            </fieldset>
+          ))}
+          <Button type="submit" variant="primary">Cộng số lượng</Button>
+          <Button type="button" variant="outline" onClick={() => setAddTarget(null)}>Hủy</Button>
         </form>
       </Modal>
 

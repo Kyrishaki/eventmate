@@ -73,7 +73,7 @@ export default function InventoryPage() {
   const [allocInputs, setAllocInputs] = React.useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = React.useState('');
   const [stockFilter, setStockFilter] = React.useState<
-    'all' | 'allocated' | 'has_unallocated' | 'low_or_empty'
+    'all' | 'allocated' | 'empty'
   >('all');
   const [viewMode, setViewMode] = React.useState<'grouped' | 'table'>('grouped');
 
@@ -387,6 +387,33 @@ export default function InventoryPage() {
     }
   }
 
+  function handleRecallAll() {
+    if (!selectedBooth || !canManageInventory() || !user) return;
+    if (!window.confirm(`Thu hồi toàn bộ hàng chưa bán của gian "${selectedBooth.name}" về kho tổng? Số đã bán được giữ nguyên.`)) return;
+    const current = useDataStore.getState();
+    let recalled = 0;
+    const now = new Date().toISOString();
+    const next = current.allocations.map((allocation) => {
+      if (allocation.booth_id !== selectedBooth.id || allocation.workspace_id !== selectedBooth.workspace_id) return allocation;
+      const variant = current.variants.find((item) => item.id === allocation.variant_id);
+      const product = current.products.find((item) => item.id === variant?.product_id);
+      if (!product || !canManageProduct(user, product.collab_partner)) return allocation;
+      const remaining = Math.max(0, allocation.allocated_quantity - allocation.sold_quantity);
+      if (!remaining) return allocation;
+      recalled += remaining;
+      return { ...allocation, allocated_quantity: allocation.sold_quantity, updated_at: now };
+    });
+    if (!recalled) return;
+    current.setAllocations(next);
+    setAllocInputs({});
+    logActivity({
+      actor_name: user.fullName, actor_role: user.role as AuditActorRole,
+      action_type: 'stock_adjust', entity_type: 'inventory', entity_name: selectedBooth.name,
+      booth_name: selectedBooth.name, event_name: selectedEvent?.name,
+      description: `Thu hồi ${recalled} món chưa bán từ gian "${selectedBooth.name}" về kho tổng.`,
+    });
+  }
+
   // Active variants of non-deleted products in current workspace
   const workspaceProducts = products.filter(
     (p) => !p.is_deleted && (!activeWorkspace || p.workspace_id === activeWorkspace.id)
@@ -465,8 +492,8 @@ export default function InventoryPage() {
   const countHasUnallocated = enrichedVariants.filter(
     (item) => item.centralStorageRemaining > 0
   ).length;
-  const countLowOrEmpty = enrichedVariants.filter(
-    (item) => item.availableToSell <= 5
+  const countEmpty = enrichedVariants.filter(
+    (item) => item.availableToSell <= 0
   ).length;
 
   // Filtered variants based on search, stockFilter, categoryFilter, sourceFilter & sorting
@@ -475,8 +502,7 @@ export default function InventoryPage() {
     .filter((item) => {
       // 1. Stock allocation filter
       if (stockFilter === 'allocated' && item.currentAllocQty <= 0) return false;
-      if (stockFilter === 'has_unallocated' && item.centralStorageRemaining <= 0) return false;
-      if (stockFilter === 'low_or_empty' && item.availableToSell > 5) return false;
+      if (stockFilter === 'empty' && item.availableToSell > 0) return false;
 
       // 2. Category filter
       if (categoryFilter !== 'all' && item.product?.category_id !== categoryFilter) return false;
@@ -608,6 +634,11 @@ export default function InventoryPage() {
 
         {selectedBooth && (
           <div className="flex flex-wrap items-center gap-2">
+            {canManage && (
+              <Button type="button" variant="outline" size="sm" onClick={handleRecallAll}>
+                Thu hồi toàn bộ
+              </Button>
+            )}
             {canManage && boothStats.unallocatedInWarehouse > 0 && (
               <Button
                 variant="outline"
@@ -908,53 +939,27 @@ export default function InventoryPage() {
 
             <button
               type="button"
-              onClick={() => setStockFilter('has_unallocated')}
+              onClick={() => setStockFilter('empty')}
               className={cn(
                 'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center justify-between sm:justify-start gap-1.5 cursor-pointer',
-                stockFilter === 'has_unallocated'
-                  ? 'bg-warning text-white shadow-2xs'
-                  : 'text-muted hover:text-foreground'
-              )}
-            >
-              <span className="flex items-center gap-1 truncate">
-                <Boxes className={cn('w-3.5 h-3.5 shrink-0', stockFilter === 'has_unallocated' ? 'text-white' : 'text-warning')} />
-                <span className="truncate">Cấp thêm</span>
-              </span>
-              <span
-                className={cn(
-                  'text-[10px] font-mono px-1.5 rounded',
-                  stockFilter === 'has_unallocated'
-                    ? 'bg-surface/20 text-white'
-                    : 'bg-warning-bg text-warning'
-                )}
-              >
-                {countHasUnallocated}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setStockFilter('low_or_empty')}
-              className={cn(
-                'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center justify-between sm:justify-start gap-1.5 cursor-pointer',
-                stockFilter === 'low_or_empty'
+                stockFilter === 'empty'
                   ? 'bg-error text-white shadow-2xs'
                   : 'text-muted hover:text-foreground'
               )}
             >
               <span className="flex items-center gap-1 truncate">
-                <AlertCircle className={cn('w-3.5 h-3.5 shrink-0', stockFilter === 'low_or_empty' ? 'text-white' : 'text-error')} />
-                <span className="truncate">Sắp hết</span>
+                <AlertCircle className={cn('w-3.5 h-3.5 shrink-0', stockFilter === 'empty' ? 'text-white' : 'text-error')} />
+                <span className="truncate">Đã hết</span>
               </span>
               <span
                 className={cn(
                   'text-[10px] font-mono px-1.5 rounded',
-                  stockFilter === 'low_or_empty'
+                  stockFilter === 'empty'
                     ? 'bg-surface/20 text-white'
                     : 'bg-error-bg text-error'
                 )}
               >
-                {countLowOrEmpty}
+                {countEmpty}
               </span>
             </button>
           </div>

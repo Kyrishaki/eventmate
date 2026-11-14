@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Be_Vietnam_Pro, Figtree } from 'next/font/google';
+import { Be_Vietnam_Pro } from 'next/font/google';
 import '../globals.css';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
@@ -7,18 +7,6 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { PwaRegister } from '@/components/pwa/pwa-register';
 import { AstryxProvider } from '@/components/providers/astryx-provider';
-
-const figtree = Figtree({
-  subsets: ['latin'],
-  variable: '--font-figtree',
-  display: 'swap',
-});
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-});
 
 const beVietnamPro = Be_Vietnam_Pro({
   weight: ['400', '500', '600', '700'],
@@ -52,7 +40,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
-  themeColor: '#315C4C',
+  themeColor: '#0F0F10',
   viewportFit: 'cover',
 };
 
@@ -78,21 +66,19 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      data-astryx-theme="neutral"
-      className={`${figtree.variable} ${inter.variable} ${beVietnamPro.variable}`}
+      data-astryx-theme="hikaru"
+      data-theme="dark"
+      className={`${beVietnamPro.variable} dark`}
       suppressHydrationWarning
     >
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
                   var saved = localStorage.getItem('eventmate-theme');
-                  var isDark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                  var isDark = saved !== 'light' && (saved !== 'system' || window.matchMedia('(prefers-color-scheme: dark)').matches);
                   var root = document.documentElement;
                   if (isDark) {
                     root.classList.add('dark');
@@ -107,7 +93,7 @@ export default async function LocaleLayout({
           }}
         />
       </head>
-      <body className="bg-[var(--color-background-body,#F7F7F5)] text-[var(--color-text-primary,#202124)] min-h-screen antialiased selection:bg-[#315C4C]/15 selection:text-[#315C4C]">
+      <body className="bg-background text-foreground min-h-screen antialiased selection:bg-primary/15 selection:text-primary">
         <AstryxProvider>
           <PwaRegister />
           <NextIntlClientProvider locale={locale} messages={messages}>

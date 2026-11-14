@@ -182,9 +182,9 @@ export default function PosOrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F7F5] dark:bg-neutral-900 flex flex-col">
+    <div className="min-h-screen bg-background dark:bg-surface flex flex-col">
       {/* Top Header */}
-      <header className="h-14 sm:h-16 bg-white dark:bg-neutral-850 border-b border-[#E8E8E5] dark:border-neutral-700/80 px-3 sm:px-4 flex items-center justify-between gap-2 sticky top-0 z-30 shadow-2xs">
+      <header className="h-14 sm:h-16 bg-surface dark:bg-surface border-b border-border dark:border-border/80 px-3 sm:px-4 flex items-center justify-between gap-2 sticky top-0 z-30 shadow-2xs">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link href="/pos">
             <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs gap-1 font-semibold">
@@ -196,8 +196,8 @@ export default function PosOrdersPage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="Logo" className="h-8 w-auto max-w-[44px] object-contain hidden sm:block shrink-0" />
             <div>
-              <h1 className="text-sm font-bold text-[#202124] dark:text-neutral-100 truncate">Lịch sử Đơn hàng tại Quầy</h1>
-              <p className="text-[11px] text-[#737373] dark:text-neutral-400 hidden sm:block">Tra cứu hóa đơn, in lại biên nhận và xử lý trả hàng / hoàn tiền</p>
+              <h1 className="text-sm font-bold text-foreground dark:text-foreground truncate">Lịch sử Đơn hàng tại Quầy</h1>
+              <p className="text-[11px] text-muted dark:text-muted hidden sm:block">Tra cứu hóa đơn, in lại biên nhận và xử lý trả hàng / hoàn tiền</p>
             </div>
           </div>
         </div>
@@ -207,7 +207,7 @@ export default function PosOrdersPage() {
             {orders.length} đơn
           </Badge>
           <Link href="/dashboard">
-            <Button variant="ghost" size="sm" className="h-8 px-2.5 text-xs font-semibold text-[#315C4C] dark:text-emerald-400">
+            <Button variant="ghost" size="sm" className="h-8 px-2.5 text-xs font-semibold text-primary dark:text-success">
               Quản lý
             </Button>
           </Link>
@@ -219,24 +219,24 @@ export default function PosOrdersPage() {
         {/* Action Feedback Banner */}
         {actionFeedback && (
           <div
-            className={`p-3 rounded-[8px] border text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200 ${
+            className={`p-3 rounded-lg border text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200 ${
               actionFeedback.type === 'success'
-                ? 'bg-[#EAF4EE] dark:bg-emerald-950/40 border-[#2F7D55]/30 text-[#2F7D55] dark:text-emerald-300'
-                : 'bg-[#FDF1F0] dark:bg-rose-950/40 border-[#C44536]/30 text-[#C44536] dark:text-rose-300'
+                ? 'bg-success-bg dark:bg-success-bg/40 border-primary/30 text-primary dark:text-success'
+                : 'bg-error-bg dark:bg-rose-950/40 border-error/30 text-error dark:text-rose-300'
             }`}
           >
             <div className="flex items-center gap-2 font-medium">
               {actionFeedback.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-[#2F7D55]" />
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-primary" />
               ) : (
-                <AlertCircle className="w-4 h-4 shrink-0 text-[#C44536]" />
+                <AlertCircle className="w-4 h-4 shrink-0 text-error" />
               )}
               <span>{actionFeedback.message}</span>
             </div>
             <button
               type="button"
               onClick={() => setActionFeedback(null)}
-              className="text-[#737373] hover:text-[#202124] p-1 rounded"
+              className="text-muted hover:text-foreground p-1 rounded"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -246,12 +246,12 @@ export default function PosOrdersPage() {
         {/* Filters */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <div className="relative max-w-full sm:max-w-xs w-full">
-            <Search className="w-4 h-4 text-[#9E9E9C] absolute left-3 top-2.5" />
+            <Search className="w-4 h-4 text-muted absolute left-3 top-2.5" />
             <Input
               placeholder="Tìm theo mã đơn (HKTS-...), mã hoàn (RF-...)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9 text-xs bg-white dark:bg-neutral-800 dark:border-neutral-700 w-full"
+              className="pl-9 h-9 text-xs bg-surface dark:bg-surface-hover dark:border-border w-full"
             />
           </div>
 
@@ -261,8 +261,8 @@ export default function PosOrdersPage() {
               onClick={() => setFilterTab('all')}
               className={`px-3 py-1.5 text-xs rounded font-semibold whitespace-nowrap shrink-0 transition-colors ${
                 filterTab === 'all'
-                  ? 'bg-[#315C4C] text-white shadow-2xs'
-                  : 'bg-white dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 text-[#737373] dark:text-neutral-300'
+                  ? 'bg-primary text-primary-foreground shadow-2xs'
+                  : 'bg-surface dark:bg-surface-hover border border-border dark:border-border text-muted dark:text-muted'
               }`}
             >
               Tất cả ({orders.length})
@@ -272,8 +272,8 @@ export default function PosOrdersPage() {
               onClick={() => setFilterTab('completed')}
               className={`px-3 py-1.5 text-xs rounded font-semibold whitespace-nowrap shrink-0 transition-colors ${
                 filterTab === 'completed'
-                  ? 'bg-[#315C4C] text-white shadow-2xs'
-                  : 'bg-white dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 text-[#737373] dark:text-neutral-300'
+                  ? 'bg-primary text-primary-foreground shadow-2xs'
+                  : 'bg-surface dark:bg-surface-hover border border-border dark:border-border text-muted dark:text-muted'
               }`}
             >
               Hoàn tất ({completedCount})
@@ -283,8 +283,8 @@ export default function PosOrdersPage() {
               onClick={() => setFilterTab('refunded')}
               className={`px-3 py-1.5 text-xs rounded font-semibold whitespace-nowrap shrink-0 transition-colors ${
                 filterTab === 'refunded'
-                  ? 'bg-[#B7791F] text-white shadow-2xs'
-                  : 'bg-white dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 text-[#737373] dark:text-neutral-300'
+                  ? 'bg-warning text-white shadow-2xs'
+                  : 'bg-surface dark:bg-surface-hover border border-border dark:border-border text-muted dark:text-muted'
               }`}
             >
               Đã trả hàng ({refundedCount})
@@ -294,8 +294,8 @@ export default function PosOrdersPage() {
               onClick={() => setFilterTab('pending')}
               className={`px-3 py-1.5 text-xs rounded font-semibold whitespace-nowrap shrink-0 transition-colors ${
                 filterTab === 'pending'
-                  ? 'bg-[#737373] text-white shadow-2xs'
-                  : 'bg-white dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 text-[#737373] dark:text-neutral-300'
+                  ? 'bg-muted text-white shadow-2xs'
+                  : 'bg-surface dark:bg-surface-hover border border-border dark:border-border text-muted dark:text-muted'
               }`}
             >
               Chờ đồng bộ ({pendingCount})
@@ -306,8 +306,8 @@ export default function PosOrdersPage() {
                 onClick={() => setFilterTab('cancelled')}
                 className={`px-3 py-1.5 text-xs rounded font-semibold whitespace-nowrap shrink-0 transition-colors ${
                   filterTab === 'cancelled'
-                    ? 'bg-[#C44536] text-white shadow-2xs'
-                    : 'bg-white dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 text-[#737373] dark:text-neutral-300'
+                    ? 'bg-error text-white shadow-2xs'
+                    : 'bg-surface dark:bg-surface-hover border border-border dark:border-border text-muted dark:text-muted'
                 }`}
               >
                 Đã hủy ({cancelledCount})
@@ -318,10 +318,10 @@ export default function PosOrdersPage() {
 
         {/* Orders Table */}
         {filteredOrders.length === 0 ? (
-          <Card className="border-[#E8E8E5] dark:border-neutral-700/80 bg-white dark:bg-neutral-850 shadow-xs">
-            <CardContent className="p-12 text-center text-xs text-[#737373] dark:text-neutral-400">
-              <ShoppingCart className="w-10 h-10 text-[#9E9E9C] mx-auto mb-2" />
-              <p className="font-semibold text-[#202124] dark:text-neutral-200">Không tìm thấy đơn hàng nào</p>
+          <Card className="border-border dark:border-border/80 bg-surface dark:bg-surface shadow-xs">
+            <CardContent className="p-12 text-center text-xs text-muted dark:text-muted">
+              <ShoppingCart className="w-10 h-10 text-muted mx-auto mb-2" />
+              <p className="font-semibold text-foreground dark:text-foreground">Không tìm thấy đơn hàng nào</p>
               <p className="text-[11px] mt-1">Thử thay đổi từ khóa tìm kiếm hoặc bấm tab &ldquo;Tất cả&rdquo;.</p>
             </CardContent>
           </Card>
@@ -336,12 +336,12 @@ export default function PosOrdersPage() {
               return (
                 <Card
                   key={ord.id}
-                  className="border-[#E8E8E5] dark:border-neutral-700/80 bg-white dark:bg-neutral-850 p-3.5 sm:p-4 shadow-2xs hover:border-[#315C4C]/40 dark:hover:border-emerald-500/40 transition-colors"
+                  className="border-border dark:border-border/80 bg-surface dark:bg-surface p-3.5 sm:p-4 shadow-2xs hover:border-primary/40 dark:hover:border-emerald-500/40 transition-colors"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="space-y-1.5 flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="font-mono font-bold text-sm text-[#202124] dark:text-neutral-100">
+                        <span className="font-mono font-bold text-sm text-foreground dark:text-foreground">
                           {ord.order_number}
                         </span>
                         <Badge
@@ -365,13 +365,13 @@ export default function PosOrdersPage() {
                           </Badge>
                         )}
                         {effectiveStatus === 'refunded' && (
-                          <Badge variant="warning" className="text-[10px] bg-[#FEF7EC] text-[#B7791F] border-[#B7791F]/40 font-bold">
+                          <Badge variant="warning" className="text-[10px] bg-warning-bg text-warning border-warning/40 font-bold">
                             Đã trả hàng / Hoàn tiền
                           </Badge>
                         )}
                       </div>
 
-                      <p className="text-xs text-[#737373] dark:text-neutral-400">
+                      <p className="text-xs text-muted dark:text-muted">
                         {event?.name || 'Sự kiện'} • {booth?.name || 'Quầy bán'} {booth?.code ? `(${booth.code})` : ''} • {formatDate(ord.created_at)}
                       </p>
 
@@ -383,15 +383,15 @@ export default function PosOrdersPage() {
                             return (
                               <span
                                 key={`${it.variant_id}-${idx}`}
-                                className="inline-flex items-center gap-1 text-[11px] bg-[#F7F7F5] dark:bg-neutral-800 text-[#555555] dark:text-neutral-300 px-2 py-0.5 rounded border border-[#E8E8E5] dark:border-neutral-700"
+                                className="inline-flex items-center gap-1 text-[11px] bg-background dark:bg-surface-hover text-muted dark:text-muted px-2 py-0.5 rounded border border-border dark:border-border"
                               >
-                                <span className="font-medium text-[#202124] dark:text-neutral-100 truncate max-w-[180px]">
+                                <span className="font-medium text-foreground dark:text-foreground truncate max-w-[180px]">
                                   {details.productName}
                                 </span>
                                 {details.variantName && details.variantName !== 'Default' && details.variantName !== 'Mặc định' && (
                                   <span className="text-[#888888]">({details.variantName})</span>
                                 )}
-                                <span className="font-bold font-mono text-[#315C4C] dark:text-emerald-400">x{details.quantity}</span>
+                                <span className="font-bold font-mono text-primary dark:text-success">x{details.quantity}</span>
                               </span>
                             );
                           })}
@@ -399,40 +399,40 @@ export default function PosOrdersPage() {
                       )}
 
                       {ord.notes && (
-                        <p className="text-[11px] text-[#737373] dark:text-neutral-400 italic">
+                        <p className="text-[11px] text-muted dark:text-muted italic">
                           Ghi chú: {ord.notes}
                         </p>
                       )}
 
                       {/* Refund Detail Callout if Refunded */}
                       {effectiveStatus === 'refunded' && (
-                        <div className="mt-2 p-2.5 bg-[#FEF7EC] dark:bg-amber-950/30 border border-[#B7791F]/30 rounded-[6px] text-xs space-y-1">
+                        <div className="mt-2 p-2.5 bg-warning-bg dark:bg-amber-950/30 border border-warning/30 rounded-lg text-xs space-y-1">
                           <div className="flex flex-wrap items-center justify-between gap-2">
-                            <span className="font-bold text-[#B7791F] dark:text-amber-400 flex items-center gap-1.5">
+                            <span className="font-bold text-warning dark:text-gold-text flex items-center gap-1.5">
                               <RotateCcw className="w-3.5 h-3.5" />
                               Biên bản hoàn tiền: {ord.refund_record_number || 'RF'}
                             </span>
-                            <span className="font-bold text-[#C44536] dark:text-rose-400 font-mono">
+                            <span className="font-bold text-error dark:text-rose-400 font-mono">
                               - {formatCurrency(ord.refund_amount ?? ord.final_amount, activeWorkspace?.currency || 'VND')}
                             </span>
                           </div>
-                          <div className="text-[11px] text-[#737373] dark:text-neutral-400 flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <div className="text-[11px] text-muted dark:text-muted flex flex-wrap items-center gap-x-3 gap-y-1">
                             {ord.refund_reason && (
                               <span>
-                                Lý do: <span className="font-medium text-[#202124] dark:text-neutral-200">{ord.refund_reason}</span>
+                                Lý do: <span className="font-medium text-foreground dark:text-foreground">{ord.refund_reason}</span>
                               </span>
                             )}
                             {ord.refunded_by && (
                               <span>
-                                Người duyệt: <span className="font-medium text-[#202124] dark:text-neutral-200">{ord.refunded_by}</span>
+                                Người duyệt: <span className="font-medium text-foreground dark:text-foreground">{ord.refunded_by}</span>
                               </span>
                             )}
                             {ord.refunded_at && (
                               <span>
-                                Thời gian: <span className="font-medium text-[#202124] dark:text-neutral-200">{formatDate(ord.refunded_at)}</span>
+                                Thời gian: <span className="font-medium text-foreground dark:text-foreground">{formatDate(ord.refunded_at)}</span>
                               </span>
                             )}
-                            <span className={`font-semibold ${ord.refund_restocked ? 'text-[#2F7D55] dark:text-emerald-400' : 'text-[#C44536] dark:text-rose-400'}`}>
+                            <span className={`font-semibold ${ord.refund_restocked ? 'text-primary dark:text-success' : 'text-error dark:text-rose-400'}`}>
                               {ord.refund_restocked ? '✓ Đã hoàn kho quầy' : '✕ Không nhập lại kho (hàng hỏng)'}
                             </span>
                           </div>
@@ -440,20 +440,20 @@ export default function PosOrdersPage() {
                       )}
                     </div>
 
-                    <div className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-3 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-[#F0F0ED] dark:border-neutral-800">
+                    <div className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-3 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-border dark:border-border">
                       <div className="text-left sm:text-right">
                         <span
                           className={`text-base font-bold ${
                             effectiveStatus === 'cancelled'
-                              ? 'line-through text-[#9E9E9C]'
+                              ? 'line-through text-muted'
                               : effectiveStatus === 'refunded'
-                              ? 'text-[#B7791F]'
-                              : 'text-[#315C4C] dark:text-emerald-400'
+                              ? 'text-warning'
+                              : 'text-primary dark:text-success'
                           }`}
                         >
                           {formatCurrency(ord.final_amount, activeWorkspace?.currency || 'VND')}
                         </span>
-                        <span className="text-[10px] text-[#737373] dark:text-neutral-400 block font-medium">
+                        <span className="text-[10px] text-muted dark:text-muted block font-medium">
                           {itemCount} món hàng
                         </span>
                       </div>
@@ -464,7 +464,7 @@ export default function PosOrdersPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 text-xs gap-1 border-[#C44536]/40 text-[#C44536] hover:bg-[#FDF1F0] dark:hover:bg-rose-950/40 font-semibold"
+                            className="h-8 text-xs gap-1 border-error/40 text-error hover:bg-error-bg dark:hover:bg-rose-950/40 font-semibold"
                             onClick={() => openRefundModal(ord)}
                             title="Lập biên bản trả hàng & hoàn tiền"
                           >
@@ -478,7 +478,7 @@ export default function PosOrdersPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 text-xs gap-1 border-[#B7791F]/40 text-[#B7791F] hover:bg-[#FEF7EC] dark:hover:bg-amber-950/40 font-semibold"
+                            className="h-8 text-xs gap-1 border-warning/40 text-warning hover:bg-warning-bg dark:hover:bg-amber-950/40 font-semibold"
                             onClick={() => setSelectedOrder(ord)}
                             title="Xem và in biên bản hoàn tiền nhiệt"
                           >
@@ -491,7 +491,7 @@ export default function PosOrdersPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-8 text-xs gap-1 border-[#315C4C]/40 text-[#315C4C] dark:text-emerald-400 hover:bg-[#EAF4EE] dark:hover:bg-emerald-950/40"
+                          className="h-8 text-xs gap-1 border-primary/40 text-primary dark:text-success hover:bg-success-bg dark:hover:bg-success-bg/40"
                           onClick={() => setSelectedOrder(ord)}
                           title="Xem biên nhận và in hóa đơn nhiệt"
                         >
@@ -537,29 +537,29 @@ export default function PosOrdersPage() {
         {refundTargetOrder && (
           <form onSubmit={handleConfirmRefund} className="space-y-4 text-xs">
             {refundError && (
-              <div className="p-2.5 rounded-[6px] bg-[#FDF1F0] dark:bg-rose-950/40 border border-[#C44536]/30 text-[#C44536] dark:text-rose-300 flex items-center gap-2">
+              <div className="p-2.5 rounded-lg bg-error-bg dark:bg-rose-950/40 border border-error/30 text-error dark:text-rose-300 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{refundError}</span>
               </div>
             )}
 
             {/* Thông tin đơn gốc */}
-            <div className="p-3 rounded-[6px] bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 space-y-1.5">
+            <div className="p-3 rounded-lg bg-background dark:bg-surface-hover border border-border dark:border-border space-y-1.5">
               <div className="flex justify-between items-center">
-                <span className="text-[#737373] dark:text-neutral-400">Tổng tiền đã thanh toán:</span>
-                <span className="font-bold text-sm text-[#202124] dark:text-neutral-100 font-mono">
+                <span className="text-muted dark:text-muted">Tổng tiền đã thanh toán:</span>
+                <span className="font-bold text-sm text-foreground dark:text-foreground font-mono">
                   {formatCurrency(refundTargetOrder.final_amount, activeWorkspace?.currency || 'VND')}
                 </span>
               </div>
               <div className="flex justify-between items-center text-[11px]">
-                <span className="text-[#737373] dark:text-neutral-400">Phương thức thanh toán:</span>
-                <span className="font-semibold text-[#202124] dark:text-neutral-200">
+                <span className="text-muted dark:text-muted">Phương thức thanh toán:</span>
+                <span className="font-semibold text-foreground dark:text-foreground">
                   {refundTargetOrder.payment_method === 'cash' ? '💵 Tiền mặt' : '📱 Chuyển khoản VietQR'}
                 </span>
               </div>
               <div className="flex justify-between items-center text-[11px]">
-                <span className="text-[#737373] dark:text-neutral-400">Thời gian tạo:</span>
-                <span className="text-[#555555] dark:text-neutral-300 font-medium">
+                <span className="text-muted dark:text-muted">Thời gian tạo:</span>
+                <span className="text-muted dark:text-muted font-medium">
                   {formatDate(refundTargetOrder.created_at)}
                 </span>
               </div>
@@ -568,31 +568,31 @@ export default function PosOrdersPage() {
             {/* Chi tiết danh sách món hàng */}
             {refundTargetOrder.items && refundTargetOrder.items.length > 0 && (
               <div className="space-y-1.5">
-                <label className="font-semibold text-[#202124] dark:text-neutral-200 flex items-center gap-1.5">
-                  <Package className="w-3.5 h-3.5 text-[#315C4C]" />
+                <label className="font-semibold text-foreground dark:text-foreground flex items-center gap-1.5">
+                  <Package className="w-3.5 h-3.5 text-primary" />
                   <span>Sản phẩm trong đơn ({refundTargetOrder.items.length} món)</span>
                 </label>
-                <div className="max-h-36 overflow-y-auto space-y-1.5 border border-[#E8E8E5] dark:border-neutral-700 rounded-[6px] p-2 bg-white dark:bg-neutral-850">
+                <div className="max-h-36 overflow-y-auto space-y-1.5 border border-border dark:border-border rounded-lg p-2 bg-surface dark:bg-surface">
                   {refundTargetOrder.items.map((it, idx) => {
                     const details = resolveOrderItem(it, variants, products);
                     return (
                       <div
                         key={`${it.variant_id}-${idx}`}
-                        className="flex items-center justify-between text-xs py-1 border-b border-[#F0F0ED] dark:border-neutral-800 last:border-b-0"
+                        className="flex items-center justify-between text-xs py-1 border-b border-border dark:border-border last:border-b-0"
                       >
                         <div className="min-w-0 flex-1 pr-2">
-                          <p className="font-semibold text-[#202124] dark:text-neutral-100 truncate">
+                          <p className="font-semibold text-foreground dark:text-foreground truncate">
                             {details.productName}
                           </p>
-                          <p className="text-[10px] text-[#737373] dark:text-neutral-400">
+                          <p className="text-[10px] text-muted dark:text-muted">
                             {details.variantName || 'Mặc định'} {details.sku ? `• SKU: ${details.sku}` : ''}
                           </p>
                         </div>
                         <div className="text-right shrink-0">
-                          <span className="font-bold text-[#315C4C] dark:text-emerald-400 font-mono">
+                          <span className="font-bold text-primary dark:text-success font-mono">
                             x{details.quantity}
                           </span>
-                          <span className="text-[10px] text-[#737373] dark:text-neutral-400 block font-mono">
+                          <span className="text-[10px] text-muted dark:text-muted block font-mono">
                             {formatCurrency(details.totalPrice, activeWorkspace?.currency || 'VND')}
                           </span>
                         </div>
@@ -604,23 +604,23 @@ export default function PosOrdersPage() {
             )}
 
             {/* Checkbox Restock vào tồn quầy */}
-            <label className="flex items-start gap-2.5 p-2.5 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#FAFAF8] dark:bg-neutral-800 cursor-pointer">
+            <label className="flex items-start gap-2.5 p-2.5 rounded-lg border border-border dark:border-border bg-background dark:bg-surface-hover cursor-pointer">
               <input
                 type="checkbox"
                 checked={refundRestock}
                 onChange={(e) => setRefundRestock(e.target.checked)}
-                className="mt-0.5 accent-[#315C4C] h-4 w-4 rounded"
+                className="mt-0.5 accent-primary h-4 w-4 rounded"
               />
               <div>
-                <p className="font-bold text-[#202124] dark:text-neutral-100 flex items-center gap-1.5">
-                  <Boxes className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400" />
+                <p className="font-bold text-foreground dark:text-foreground flex items-center gap-1.5">
+                  <Boxes className="w-3.5 h-3.5 text-primary dark:text-success" />
                   <span>
                     Hoàn trả +
                     {refundTargetOrder.items?.reduce((sum, it) => sum + (it.quantity || 0), 0) || 0} sản phẩm vào tồn
                     kho quầy bán
                   </span>
                 </p>
-                <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-0.5">
+                <p className="text-[11px] text-muted dark:text-muted mt-0.5">
                   Tự động cộng lại số lượng vào tồn kho quầy hiện tại để tiếp tục bán. (Bỏ chọn nếu hàng bị bể vỡ / rách
                   hỏng không thể bán lại).
                 </p>
@@ -630,14 +630,14 @@ export default function PosOrdersPage() {
             {/* Số tiền hoàn trả */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="font-semibold text-[#202124] dark:text-neutral-200">
-                  Số tiền hoàn trả khách (VND) <span className="text-[#C44536]">*</span>
+                <label className="font-semibold text-foreground dark:text-foreground">
+                  Số tiền hoàn trả khách (VND) <span className="text-error">*</span>
                 </label>
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
                     onClick={() => setRefundAmountInput(String(refundTargetOrder.final_amount))}
-                    className="text-[11px] px-2 py-0.5 rounded bg-[#EAF4EE] text-[#2F7D55] font-semibold border border-[#2F7D55]/30 hover:bg-[#D8EDE0]"
+                    className="text-[11px] px-2 py-0.5 rounded bg-success-bg text-primary font-semibold border border-primary/30 hover:bg-[#D8EDE0]"
                   >
                     Hoàn 100%
                   </button>
@@ -646,7 +646,7 @@ export default function PosOrdersPage() {
                     onClick={() =>
                       setRefundAmountInput(String(Math.round(refundTargetOrder.final_amount / 2)))
                     }
-                    className="text-[11px] px-2 py-0.5 rounded bg-[#F7F7F5] text-[#555555] font-semibold border border-[#E8E8E5] hover:bg-[#E8E8E5]"
+                    className="text-[11px] px-2 py-0.5 rounded bg-background text-muted font-semibold border border-border hover:bg-surface-hover"
                   >
                     Hoàn 50%
                   </button>
@@ -661,17 +661,17 @@ export default function PosOrdersPage() {
                   setRefundAmountInput(e.target.value);
                   setRefundError(null);
                 }}
-                className="h-9 text-sm font-mono font-bold bg-white dark:bg-neutral-800"
+                className="h-9 text-sm font-mono font-bold bg-surface dark:bg-surface-hover"
               />
-              <p className="text-[11px] text-[#737373] dark:text-neutral-400">
+              <p className="text-[11px] text-muted dark:text-muted">
                 Tối đa: {formatCurrency(refundTargetOrder.final_amount, activeWorkspace?.currency || 'VND')}.
               </p>
             </div>
 
             {/* Lý do trả hàng */}
             <div className="space-y-1.5">
-              <label className="font-semibold text-[#202124] dark:text-neutral-200 block">
-                Lý do trả hàng & hoàn tiền <span className="text-[#C44536]">*</span>
+              <label className="font-semibold text-foreground dark:text-foreground block">
+                Lý do trả hàng & hoàn tiền <span className="text-error">*</span>
               </label>
               <select
                 value={refundReason}
@@ -679,7 +679,7 @@ export default function PosOrdersPage() {
                   setRefundReason(e.target.value);
                   setRefundError(null);
                 }}
-                className="w-full h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2.5 text-xs font-medium text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C]"
+                className="w-full h-8 rounded-lg border border-border dark:border-border bg-surface dark:bg-surface-hover px-2.5 text-xs font-medium text-foreground dark:text-foreground focus:outline-none focus:border-primary"
               >
                 {REFUND_PRESET_REASONS.map((preset) => (
                   <option key={preset} value={preset}>
@@ -693,13 +693,13 @@ export default function PosOrdersPage() {
                 value={refundCustomNote}
                 onChange={(e) => setRefundCustomNote(e.target.value)}
                 placeholder="Ghi chú thêm về tình trạng hàng trả hoặc trao đổi với khách..."
-                className="w-full p-2 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-800 text-xs text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C]"
+                className="w-full p-2 rounded-lg border border-border dark:border-border bg-surface dark:bg-surface-hover text-xs text-foreground dark:text-foreground focus:outline-none focus:border-primary"
               />
             </div>
 
             {/* Thông báo ca bán hàng nếu thanh toán tiền mặt */}
             {refundTargetOrder.payment_method === 'cash' && (
-              <div className="p-2.5 rounded-[6px] bg-[#FEF7EC] dark:bg-amber-950/30 border border-[#B7791F]/30 text-[#8C5D17] dark:text-amber-300 text-[11px] flex items-center gap-2">
+              <div className="p-2.5 rounded-lg bg-warning-bg dark:bg-amber-950/30 border border-warning/30 text-warning dark:text-gold-text text-[11px] flex items-center gap-2">
                 <Banknote className="w-4 h-4 shrink-0" />
                 <span>
                   Số tiền hoàn tiền mặt sẽ được tự động trừ vào số dư két tiền mặt trong ca bán hàng hiện tại.
@@ -708,7 +708,7 @@ export default function PosOrdersPage() {
             )}
 
             {/* Action Buttons */}
-            <div className="pt-2 border-t border-[#E8E8E5] dark:border-neutral-700 flex items-center justify-end gap-2">
+            <div className="pt-2 border-t border-border dark:border-border flex items-center justify-end gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -724,7 +724,7 @@ export default function PosOrdersPage() {
                 variant="destructive"
                 size="sm"
                 disabled={isRefunding}
-                className="h-9 px-4 text-xs font-bold gap-1.5 bg-[#C44536] hover:bg-[#A83224] text-white"
+                className="h-9 px-4 text-xs font-bold gap-1.5 bg-error hover:bg-[#A83224] text-white"
               >
                 {isRefunding ? (
                   <>

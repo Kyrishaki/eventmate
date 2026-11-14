@@ -50,25 +50,25 @@ export function BottomSheet({
       {/* Sheet Surface */}
       <div
         className={cn(
-          'relative w-full max-w-lg mx-auto bg-white dark:bg-neutral-900 rounded-t-[20px] border-t border-[#E8E8E5] dark:border-neutral-800 shadow-2xl flex flex-col animate-in slide-in-from-bottom-4 duration-200 z-10 pb-[max(0.75rem,env(safe-area-inset-bottom))]',
+          'relative w-full max-w-lg mx-auto bg-surface dark:bg-surface rounded-t-[20px] border-t border-border dark:border-border shadow-2xl flex flex-col animate-in slide-in-from-bottom-4 duration-200 z-10 pb-[max(0.75rem,env(safe-area-inset-bottom))]',
           maxHeight,
           className
         )}
       >
         {/* Drag handle */}
         <div className="pt-2.5 pb-1 flex justify-center shrink-0">
-          <div className="w-10 h-1 rounded-full bg-[#D6D6D2] dark:bg-neutral-700" />
+          <div className="w-10 h-1 rounded-full bg-border-strong dark:bg-surface-hover" />
         </div>
 
         {/* Header if title is present */}
         {title && (
-          <div className="px-4 py-2.5 border-b border-[#F0F0ED] dark:border-neutral-800 flex items-center justify-between gap-2 shrink-0">
+          <div className="px-4 py-2.5 border-b border-border dark:border-border flex items-center justify-between gap-2 shrink-0">
             <div className="min-w-0">
-              <h3 className="text-sm font-bold text-[#202124] dark:text-neutral-100 truncate">
+              <h3 className="text-sm font-bold text-foreground dark:text-foreground truncate">
                 {title}
               </h3>
               {description && (
-                <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-0.5 truncate">
+                <p className="text-[11px] text-muted dark:text-muted mt-0.5 truncate">
                   {description}
                 </p>
               )}
@@ -76,7 +76,7 @@ export function BottomSheet({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-full text-[#737373] hover:text-[#202124] dark:hover:text-white hover:bg-[#F0F0ED] dark:hover:bg-neutral-800 transition-colors shrink-0 cursor-pointer"
+              className="p-1.5 rounded-full text-muted hover:text-foreground dark:hover:text-white hover:bg-surface-hover dark:hover:bg-surface-hover transition-colors shrink-0 cursor-pointer"
               aria-label="Đóng"
             >
               <X className="w-4 h-4" />

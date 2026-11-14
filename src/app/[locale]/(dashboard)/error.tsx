@@ -29,15 +29,15 @@ export default function DashboardError({
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center p-6">
-      <div className="max-w-md w-full bg-white border border-[#E8E8E5] rounded-2xl p-6 text-center shadow-xs space-y-4">
-        <div className="w-12 h-12 rounded-xl bg-[#FEF7EC] border border-[#B7791F]/25 text-[#B7791F] flex items-center justify-center mx-auto">
+      <div className="max-w-md w-full bg-surface border border-border rounded-2xl p-6 text-center shadow-xs space-y-4">
+        <div className="w-12 h-12 rounded-xl bg-warning-bg border border-warning/25 text-warning flex items-center justify-center mx-auto">
           <AlertTriangle className="w-6 h-6" />
         </div>
         <div className="space-y-1.5">
-          <h2 className="text-base font-bold text-[#202124]">
+          <h2 className="text-base font-bold text-foreground">
             Đã xảy ra sự cố hiển thị tạm thời
           </h2>
-          <p className="text-xs text-[#737373]">
+          <p className="text-xs text-muted">
             Hệ thống đã tự động bảo vệ dữ liệu kho hàng của bạn. Vui lòng nhấn tải lại để tiếp tục thao tác.
           </p>
         </div>

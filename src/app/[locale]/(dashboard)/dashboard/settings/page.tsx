@@ -240,15 +240,15 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 max-w-4xl pb-12">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#E8E8E5]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[#202124]">Cài Đặt Hệ Thống & Thông Tin Gian Hàng</h1>
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">Cài Đặt Hệ Thống & Thông Tin Gian Hàng</h1>
             <Badge variant="outline" className="text-[11px] font-mono">
               {activeWorkspace?.currency || 'VND'}
             </Badge>
           </div>
-          <p className="text-xs text-[#737373] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Cấu hình đồng bộ thông tin cá nhân, gian hàng, hotline, địa chỉ và mã VietQR cho toàn bộ hệ thống.
           </p>
         </div>
@@ -262,13 +262,13 @@ export default function SettingsPage() {
       </Button>
 
       {/* Auto-Sync Explanation Banner */}
-      <div className="flex items-start gap-3 p-3.5 bg-[#EBF1EE] dark:bg-emerald-950/30 border border-[#315C4C]/30 rounded-[8px] text-xs text-[#202124] dark:text-neutral-200">
-        <Info className="w-5 h-5 text-[#315C4C] dark:text-emerald-400 shrink-0 mt-0.5" />
+      <div className="flex items-start gap-3 p-3.5 bg-warning-bg dark:bg-success-bg/30 border border-primary/30 rounded-lg text-xs text-foreground dark:text-foreground">
+        <Info className="w-5 h-5 text-primary dark:text-success shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <p className="font-bold text-[#315C4C] dark:text-emerald-400">
+          <p className="font-bold text-primary dark:text-success">
             Trung tâm Đồng bộ Tự động — Điền 1 lần, hiển thị toàn diện:
           </p>
-          <p className="text-[#404040] dark:text-neutral-300 leading-relaxed text-[11px]">
+          <p className="text-[#404040] dark:text-muted leading-relaxed text-[11px]">
             Mọi thông tin cá nhân và tài khoản bạn chỉnh sửa bên dưới sẽ được tự động đồng bộ ngay lập tức sang:
             <strong> (1) Gian hàng cho Khách xem</strong> (Hotline, Zalo, địa chỉ, số tài khoản thanh toán online),
             <strong> (2) Màn hình Bán hàng & Mã VietQR</strong>, và
@@ -278,11 +278,11 @@ export default function SettingsPage() {
       </div>
 
       {saveSuccess && (
-        <div className="flex items-center gap-2.5 p-3.5 text-xs text-[#2F7D55] bg-[#EAF4EE] border border-[#CEE6D7] rounded-[8px] shadow-xs">
-          <CheckCircle2 className="w-5 h-5 shrink-0 text-[#2F7D55]" />
+        <div className="flex items-center gap-2.5 p-3.5 text-xs text-primary bg-success-bg border border-[#CEE6D7] rounded-lg shadow-xs">
+          <CheckCircle2 className="w-5 h-5 shrink-0 text-primary" />
           <div>
             <p className="font-bold">Đã lưu và đồng bộ toàn bộ thông tin thành công!</p>
-            <p className="text-[11px] text-[#2F7D55]/90">
+            <p className="text-[11px] text-primary/90">
               Gian hàng khách xem, hóa đơn in nhiệt và mã VietQR tại quầy POS đã nhận dữ liệu mới nhất.
             </p>
           </div>
@@ -292,10 +292,10 @@ export default function SettingsPage() {
       {/* Main Consolidated Profile Form */}
       <form onSubmit={handleSaveAll} className="space-y-6">
         {/* Section 1: Store & Brand Profile */}
-        <Card className="border-[#E8E8E5] bg-white shadow-xs">
-          <CardHeader className="border-b border-[#F0F0ED] pb-4">
-            <CardTitle className="text-sm font-semibold text-[#202124] flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-[#315C4C]" />
+        <Card className="border-border bg-surface shadow-xs">
+          <CardHeader className="border-b border-border pb-4">
+            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-primary" />
               1. Thông Tin Gian Hàng & Thương Hiệu
             </CardTitle>
             <CardDescription className="text-xs">
@@ -316,7 +316,7 @@ export default function SettingsPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
-                <p className="text-[11px] text-[#737373]">Tên xuất hiện trên tiêu đề web, bill in nhiệt và banner khách xem.</p>
+                <p className="text-[11px] text-muted">Tên xuất hiện trên tiêu đề web, bill in nhiệt và banner khách xem.</p>
               </div>
 
               <div className="space-y-1.5">
@@ -340,14 +340,14 @@ export default function SettingsPage() {
                   value={slogan}
                   onChange={(e) => setSlogan(e.target.value)}
                 />
-                <p className="text-[11px] text-[#737373]">Hiển thị tại đầu trang gian hàng khách và chân hóa đơn.</p>
+                <p className="text-[11px] text-muted">Hiển thị tại đầu trang gian hàng khách và chân hóa đơn.</p>
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="ws-curr">{t('currency')}</Label>
                 <select
                   id="ws-curr"
-                  className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-sm text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                  className="flex h-9 w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-foreground focus:outline-none focus:border-primary"
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
                 >
@@ -362,7 +362,7 @@ export default function SettingsPage() {
               <textarea
                 id="ws-desc"
                 rows={2}
-                className="w-full rounded-[6px] border border-[#E8E8E5] bg-white p-2.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                className="w-full rounded-lg border border-border bg-surface p-2.5 text-xs text-foreground focus:outline-none focus:border-primary"
                 placeholder="Giới thiệu về gian hàng, tour diễn và các sản phẩm độc quyền..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -372,10 +372,10 @@ export default function SettingsPage() {
         </Card>
 
         {/* Section 2: Owner & Public Contact Info */}
-        <Card className="border-[#E8E8E5] bg-white shadow-xs">
-          <CardHeader className="border-b border-[#F0F0ED] pb-4">
-            <CardTitle className="text-sm font-semibold text-[#202124] flex items-center gap-2">
-              <User className="w-4 h-4 text-[#315C4C]" />
+        <Card className="border-border bg-surface shadow-xs">
+          <CardHeader className="border-b border-border pb-4">
+            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <User className="w-4 h-4 text-primary" />
               2. Thông Tin Chủ Quầy & Kênh Liên Hệ Khách Hàng
             </CardTitle>
             <CardDescription className="text-xs">
@@ -387,7 +387,7 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="owner-name" required className="flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-[#737373]" />
+                  <User className="w-3.5 h-3.5 text-muted" />
                   <span>Họ và Tên Chủ quầy / Người đại diện</span>
                 </Label>
                 <Input
@@ -401,7 +401,7 @@ export default function SettingsPage() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="owner-phone" required className="flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5 text-[#737373]" />
+                  <Phone className="w-3.5 h-3.5 text-muted" />
                   <span>Số Điện Thoại / Hotline Tư Vấn & Đặt Hàng</span>
                 </Label>
                 <Input
@@ -411,14 +411,14 @@ export default function SettingsPage() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                 />
-                <p className="text-[11px] text-[#737373]">Khách bấm vào nút Hotline ở gian hàng sẽ gọi thẳng tới số này.</p>
+                <p className="text-[11px] text-muted">Khách bấm vào nút Hotline ở gian hàng sẽ gọi thẳng tới số này.</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="owner-email" className="flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-[#737373]" />
+                  <Mail className="w-3.5 h-3.5 text-muted" />
                   <span>Địa chỉ Email Hỗ trợ / Hợp tác</span>
                 </Label>
                 <Input
@@ -432,7 +432,7 @@ export default function SettingsPage() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="owner-social" className="flex items-center gap-1.5">
-                  <Share2 className="w-3.5 h-3.5 text-[#737373]" />
+                  <Share2 className="w-3.5 h-3.5 text-muted" />
                   <span>Link Chat Zalo / Facebook Tư Vấn Nhanh</span>
                 </Label>
                 <Input
@@ -441,13 +441,13 @@ export default function SettingsPage() {
                   value={socialLink}
                   onChange={(e) => setSocialLink(e.target.value)}
                 />
-                <p className="text-[11px] text-[#737373]">Gắn vào nút &quot;Nhắn Zalo đặt hàng ngay&quot; ở gian hàng khách xem.</p>
+                <p className="text-[11px] text-muted">Gắn vào nút &quot;Nhắn Zalo đặt hàng ngay&quot; ở gian hàng khách xem.</p>
               </div>
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="owner-address" className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-[#737373]" />
+                <MapPin className="w-3.5 h-3.5 text-muted" />
                 <span>Địa Chỉ Quầy Bán / Trụ Sở Gian Hàng</span>
               </Label>
               <Input
@@ -456,16 +456,16 @@ export default function SettingsPage() {
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
               />
-              <p className="text-[11px] text-[#737373]">In trên chân hóa đơn bán hàng và thông tin liên hệ của trang web.</p>
+              <p className="text-[11px] text-muted">In trên chân hóa đơn bán hàng và thông tin liên hệ của trang web.</p>
             </div>
           </CardContent>
         </Card>
 
         {/* Section 3: Bank & VietQR Payment Configuration */}
-        <Card className="border-[#E8E8E5] bg-white shadow-xs">
-          <CardHeader className="border-b border-[#F0F0ED] pb-4">
-            <CardTitle className="text-sm font-semibold text-[#202124] flex items-center gap-2">
-              <QrCode className="w-4 h-4 text-[#315C4C]" />
+        <Card className="border-border bg-surface shadow-xs">
+          <CardHeader className="border-b border-border pb-4">
+            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <QrCode className="w-4 h-4 text-primary" />
               3. Cấu Hình Tài Khoản Ngân Hàng & Mã VietQR Nhận Tiền
             </CardTitle>
             <CardDescription className="text-xs">
@@ -481,7 +481,7 @@ export default function SettingsPage() {
                 </Label>
                 <select
                   id="bank-select"
-                  className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                  className="flex h-9 w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
                   value={bankId}
                   onChange={(e) => setBankId(e.target.value)}
                 >
@@ -523,8 +523,8 @@ export default function SettingsPage() {
             </div>
 
             {/* Live VietQR Preview Box */}
-            <div className="p-3 bg-[#F7F7F5] dark:bg-neutral-800 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-700 flex flex-col sm:flex-row items-center gap-4">
-              <div className="w-24 h-24 bg-white p-1 rounded border border-[#E8E8E5] shrink-0 flex items-center justify-center">
+            <div className="p-3 bg-background dark:bg-surface-hover rounded-lg border border-border dark:border-border flex flex-col sm:flex-row items-center gap-4">
+              <div className="w-24 h-24 bg-surface p-1 rounded border border-border shrink-0 flex items-center justify-center">
                 {accountNo ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -535,22 +535,22 @@ export default function SettingsPage() {
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <QrCode className="w-10 h-10 text-[#9E9E9C]" />
+                  <QrCode className="w-10 h-10 text-muted" />
                 )}
               </div>
               <div className="text-xs space-y-1 flex-1">
-                <p className="font-bold text-[#202124] dark:text-neutral-100 flex items-center gap-1.5">
-                  <CreditCard className="w-3.5 h-3.5 text-[#315C4C]" />
+                <p className="font-bold text-foreground dark:text-foreground flex items-center gap-1.5">
+                  <CreditCard className="w-3.5 h-3.5 text-primary" />
                   <span>Mã QR Xem Trước Của Bạn</span>
                 </p>
-                <p className="text-[11px] text-[#737373] dark:text-neutral-400">
+                <p className="text-[11px] text-muted dark:text-muted">
                   Ngân hàng: <strong>{getBankDisplayName(bankId)}</strong> • Số TK:{' '}
-                  <strong className="font-mono text-[#202124] dark:text-neutral-200">{accountNo || '(Chưa nhập)'}</strong>
+                  <strong className="font-mono text-foreground dark:text-foreground">{accountNo || '(Chưa nhập)'}</strong>
                 </p>
-                <p className="text-[11px] text-[#737373] dark:text-neutral-400">
+                <p className="text-[11px] text-muted dark:text-muted">
                   Chủ TK: <strong className="uppercase">{accountName || '(Chưa nhập)'}</strong>
                 </p>
-                <p className="text-[10px] text-[#2F7D55] font-semibold mt-1">
+                <p className="text-[10px] text-primary font-semibold mt-1">
                   ✓ Sẵn sàng quét nhận tiền qua tất cả ứng dụng ngân hàng và ví điện tử tại Việt Nam.
                 </p>
               </div>
@@ -559,11 +559,11 @@ export default function SettingsPage() {
         </Card>
 
         {/* Save Button Bar */}
-        <div className="sticky bottom-2 sm:bottom-4 bg-white/95 dark:bg-neutral-900/95 backdrop-blur p-3.5 sm:p-4 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-800 shadow-lg flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 z-20">
-          <p className="text-xs text-[#737373] dark:text-neutral-400">
+        <div className="sticky bottom-2 sm:bottom-4 bg-surface/95 dark:bg-surface/95 backdrop-blur p-3.5 sm:p-4 rounded-lg border border-border dark:border-border shadow-lg flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 z-20">
+          <p className="text-xs text-muted dark:text-muted">
             Lưu một lần — Tự động áp dụng cho Gian hàng khách xem, Hóa đơn và Màn hình POS.
           </p>
-          <Button type="submit" variant="primary" size="md" className="gap-2 bg-[#315C4C] hover:bg-[#254639] text-white w-full sm:w-auto shrink-0 shadow-sm">
+          <Button type="submit" variant="primary" size="md" className="gap-2 bg-primary hover:bg-gold-text text-primary-foreground w-full sm:w-auto shrink-0 shadow-sm">
             <Save className="w-4 h-4" />
             <span className="font-bold">Lưu Toàn Bộ Cài Đặt</span>
           </Button>
@@ -571,10 +571,10 @@ export default function SettingsPage() {
       </form>
 
       {/* Theme & Appearance Settings */}
-      <Card className="border-[#E8E8E5] bg-white shadow-xs">
-        <CardHeader className="border-b border-[#F0F0ED] pb-4">
-          <CardTitle className="text-sm font-semibold text-[#202124] flex items-center gap-2">
-            <Palette className="w-4 h-4 text-[#315C4C]" />
+      <Card className="border-border bg-surface shadow-xs">
+        <CardHeader className="border-b border-border pb-4">
+          <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Palette className="w-4 h-4 text-primary" />
             Chế độ Giao diện (Sáng / Tối)
           </CardTitle>
           <CardDescription className="text-xs">
@@ -582,10 +582,10 @@ export default function SettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-4 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[6px]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-background border border-border rounded-lg">
             <div>
-              <p className="text-xs font-semibold text-[#202124]">Lựa chọn chủ đề:</p>
-              <p className="text-[11px] text-[#737373] mt-0.5">
+              <p className="text-xs font-semibold text-foreground">Lựa chọn chủ đề:</p>
+              <p className="text-[11px] text-muted mt-0.5">
                 Chế độ Tối (Dark mode) giúp bảo vệ mắt khi bán hàng ban đêm tại các sự kiện hoặc sân khấu âm nhạc.
               </p>
             </div>
@@ -595,31 +595,31 @@ export default function SettingsPage() {
       </Card>
 
       {/* Google Gemini AI Configuration */}
-      <Card className="border-[#E8E8E5] dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs">
-        <CardHeader className="border-b border-[#F0F0ED] dark:border-neutral-800 pb-4">
+      <Card className="border-border dark:border-border bg-surface dark:bg-surface shadow-xs">
+        <CardHeader className="border-b border-border dark:border-border pb-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold text-[#202124] dark:text-neutral-100 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#315C4C] dark:text-emerald-400" />
+            <CardTitle className="text-sm font-semibold text-foreground dark:text-foreground flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary dark:text-success" />
               Trí Tuệ Nhân Tạo (Google Gemini AI)
             </CardTitle>
             <Badge variant="success" className="text-[10px] font-mono">
               gemini-2.5-flash
             </Badge>
           </div>
-          <CardDescription className="text-xs text-[#737373] dark:text-neutral-400">
+          <CardDescription className="text-xs text-muted dark:text-muted">
             Hệ thống AI thông minh hỗ trợ trích xuất tự động thông tin sự kiện từ ảnh poster, đọc dữ liệu và tối ưu hóa quản trị.
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-4 space-y-3.5">
-          <div className="p-3.5 bg-[#F7F7F5] dark:bg-neutral-800/60 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-700/60 space-y-3">
+          <div className="p-3.5 bg-background dark:bg-surface-hover/60 rounded-lg border border-border dark:border-border/60 space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold text-[#202124] dark:text-neutral-200 flex items-center gap-1.5">
+                <p className="text-xs font-semibold text-foreground dark:text-foreground flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span>Trạng thái: <strong>Đã tự động cấu hình & Sẵn sàng hoạt động</strong></span>
                 </p>
-                <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-0.5">
-                  Khóa API: <code className="font-mono bg-white dark:bg-neutral-900 px-1.5 py-0.5 rounded border border-[#E8E8E5] dark:border-neutral-700 text-xs">AQ.Ab8RN6••••••••5w9Q</code> (Đã kích hoạt trong .env.local)
+                <p className="text-[11px] text-muted dark:text-muted mt-0.5">
+                  Khóa API: <code className="font-mono bg-surface dark:bg-surface px-1.5 py-0.5 rounded border border-border dark:border-border text-xs">AQ.Ab8RN6••••••••5w9Q</code> (Đã kích hoạt trong .env.local)
                 </p>
               </div>
 
@@ -629,7 +629,7 @@ export default function SettingsPage() {
                 size="sm"
                 onClick={handleTestAiConnection}
                 disabled={aiStatus === 'testing'}
-                className="gap-1.5 text-xs text-[#315C4C] dark:text-emerald-400 border-[#315C4C]/40 dark:border-emerald-600/40 hover:bg-[#EBF1EE] dark:hover:bg-emerald-950/40 shrink-0"
+                className="gap-1.5 text-xs text-primary dark:text-success border-primary/40 dark:border-emerald-600/40 hover:bg-warning-bg dark:hover:bg-success-bg/40 shrink-0"
               >
                 {aiStatus === 'testing' ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -641,8 +641,8 @@ export default function SettingsPage() {
             </div>
 
             {aiStatus === 'success' && (
-              <div className="flex items-center gap-2 p-2.5 rounded bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs">
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <div className="flex items-center gap-2 p-2.5 rounded bg-emerald-50 dark:bg-success-bg/50 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-success dark:text-success" />
                 <span>{aiMessage || 'Kết nối máy chủ Google Gemini API thành công 100%!'}</span>
               </div>
             )}
@@ -655,24 +655,24 @@ export default function SettingsPage() {
             )}
           </div>
 
-          <div className="text-[11px] text-[#737373] dark:text-neutral-400 space-y-1">
-            <p className="font-semibold text-[#202124] dark:text-neutral-300">
+          <div className="text-[11px] text-muted dark:text-muted space-y-1">
+            <p className="font-semibold text-foreground dark:text-muted">
               💡 Hướng dẫn nếu bạn muốn tạo và lấy khóa API riêng từ tài khoản Google cá nhân:
             </p>
             <ol className="list-decimal list-inside pl-1 space-y-0.5">
-              <li>Truy cập <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="text-[#315C4C] dark:text-emerald-400 underline font-semibold inline-flex items-center gap-0.5">Google AI Studio (aistudio.google.com/apikey) <ExternalLink className="w-2.5 h-2.5" /></a> và đăng nhập bằng tài khoản Google của bạn.</li>
+              <li>Truy cập <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="text-primary dark:text-success underline font-semibold inline-flex items-center gap-0.5">Google AI Studio (aistudio.google.com/apikey) <ExternalLink className="w-2.5 h-2.5" /></a> và đăng nhập bằng tài khoản Google của bạn.</li>
               <li>Bấm nút <strong>&ldquo;Create API key&rdquo;</strong> để tạo khóa mới hoàn toàn miễn phí.</li>
-              <li>Sao chép mã khóa và cập nhật vào biến <code className="font-mono text-[10.5px] bg-neutral-100 dark:bg-neutral-800 px-1 rounded">GEMINI_API_KEY</code> trong tệp <code className="font-mono text-[10.5px]">.env.local</code>.</li>
+              <li>Sao chép mã khóa và cập nhật vào biến <code className="font-mono text-[10.5px] bg-surface-hover dark:bg-surface-hover px-1 rounded">GEMINI_API_KEY</code> trong tệp <code className="font-mono text-[10.5px]">.env.local</code>.</li>
             </ol>
           </div>
         </CardContent>
       </Card>
 
       {/* Full System Backup & Restore Section */}
-      <Card className="border-[#E8E8E5] bg-white shadow-xs">
-        <CardHeader className="border-b border-[#F0F0ED] pb-4">
-          <CardTitle className="text-sm font-semibold text-[#202124] flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-[#315C4C]" />
+      <Card className="border-border bg-surface shadow-xs">
+        <CardHeader className="border-b border-border pb-4">
+          <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-primary" />
             Sao Lưu & Khôi Phục Dữ Liệu Ngoại Tuyến (Backup / Restore)
           </CardTitle>
           <CardDescription className="text-xs">
@@ -682,14 +682,14 @@ export default function SettingsPage() {
 
         <CardContent className="pt-4 space-y-3">
           {backupSuccess && (
-            <div className="flex items-center gap-2 p-3 text-xs text-[#2F7D55] bg-[#EAF4EE] border border-[#CEE6D7] rounded-[6px]">
+            <div className="flex items-center gap-2 p-3 text-xs text-primary bg-success-bg border border-[#CEE6D7] rounded-lg">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>Đã xuất thành công file sao lưu hệ thống toàn vẹn (.json)!</span>
             </div>
           )}
 
           {restoreMessage && (
-            <div className="flex items-center gap-2 p-3 text-xs text-[#2F7D55] bg-[#EAF4EE] border border-[#CEE6D7] rounded-[6px]">
+            <div className="flex items-center gap-2 p-3 text-xs text-primary bg-success-bg border border-[#CEE6D7] rounded-lg">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>{restoreMessage}</span>
             </div>
@@ -701,9 +701,9 @@ export default function SettingsPage() {
               variant="outline"
               size="sm"
               onClick={handleExportBackup}
-              className="gap-1.5 border-[#315C4C]/40 text-[#315C4C] hover:bg-[#EAF4EE] font-semibold h-8.5"
+              className="gap-1.5 border-primary/40 text-primary hover:bg-success-bg font-semibold h-8.5"
             >
-              <Download className="w-3.5 h-3.5 text-[#315C4C]" />
+              <Download className="w-3.5 h-3.5 text-primary" />
               <span>Tải File Sao Lưu (.json)</span>
             </Button>
 
@@ -721,7 +721,7 @@ export default function SettingsPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                className="gap-1.5 border-[#737373]/40 text-[#202124] hover:bg-[#F0F0ED] font-semibold h-8.5"
+                className="gap-1.5 border-muted/40 text-foreground hover:bg-surface-hover font-semibold h-8.5"
               >
                 <Upload className="w-3.5 h-3.5" />
                 <span>Khôi Phục từ File Backup</span>

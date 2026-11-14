@@ -26,7 +26,7 @@ export function ThemeToggle({ className }: { className?: string }) {
     return (
       <div
         className={cn(
-          'w-8 h-8 rounded-[6px] border border-[#E8E8E5] bg-white opacity-40 shrink-0',
+          'w-8 h-8 rounded-lg border border-border bg-surface opacity-40 shrink-0',
           className
         )}
       />
@@ -42,12 +42,12 @@ export function ThemeToggle({ className }: { className?: string }) {
       title={isDark ? 'Chuyển sang Giao diện Sáng (Light mode)' : 'Chuyển sang Giao diện Tối (Dark mode)'}
       aria-label="Toggle theme"
       className={cn(
-        'p-1.5 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-800 bg-white dark:bg-neutral-900 text-[#737373] hover:text-[#202124] dark:hover:text-neutral-100 hover:bg-[#F0F0ED] dark:hover:bg-neutral-800 transition-all flex items-center justify-center shrink-0 shadow-2xs cursor-pointer',
+        'p-1.5 rounded-lg border border-border dark:border-border bg-surface dark:bg-surface text-muted hover:text-foreground dark:hover:text-foreground hover:bg-surface-hover dark:hover:bg-surface-hover transition-all flex items-center justify-center shrink-0 shadow-2xs cursor-pointer',
         className
       )}
     >
       {isDark ? (
-        <Sun className="w-4 h-4 text-amber-400 transition-transform duration-300 hover:rotate-45" />
+        <Sun className="w-4 h-4 text-gold-text transition-transform duration-300 hover:rotate-45" />
       ) : (
         <Moon className="w-4 h-4 text-red-600 transition-transform duration-300 hover:-rotate-12" />
       )}
@@ -74,7 +74,7 @@ export function ThemeSelector({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'inline-flex items-center rounded-[6px] border border-[#E8E8E5] dark:border-neutral-800 bg-white dark:bg-neutral-900 p-0.5 text-xs text-[#737373]',
+        'inline-flex items-center rounded-lg border border-border dark:border-border bg-surface dark:bg-surface p-0.5 text-xs text-muted',
         className
       )}
     >
@@ -84,10 +84,10 @@ export function ThemeSelector({ className }: { className?: string }) {
           type="button"
           onClick={() => setTheme(opt.mode)}
           className={cn(
-            'flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] font-bold transition-colors cursor-pointer text-xs',
+            'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-colors cursor-pointer text-xs',
             theme === opt.mode
-              ? 'bg-amber-500 text-neutral-950 shadow-2xs'
-              : 'text-[#737373] hover:text-[#202124] hover:bg-[#F0F0ED] dark:hover:bg-neutral-800'
+              ? 'bg-primary text-primary-foreground shadow-2xs'
+              : 'text-muted hover:text-foreground hover:bg-surface-hover dark:hover:bg-surface-hover'
           )}
         >
           {opt.icon}

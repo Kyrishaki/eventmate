@@ -342,17 +342,17 @@ export default function TeamManagement() {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#E8E8E5]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-border">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-[#202124]">
+            <h1 className="text-xl font-bold tracking-tight text-foreground">
               Đội ngũ & Cấp tài khoản Nhân sự
             </h1>
             <Badge variant="outline" className="text-[11px] font-mono">
               {accounts.length} tài khoản
             </Badge>
           </div>
-          <p className="text-xs text-[#737373] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Quản trị viên trực tiếp quản lý, đổi mật khẩu và đảo ngẫu nhiên mật khẩu để tái sử dụng tài khoản cho nhân sự mới.
           </p>
         </div>
@@ -363,10 +363,10 @@ export default function TeamManagement() {
               variant="outline"
               size="sm"
               onClick={() => openRecycleModal()}
-              className="gap-1.5 font-bold border-[#B7791F]/40 text-[#8C5D17] bg-[#FEF7EC] hover:bg-[#FDF2E9] shadow-2xs"
+              className="gap-1.5 font-bold border-warning/40 text-warning bg-warning-bg hover:bg-warning-bg shadow-2xs"
               title="Đảo ngẫu nhiên mật khẩu một tài khoản bất kỳ và đá phiên khỏi thiết bị cũ"
             >
-              <Shuffle className="w-3.5 h-3.5 text-[#B7791F]" />
+              <Shuffle className="w-3.5 h-3.5 text-warning" />
               <span>Đảo ngẫu nhiên MK</span>
             </Button>
 
@@ -386,24 +386,24 @@ export default function TeamManagement() {
       {/* Action Feedback Banner */}
       {actionFeedback && (
         <div
-          className={`p-3 rounded-[8px] border text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200 ${
+          className={`p-3 rounded-lg border text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200 ${
             actionFeedback.type === 'success'
-              ? 'bg-[#EAF4EE] border-[#2F7D55]/30 text-[#2F7D55]'
-              : 'bg-[#FDF1F0] border-[#C44536]/30 text-[#C44536]'
+              ? 'bg-success-bg border-primary/30 text-primary'
+              : 'bg-error-bg border-error/30 text-error'
           }`}
         >
           <div className="flex items-center gap-2 font-medium">
             {actionFeedback.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-[#2F7D55]" />
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-primary" />
             ) : (
-              <AlertCircle className="w-4 h-4 shrink-0 text-[#C44536]" />
+              <AlertCircle className="w-4 h-4 shrink-0 text-error" />
             )}
             <span>{actionFeedback.message}</span>
           </div>
           <button
             type="button"
             onClick={() => setActionFeedback(null)}
-            className="text-[#737373] hover:text-[#202124] p-1 rounded"
+            className="text-muted hover:text-foreground p-1 rounded"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -411,35 +411,35 @@ export default function TeamManagement() {
       )}
 
       {/* Role explanation alert */}
-      <Card className="border-[#E8E8E5] bg-[#F7F7F5] p-3.5">
-        <div className="flex items-center gap-2 font-semibold text-xs text-[#202124] mb-1.5">
-          <Shield className="w-4 h-4 text-[#315C4C]" />
+      <Card className="border-border bg-background p-3.5">
+        <div className="flex items-center gap-2 font-semibold text-xs text-foreground mb-1.5">
+          <Shield className="w-4 h-4 text-primary" />
           <span>Quy tắc phân quyền & Tái sử dụng tài khoản:</span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] text-[#555555]">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] text-muted">
           <div>
-            <span className="font-semibold text-[#202124]">Admin (Chủ sở hữu / Quản trị):</span>{' '}
+            <span className="font-semibold text-foreground">Admin (Chủ sở hữu / Quản trị):</span>{' '}
             Toàn quyền thêm, sửa, xóa, đổi mật khẩu và đảo ngẫu nhiên mật khẩu của tất cả tài khoản.
           </div>
           <div>
-            <span className="font-semibold text-[#202124]">Đảo MK Tái sử dụng:</span> Cho phép reset mật khẩu sang mã ngẫu nhiên mới và NGAY LẬP TỨC thoát phiên (đá ra) ở thiết bị cũ.
+            <span className="font-semibold text-foreground">Đảo MK Tái sử dụng:</span> Cho phép reset mật khẩu sang mã ngẫu nhiên mới và NGAY LẬP TỨC thoát phiên (đá ra) ở thiết bị cũ.
           </div>
           <div>
-            <span className="font-semibold text-[#202124]">Thu ngân (Cashier):</span> Chỉ được mở màn hình Bán hàng
+            <span className="font-semibold text-foreground">Thu ngân (Cashier):</span> Chỉ được mở màn hình Bán hàng
             (`/pos`) để bán hàng và quét mã VietQR. Không được sửa giá hay kho.
           </div>
           <div>
-            <span className="font-semibold text-[#202124]">Đối tác Collab:</span> Chỉ được quản trị và kiểm đếm danh mục sản phẩm của thương hiệu đối tác mình. Kho hàng Admin ở chế độ chỉ đọc.
+            <span className="font-semibold text-foreground">Đối tác Collab:</span> Chỉ được quản trị và kiểm đếm danh mục sản phẩm của thương hiệu đối tác mình. Kho hàng Admin ở chế độ chỉ đọc.
           </div>
         </div>
       </Card>
 
       {/* Accounts List */}
-      <Card className="border-[#E8E8E5] bg-white shadow-xs overflow-hidden">
-        <CardHeader className="py-3.5 px-5 bg-[#FAFAF8] border-b border-[#E8E8E5] flex flex-row items-center justify-between">
+      <Card className="border-border bg-surface shadow-xs overflow-hidden">
+        <CardHeader className="py-3.5 px-5 bg-background border-b border-border flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-sm font-semibold text-[#202124] flex items-center gap-2">
-              <KeyRound className="w-4 h-4 text-[#315C4C]" />
+            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <KeyRound className="w-4 h-4 text-primary" />
               Danh sách Tài khoản & Mật khẩu Đã Cấp
             </CardTitle>
             <CardDescription className="text-xs">
@@ -448,7 +448,7 @@ export default function TeamManagement() {
           </div>
         </CardHeader>
 
-        <div className="divide-y divide-[#F0F0ED]">
+        <div className="divide-y divide-border">
           {accounts.map((acc) => {
             const isMaster = acc.id === 'admin-tuan' || acc.id === 'admin-hkt';
             const isPasswordVisible = !!visiblePasswords[acc.id];
@@ -457,16 +457,16 @@ export default function TeamManagement() {
             return (
               <div
                 key={acc.id}
-                className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-[#FBFBFA] transition-colors"
+                className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-background transition-colors"
               >
                 {/* Account info */}
                 <div className="flex items-start gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-[#EBF1EE] text-[#315C4C] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                  <div className="w-10 h-10 rounded-full bg-warning-bg text-primary flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
                     {acc.fullName.charAt(0)}
                   </div>
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-bold text-[#202124]">{acc.fullName}</p>
+                      <p className="text-sm font-bold text-foreground">{acc.fullName}</p>
                       <Badge variant={roleColors[acc.role]} className="text-[10px]">
                         {getRoleLabel(acc.role)}
                       </Badge>
@@ -477,27 +477,27 @@ export default function TeamManagement() {
                         </Badge>
                       )}
                       {isMaster && (
-                        <span className="text-[10px] bg-[#315C4C] text-white px-1.5 py-0.2 rounded font-semibold">
+                        <span className="text-[10px] bg-primary text-primary-foreground px-1.5 py-0.2 rounded font-semibold">
                           Admin Chính
                         </span>
                       )}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-[#737373]">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-muted">
                       <span>
-                        Tài khoản: <strong className="text-[#202124] font-mono">{acc.username}</strong>
+                        Tài khoản: <strong className="text-foreground font-mono">{acc.username}</strong>
                       </span>
 
                       {/* Password field with show/hide */}
                       <span className="flex items-center gap-1">
                         Mật khẩu:{' '}
-                        <span className="font-mono font-bold text-[#202124] bg-[#F7F7F5] px-1.5 py-0.5 rounded border border-[#E8E8E5]">
+                        <span className="font-mono font-bold text-foreground bg-background px-1.5 py-0.5 rounded border border-border">
                           {isPasswordVisible ? getDisplayPassword(acc) : '••••••••••••'}
                         </span>
                         <button
                           type="button"
                           onClick={() => toggleShowPassword(acc.id)}
-                          className="p-1 text-[#9E9E9C] hover:text-[#202124] rounded"
+                          className="p-1 text-muted hover:text-foreground rounded"
                           title={isPasswordVisible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                         >
                           {isPasswordVisible ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -508,17 +508,17 @@ export default function TeamManagement() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 shrink-0 self-stretch sm:self-auto justify-end pt-2 md:pt-0 border-t md:border-t-0 border-[#F0F0ED] flex-wrap">
+                <div className="flex items-center gap-2 shrink-0 self-stretch sm:self-auto justify-end pt-2 md:pt-0 border-t md:border-t-0 border-border flex-wrap">
                   {/* Button: Đảo MK & Đăng xuất thiết bị (Tái sử dụng) - Chỉ áp dụng cho Nhân viên, không đảo Admin */}
                   {isAdmin && !isMaster && (
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-8 px-2.5 text-xs gap-1 border-[#B7791F]/40 text-[#8C5D17] hover:bg-[#FEF7EC] font-semibold"
+                      className="h-8 px-2.5 text-xs gap-1 border-warning/40 text-warning hover:bg-warning-bg font-semibold"
                       onClick={() => openRecycleModal(acc)}
                       title="Đảo ngẫu nhiên mật khẩu và cưỡng chế thoát phiên ở tất cả các thiết bị đang đăng nhập"
                     >
-                      <Shuffle className="w-3.5 h-3.5 text-[#B7791F]" />
+                      <Shuffle className="w-3.5 h-3.5 text-warning" />
                       <span>Đảo MK & Thoát phiên</span>
                     </Button>
                   )}
@@ -528,7 +528,7 @@ export default function TeamManagement() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-8 px-2.5 text-xs gap-1 border-[#315C4C]/40 text-[#315C4C] hover:bg-[#EAF4EE] font-semibold"
+                      className="h-8 px-2.5 text-xs gap-1 border-primary/40 text-primary hover:bg-success-bg font-semibold"
                       onClick={() => openEditModal(acc)}
                       title="Đổi tên đăng nhập, mật khẩu tùy ý và vai trò của tài khoản này"
                     >
@@ -547,8 +547,8 @@ export default function TeamManagement() {
                   >
                     {isCopied ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-[#2F7D55]" />
-                        <span className="text-[#2F7D55] font-semibold">Đã sao chép</span>
+                        <Check className="w-3.5 h-3.5 text-primary" />
+                        <span className="text-primary font-semibold">Đã sao chép</span>
                       </>
                     ) : (
                       <>
@@ -563,7 +563,7 @@ export default function TeamManagement() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 px-2 text-[#C44536] hover:bg-[#FDF1F0]"
+                      className="h-8 px-2 text-error hover:bg-error-bg"
                       onClick={() => {
                         if (confirm(`Bạn có chắc muốn xóa tài khoản "${acc.username}"?`)) {
                           deleteStaffAccount(acc.id);
@@ -603,42 +603,42 @@ export default function TeamManagement() {
       >
         {recycleSuccessData ? (
           <div className="space-y-4 text-xs">
-            <div className="p-3.5 rounded-[8px] bg-[#EAF4EE] border border-[#2F7D55]/30 text-xs space-y-2">
-              <div className="flex items-center gap-2 font-bold text-[#2F7D55] text-sm">
+            <div className="p-3.5 rounded-lg bg-success-bg border border-primary/30 text-xs space-y-2">
+              <div className="flex items-center gap-2 font-bold text-primary text-sm">
                 <CheckCircle2 className="w-5 h-5 shrink-0" />
                 <span>Đã đảo mật khẩu & Thu hồi phiên thành công!</span>
               </div>
-              <p className="text-[#333333] leading-relaxed">
+              <p className="text-foreground leading-relaxed">
                 Tất cả thiết bị đang đăng nhập tài khoản <strong>{recycleSuccessData.username}</strong> đã bị đăng xuất ngay lập tức. Hãy sao chép thông tin mới dưới đây để gửi cho nhân sự mới nhận tài khoản:
               </p>
             </div>
 
-            <div className="p-3.5 rounded-[8px] bg-[#F7F7F5] border border-[#E8E8E5] font-mono text-xs space-y-2">
-              <div className="flex justify-between items-center py-0.5 border-b border-[#E8E8E5]">
-                <span className="text-[#737373]">Đường dẫn:</span>
-                <span className="font-bold text-[#202124]">{typeof window !== 'undefined' ? window.location.origin : ''}/login</span>
+            <div className="p-3.5 rounded-lg bg-background border border-border font-mono text-xs space-y-2">
+              <div className="flex justify-between items-center py-0.5 border-b border-border">
+                <span className="text-muted">Đường dẫn:</span>
+                <span className="font-bold text-foreground">{typeof window !== 'undefined' ? window.location.origin : ''}/login</span>
               </div>
-              <div className="flex justify-between items-center py-0.5 border-b border-[#E8E8E5]">
-                <span className="text-[#737373]">Tên tài khoản:</span>
-                <span className="font-bold text-[#202124]">{recycleSuccessData.username}</span>
+              <div className="flex justify-between items-center py-0.5 border-b border-border">
+                <span className="text-muted">Tên tài khoản:</span>
+                <span className="font-bold text-foreground">{recycleSuccessData.username}</span>
               </div>
-              <div className="flex justify-between items-center py-0.5 border-b border-[#E8E8E5]">
-                <span className="text-[#737373]">Mật khẩu mới:</span>
-                <span className="font-bold text-[#C44536] text-sm bg-white px-2 py-0.5 rounded border border-[#E8E8E5]">
+              <div className="flex justify-between items-center py-0.5 border-b border-border">
+                <span className="text-muted">Mật khẩu mới:</span>
+                <span className="font-bold text-error text-sm bg-surface px-2 py-0.5 rounded border border-border">
                   {recycleSuccessData.password}
                 </span>
               </div>
-              <div className="flex justify-between items-center py-0.5 border-b border-[#E8E8E5]">
-                <span className="text-[#737373]">Người nhận mới:</span>
-                <span className="font-bold text-[#202124]">{recycleSuccessData.fullName}</span>
+              <div className="flex justify-between items-center py-0.5 border-b border-border">
+                <span className="text-muted">Người nhận mới:</span>
+                <span className="font-bold text-foreground">{recycleSuccessData.fullName}</span>
               </div>
               <div className="flex justify-between items-center py-0.5">
-                <span className="text-[#737373]">Vai trò:</span>
-                <span className="font-bold text-[#202124]">{getRoleLabel(recycleSuccessData.role)}</span>
+                <span className="text-muted">Vai trò:</span>
+                <span className="font-bold text-foreground">{getRoleLabel(recycleSuccessData.role)}</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#E8E8E5]">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
               <Button
                 type="button"
                 variant="primary"
@@ -662,7 +662,7 @@ export default function TeamManagement() {
         ) : (
           <form onSubmit={handleConfirmRecycle} className="space-y-4 text-xs">
             {recycleModalError && (
-              <div className="p-2.5 bg-[#FDF1F0] border border-[#FADBD8] text-[#C44536] rounded text-xs flex items-center gap-2">
+              <div className="p-2.5 bg-error-bg border border-error-bg text-error rounded text-xs flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{recycleModalError}</span>
               </div>
@@ -684,7 +684,7 @@ export default function TeamManagement() {
                     setRecycleNewRole(found.role);
                   }
                 }}
-                className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-xs text-[#202124] font-medium focus:outline-none focus:border-[#315C4C]"
+                className="flex h-9 w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-foreground font-medium focus:outline-none focus:border-primary"
               >
                 {accounts.map((a) => (
                   <option key={a.id} value={a.id}>
@@ -707,7 +707,7 @@ export default function TeamManagement() {
                 onChange={(e) => setRecycleNewName(e.target.value)}
                 className="h-9 text-xs"
               />
-              <p className="text-[11px] text-[#737373]">
+              <p className="text-[11px] text-muted">
                 Tên hiển thị để nhận diện ai đang chịu trách nhiệm ca/quầy hiện tại
               </p>
             </div>
@@ -715,13 +715,13 @@ export default function TeamManagement() {
             {/* Mật khẩu ngẫu nhiên mới */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label htmlFor="recycle-password" required className="font-bold text-[#202124]">
+                <Label htmlFor="recycle-password" required className="font-bold text-foreground">
                   Mật khẩu ngẫu nhiên mới sinh ra
                 </Label>
                 <button
                   type="button"
                   onClick={rerollRecyclePassword}
-                  className="text-[11px] text-[#B7791F] hover:text-[#8C5D17] flex items-center gap-1 font-bold"
+                  className="text-[11px] text-warning hover:text-warning flex items-center gap-1 font-bold"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>Đổi mã khác</span>
@@ -734,7 +734,7 @@ export default function TeamManagement() {
                   required
                   readOnly
                   value={recycleNewPassword}
-                  className="h-10 text-sm font-mono font-bold bg-[#F7F7F5] text-[#C44536] border-[#E8E8E5]"
+                  className="h-10 text-sm font-mono font-bold bg-background text-error border-border"
                 />
                 <Button
                   type="button"
@@ -750,7 +750,7 @@ export default function TeamManagement() {
                   <span>Sao chép</span>
                 </Button>
               </div>
-              <p className="text-[11px] text-[#737373]">Mật khẩu ngẫu nhiên rõ ràng, dễ nhớ, dễ gõ trên điện thoại</p>
+              <p className="text-[11px] text-muted">Mật khẩu ngẫu nhiên rõ ràng, dễ nhớ, dễ gõ trên điện thoại</p>
             </div>
 
             {/* Phân quyền */}
@@ -760,7 +760,7 @@ export default function TeamManagement() {
               </Label>
               <select
                 id="recycle-role"
-                className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                className="flex h-9 w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
                 value={recycleNewRole}
                 onChange={(e) => setRecycleNewRole(e.target.value as WorkspaceRole)}
               >
@@ -775,9 +775,9 @@ export default function TeamManagement() {
             </div>
 
             {/* Hộp cảnh báo cưỡng chế đăng xuất */}
-            <div className="p-3 bg-[#FEF7EC] border border-[#B7791F]/40 rounded-[8px] text-xs text-[#8C5D17] space-y-1">
+            <div className="p-3 bg-warning-bg border border-warning/40 rounded-lg text-xs text-warning space-y-1">
               <div className="flex items-center gap-1.5 font-bold text-sm">
-                <AlertTriangle className="w-4 h-4 text-[#B7791F] shrink-0" />
+                <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
                 <span>Cưỡng chế thoát phiên ở tất cả các thiết bị:</span>
               </div>
               <p className="text-[11px] leading-relaxed">
@@ -785,7 +785,7 @@ export default function TeamManagement() {
               </p>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F0ED]">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
               <Button
                 type="button"
                 variant="outline"
@@ -800,7 +800,7 @@ export default function TeamManagement() {
                 variant="destructive"
                 size="sm"
                 disabled={isRecycling}
-                className="font-bold gap-1.5 bg-[#B7791F] hover:bg-[#8C5D17] text-white"
+                className="font-bold gap-1.5 bg-warning hover:bg-warning text-white"
               >
                 {isRecycling ? (
                   <>
@@ -829,7 +829,7 @@ export default function TeamManagement() {
         {editingAccount && (
           <form onSubmit={handleUpdateAccount} className="space-y-4">
             {editModalError && (
-              <div className="p-2.5 bg-[#FDF1F0] border border-[#FADBD8] text-[#C44536] rounded text-xs flex items-center gap-2">
+              <div className="p-2.5 bg-error-bg border border-error-bg text-error rounded text-xs flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{editModalError}</span>
               </div>
@@ -862,7 +862,7 @@ export default function TeamManagement() {
                   onChange={(e) => setEditUsername(e.target.value)}
                   className="h-9 text-xs font-mono font-bold"
                 />
-                <p className="text-[11px] text-[#737373]">Dùng để đăng nhập vào trang `/login`</p>
+                <p className="text-[11px] text-muted">Dùng để đăng nhập vào trang `/login`</p>
               </div>
 
               <div className="space-y-1.5">
@@ -873,7 +873,7 @@ export default function TeamManagement() {
                   <button
                     type="button"
                     onClick={() => setEditPassword(generateStaffPassword())}
-                    className="text-[10px] text-[#315C4C] hover:underline flex items-center gap-1 font-semibold"
+                    className="text-[10px] text-primary hover:underline flex items-center gap-1 font-semibold"
                   >
                     <Sparkles className="w-3 h-3" />
                     <span>Tạo ngẫu nhiên</span>
@@ -892,13 +892,13 @@ export default function TeamManagement() {
                   <button
                     type="button"
                     onClick={() => setShowEditPassword(!showEditPassword)}
-                    className="absolute right-2 top-2.5 text-[#9E9E9C] hover:text-[#202124]"
+                    className="absolute right-2 top-2.5 text-muted hover:text-foreground"
                     title={showEditPassword ? 'Ẩn' : 'Hiện'}
                   >
                     {showEditPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
                 </div>
-                <p className="text-[11px] text-[#737373]">Mật khẩu dạng chữ rõ ràng, tối thiểu 4 ký tự</p>
+                <p className="text-[11px] text-muted">Mật khẩu dạng chữ rõ ràng, tối thiểu 4 ký tự</p>
               </div>
             </div>
 
@@ -908,7 +908,7 @@ export default function TeamManagement() {
               </Label>
               <select
                 id="edit-role"
-                className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                className="flex h-9 w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
                 value={editRole}
                 onChange={(e) => setEditRole(e.target.value as WorkspaceRole)}
               >
@@ -923,7 +923,7 @@ export default function TeamManagement() {
             </div>
 
             {editRole === 'collab_partner' && (
-              <div className="space-y-1.5 p-3 rounded-[6px] bg-[#FAF5FF] border border-[#A855F7]/30">
+              <div className="space-y-1.5 p-3 rounded-lg bg-[#FAF5FF] border border-[#A855F7]/30">
                 <Label htmlFor="edit-collab-partner" required className="text-[#6B21A8] font-bold">
                   Tên đối tác / Thương hiệu Collab
                 </Label>
@@ -933,19 +933,19 @@ export default function TeamManagement() {
                   placeholder="VD: GenZ Studio, The Cassette, Brand X..."
                   value={editCollabPartnerName}
                   onChange={(e) => setEditCollabPartnerName(e.target.value)}
-                  className="h-9 text-xs bg-white"
+                  className="h-9 text-xs bg-surface"
                 />
               </div>
             )}
 
-            <div className="p-3 bg-[#F7F7F5] rounded text-xs text-[#737373] space-y-1">
-              <p className="font-semibold text-[#202124]">💡 Hiệu lực ngay lập tức:</p>
+            <div className="p-3 bg-background rounded text-xs text-muted space-y-1">
+              <p className="font-semibold text-foreground">💡 Hiệu lực ngay lập tức:</p>
               <p>
                 Sau khi bấm <strong>&ldquo;Lưu thay đổi&rdquo;</strong>, tên đăng nhập và mật khẩu mới sẽ có hiệu lực ngay lập tức. Người dùng có thể dùng thông tin mới để đăng nhập ngay mà không cần đợi.
               </p>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F0ED]">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
               <Button
                 type="button"
                 variant="outline"
@@ -971,7 +971,7 @@ export default function TeamManagement() {
       >
         <form onSubmit={handleCreateAccount} className="space-y-4">
           {modalError && (
-            <div className="p-2.5 bg-[#FDF1F0] border border-[#FADBD8] text-[#C44536] rounded text-xs">
+            <div className="p-2.5 bg-error-bg border border-error-bg text-error rounded text-xs">
               {modalError}
             </div>
           )}
@@ -1013,7 +1013,7 @@ export default function TeamManagement() {
                 <button
                   type="button"
                   onClick={() => setPassword(generateStaffPassword())}
-                  className="text-[10px] text-[#315C4C] hover:underline flex items-center gap-1 font-semibold"
+                  className="text-[10px] text-primary hover:underline flex items-center gap-1 font-semibold"
                 >
                   <Sparkles className="w-3 h-3" />
                   <span>Tạo ngẫu nhiên</span>
@@ -1037,7 +1037,7 @@ export default function TeamManagement() {
             </Label>
             <select
               id="staff-role"
-              className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+              className="flex h-9 w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
               value={role}
               onChange={(e) => setRole(e.target.value as WorkspaceRole)}
             >
@@ -1051,7 +1051,7 @@ export default function TeamManagement() {
           </div>
 
           {role === 'collab_partner' && (
-            <div className="space-y-1.5 p-3 rounded-[6px] bg-[#FAF5FF] border border-[#A855F7]/30">
+            <div className="space-y-1.5 p-3 rounded-lg bg-[#FAF5FF] border border-[#A855F7]/30">
               <Label htmlFor="staff-collab-partner" required className="text-[#6B21A8] font-bold">
                 Tên đối tác / Thương hiệu Collab
               </Label>
@@ -1061,7 +1061,7 @@ export default function TeamManagement() {
                 placeholder="VD: GenZ Studio, The Cassette, Brand X..."
                 value={collabPartnerName}
                 onChange={(e) => setCollabPartnerName(e.target.value)}
-                className="h-9 text-xs bg-white"
+                className="h-9 text-xs bg-surface"
               />
               <p className="text-[11px] text-[#7E22CE]">
                 🔒 Đối tác Collab sẽ chỉ được phép quản trị sản phẩm và điều phối kho hàng thuộc thương hiệu này. Kho hàng của Admin được bảo vệ an toàn (Chỉ đọc).
@@ -1069,14 +1069,14 @@ export default function TeamManagement() {
             </div>
           )}
 
-          <div className="p-3 bg-[#F7F7F5] rounded text-xs text-[#737373] space-y-1">
-            <p className="font-semibold text-[#202124]">💡 Lưu ý bảo mật:</p>
+          <div className="p-3 bg-background rounded text-xs text-muted space-y-1">
+            <p className="font-semibold text-foreground">💡 Lưu ý bảo mật:</p>
             <p>
               Sau khi tạo, bạn có thể bấm nút <strong>&ldquo;Gửi thông tin&rdquo;</strong> để sao chép tin nhắn định dạng sẵn và gửi qua Zalo/Messenger cho nhân viên.
             </p>
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F0ED]">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
             <Button
               type="button"
               variant="outline"

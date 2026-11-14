@@ -57,12 +57,12 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <Card className="border-[#E8E8E5] shadow-xs">
+    <Card className="border-border shadow-xs">
       <CardHeader className="space-y-1 pb-4">
-        <CardTitle className="text-xl font-bold tracking-tight text-[#202124]">
+        <CardTitle className="text-xl font-bold tracking-tight text-foreground">
           {t('forgotTitle')}
         </CardTitle>
-        <CardDescription className="text-xs text-[#737373]">
+        <CardDescription className="text-xs text-muted">
           {t('forgotSubtitle')}
         </CardDescription>
       </CardHeader>
@@ -70,14 +70,14 @@ export default function ForgotPasswordPage() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">
           {errorMessage && (
-            <div className="flex items-start gap-2 p-3 text-xs text-[#C44536] bg-[#FDF1F0] border border-[#FADBD8] rounded-[6px]">
+            <div className="flex items-start gap-2 p-3 text-xs text-error bg-error-bg border border-error-bg rounded-lg">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{errorMessage}</span>
             </div>
           )}
 
           {successMessage && (
-            <div className="flex items-start gap-2 p-3 text-xs text-[#2F7D55] bg-[#EAF4EE] border border-[#CEE6D7] rounded-[6px]">
+            <div className="flex items-start gap-2 p-3 text-xs text-primary bg-success-bg border border-[#CEE6D7] rounded-lg">
               <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{successMessage}</span>
             </div>
@@ -88,7 +88,7 @@ export default function ForgotPasswordPage() {
               {t('emailLabel')}
             </Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-2.5 w-4 h-4 text-[#9E9E9C]" />
+              <Mail className="absolute left-3 top-2.5 w-4 h-4 text-muted" />
               <Input
                 id="email"
                 type="email"
@@ -99,7 +99,7 @@ export default function ForgotPasswordPage() {
               />
             </div>
             {errors.email && (
-              <p className="text-xs text-[#C44536]">{errors.email.message}</p>
+              <p className="text-xs text-error">{errors.email.message}</p>
             )}
           </div>
 
@@ -108,10 +108,10 @@ export default function ForgotPasswordPage() {
           </Button>
         </CardContent>
 
-        <CardFooter className="justify-center border-t border-[#F0F0ED] pt-4 text-xs">
+        <CardFooter className="justify-center border-t border-border pt-4 text-xs">
           <Link
             href="/login"
-            className="text-[#315C4C] font-medium hover:underline"
+            className="text-primary font-medium hover:underline"
           >
             ← {t('backToLogin')}
           </Link>

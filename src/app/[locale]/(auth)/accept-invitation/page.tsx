@@ -56,39 +56,39 @@ function AcceptInvitationContent() {
   }
 
   return (
-    <Card className="border-[#E8E8E5] shadow-xs">
+    <Card className="border-border shadow-xs">
       <CardHeader className="space-y-1 pb-4">
-        <div className="w-10 h-10 rounded-[6px] bg-[#EBF1EE] text-[#315C4C] flex items-center justify-center mb-2">
+        <div className="w-10 h-10 rounded-lg bg-warning-bg text-primary flex items-center justify-center mb-2">
           <Users className="w-5 h-5" />
         </div>
-        <CardTitle className="text-xl font-bold tracking-tight text-[#202124]">
+        <CardTitle className="text-xl font-bold tracking-tight text-foreground">
           {t('acceptInvitationTitle')}
         </CardTitle>
-        <CardDescription className="text-xs text-[#737373]">
+        <CardDescription className="text-xs text-muted">
           {t('acceptInvitationSubtitle')}
         </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <div className="p-4 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5] space-y-2.5">
+        <div className="p-4 bg-background rounded-lg border border-border space-y-2.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-[#737373]">Không gian làm việc:</span>
-            <span className="font-semibold text-[#202124]">{workspaceName}</span>
+            <span className="text-muted">Không gian làm việc:</span>
+            <span className="font-semibold text-foreground">{workspaceName}</span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-[#737373]">Vai trò được phân công:</span>
+            <span className="text-muted">Vai trò được phân công:</span>
             <Badge variant="default" className="capitalize">
               {role}
             </Badge>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-[#737373]">Mã thư mời:</span>
-            <span className="font-mono text-[#737373] text-[11px] truncate max-w-[160px]">{token}</span>
+            <span className="text-muted">Mã thư mời:</span>
+            <span className="font-mono text-muted text-[11px] truncate max-w-[160px]">{token}</span>
           </div>
         </div>
 
         {isAccepted ? (
-          <div className="flex items-center justify-center gap-2 p-3 text-xs text-[#2F7D55] bg-[#EAF4EE] border border-[#CEE6D7] rounded-[6px]">
+          <div className="flex items-center justify-center gap-2 p-3 text-xs text-primary bg-success-bg border border-[#CEE6D7] rounded-lg">
             <CheckCircle2 className="w-4 h-4" />
             <span>Đã tham gia thành công! Đang chuyển hướng...</span>
           </div>
@@ -111,7 +111,7 @@ function AcceptInvitationContent() {
 
 export default function AcceptInvitationPage() {
   return (
-    <React.Suspense fallback={<div className="p-8 text-center text-xs text-neutral-500">Đang tải thư mời...</div>}>
+    <React.Suspense fallback={<div className="p-8 text-center text-xs text-muted">Đang tải thư mời...</div>}>
       <AcceptInvitationContent />
     </React.Suspense>
   );

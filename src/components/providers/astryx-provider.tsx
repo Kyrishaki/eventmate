@@ -19,7 +19,7 @@ export function AstryxProvider({ children }: AstryxProviderProps) {
   }, [initTheme]);
 
   // Keep SSR and client hydration smooth
-  const activeMode = mounted ? theme : 'system';
+  const activeMode = mounted ? theme : 'dark';
 
   return (
     <Theme theme={themes[defaultThemeSlug]} mode={activeMode}>

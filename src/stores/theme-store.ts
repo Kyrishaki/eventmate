@@ -18,6 +18,7 @@ function getSystemTheme(): 'light' | 'dark' {
 function applyThemeToDocument(resolved: 'light' | 'dark') {
   if (typeof document === 'undefined') return;
   const root = document.documentElement;
+  root.setAttribute('data-theme', resolved);
   if (resolved === 'dark') {
     root.classList.add('dark');
   } else {
@@ -26,13 +27,13 @@ function applyThemeToDocument(resolved: 'light' | 'dark') {
 }
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
-  theme: 'system',
-  resolvedTheme: 'light',
+  theme: 'dark',
+  resolvedTheme: 'dark',
 
   initTheme: () => {
     if (typeof window === 'undefined') return;
     const saved = localStorage.getItem('eventmate-theme') as ThemeMode | null;
-    const initialTheme: ThemeMode = saved || 'system';
+    const initialTheme: ThemeMode = saved === 'light' || saved === 'dark' || saved === 'system' ? saved : 'dark';
     const resolved: 'light' | 'dark' =
       initialTheme === 'system' ? getSystemTheme() : initialTheme;
 

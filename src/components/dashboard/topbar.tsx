@@ -35,7 +35,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
   }
 
   return (
-    <header className="h-14 sm:h-16 border-b border-[#2E2E32] bg-[#19191B]/95 backdrop-blur-sm px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs print:hidden">
+    <header className="h-14 sm:h-16 border-b border-border bg-surface/95 backdrop-blur-sm px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs print:hidden">
       {/* Left: Dynamic Context Header */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 pr-2">
         {/* Mobile Brand Icon (< md) */}
@@ -49,20 +49,20 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
         </Link>
 
         {/* Desktop/Tablet Active Page Icon (md+) */}
-        <div className="hidden md:flex w-8 h-8 rounded-[8px] bg-[#232326] text-[#F5B301] items-center justify-center shrink-0 border border-[#2E2E32]">
+        <div className="hidden md:flex w-8 h-8 rounded-lg bg-surface-hover text-primary items-center justify-center shrink-0 border border-border">
           <PageIcon className="w-4 h-4" />
         </div>
 
         {/* Dynamic Page Title & Mobile Open Menu Button */}
         <div className="flex flex-col min-w-0">
-          <span className="font-bold text-sm sm:text-[15px] text-[#F4F4F2] leading-tight truncate">
+          <span className="font-bold text-sm sm:text-[15px] text-foreground leading-tight truncate">
             {pageTitle}
           </span>
           {onOpenMobileMenu && (
             <button
               type="button"
               onClick={onOpenMobileMenu}
-              className="md:hidden inline-flex items-center gap-1 text-[11px] font-medium text-[#A3A3A0] hover:text-[#F5B301] leading-none mt-0.5 text-left truncate cursor-pointer"
+              className="md:hidden inline-flex items-center gap-1 text-[11px] font-medium text-muted hover:text-primary leading-none mt-0.5 text-left truncate cursor-pointer"
             >
               <span>HikaruStore · Menu</span>
               <ChevronDown className="w-3 h-3 shrink-0" />
@@ -95,7 +95,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
               exitCollabPreview();
               router.push('/dashboard');
             }}
-            className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-[6px] text-xs font-bold bg-red-500/15 dark:bg-red-950/60 border border-red-500/40 text-red-600 dark:text-red-300 hover:bg-red-500/25 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-bold bg-red-500/15 dark:bg-red-950/60 border border-red-500/40 text-red-600 dark:text-red-300 hover:bg-red-500/25 transition-colors cursor-pointer"
             title="Thoát chế độ xem thử Collab và trở lại tài khoản Quản trị"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
@@ -110,7 +110,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
           onClick={() => {
             useAuthStore.getState().enterGuestPreview();
           }}
-          className="hidden lg:inline-flex items-center gap-1.5 h-8 px-2.5 rounded-[var(--radius-container,6px)] text-xs font-semibold border border-[var(--color-border,#E8E8E5)] dark:border-[#2C3038] text-[var(--color-text-secondary,#737373)] dark:text-[#9BA1A6] hover:text-[var(--color-text-primary,#202124)] dark:hover:text-white hover:bg-[var(--color-surface-hover,#F0F0ED)] dark:hover:bg-[#25282F] transition-colors cursor-pointer"
+          className="hidden lg:inline-flex items-center gap-1.5 h-8 px-2.5 rounded-xl text-xs font-semibold border border-border dark:border-border text-muted dark:text-muted hover:text-foreground dark:hover:text-white hover:bg-surface-hover dark:hover:bg-surface-hover transition-colors cursor-pointer"
           title="Xem thử giao diện Gian hàng Khách xem (Chỉ xem sản phẩm & Keep đồ)"
         >
           <Eye className="w-3.5 h-3.5" />
@@ -118,18 +118,18 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
         </button>
 
         {/* User Account & Logout */}
-        <div className="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-2 border-l border-[#E8E8E5]">
+        <div className="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-2 border-l border-border">
           <button
             type="button"
             onClick={onOpenMobileMenu}
-            className="md:pointer-events-none w-7 h-7 rounded-full bg-[#F0F0ED] text-[#202124] flex items-center justify-center text-xs font-semibold shrink-0 cursor-pointer md:cursor-default"
+            className="md:pointer-events-none w-7 h-7 rounded-full bg-surface-hover text-foreground flex items-center justify-center text-xs font-semibold shrink-0 cursor-pointer md:cursor-default"
             aria-label="Tài khoản"
           >
-            {user?.fullName?.charAt(0) || <UserIcon className="w-3.5 h-3.5 text-[#737373]" />}
+            {user?.fullName?.charAt(0) || <UserIcon className="w-3.5 h-3.5 text-muted" />}
           </button>
 
           <div className="hidden sm:block text-left">
-            <p className="text-xs font-medium text-[#202124] leading-tight truncate max-w-[120px]">
+            <p className="text-xs font-medium text-foreground leading-tight truncate max-w-[120px]">
               {user?.fullName || 'Thành viên ban tổ chức'}
             </p>
             <div className="flex items-center gap-1">
@@ -149,7 +149,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
             type="button"
             onClick={handleLogout}
             title="Đăng xuất"
-            className="p-1.5 text-[#737373] hover:text-[#C44536] hover:bg-[#FDF1F0] rounded-[4px] transition-colors cursor-pointer"
+            className="p-1.5 text-muted hover:text-error hover:bg-error-bg rounded-lg transition-colors cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
           </button>

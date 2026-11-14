@@ -139,7 +139,7 @@ export function StocktakeModal({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {isSuccess ? (
-          <div className="p-4 bg-[#EAF4EE] text-[#2F7D55] rounded-[6px] text-xs flex items-center gap-2 border border-[#CEE6D7]">
+          <div className="p-4 bg-success-bg text-primary rounded-lg text-xs flex items-center gap-2 border border-[#CEE6D7]">
             <CheckCircle2 className="w-5 h-5 shrink-0" />
             <span className="font-semibold">
               Đã ghi nhận kết quả kiểm kê và tự động cân bằng tồn kho quầy thành công!
@@ -147,7 +147,7 @@ export function StocktakeModal({
           </div>
         ) : (
           <>
-            <div className="p-3 bg-[#EBF1EE] text-[#315C4C] rounded-[6px] text-xs flex items-center gap-2 border border-[#315C4C]/20">
+            <div className="p-3 bg-warning-bg text-primary rounded-lg text-xs flex items-center gap-2 border border-primary/20">
               <ClipboardCheck className="w-4 h-4 shrink-0" />
               <span>
                 Nhập số lượng thực đếm tại quầy. Hệ thống sẽ tự động tính độ lệch và lưu vết giải trình vào Nhật ký hoạt động.
@@ -156,7 +156,7 @@ export function StocktakeModal({
 
             <div className="max-h-72 overflow-y-auto space-y-2.5 pr-1">
               {boothAllocs.length === 0 ? (
-                <p className="text-xs text-[#737373] text-center py-6">
+                <p className="text-xs text-muted text-center py-6">
                   Quầy này chưa được phân bổ món hàng nào.
                 </p>
               ) : (
@@ -170,38 +170,38 @@ export function StocktakeModal({
                   return (
                     <div
                       key={alloc.id}
-                      className="p-3 rounded-[6px] border border-[#E8E8E5] bg-[#FBFBFA] space-y-2 text-xs"
+                      className="p-3 rounded-lg border border-border bg-background space-y-2 text-xs"
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-bold text-[#202124]">{product?.name}</p>
-                          <p className="text-[11px] text-[#737373]">
-                            Phân loại: <span className="font-semibold text-[#202124]">{variant?.name}</span> • Mã loại: {variant?.sku}
+                          <p className="font-bold text-foreground">{product?.name}</p>
+                          <p className="text-[11px] text-muted">
+                            Phân loại: <span className="font-semibold text-foreground">{variant?.name}</span> • Mã loại: {variant?.sku}
                           </p>
                         </div>
                         <div className="text-right">
-                          <span className="text-[11px] text-[#737373]">Tồn hệ thống: </span>
-                          <span className="font-bold text-[#202124]">{systemAvailable} món</span>
+                          <span className="text-[11px] text-muted">Tồn hệ thống: </span>
+                          <span className="font-bold text-foreground">{systemAvailable} món</span>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-[#E8E8E5]">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-border">
                         <div className="flex items-center gap-2">
-                          <Label className="text-[11px] text-[#737373] shrink-0">Thực đếm:</Label>
+                          <Label className="text-[11px] text-muted shrink-0">Thực đếm:</Label>
                           <Input
                             type="number"
                             min="0"
                             value={actual}
                             onChange={(e) => handleCountChange(alloc.variant_id, e.target.value)}
-                            className="h-8 text-xs font-bold text-center w-24 bg-white"
+                            className="h-8 text-xs font-bold text-center w-24 bg-surface"
                           />
                           <span
                             className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${
                               delta === 0
-                                ? 'text-[#2F7D55] bg-[#EAF4EE]'
+                                ? 'text-primary bg-success-bg'
                                 : delta > 0
-                                ? 'text-[#B7791F] bg-[#FEF7EC]'
-                                : 'text-[#C44536] bg-[#FDF1F0]'
+                                ? 'text-warning bg-warning-bg'
+                                : 'text-error bg-error-bg'
                             }`}
                           >
                             {delta === 0 ? 'Khớp' : delta > 0 ? `+${delta}` : delta}
@@ -210,11 +210,11 @@ export function StocktakeModal({
 
                         {delta !== 0 && (
                           <div className="flex items-center gap-1.5">
-                            <Label className="text-[11px] text-[#737373] shrink-0">Lý do lệch:</Label>
+                            <Label className="text-[11px] text-muted shrink-0">Lý do lệch:</Label>
                             <select
                               value={reasons[alloc.variant_id] || 'loss'}
                               onChange={(e) => handleReasonChange(alloc.variant_id, e.target.value)}
-                              className="h-8 text-xs rounded border border-[#E8E8E5] bg-white px-2 text-[#202124] focus:outline-none focus:border-[#315C4C] flex-1"
+                              className="h-8 text-xs rounded border border-border bg-surface px-2 text-foreground focus:outline-none focus:border-primary flex-1"
                             >
                               <option value="loss">Thất thoát / Chưa rõ</option>
                               <option value="damaged">Hư hỏng / Lỗi tem</option>
@@ -232,7 +232,7 @@ export function StocktakeModal({
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs text-[#737373]">Ghi chú đợt kiểm kê:</Label>
+              <Label className="text-xs text-muted">Ghi chú đợt kiểm kê:</Label>
               <Input
                 placeholder="Kiểm kê đầu ngày / Cuối show..."
                 value={generalNotes}
@@ -241,7 +241,7 @@ export function StocktakeModal({
               />
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#E8E8E5]">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
               <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs">
                 Hủy
               </Button>
@@ -249,7 +249,7 @@ export function StocktakeModal({
                 type="submit"
                 variant="primary"
                 size="sm"
-                className="text-xs bg-[#315C4C] text-white hover:bg-[#254639] gap-1.5 font-bold"
+                className="text-xs bg-primary text-primary-foreground hover:bg-gold-text gap-1.5 font-bold"
               >
                 <Save className="w-3.5 h-3.5" />
                 <span>Xác Nhận & Cân Bằng Kho</span>

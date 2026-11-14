@@ -717,12 +717,12 @@ export default function ProductsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-xl font-bold tracking-tight text-[#202124]">{t('title')}</h1>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#EBF1EE] text-[#315C4C] border border-[#315C4C]/20">
+            <h1 className="text-xl font-bold tracking-tight text-foreground">{t('title')}</h1>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-warning-bg text-primary border border-primary/20">
               {workspaceProducts.length} {t('units')} · {catalogTotals.totalVariantsCount} phân loại
             </span>
           </div>
-          <p className="text-xs text-[#737373] mt-0.5">{t('description')}</p>
+          <p className="text-xs text-muted mt-0.5">{t('description')}</p>
         </div>
 
         {editable ? (
@@ -736,7 +736,7 @@ export default function ProductsPage() {
             <span>{t('createButton')}</span>
           </Button>
         ) : (
-          <Badge variant="outline" className="text-xs text-[#737373]">
+          <Badge variant="outline" className="text-xs text-muted">
             Chế độ Chỉ Xem
           </Badge>
         )}
@@ -769,40 +769,40 @@ export default function ProductsPage() {
 
       {/* 4 Compact Inventory KPI Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
+        <div className="bg-surface border border-border rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
           <div>
-            <p className="text-[11px] font-medium text-[#737373]"> Sẵn sàng bán quầy (POS)</p>
-            <p className="text-lg font-extrabold text-[#2F7D55] mt-0.5 font-mono">
+            <p className="text-[11px] font-medium text-muted"> Sẵn sàng bán quầy (POS)</p>
+            <p className="text-lg font-extrabold text-primary mt-0.5 font-mono">
               {catalogTotals.offlineAvailable.toLocaleString('vi-VN')}
-              <span className="text-xs font-normal text-[#737373] ml-1">món</span>
+              <span className="text-xs font-normal text-muted ml-1">món</span>
             </p>
           </div>
-          <div className="w-9 h-9 rounded-lg bg-[#EAF4EE] flex items-center justify-center text-[#2F7D55] shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-success-bg flex items-center justify-center text-primary shrink-0">
             <Store className="w-4 h-4" />
           </div>
         </div>
 
-        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
+        <div className="bg-surface border border-border rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
           <div>
-            <p className="text-[11px] font-medium text-[#737373]">Tổng tồn kho vật lý</p>
-            <p className="text-lg font-extrabold text-[#202124] mt-0.5 font-mono">
+            <p className="text-[11px] font-medium text-muted">Tổng tồn kho vật lý</p>
+            <p className="text-lg font-extrabold text-foreground mt-0.5 font-mono">
               {catalogTotals.totalStock.toLocaleString('vi-VN')}
-              <span className="text-xs font-normal text-[#737373] ml-1">món</span>
+              <span className="text-xs font-normal text-muted ml-1">món</span>
             </p>
           </div>
-          <div className="w-9 h-9 rounded-lg bg-[#F7F7F5] border border-[#E8E8E5] flex items-center justify-center text-[#315C4C] shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-background border border-border flex items-center justify-center text-primary shrink-0">
             <Boxes className="w-4 h-4" />
           </div>
         </div>
 
-        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
+        <div className="bg-surface border border-border rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
           <div>
-            <p className="text-[11px] font-medium text-[#737373]">Đơn Online & Giữ chỗ</p>
+            <p className="text-[11px] font-medium text-muted">Đơn Online & Giữ chỗ</p>
             <div className="flex items-baseline gap-2 mt-0.5">
               <p className="text-lg font-extrabold text-[#1D4ED8] font-mono">
                 {(catalogTotals.onlineCount + catalogTotals.preordCount).toLocaleString('vi-VN')}
               </p>
-              <span className="text-[10px] text-[#737373]">
+              <span className="text-[10px] text-muted">
                 ({catalogTotals.onlineCount} Onl · {catalogTotals.preordCount} VIP)
               </span>
             </div>
@@ -812,38 +812,38 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
+        <div className="bg-surface border border-border rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
           <div>
-            <p className="text-[11px] font-medium text-[#737373]">Đã bán tại sự kiện</p>
-            <p className="text-lg font-extrabold text-[#202124] mt-0.5 font-mono">
+            <p className="text-[11px] font-medium text-muted">Đã bán tại sự kiện</p>
+            <p className="text-lg font-extrabold text-foreground mt-0.5 font-mono">
               {catalogTotals.offlineSold.toLocaleString('vi-VN')}
-              <span className="text-xs font-normal text-[#737373] ml-1">món</span>
+              <span className="text-xs font-normal text-muted ml-1">món</span>
             </p>
           </div>
-          <div className="w-9 h-9 rounded-lg bg-[#F7F7F5] border border-[#E8E8E5] flex items-center justify-center text-[#737373] shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-background border border-border flex items-center justify-center text-muted shrink-0">
             <ShoppingBag className="w-4 h-4" />
           </div>
         </div>
       </div>
 
       {/* Unified Filter, Search, Tag & Sort Toolbar */}
-      <div className="bg-white border border-[#E8E8E5] rounded-xl p-2.5 shadow-2xs space-y-2.5">
+      <div className="bg-surface border border-border rounded-xl p-2.5 shadow-2xs space-y-2.5">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           {/* Status Segmented Tabs */}
-          <div className="flex flex-wrap items-center gap-1 p-1 bg-[#F7F7F5] rounded-lg border border-[#E8E8E5] text-xs">
+          <div className="flex flex-wrap items-center gap-1 p-1 bg-background rounded-lg border border-border text-xs">
             <button
               type="button"
               onClick={() => setStatusFilter('active')}
               className={cn(
                 'px-3 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5',
                 statusFilter === 'active'
-                  ? 'bg-white text-[#315C4C] shadow-2xs'
-                  : 'text-[#737373] hover:text-[#202124]'
+                  ? 'bg-surface text-primary shadow-2xs'
+                  : 'text-muted hover:text-foreground'
               )}
             >
-              <span className="w-2 h-2 rounded-full bg-[#2F7D55]" />
+              <span className="w-2 h-2 rounded-full bg-primary" />
               <span>Đang bán</span>
-              <span className="text-[10px] bg-[#EBF1EE] px-1.5 py-0.2 rounded font-mono text-[#315C4C]">
+              <span className="text-[10px] bg-warning-bg px-1.5 py-0.2 rounded font-mono text-primary">
                 {activeCount}
               </span>
             </button>
@@ -854,13 +854,13 @@ export default function ProductsPage() {
               className={cn(
                 'px-3 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5',
                 statusFilter === 'sold_out'
-                  ? 'bg-white text-[#B7791F] shadow-2xs'
-                  : 'text-[#737373] hover:text-[#202124]'
+                  ? 'bg-surface text-warning shadow-2xs'
+                  : 'text-muted hover:text-foreground'
               )}
             >
-              <EyeOff className="w-3.5 h-3.5 text-[#B7791F]" />
+              <EyeOff className="w-3.5 h-3.5 text-warning" />
               <span>Hết hàng</span>
-              <span className="text-[10px] bg-[#FEF7EC] px-1.5 py-0.2 rounded font-mono text-[#B7791F]">
+              <span className="text-[10px] bg-warning-bg px-1.5 py-0.2 rounded font-mono text-warning">
                 {soldOutCount}
               </span>
             </button>
@@ -871,13 +871,13 @@ export default function ProductsPage() {
               className={cn(
                 'px-3 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5',
                 statusFilter === 'archived'
-                  ? 'bg-white text-[#C44536] shadow-2xs'
-                  : 'text-[#737373] hover:text-[#202124]'
+                  ? 'bg-surface text-error shadow-2xs'
+                  : 'text-muted hover:text-foreground'
               )}
             >
-              <Archive className="w-3.5 h-3.5 text-[#C44536]" />
+              <Archive className="w-3.5 h-3.5 text-error" />
               <span>Đã ẩn</span>
-              <span className="text-[10px] bg-[#FDF1F0] px-1.5 py-0.2 rounded font-mono text-[#C44536]">
+              <span className="text-[10px] bg-error-bg px-1.5 py-0.2 rounded font-mono text-error">
                 {archivedCount}
               </span>
             </button>
@@ -888,12 +888,12 @@ export default function ProductsPage() {
               className={cn(
                 'px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-1.5',
                 statusFilter === 'all'
-                  ? 'bg-white text-[#202124] shadow-2xs font-semibold'
-                  : 'text-[#737373] hover:text-[#202124]'
+                  ? 'bg-surface text-foreground shadow-2xs font-semibold'
+                  : 'text-muted hover:text-foreground'
               )}
             >
               <span>Tất cả</span>
-              <span className="text-[10px] bg-[#E8E8E5] px-1.5 py-0.2 rounded font-mono text-[#737373]">
+              <span className="text-[10px] bg-surface-hover px-1.5 py-0.2 rounded font-mono text-muted">
                 {allCount}
               </span>
             </button>
@@ -902,7 +902,7 @@ export default function ProductsPage() {
           {/* Right: Search + Category Select + Sort Select + View Mode Switcher */}
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
             <div className="relative flex-1 sm:w-56">
-              <Search className="w-3.5 h-3.5 text-[#9E9E9C] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Search className="w-3.5 h-3.5 text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <Input
                 placeholder="Tìm tên, SKU, #tag..."
                 value={searchQuery}
@@ -913,7 +913,7 @@ export default function ProductsPage() {
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9E9E9C] hover:text-[#202124]"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
                   title="Xóa tìm kiếm"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -922,9 +922,9 @@ export default function ProductsPage() {
             </div>
 
             <div className="relative flex items-center">
-              <Tag className="w-3.5 h-3.5 text-[#9E9E9C] absolute left-2.5 pointer-events-none" />
+              <Tag className="w-3.5 h-3.5 text-muted absolute left-2.5 pointer-events-none" />
               <select
-                className="h-8 rounded-lg border border-[#E8E8E5] bg-white pl-8 pr-7 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                className="h-8 rounded-lg border border-border bg-surface pl-8 pr-7 text-xs text-foreground focus:outline-none focus:border-primary"
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
@@ -938,12 +938,12 @@ export default function ProductsPage() {
             </div>
 
             <label className="flex items-center gap-1.5 min-w-0">
-              <Tag className="w-3.5 h-3.5 text-[#315C4C] shrink-0" />
-              <span className="text-[11px] font-bold text-[#737373] shrink-0">Tag:</span>
+              <Tag className="w-3.5 h-3.5 text-primary shrink-0" />
+              <span className="text-[11px] font-bold text-muted shrink-0">Tag:</span>
               <select
                 value={selectedTags[0] || ''}
                 onChange={(event) => setSelectedTags(event.target.value ? [event.target.value] : [])}
-                className="h-8 rounded-lg border border-[#E8E8E5] bg-white px-2 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C] max-w-36 sm:max-w-48"
+                className="h-8 rounded-lg border border-border bg-surface px-2 text-xs text-foreground focus:outline-none focus:border-primary max-w-36 sm:max-w-48"
               >
                 <option value="">Tất cả tag ({tagOptions.length})</option>
                 {availableTags.map((tag) => <option key={tag.name} value={tag.name}>{tag.name} ({tag.count})</option>)}
@@ -954,9 +954,9 @@ export default function ProductsPage() {
             </label>
 
             <div className="relative flex items-center">
-              <ArrowUpDown className="w-3.5 h-3.5 text-[#9E9E9C] absolute left-2.5 pointer-events-none" />
+              <ArrowUpDown className="w-3.5 h-3.5 text-muted absolute left-2.5 pointer-events-none" />
               <select
-                className="h-8 rounded-lg border border-[#E8E8E5] bg-white pl-8 pr-6 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                className="h-8 rounded-lg border border-border bg-surface pl-8 pr-6 text-xs text-foreground focus:outline-none focus:border-primary"
                 value={sortBy}
                 onChange={(e) =>
                   setSortBy(
@@ -993,11 +993,11 @@ export default function ProductsPage() {
 
       {/* Products Content */}
       {filteredProducts.length === 0 ? (
-        <Card className="border-[#E8E8E5] shadow-xs rounded-xl">
+        <Card className="border-border shadow-xs rounded-xl">
           <CardContent className="p-12 text-center">
-            <Package className="w-10 h-10 text-[#9E9E9C] mx-auto mb-3" />
-            <h3 className="text-sm font-semibold text-[#202124]">{t('noProducts')}</h3>
-            <p className="text-xs text-[#737373] mt-1 max-w-sm mx-auto">{t('noProductsDesc')}</p>
+            <Package className="w-10 h-10 text-muted mx-auto mb-3" />
+            <h3 className="text-sm font-semibold text-foreground">{t('noProducts')}</h3>
+            <p className="text-xs text-muted mt-1 max-w-sm mx-auto">{t('noProductsDesc')}</p>
             {editable && (
               <Button variant="outline" size="sm" className="mt-4 gap-1" onClick={openCreateModal}>
                 <Plus className="w-3.5 h-3.5" />
@@ -1036,7 +1036,7 @@ export default function ProductsPage() {
             return (
               <Card
                 key={prod.id}
-                className="border-[#E8E8E5] bg-white rounded-xl overflow-hidden shadow-2xs hover:border-[#315C4C]/40 transition-all flex flex-col justify-between group"
+                className="border-border bg-surface rounded-xl overflow-hidden shadow-2xs hover:border-primary/40 transition-all flex flex-col justify-between group"
               >
                 <div>
                   {/* Card Top Visual Header */}
@@ -1044,8 +1044,8 @@ export default function ProductsPage() {
                     <div
                       onClick={() => canManageThis && openEditModal(prod)}
                       className={cn(
-                        'w-20 h-20 rounded-xl bg-[#F7F7F5] border border-[#E8E8E5] overflow-hidden shrink-0 flex items-center justify-center relative',
-                        canManageThis ? 'cursor-pointer hover:border-[#315C4C]' : ''
+                        'w-20 h-20 rounded-xl bg-background border border-border overflow-hidden shrink-0 flex items-center justify-center relative',
+                        canManageThis ? 'cursor-pointer hover:border-primary' : ''
                       )}
                       title={canManageThis ? 'Bấm để đổi ảnh hoặc sửa thông tin sản phẩm' : undefined}
                     >
@@ -1057,7 +1057,7 @@ export default function ProductsPage() {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
-                        <Package className="w-7 h-7 text-[#9E9E9C]" />
+                        <Package className="w-7 h-7 text-muted" />
                       )}
                       {canManageThis && (
                         <div className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-semibold">
@@ -1070,7 +1070,7 @@ export default function ProductsPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-1.5 mb-1">
                         {category && (
-                          <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-[#F7F7F5] border border-[#E8E8E5] text-[#737373]">
+                          <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-background border border-border text-muted">
                             {category.name}
                           </span>
                         )}
@@ -1095,16 +1095,16 @@ export default function ProductsPage() {
                         ) : null}
                       </div>
 
-                      <h3 className="text-sm font-bold text-[#202124] leading-snug line-clamp-2">
+                      <h3 className="text-sm font-bold text-foreground leading-snug line-clamp-2">
                         {prod.name}
                       </h3>
 
                       <div className="flex items-center gap-2 mt-1.5">
-                        <span className="text-sm font-extrabold text-[#315C4C] font-mono">
+                        <span className="text-sm font-extrabold text-primary font-mono">
                           {priceLabel}
                         </span>
                         {productVariants.length === 1 && (
-                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#F7F7F5] border border-[#E8E8E5] text-[#737373]">
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-background border border-border text-muted">
                             {productVariants[0].sku}
                           </span>
                         )}
@@ -1124,8 +1124,8 @@ export default function ProductsPage() {
                                 className={cn(
                                   'text-[10px] px-1.5 py-0.2 rounded border transition-colors cursor-pointer',
                                   isTagActive
-                                    ? 'bg-amber-500 text-neutral-950 border-amber-600 font-semibold dark:bg-amber-400 dark:border-amber-300'
-                                    : 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100 dark:bg-neutral-800 dark:text-amber-200 dark:border-amber-700 dark:hover:bg-neutral-700'
+                                    ? 'bg-primary text-primary-foreground border-primary font-semibold dark:bg-amber-400 dark:border-amber-300'
+                                    : 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100 dark:bg-surface-hover dark:text-amber-200 dark:border-amber-700 dark:hover:bg-surface-hover'
                                 )}
                                 title={`Bấm để lọc theo tag #${tg}`}
                               >
@@ -1140,19 +1140,19 @@ export default function ProductsPage() {
 
                   {/* Unified Stock Allocation Box */}
                   <div className="px-4 pb-3">
-                    <div className="p-3 rounded-xl bg-[#F7F7F5] border border-[#E8E8E5] space-y-2.5">
+                    <div className="p-3 rounded-xl bg-background border border-border space-y-2.5">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-[11px] font-medium text-[#737373]">
+                        <span className="text-[11px] font-medium text-muted">
                           Khả dụng bán tại quầy:
                         </span>
                         <span
                           className={cn(
                             'px-2 py-0.5 rounded-md text-xs font-extrabold font-mono',
                             prodSummary.offlineAvailable <= 0
-                              ? 'bg-[#FDF1F0] text-[#C44536]'
+                              ? 'bg-error-bg text-error'
                               : prodSummary.offlineAvailable <= 10
-                              ? 'bg-[#FEF7EC] text-[#B7791F]'
-                              : 'bg-[#EAF4EE] text-[#2F7D55]'
+                              ? 'bg-warning-bg text-warning'
+                              : 'bg-success-bg text-primary'
                           )}
                         >
                           {prodSummary.offlineAvailable} / {prodSummary.total} món
@@ -1160,9 +1160,9 @@ export default function ProductsPage() {
                       </div>
 
                       {/* Segmented Stock Progress Bar */}
-                      <div className="h-1.5 w-full rounded-full bg-[#E8E8E5] overflow-hidden flex">
+                      <div className="h-1.5 w-full rounded-full bg-surface-hover overflow-hidden flex">
                         <div
-                          className="h-full bg-[#2F7D55] transition-all"
+                          className="h-full bg-primary transition-all"
                           style={{ width: `${availPct}%` }}
                           title={`Khả dụng tại quầy: ${prodSummary.offlineAvailable}`}
                         />
@@ -1175,20 +1175,20 @@ export default function ProductsPage() {
 
                       <div className="grid grid-cols-4 gap-1 pt-0.5 text-center text-[10px]">
                         <div>
-                          <span className="text-[#737373] block">Tổng kho</span>
-                          <span className="font-bold text-[#202124] font-mono">{prodSummary.total}</span>
+                          <span className="text-muted block">Tổng kho</span>
+                          <span className="font-bold text-foreground font-mono">{prodSummary.total}</span>
                         </div>
                         <div>
                           <span className="text-[#1D4ED8] block">Online</span>
                           <span className="font-bold text-[#1D4ED8] font-mono">{prodSummary.online}</span>
                         </div>
                         <div>
-                          <span className="text-[#B7791F] block">Giữ VIP</span>
-                          <span className="font-bold text-[#B7791F] font-mono">{prodSummary.preord}</span>
+                          <span className="text-warning block">Giữ VIP</span>
+                          <span className="font-bold text-warning font-mono">{prodSummary.preord}</span>
                         </div>
                         <div>
-                          <span className="text-[#737373] block">Đã bán</span>
-                          <span className="font-bold text-[#202124] font-mono">{prodSummary.offlineSold}</span>
+                          <span className="text-muted block">Đã bán</span>
+                          <span className="font-bold text-foreground font-mono">{prodSummary.offlineSold}</span>
                         </div>
                       </div>
                     </div>
@@ -1206,18 +1206,18 @@ export default function ProductsPage() {
                               key={v.id}
                               onClick={() => canManageThis && openQuickAdjustModal(prod)}
                               className={cn(
-                                'inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] border bg-white border-[#E8E8E5]',
-                                canManageThis ? 'cursor-pointer hover:border-[#315C4C]' : ''
+                                'inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] border bg-surface border-border',
+                                canManageThis ? 'cursor-pointer hover:border-primary' : ''
                               )}
                               title={`${v.name} (${v.sku}) — Bấm để chỉnh nhanh tồn kho`}
                             >
-                              <span className="font-semibold text-[#202124]">{v.name}</span>
+                              <span className="font-semibold text-foreground">{v.name}</span>
                               <span
                                 className={cn(
                                   'font-mono font-bold text-[10px] px-1 rounded',
                                   st.offlineAvailable <= 0
-                                    ? 'bg-[#FDF1F0] text-[#C44536]'
-                                    : 'bg-[#EAF4EE] text-[#2F7D55]'
+                                    ? 'bg-error-bg text-error'
+                                    : 'bg-success-bg text-primary'
                                 )}
                               >
                                 {st.offlineAvailable}
@@ -1231,26 +1231,26 @@ export default function ProductsPage() {
                 </div>
 
                 {/* Card Footer Actions */}
-                <div className="px-4 py-2.5 bg-[#F7F7F5] border-t border-[#E8E8E5] flex items-center justify-between gap-2">
+                <div className="px-4 py-2.5 bg-background border-t border-border flex items-center justify-between gap-2">
                   {editable && canManageThis ? (
                     <>
                       <div className="flex items-center gap-1.5">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-7 px-2.5 text-[11px] gap-1 bg-white font-semibold"
+                          className="h-7 px-2.5 text-[11px] gap-1 bg-surface font-semibold"
                           onClick={() => openEditModal(prod)}
                         >
-                          <Edit className="w-3 h-3 text-[#315C4C]" />
+                          <Edit className="w-3 h-3 text-primary" />
                           <span>Sửa & Ảnh</span>
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-7 px-2.5 text-[11px] gap-1 bg-white font-semibold"
+                          className="h-7 px-2.5 text-[11px] gap-1 bg-surface font-semibold"
                           onClick={() => openQuickAdjustModal(prod)}
                         >
-                          <SlidersHorizontal className="w-3 h-3 text-[#B7791F]" />
+                          <SlidersHorizontal className="w-3 h-3 text-warning" />
                           <span>Chỉnh tồn</span>
                         </Button>
                       </div>
@@ -1260,7 +1260,7 @@ export default function ProductsPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 px-2 text-[11px] gap-1 text-[#2F7D55]"
+                            className="h-7 px-2 text-[11px] gap-1 text-primary"
                             onClick={() => handleRestoreProduct(prod)}
                           >
                             <RotateCcw className="w-3 h-3" />
@@ -1271,19 +1271,19 @@ export default function ProductsPage() {
                             <button
                               type="button"
                               onClick={() => toggleProductActive(prod.id)}
-                              className="p-1.5 rounded-md text-[#737373] hover:text-[#202124] hover:bg-white transition-colors"
+                              className="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-surface transition-colors"
                               title={prod.is_active ? 'Tạm ẩn sản phẩm' : 'Hiện lại sản phẩm'}
                             >
                               {prod.is_active ? (
                                 <EyeOff className="w-3.5 h-3.5" />
                               ) : (
-                                <Eye className="w-3.5 h-3.5 text-[#2F7D55]" />
+                                <Eye className="w-3.5 h-3.5 text-primary" />
                               )}
                             </button>
                             <button
                               type="button"
                               onClick={() => handleDeleteProduct(prod)}
-                              className="p-1.5 rounded-md text-[#737373] hover:text-[#C44536] hover:bg-[#FDF1F0] transition-colors"
+                              className="p-1.5 rounded-md text-muted hover:text-error hover:bg-error-bg transition-colors"
                               title="Xóa / Ẩn sản phẩm"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1293,12 +1293,12 @@ export default function ProductsPage() {
                       </div>
                     </>
                   ) : editable && isPartner ? (
-                    <div className="flex items-center gap-1.5 text-[11px] text-[#737373] font-medium">
-                      <Lock className="w-3 h-3 text-[#9E9E9C]" />
+                    <div className="flex items-center gap-1.5 text-[11px] text-muted font-medium">
+                      <Lock className="w-3 h-3 text-muted" />
                       <span>Kho hàng Admin (Chỉ đọc)</span>
                     </div>
                   ) : (
-                    <span className="text-[11px] text-[#9E9E9C] italic">Chỉ xem</span>
+                    <span className="text-[11px] text-muted italic">Chỉ xem</span>
                   )}
                 </div>
               </Card>
@@ -1345,7 +1345,7 @@ export default function ProductsPage() {
             <div className="space-y-1.5 relative" ref={categoryDropdownRef}>
               <div className="flex items-center justify-between">
                 <Label htmlFor="prod-cat">{t('categoryLabel')}</Label>
-                <span className="text-[10px] text-[#737373] dark:text-neutral-400">
+                <span className="text-[10px] text-muted dark:text-muted">
                   Nhập tự do hoặc chọn có sẵn
                 </span>
               </div>
@@ -1361,25 +1361,25 @@ export default function ProductsPage() {
                     setIsCategoryDropdownOpen(true);
                   }}
                   onFocus={() => setIsCategoryDropdownOpen(true)}
-                  className="pr-9 text-xs bg-white dark:bg-neutral-900 border-[#E8E8E5] dark:border-neutral-700 text-[#202124] dark:text-neutral-100 placeholder:text-neutral-400"
+                  className="pr-9 text-xs bg-surface dark:bg-surface border-border dark:border-border text-foreground dark:text-foreground placeholder:text-muted"
                 />
                 <button
                   type="button"
                   onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-                  className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 text-muted hover:text-muted dark:hover:text-foreground transition-colors"
                   title="Bấm để mở danh sách danh mục có sẵn"
                 >
                   <ChevronDown
                     className={cn(
                       'w-4 h-4 transition-transform duration-200',
-                      isCategoryDropdownOpen ? 'rotate-180 text-[#315C4C]' : ''
+                      isCategoryDropdownOpen ? 'rotate-180 text-primary' : ''
                     )}
                   />
                 </button>
               </div>
 
               {isCategoryDropdownOpen && (
-                <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-700 rounded-[6px] shadow-lg z-50 max-h-52 overflow-y-auto py-1 divide-y divide-[#F0F0ED] dark:divide-neutral-800">
+                <div className="absolute left-0 right-0 top-full mt-1 bg-surface dark:bg-surface border border-border dark:border-border rounded-lg shadow-lg z-50 max-h-52 overflow-y-auto py-1 divide-y divide-border dark:divide-border">
                   {categoryInput.trim() &&
                     !allExistingCategories.some(
                       (c) => c.name.toLowerCase() === categoryInput.trim().toLowerCase()
@@ -1389,7 +1389,7 @@ export default function ProductsPage() {
                         onClick={() => {
                           setIsCategoryDropdownOpen(false);
                         }}
-                        className="w-full text-left px-3 py-2 text-xs font-semibold text-[#315C4C] dark:text-emerald-400 hover:bg-[#EBF1EE] dark:hover:bg-emerald-950/40 flex items-center gap-2 transition-colors"
+                        className="w-full text-left px-3 py-2 text-xs font-semibold text-primary dark:text-success hover:bg-warning-bg dark:hover:bg-success-bg/40 flex items-center gap-2 transition-colors"
                       >
                         <Plus className="w-3.5 h-3.5 shrink-0" />
                         <span>
@@ -1412,31 +1412,31 @@ export default function ProductsPage() {
                             setIsCategoryDropdownOpen(false);
                           }}
                           className={cn(
-                            'w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-[#F7F7F5] dark:hover:bg-neutral-800 transition-colors',
+                            'w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-background dark:hover:bg-surface-hover transition-colors',
                             isSelected
-                              ? 'bg-[#EBF1EE]/60 dark:bg-emerald-950/40 font-bold text-[#315C4C] dark:text-emerald-300'
-                              : 'text-[#202124] dark:text-neutral-200'
+                              ? 'bg-warning-bg/60 dark:bg-success-bg/40 font-bold text-primary dark:text-success'
+                              : 'text-foreground dark:text-foreground'
                           )}
                         >
                           <div className="flex items-center gap-2 truncate">
-                            <Tag className="w-3 h-3 text-[#9E9E9C] shrink-0" />
+                            <Tag className="w-3 h-3 text-muted shrink-0" />
                             <span className="truncate">{c.name}</span>
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0 ml-2">
                             {c.count > 0 && (
-                              <span className="text-[10px] text-[#737373] dark:text-neutral-400 font-mono">
+                              <span className="text-[10px] text-muted dark:text-muted font-mono">
                                 {c.count} SP
                               </span>
                             )}
                             {isSelected && (
-                              <Check className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400" />
+                              <Check className="w-3.5 h-3.5 text-primary dark:text-success" />
                             )}
                           </div>
                         </button>
                       );
                     })
                   ) : (
-                    <div className="px-3 py-2 text-xs text-[#737373] dark:text-neutral-400 italic">
+                    <div className="px-3 py-2 text-xs text-muted dark:text-muted italic">
                       Không tìm thấy danh mục có sẵn. Danh mục mới sẽ được tạo khi lưu.
                     </div>
                   )}
@@ -1444,7 +1444,7 @@ export default function ProductsPage() {
               )}
 
               <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                <span className="text-[10px] text-[#737373] dark:text-neutral-400">Gợi ý nhanh:</span>
+                <span className="text-[10px] text-muted dark:text-muted">Gợi ý nhanh:</span>
                 {allExistingCategories.slice(0, 5).map((c) => (
                   <button
                     key={c.id || c.name}
@@ -1457,8 +1457,8 @@ export default function ProductsPage() {
                     className={cn(
                       'text-[10px] px-2 py-0.5 rounded-full border transition-all',
                       categoryInput.trim().toLowerCase() === c.name.toLowerCase()
-                        ? 'bg-[#315C4C] text-white border-[#315C4C] font-semibold'
-                        : 'bg-[#F7F7F5] dark:bg-neutral-800 text-[#555] dark:text-neutral-300 border-[#E8E8E5] dark:border-neutral-700 hover:border-[#315C4C]'
+                        ? 'bg-primary text-primary-foreground border-primary font-semibold'
+                        : 'bg-background dark:bg-surface-hover text-[#555] dark:text-muted border-border dark:border-border hover:border-primary'
                     )}
                   >
                     {c.name}
@@ -1475,9 +1475,9 @@ export default function ProductsPage() {
                     id="prod-collab"
                     value={partnerName || 'Collab Partner'}
                     disabled
-                    className="bg-[#F0F0ED] text-[#202124] font-semibold cursor-not-allowed"
+                    className="bg-surface-hover text-foreground font-semibold cursor-not-allowed"
                   />
-                  <p className="text-[10px] text-[#737373] mt-1">
+                  <p className="text-[10px] text-muted mt-1">
                     🔒 Tự động gán cho tài khoản đối tác của bạn ({partnerName}).
                   </p>
                 </div>
@@ -1497,7 +1497,7 @@ export default function ProductsPage() {
             <textarea
               id="prod-desc"
               rows={2}
-              className="flex w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-sm text-[#202124] focus:outline-none focus:border-[#315C4C]"
+              className="flex w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-foreground focus:outline-none focus:border-primary"
               placeholder="Chất liệu, ghi chú đóng gói..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -1505,13 +1505,13 @@ export default function ProductsPage() {
           </div>
 
           {/* Multi-Tag Manager */}
-          <div className="space-y-2 p-3 rounded-[8px] bg-[#F7F7F5] border border-[#E8E8E5]">
+          <div className="space-y-2 p-3 rounded-lg bg-background border border-border">
             <div className="flex items-center justify-between gap-2">
-              <Label htmlFor="prod-tags" className="text-xs font-bold text-[#202124] flex items-center gap-1.5">
-                <Hash className="w-3.5 h-3.5 text-[#315C4C]" />
+              <Label htmlFor="prod-tags" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Hash className="w-3.5 h-3.5 text-primary" />
                 <span>Nhãn phân loại (Tags — Gắn nhiều tag để dễ lọc &amp; sắp xếp)</span>
               </Label>
-              <span className="text-[10px] text-[#737373]">{productTags.length} tag</span>
+              <span className="text-[10px] text-muted">{productTags.length} tag</span>
             </div>
 
             {productTags.length > 0 && (
@@ -1519,13 +1519,13 @@ export default function ProductsPage() {
                 {productTags.map((tg) => (
                   <span
                     key={tg}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#315C4C] text-white"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-primary text-primary-foreground"
                   >
                     <span>#{tg}</span>
                     <button
                       type="button"
                       onClick={() => toggleFormTag(tg)}
-                      className="hover:text-[#FDF1F0] cursor-pointer"
+                      className="hover:text-error-bg cursor-pointer"
                       title={`Gỡ tag #${tg}`}
                     >
                       <X className="w-3 h-3" />
@@ -1548,13 +1548,13 @@ export default function ProductsPage() {
                     addTagsFromInput(tagInput);
                   }
                 }}
-                className="h-8 text-xs bg-white flex-1"
+                className="h-8 text-xs bg-surface flex-1"
               />
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs px-3 shrink-0 bg-white"
+                className="h-8 text-xs px-3 shrink-0 bg-surface"
                 onClick={() => addTagsFromInput(tagInput)}
               >
                 + Thêm tag
@@ -1562,7 +1562,7 @@ export default function ProductsPage() {
             </div>
 
             <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-              <span className="text-[10px] text-[#737373]">Gợi ý nhanh:</span>
+              <span className="text-[10px] text-muted">Gợi ý nhanh:</span>
               {allExistingTags.slice(0, 10).map((tg) => {
                 const isAdded = productTags.some(
                   (tItem) => tItem.toLowerCase() === tg.name.toLowerCase()
@@ -1575,8 +1575,8 @@ export default function ProductsPage() {
                     className={cn(
                       'text-[10px] px-2 py-0.5 rounded-full border transition-all cursor-pointer',
                       isAdded
-                        ? 'bg-[#315C4C] text-white border-[#315C4C] font-semibold'
-                        : 'bg-white text-[#555] border-[#E8E8E5] hover:border-[#315C4C]'
+                        ? 'bg-primary text-primary-foreground border-primary font-semibold'
+                        : 'bg-surface text-[#555] border-border hover:border-primary'
                     )}
                   >
                     #{tg.name}
@@ -1587,9 +1587,9 @@ export default function ProductsPage() {
           </div>
 
           {/* Dynamic Variants Form */}
-          <div className="border-t border-[#F0F0ED] pt-3">
+          <div className="border-t border-border pt-3">
             <div className="flex items-center justify-between mb-2">
-              <Label className="text-xs font-bold text-[#202124]">
+              <Label className="text-xs font-bold text-foreground">
                 {t('variantsSection')}
               </Label>
               <Button
@@ -1615,34 +1615,34 @@ export default function ProductsPage() {
                 return (
                   <div
                     key={idx}
-                    className="p-3 bg-[#F7F7F5] rounded-[8px] border border-[#E8E8E5] space-y-2.5"
+                    className="p-3 bg-background rounded-lg border border-border space-y-2.5"
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
                       <div className="sm:col-span-5">
-                        <span className="text-[10px] text-[#737373] block mb-1 font-semibold">
+                        <span className="text-[10px] text-muted block mb-1 font-semibold">
                           Tên biến thể:
                         </span>
                         <Input
                           placeholder={t('variantNamePlaceholder')}
                           value={v.name}
                           onChange={(e) => updateVariantField(idx, 'name', e.target.value)}
-                          className="h-8 text-xs bg-white"
+                          className="h-8 text-xs bg-surface"
                           required
                         />
                       </div>
                       <div className="sm:col-span-3">
-                        <span className="text-[10px] text-[#737373] block mb-1 font-semibold">
+                        <span className="text-[10px] text-muted block mb-1 font-semibold">
                           Mã loại:
                         </span>
                         <Input
                           placeholder="Tự động nếu để trống"
                           value={v.sku}
                           onChange={(e) => updateVariantField(idx, 'sku', e.target.value)}
-                          className="h-8 text-xs bg-white font-mono uppercase"
+                          className="h-8 text-xs bg-surface font-mono uppercase"
                         />
                       </div>
                       <div className="sm:col-span-3">
-                        <span className="text-[10px] text-[#737373] block mb-1 font-semibold">
+                        <span className="text-[10px] text-muted block mb-1 font-semibold">
                           Giá bán (VND):
                         </span>
                         <Input
@@ -1657,7 +1657,7 @@ export default function ProductsPage() {
                               e.target.value === '' ? 0 : Math.max(0, Number(e.target.value) || 0)
                             )
                           }
-                          className="h-8 text-xs bg-white"
+                          className="h-8 text-xs bg-surface"
                         />
                       </div>
                       <div className="sm:col-span-1 flex justify-end sm:justify-center pt-1 sm:pt-4">
@@ -1665,7 +1665,7 @@ export default function ProductsPage() {
                           type="button"
                           disabled={formVariants.length <= 1}
                           onClick={() => removeVariantField(idx)}
-                          className="p-1.5 text-[#737373] hover:text-[#C44536] disabled:opacity-30"
+                          className="p-1.5 text-muted hover:text-error disabled:opacity-30"
                           title="Xóa biến thể"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1673,9 +1673,9 @@ export default function ProductsPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-[#E8E8E5]">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-border">
                       <div>
-                        <span className="text-[10px] text-[#202124] block mb-1 font-semibold">
+                        <span className="text-[10px] text-foreground block mb-1 font-semibold">
                           Tổng tồn kho:
                         </span>
                         <Input
@@ -1690,11 +1690,11 @@ export default function ProductsPage() {
                               e.target.value === '' ? 0 : Math.max(0, Number(e.target.value) || 0)
                             )
                           }
-                          className="h-8 text-xs bg-white"
+                          className="h-8 text-xs bg-surface"
                         />
                       </div>
                       <div>
-                        <span className="text-[10px] text-[#B7791F] block mb-1 font-semibold">
+                        <span className="text-[10px] text-warning block mb-1 font-semibold">
                           Tự giữ chỗ (VIP):
                         </span>
                         <Input
@@ -1709,7 +1709,7 @@ export default function ProductsPage() {
                               e.target.value === '' ? 0 : Math.max(0, Number(e.target.value) || 0)
                             )
                           }
-                          className="h-8 text-xs bg-white border-[#B7791F]/40"
+                          className="h-8 text-xs bg-surface border-warning/40"
                         />
                       </div>
                       <div>
@@ -1728,14 +1728,14 @@ export default function ProductsPage() {
                               e.target.value === '' ? 0 : Math.max(0, Number(e.target.value) || 0)
                             )
                           }
-                          className="h-8 text-xs bg-white border-[#3B82F6]/40"
+                          className="h-8 text-xs bg-surface border-[#3B82F6]/40"
                         />
                       </div>
-                      <div className="bg-white p-1.5 rounded border border-[#E8E8E5] flex flex-col justify-center text-center">
-                        <span className="text-[9px] text-[#737373] block">Khả dụng tại quầy</span>
+                      <div className="bg-surface p-1.5 rounded border border-border flex flex-col justify-center text-center">
+                        <span className="text-[9px] text-muted block">Khả dụng tại quầy</span>
                         <span
                           className={`text-xs font-bold font-mono ${
-                            available <= 0 ? 'text-[#C44536]' : 'text-[#2F7D55]'
+                            available <= 0 ? 'text-error' : 'text-primary'
                           }`}
                         >
                           {available} món
@@ -1748,7 +1748,7 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F0ED]">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
             <Button
               type="button"
               variant="outline"
@@ -1775,8 +1775,8 @@ export default function ProductsPage() {
         >
           <div className="space-y-4">
             {/* Product Mini Preview Header inside Modal */}
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-[#F7F7F5] border border-[#E8E8E5]">
-              <div className="w-12 h-12 rounded-lg bg-white border border-[#E8E8E5] overflow-hidden flex items-center justify-center shrink-0">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-background border border-border">
+              <div className="w-12 h-12 rounded-lg bg-surface border border-border overflow-hidden flex items-center justify-center shrink-0">
                 {quickAdjustProduct.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -1785,15 +1785,15 @@ export default function ProductsPage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <Package className="w-5 h-5 text-[#9E9E9C]" />
+                  <Package className="w-5 h-5 text-muted" />
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <h4 className="text-sm font-bold text-[#202124] truncate">
+                <h4 className="text-sm font-bold text-foreground truncate">
                   {quickAdjustProduct.name}
                 </h4>
-                <p className="text-[11px] text-[#737373] mt-0.5 flex items-center gap-1">
-                  <Info className="w-3 h-3 text-[#315C4C] shrink-0" />
+                <p className="text-[11px] text-muted mt-0.5 flex items-center gap-1">
+                  <Info className="w-3 h-3 text-primary shrink-0" />
                   <span>
                     Tồn bán quầy = Tổng kho − Tự giữ VIP − Khách Online − Đã bán tại quầy
                   </span>
@@ -1809,20 +1809,20 @@ export default function ProductsPage() {
                 return (
                   <div
                     key={qv.id}
-                    className="p-3.5 bg-[#F7F7F5] rounded-xl border border-[#E8E8E5] space-y-3"
+                    className="p-3.5 bg-background rounded-xl border border-border space-y-3"
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-bold text-xs text-[#202124]">{qv.name}</h4>
-                        <span className="font-mono text-[10px] text-[#737373]">
+                        <h4 className="font-bold text-xs text-foreground">{qv.name}</h4>
+                        <span className="font-mono text-[10px] text-muted">
                           Mã: {qv.sku} • Đã bán tại quầy: {qv.offlineSold || 0}
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[10px] text-[#737373] block">Còn bán tại quầy:</span>
+                        <span className="text-[10px] text-muted block">Còn bán tại quầy:</span>
                         <span
                           className={`text-xs font-extrabold font-mono ${
-                            offlineAvailable <= 0 ? 'text-[#C44536]' : 'text-[#2F7D55]'
+                            offlineAvailable <= 0 ? 'text-error' : 'text-primary'
                           }`}
                         >
                           {offlineAvailable} món
@@ -1832,7 +1832,7 @@ export default function ProductsPage() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-semibold text-[#202124]">
+                        <Label className="text-[11px] font-semibold text-foreground">
                           Tổng số lượng kho:
                         </Label>
                         <Input
@@ -1846,13 +1846,13 @@ export default function ProductsPage() {
                               prev.map((item, i) => (i === idx ? { ...item, total: val } : item))
                             );
                           }}
-                          className="h-8 text-xs bg-white font-mono"
+                          className="h-8 text-xs bg-surface font-mono"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-semibold text-[#B7791F] flex items-center gap-1">
-                          <Bookmark className="w-3 h-3 text-[#B7791F]" />
+                        <Label className="text-[11px] font-semibold text-warning flex items-center gap-1">
+                          <Bookmark className="w-3 h-3 text-warning" />
                           <span>Tự giữ / Đặt trước (VIP):</span>
                         </Label>
                         <Input
@@ -1866,7 +1866,7 @@ export default function ProductsPage() {
                               prev.map((item, i) => (i === idx ? { ...item, reserved: val } : item))
                             );
                           }}
-                          className="h-8 text-xs bg-white border-[#B7791F]/40 font-mono"
+                          className="h-8 text-xs bg-surface border-warning/40 font-mono"
                         />
                       </div>
 
@@ -1886,7 +1886,7 @@ export default function ProductsPage() {
                               prev.map((item, i) => (i === idx ? { ...item, online: val } : item))
                             );
                           }}
-                          className="h-8 text-xs bg-white border-[#3B82F6]/40 font-mono"
+                          className="h-8 text-xs bg-surface border-[#3B82F6]/40 font-mono"
                         />
                       </div>
                     </div>
@@ -1895,7 +1895,7 @@ export default function ProductsPage() {
               })}
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F0ED]">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
               <Button
                 type="button"
                 variant="outline"
@@ -1908,7 +1908,7 @@ export default function ProductsPage() {
                 type="button"
                 variant="primary"
                 size="sm"
-                className="bg-[#315C4C] hover:bg-[#27483B] text-white font-bold"
+                className="bg-primary hover:bg-[#27483B] text-primary-foreground font-bold"
                 onClick={handleSaveQuickAdjust}
               >
                 Lưu Thay Đổi Số Lượng

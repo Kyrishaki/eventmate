@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import { usePathname, Link } from '@/i18n/routing';
-import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/stores/auth-store';
 import { cn } from '@/lib/utils';
 import { getGroupedNavSections, isNavRouteActive } from './nav-config';
@@ -31,14 +30,13 @@ export function Sidebar({
   onToggleCollapse,
 }: SidebarProps) {
   const pathname = usePathname();
-  const t = useTranslations('nav');
   const { user } = useAuthStore();
 
   const isCollab = user?.role === 'collab_partner';
   const sections = React.useMemo(() => getGroupedNavSections(isCollab), [isCollab]);
 
   const userInitial = user?.fullName ? user.fullName.charAt(0).toUpperCase() : 'T';
-  const userDisplayName = user?.fullName || 'Tuấn Admin VIP Pro';
+  const userDisplayName = user?.fullName || 'Tài khoản';
   const userRoleDisplay = user?.role === 'owner' ? 'Chủ sở hữu' : user?.role === 'collab_partner' ? 'Đối tác Collab' : 'Quản trị';
 
   return (
@@ -55,7 +53,7 @@ export function Sidebar({
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-50 flex flex-col justify-between transition-all duration-200 select-none print:hidden',
-          'bg-[#19191B] text-[#F4F4F2] border-r border-[#2E2E32] font-sans',
+          'bg-surface text-foreground border-r border-border font-sans',
           isOpen ? 'md:w-[240px] md:shadow-2xl lg:shadow-none' : 'md:w-[76px]',
           isCollapsed ? 'lg:w-[76px]' : 'lg:w-[240px]',
           'hidden md:flex'
@@ -67,7 +65,7 @@ export function Sidebar({
             <Link
               href="/dashboard"
               onClick={onClose}
-              className="flex items-center gap-2.5 text-[#F4F4F2] group min-w-0"
+              className="flex items-center gap-2.5 text-foreground group min-w-0"
               title="HikaruStore Quản trị"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -83,10 +81,10 @@ export function Sidebar({
                   isCollapsed ? 'lg:hidden' : 'lg:flex'
                 )}
               >
-                <span className="text-[17px] font-bold tracking-tight text-[#F4F4F2] truncate">
+                <span className="text-[17px] font-bold tracking-tight text-foreground truncate">
                   HikaruStore
                 </span>
-                <span className="text-[12px] text-[#A3A3A0] leading-none mt-0.5">
+                <span className="text-[12px] text-muted leading-none mt-0.5">
                   Quản trị
                 </span>
               </div>
@@ -97,7 +95,7 @@ export function Sidebar({
               <button
                 type="button"
                 onClick={onClose}
-                className="hidden md:flex lg:hidden p-1.5 rounded-[8px] text-[#A3A3A0] hover:text-[#F4F4F2] hover:bg-[#232326] cursor-pointer"
+                className="hidden md:flex lg:hidden p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-surface-hover cursor-pointer"
                 aria-label="Đóng menu"
               >
                 <X className="w-4 h-4" />
@@ -108,7 +106,7 @@ export function Sidebar({
               <button
                 type="button"
                 onClick={onToggleCollapse}
-                className="hidden lg:flex p-1.5 rounded-[8px] text-[#A3A3A0] hover:text-[#F4F4F2] hover:bg-[#232326] transition-colors cursor-pointer"
+                className="hidden lg:flex p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
                 aria-label="Thu gọn thanh điều hướng"
                 title="Thu gọn thanh điều hướng"
               >
@@ -126,13 +124,13 @@ export function Sidebar({
           >
             <Link
               href="/pos"
-              className="h-10 px-3 rounded-[10px] bg-[#232326] hover:bg-[#2E2E32] text-[#F5B301] border border-[#2E2E32] hover:border-[#F5B301]/40 text-[13.5px] font-semibold flex items-center justify-between transition-all"
+              className="h-10 px-3 rounded-lg bg-surface-hover hover:bg-border text-primary border border-border hover:border-primary/40 text-[13.5px] font-semibold flex items-center justify-between transition-all"
             >
               <span className="flex items-center gap-2">
                 <TabletSmartphone className="w-4 h-4" />
                 <span>Mở bán hàng POS</span>
               </span>
-              <span className="text-[11px] px-1.5 py-0.5 rounded bg-[#F5B301]/15 text-[#F5B301] font-bold">
+              <span className="text-[11px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-bold">
                 POS
               </span>
             </Link>
@@ -155,7 +153,7 @@ export function Sidebar({
                   onOpenDrawer?.();
                 }
               }}
-              className="w-10 h-10 rounded-[10px] bg-[#232326] text-[#A3A3A0] hover:text-[#F4F4F2] flex items-center justify-center transition-colors cursor-pointer"
+              className="w-10 h-10 rounded-lg bg-surface-hover text-muted hover:text-foreground flex items-center justify-center transition-colors cursor-pointer"
               title="Mở rộng menu"
             >
               <PanelLeftOpen className="w-4 h-4" />
@@ -169,7 +167,7 @@ export function Sidebar({
                 {/* Group Title */}
                 <div
                   className={cn(
-                    'px-3 pb-1 text-[11px] font-bold tracking-wider uppercase text-[#A3A3A0]',
+                    'px-3 pb-1 text-[11px] font-bold tracking-wider uppercase text-muted',
                     isOpen ? 'md:block' : 'md:hidden',
                     isCollapsed ? 'lg:hidden' : 'lg:block'
                   )}
@@ -188,16 +186,16 @@ export function Sidebar({
                       onClick={onClose}
                       title={item.defaultLabel}
                       className={cn(
-                        'h-[42px] px-3 rounded-[10px] text-[14px] flex items-center transition-colors select-none',
+                        'h-11 px-3 rounded-lg text-sm flex items-center transition-colors select-none',
                         isActive
-                          ? 'bg-[#232326] text-[#F4F4F2] font-semibold'
-                          : 'text-[#A3A3A0] hover:text-[#F4F4F2] hover:bg-[#232326]/60 font-normal',
+                          ? 'bg-surface-hover text-foreground font-semibold'
+                          : 'text-muted hover:text-foreground hover:bg-surface-hover/60 font-normal',
                         isOpen ? 'md:justify-between' : 'md:justify-center md:px-0',
                         isCollapsed ? 'lg:justify-center lg:px-0' : 'lg:justify-between'
                       )}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <Icon className={cn('w-[18px] h-[18px] shrink-0', isActive ? 'text-[#F5B301]' : 'text-[#A3A3A0]')} />
+                        <Icon className={cn('w-[18px] h-[18px] shrink-0', isActive ? 'text-primary' : 'text-muted')} />
                         <span
                           className={cn(
                             'truncate',
@@ -213,7 +211,7 @@ export function Sidebar({
                       {item.badge && (
                         <span
                           className={cn(
-                            'min-w-[20px] h-[20px] px-1.5 rounded-full bg-[#F5B301] text-[#1A1300] text-[11px] font-bold inline-flex items-center justify-center shrink-0',
+                            'min-w-[20px] h-[20px] px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold inline-flex items-center justify-center shrink-0',
                             isOpen ? 'md:inline-flex' : 'md:hidden',
                             isCollapsed ? 'lg:hidden' : 'lg:inline-flex'
                           )}
@@ -232,7 +230,7 @@ export function Sidebar({
         {/* Footer Area: User profile chip */}
         <div
           className={cn(
-            'p-3.5 border-t border-[#2E2E32] flex flex-col gap-3 shrink-0',
+            'p-3.5 border-t border-border flex flex-col gap-3 shrink-0',
             isOpen ? 'md:flex' : 'md:hidden',
             isCollapsed ? 'lg:hidden' : 'lg:flex'
           )}
@@ -241,15 +239,15 @@ export function Sidebar({
           <div className="flex items-center gap-2.5 min-w-0">
             <span
               aria-hidden="true"
-              className="w-9 h-9 rounded-full bg-[#232326] text-[#F4F4F2] flex items-center justify-center text-[14px] font-bold shrink-0 border border-[#2E2E32]"
+              className="w-9 h-9 rounded-full bg-surface-hover text-foreground flex items-center justify-center text-[14px] font-bold shrink-0 border border-border"
             >
               {userInitial}
             </span>
             <div className="flex flex-col min-w-0">
-              <span className="text-[13.5px] font-semibold text-[#F4F4F2] truncate">
+              <span className="text-[13.5px] font-semibold text-foreground truncate">
                 {userDisplayName}
               </span>
-              <span className="text-[12px] text-[#A3A3A0] truncate">
+              <span className="text-[12px] text-muted truncate">
                 {userRoleDisplay}
               </span>
             </div>

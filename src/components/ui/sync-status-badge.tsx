@@ -21,38 +21,38 @@ export function SyncStatusBadge({ status, pendingCount = 0, className, onClick }
     online: {
       icon: Wifi,
       label: t('online'),
-      dotClass: 'bg-[#2F7D55]',
-      badgeClass: 'text-[#2F7D55] bg-[#EAF4EE] border-[#CEE6D7]',
+      dotClass: 'bg-primary',
+      badgeClass: 'text-primary bg-success-bg border-[#CEE6D7]',
     },
     offline: {
       icon: WifiOff,
       label: t('offline'),
-      dotClass: 'bg-[#B7791F]',
-      badgeClass: 'text-[#B7791F] bg-[#FEF7EC] border-[#F8E3C3]',
+      dotClass: 'bg-warning',
+      badgeClass: 'text-warning bg-warning-bg border-[#F8E3C3]',
     },
     syncing: {
       icon: RefreshCw,
       label: t('syncing'),
-      dotClass: 'bg-[#315C4C] animate-pulse',
-      badgeClass: 'text-[#315C4C] bg-[#EBF1EE] border-[#D5E2DC]',
+      dotClass: 'bg-primary animate-pulse',
+      badgeClass: 'text-primary bg-warning-bg border-[#D5E2DC]',
     },
     synced: {
       icon: Wifi,
       label: t('synced'),
-      dotClass: 'bg-[#2F7D55]',
-      badgeClass: 'text-[#2F7D55] bg-[#EAF4EE] border-[#CEE6D7]',
+      dotClass: 'bg-primary',
+      badgeClass: 'text-primary bg-success-bg border-[#CEE6D7]',
     },
     pending: {
       icon: RefreshCw,
       label: `${t('pending')} (${pendingCount})`,
-      dotClass: 'bg-[#B7791F]',
-      badgeClass: 'text-[#B7791F] bg-[#FEF7EC] border-[#F8E3C3]',
+      dotClass: 'bg-warning',
+      badgeClass: 'text-warning bg-warning-bg border-[#F8E3C3]',
     },
     syncFailed: {
       icon: AlertCircle,
       label: t('syncFailed'),
-      dotClass: 'bg-[#C44536]',
-      badgeClass: 'text-[#C44536] bg-[#FDF1F0] border-[#FADBD8]',
+      dotClass: 'bg-error',
+      badgeClass: 'text-error bg-error-bg border-error-bg',
     },
   };
 
@@ -65,7 +65,7 @@ export function SyncStatusBadge({ status, pendingCount = 0, className, onClick }
       onClick={onClick}
       disabled={status === 'syncing'}
       className={cn(
-        'inline-flex items-center gap-1.5 px-2 py-1 rounded-[4px] border text-xs font-medium tracking-tight select-none transition-opacity',
+        'inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-medium tracking-tight select-none transition-opacity',
         onClick && 'cursor-pointer hover:opacity-85 active:scale-95',
         current.badgeClass,
         className

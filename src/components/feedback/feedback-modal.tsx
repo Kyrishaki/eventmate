@@ -122,15 +122,15 @@ export function FeedbackModal({ isOpen, onClose, defaultType = 'bug' }: Feedback
     >
       {isSuccess ? (
         <div className="py-6 text-center space-y-4">
-          <div className="w-14 h-14 rounded-full bg-[#EBF1EE] text-[#2F7D55] flex items-center justify-center mx-auto">
+          <div className="w-14 h-14 rounded-full bg-warning-bg text-primary flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-8 h-8" />
           </div>
 
           <div className="space-y-1.5 max-w-sm mx-auto">
-            <h3 className="text-base font-bold text-[#202124]">
+            <h3 className="text-base font-bold text-foreground">
               Cảm ơn bạn đã đóng góp!
             </h3>
-            <p className="text-xs text-[#737373]">
+            <p className="text-xs text-muted">
               Báo cáo của bạn đã được chuyển tới Admin để tổng hợp và xử lý.
             </p>
           </div>
@@ -148,10 +148,10 @@ export function FeedbackModal({ isOpen, onClose, defaultType = 'bug' }: Feedback
             <button
               type="button"
               onClick={() => setType('bug')}
-              className={`p-2.5 rounded-[6px] border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+              className={`p-2.5 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
                 type === 'bug'
-                  ? 'border-[#C44536] bg-[#C44536]/10 text-[#C44536]'
-                  : 'border-[#E8E8E5] bg-white text-[#737373] hover:text-[#202124]'
+                  ? 'border-error bg-error/10 text-error'
+                  : 'border-border bg-surface text-muted hover:text-foreground'
               }`}
             >
               <Bug className="w-3.5 h-3.5" />
@@ -161,10 +161,10 @@ export function FeedbackModal({ isOpen, onClose, defaultType = 'bug' }: Feedback
             <button
               type="button"
               onClick={() => setType('feature')}
-              className={`p-2.5 rounded-[6px] border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+              className={`p-2.5 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
                 type === 'feature'
-                  ? 'border-[#315C4C] bg-[#315C4C]/10 text-[#315C4C]'
-                  : 'border-[#E8E8E5] bg-white text-[#737373] hover:text-[#202124]'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border bg-surface text-muted hover:text-foreground'
               }`}
             >
               <Lightbulb className="w-3.5 h-3.5" />
@@ -174,10 +174,10 @@ export function FeedbackModal({ isOpen, onClose, defaultType = 'bug' }: Feedback
             <button
               type="button"
               onClick={() => setType('ux')}
-              className={`p-2.5 rounded-[6px] border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+              className={`p-2.5 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
                 type === 'ux'
                   ? 'border-[#2563EB] bg-[#2563EB]/10 text-[#2563EB]'
-                  : 'border-[#E8E8E5] bg-white text-[#737373] hover:text-[#202124]'
+                  : 'border-border bg-surface text-muted hover:text-foreground'
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
@@ -187,10 +187,10 @@ export function FeedbackModal({ isOpen, onClose, defaultType = 'bug' }: Feedback
             <button
               type="button"
               onClick={() => setType('other')}
-              className={`p-2.5 rounded-[6px] border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+              className={`p-2.5 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
                 type === 'other'
-                  ? 'border-[#737373] bg-[#737373]/10 text-[#202124]'
-                  : 'border-[#E8E8E5] bg-white text-[#737373] hover:text-[#202124]'
+                  ? 'border-muted bg-muted/10 text-foreground'
+                  : 'border-border bg-surface text-muted hover:text-foreground'
               }`}
             >
               <MessageSquare className="w-3.5 h-3.5" />
@@ -208,7 +208,7 @@ export function FeedbackModal({ isOpen, onClose, defaultType = 'bug' }: Feedback
                 id="fb-module"
                 value={module}
                 onChange={(e) => setModule(e.target.value)}
-                className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                className="flex h-9 w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
               >
                 <option value="POS Bán hàng">POS Bán hàng (Thu ngân, giỏ hàng, quét QR)</option>
                 <option value="Kho & Phân bổ">Quản lý Kho & Phân bổ hàng hóa</option>
@@ -230,7 +230,7 @@ export function FeedbackModal({ isOpen, onClose, defaultType = 'bug' }: Feedback
                 id="fb-severity"
                 value={severity}
                 onChange={(e) => setSeverity(e.target.value as FeedbackSeverity)}
-                className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                className="flex h-9 w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
               >
                 <option value="low">Thấp — Ý kiến tham khảo / Cải tiến nhỏ</option>
                 <option value="medium">Bình thường — Cần cải thiện trong bản tới</option>
@@ -271,7 +271,7 @@ export function FeedbackModal({ isOpen, onClose, defaultType = 'bug' }: Feedback
               placeholder="Vui lòng mô tả cụ thể bạn đang thao tác ở bước nào, lỗi hiển thị ra sao hoặc bạn mong muốn hệ thống hoạt động như thế nào..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="flex w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-2 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+              className="flex w-full rounded-lg border border-border bg-surface px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary"
             />
           </div>
 
@@ -287,7 +287,7 @@ export function FeedbackModal({ isOpen, onClose, defaultType = 'bug' }: Feedback
           {/* Reporter Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div className="space-y-1.5">
-              <Label htmlFor="fb-name" className="text-[11px] text-[#737373]">
+              <Label htmlFor="fb-name" className="text-[11px] text-muted">
                 Người gửi (Họ tên):
               </Label>
               <Input
@@ -300,7 +300,7 @@ export function FeedbackModal({ isOpen, onClose, defaultType = 'bug' }: Feedback
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="fb-email" className="text-[11px] text-[#737373]">
+              <Label htmlFor="fb-email" className="text-[11px] text-muted">
                 Email / SĐT liên hệ lại (nếu cần):
               </Label>
               <Input
@@ -314,7 +314,7 @@ export function FeedbackModal({ isOpen, onClose, defaultType = 'bug' }: Feedback
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F0ED]">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
             <Button type="button" variant="outline" size="sm" onClick={handleResetAndClose}>
               Hủy
             </Button>
@@ -354,10 +354,10 @@ export function FloatingFeedbackWidget({ hasBottomNav = false }: { hasBottomNav?
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-2 bg-[#315C4C] text-white hover:bg-[#284A3D] px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95 border border-white/20 text-xs font-semibold group cursor-pointer"
+          className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary-hover px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95 border border-white/20 text-xs font-semibold group cursor-pointer"
           title="Báo cáo lỗi hoặc đóng góp ý kiến cải thiện website"
         >
-          <MessageSquarePlus className="w-4 h-4 text-[#F3B05C] group-hover:rotate-12 transition-transform" />
+          <MessageSquarePlus className="w-4 h-4 text-warning group-hover:rotate-12 transition-transform" />
           <span className="hidden sm:inline">Góp ý & Báo lỗi</span>
         </button>
       </div>

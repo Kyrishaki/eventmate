@@ -4,8 +4,8 @@
   "description": "Hệ thống quản lý gian hàng merchandise, kiểm soát kho và bán hàng POS chuyên nghiệp HikaruStore",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F7F7F5",
-  "theme_color": "#315C4C",
+  "background_color": "#0F0F10",
+  "theme_color": "#0F0F10",
   "orientation": "any",
   "icons": [
     {

@@ -356,8 +356,8 @@ export default function AuditLogsPage() {
     switch (role) {
       case 'collab_partner':
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded bg-[#FEF7EC] text-[#8C5D17] border border-[#B7791F]/30">
-            <Handshake className="w-3 h-3 text-[#B7791F]" />
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded bg-warning-bg text-warning border border-warning/30">
+            <Handshake className="w-3 h-3 text-warning" />
             <span>{name}</span>
           </span>
         );
@@ -371,22 +371,22 @@ export default function AuditLogsPage() {
         );
       case 'cashier':
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-[#EBF1EE] text-[#315C4C] border border-[#315C4C]/30">
-            <ShoppingCart className="w-3 h-3 text-[#315C4C]" />
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-warning-bg text-primary border border-primary/30">
+            <ShoppingCart className="w-3 h-3 text-primary" />
             <span>{name}</span>
           </span>
         );
       case 'owner':
       case 'admin':
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded bg-[#202124] text-white">
-            <ShieldCheck className="w-3 h-3 text-[#B7791F]" />
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded bg-foreground text-white">
+            <ShieldCheck className="w-3 h-3 text-warning" />
             <span>{name}</span>
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded bg-[#F7F7F5] text-[#737373] border border-[#E8E8E5]">
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded bg-background text-muted border border-border">
             <User className="w-3 h-3" />
             <span>{name}</span>
           </span>
@@ -411,7 +411,7 @@ export default function AuditLogsPage() {
         );
       case 'preorder_adjust':
         return (
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#FEF7EC] text-[#B7791F] border border-[#B7791F]/30">
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-warning-bg text-warning border border-warning/30">
             ⚡ Chỉnh đặt trước
           </span>
         );
@@ -423,7 +423,7 @@ export default function AuditLogsPage() {
         );
       case 'create':
         return (
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#EBF1EE] text-[#2F7D55] border border-[#A6C4B8]">
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-warning-bg text-primary border border-[#A6C4B8]">
             + Thêm mới
           </span>
         );
@@ -436,7 +436,7 @@ export default function AuditLogsPage() {
       case 'delete':
       case 'user_delete':
         return (
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#FDF1F0] text-[#C44536] border border-[#F8B4AF]">
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-error-bg text-error border border-[#F8B4AF]">
             🗑 Đã xóa
           </span>
         );
@@ -448,13 +448,13 @@ export default function AuditLogsPage() {
         );
       case 'order_cancel':
         return (
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#FDF1F0] text-[#C44536] border border-[#F8B4AF]">
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-error-bg text-error border border-[#F8B4AF]">
             🚫 Hủy đơn (Void)
           </span>
         );
       case 'order_refund':
         return (
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#FEF7EC] text-[#B7791F] border border-[#FDE68A]">
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-warning-bg text-warning border border-gold-text">
             ↩ Hoàn tiền / Trả hàng
           </span>
         );
@@ -466,7 +466,7 @@ export default function AuditLogsPage() {
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#F7F7F5] text-[#737373]">
+          <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-background text-muted">
             {type}
           </span>
         );
@@ -481,8 +481,8 @@ export default function AuditLogsPage() {
   if (!hasAuthHydrated) {
     return (
       <div className="max-w-2xl mx-auto py-12 px-4 flex flex-col items-center justify-center gap-3">
-        <div className="w-8 h-8 border-3 border-[#315C4C] border-t-transparent rounded-full animate-spin" />
-        <span className="text-xs text-[#737373] font-medium">Đang kiểm tra quyền hạn hệ thống...</span>
+        <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs text-muted font-medium">Đang kiểm tra quyền hạn hệ thống...</span>
       </div>
     );
   }
@@ -490,26 +490,26 @@ export default function AuditLogsPage() {
   if (!isAdmin) {
     return (
       <div className="max-w-2xl mx-auto py-12 px-4 text-center space-y-6">
-        <div className="w-16 h-16 rounded-full bg-[#FEF7EC] border border-[#B7791F]/30 flex items-center justify-center mx-auto text-[#B7791F]">
+        <div className="w-16 h-16 rounded-full bg-warning-bg border border-warning/30 flex items-center justify-center mx-auto text-warning">
           <ShieldAlert className="w-8 h-8" />
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#202124]">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
             Khu vực Giám Sát & Nhật Ký Hoạt Động (Admin Only)
           </h1>
-          <p className="text-xs sm:text-sm text-[#737373] max-w-lg mx-auto">
+          <p className="text-xs sm:text-sm text-muted max-w-lg mx-auto">
             Nhật ký lưu vết thao tác (Audit Log) chứa thông tin bảo mật về toàn bộ lịch sử chỉnh sửa, xóa hàng, điều chỉnh kho của Đối tác Collab và Nhân viên.
           </p>
         </div>
 
-        <Card className="p-4 bg-[#F7F7F5] border-[#E8E8E5] text-left text-xs space-y-2">
-          <div className="flex items-center justify-between pb-2 border-b border-[#E8E8E5]">
-            <span className="text-[#737373]">Tài khoản hiện tại:</span>
-            <span className="font-semibold text-[#202124]">{user?.fullName || 'Khách xem'}</span>
+        <Card className="p-4 bg-background border-border text-left text-xs space-y-2">
+          <div className="flex items-center justify-between pb-2 border-b border-border">
+            <span className="text-muted">Tài khoản hiện tại:</span>
+            <span className="font-semibold text-foreground">{user?.fullName || 'Khách xem'}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-[#737373]">Vai trò hiện tại:</span>
+            <span className="text-muted">Vai trò hiện tại:</span>
             <Badge variant="warning" className="text-[10px] uppercase font-bold">
               {user?.role || 'viewer'} (Không đủ quyền)
             </Badge>
@@ -539,19 +539,19 @@ export default function AuditLogsPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2 border-b border-[#E8E8E5]">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2 border-b border-border">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[#202124] flex items-center gap-2">
-              <History className="w-5 h-5 text-[#315C4C]" />
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+              <History className="w-5 h-5 text-primary" />
               <span>Nhật Ký Hoạt Động (Audit Log)</span>
             </h1>
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-[#2F7D55]/10 text-[#2F7D55] border border-[#2F7D55]/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#2F7D55] animate-pulse" />
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
               Thời gian thực
             </span>
           </div>
-          <p className="text-xs text-[#737373] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Dành riêng cho Quản trị viên: Tra cứu toàn bộ lịch sử Đối tác Collab và Staff nhân sự làm gì, thêm gì, chỉnh gì, xóa gì.
           </p>
         </div>
@@ -561,7 +561,7 @@ export default function AuditLogsPage() {
           <Button
             variant="outline"
             size="sm"
-            className="text-xs gap-1.5 h-8 bg-white flex-1 sm:flex-none justify-center px-2"
+            className="text-xs gap-1.5 h-8 bg-surface flex-1 sm:flex-none justify-center px-2"
             onClick={handleExportJson}
             title="Tải file JSON toàn bộ nhật ký"
           >
@@ -572,7 +572,7 @@ export default function AuditLogsPage() {
           <Button
             variant="outline"
             size="sm"
-            className="text-xs gap-1.5 h-8 text-[#C44536] hover:bg-[#FDF1F0] hover:border-[#F8B4AF] flex-1 sm:flex-none justify-center px-2"
+            className="text-xs gap-1.5 h-8 text-error hover:bg-error-bg hover:border-[#F8B4AF] flex-1 sm:flex-none justify-center px-2"
             onClick={() => setIsConfirmClearOpen(true)}
             title="Xóa sạch toàn bộ lịch sử log"
           >
@@ -585,34 +585,34 @@ export default function AuditLogsPage() {
       {/* KPI Overview Cards */}
       <div className="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Total Logs */}
-        <Card className="border-[#E8E8E5] bg-white shadow-2xs p-3.5 sm:p-4">
-          <span className="text-[11px] font-semibold text-[#737373] uppercase tracking-wider block">
+        <Card className="border-border bg-surface shadow-2xs p-3.5 sm:p-4">
+          <span className="text-[11px] font-semibold text-muted uppercase tracking-wider block">
             Tổng Lượt Thao Tác
           </span>
           <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-lg min-[360px]:text-xl sm:text-2xl font-black text-[#202124]">
+            <span className="text-lg min-[360px]:text-xl sm:text-2xl font-black text-foreground">
               {totalLogsCount}
             </span>
-            <FileText className="w-4 h-4 text-[#737373]" />
+            <FileText className="w-4 h-4 text-muted" />
           </div>
-          <p className="text-[10px] text-[#737373] mt-1">Đã lưu trong phiên làm việc</p>
+          <p className="text-[10px] text-muted mt-1">Đã lưu trong phiên làm việc</p>
         </Card>
 
         {/* Collab Partner Actions */}
         <Card
-          className="border-[#B7791F]/30 bg-[#FEF7EC] shadow-2xs p-3.5 sm:p-4 cursor-pointer hover:border-[#B7791F] transition-colors"
+          className="border-warning/30 bg-warning-bg shadow-2xs p-3.5 sm:p-4 cursor-pointer hover:border-warning transition-colors"
           onClick={() => setActorRoleFilter(actorRoleFilter === 'collab_partner' ? 'all' : 'collab_partner')}
         >
-          <span className="text-[11px] font-bold text-[#B7791F] uppercase tracking-wider block">
+          <span className="text-[11px] font-bold text-warning uppercase tracking-wider block">
             Đối Tác Collab Thao Tác
           </span>
           <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-lg min-[360px]:text-xl sm:text-2xl font-black text-[#B7791F]">
+            <span className="text-lg min-[360px]:text-xl sm:text-2xl font-black text-warning">
               {collabLogsCount}
             </span>
-            <Handshake className="w-4 h-4 text-[#B7791F]" />
+            <Handshake className="w-4 h-4 text-warning" />
           </div>
-          <p className="text-[10px] text-[#8C5D17] mt-1">Thêm hàng, nạp kho, đồng bộ</p>
+          <p className="text-[10px] text-warning mt-1">Thêm hàng, nạp kho, đồng bộ</p>
         </Card>
 
         {/* Staff & Cashier Actions */}
@@ -634,28 +634,28 @@ export default function AuditLogsPage() {
 
         {/* Sensitive / Critical Changes */}
         <Card
-          className="border-[#E8E8E5] bg-white shadow-2xs p-3.5 sm:p-4 cursor-pointer hover:border-[#C44536]/50 transition-colors"
+          className="border-border bg-surface shadow-2xs p-3.5 sm:p-4 cursor-pointer hover:border-error/50 transition-colors"
           onClick={() => setActionTypeFilter(actionTypeFilter === 'delete' ? 'all' : 'delete')}
         >
-          <span className="text-[11px] font-bold text-[#C44536] uppercase tracking-wider block">
+          <span className="text-[11px] font-bold text-error uppercase tracking-wider block">
             Chỉnh Sửa & Xóa Nhạy Cảm
           </span>
           <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-lg min-[360px]:text-xl sm:text-2xl font-black text-[#C44536]">
+            <span className="text-lg min-[360px]:text-xl sm:text-2xl font-black text-error">
               {criticalActionsCount}
             </span>
-            <AlertTriangle className="w-4 h-4 text-[#C44536]" />
+            <AlertTriangle className="w-4 h-4 text-error" />
           </div>
-          <p className="text-[10px] text-[#737373] mt-1">Sửa giá, xóa món, chỉnh VIP hold</p>
+          <p className="text-[10px] text-muted mt-1">Sửa giá, xóa món, chỉnh VIP hold</p>
         </Card>
       </div>
 
       {/* Filter Toolbar */}
-      <Card className="p-3.5 sm:p-4 border-[#E8E8E5] bg-white shadow-2xs space-y-3">
+      <Card className="p-3.5 sm:p-4 border-border bg-surface shadow-2xs space-y-3">
         <div className="flex flex-col lg:flex-row lg:items-center gap-3">
           {/* Keyword Search */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-[#9E9E9C] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2" />
             <Input
               type="text"
               placeholder="Tìm kiếm theo tên nhân viên, đối tác, sản phẩm, mã đơn hoặc nội dung..."
@@ -671,7 +671,7 @@ export default function AuditLogsPage() {
             <select
               value={actorRoleFilter}
               onChange={(e) => setActorRoleFilter(e.target.value)}
-              className="h-9 px-2.5 rounded-[6px] border border-[#E8E8E5] bg-white text-xs font-medium text-[#202124] focus:outline-none focus:border-[#315C4C]"
+              className="h-9 px-2.5 rounded-lg border border-border bg-surface text-xs font-medium text-foreground focus:outline-none focus:border-primary"
             >
               <option value="all">👤 Tất cả đối tượng</option>
               <option value="collab_partner">🤝 Chỉ Đối tác Collab</option>
@@ -684,7 +684,7 @@ export default function AuditLogsPage() {
             <select
               value={actionTypeFilter}
               onChange={(e) => setActionTypeFilter(e.target.value)}
-              className="h-9 px-2.5 rounded-[6px] border border-[#E8E8E5] bg-white text-xs font-medium text-[#202124] focus:outline-none focus:border-[#315C4C]"
+              className="h-9 px-2.5 rounded-lg border border-border bg-surface text-xs font-medium text-foreground focus:outline-none focus:border-primary"
             >
               <option value="all">⚡ Tất cả hành động</option>
               <option value="collab_contribute">+ Đóng góp hàng Collab</option>
@@ -704,7 +704,7 @@ export default function AuditLogsPage() {
             <select
               value={timeFilter}
               onChange={(e) => setTimeFilter(e.target.value)}
-              className="h-9 px-2.5 rounded-[6px] border border-[#E8E8E5] bg-white text-xs font-medium text-[#202124] focus:outline-none focus:border-[#315C4C]"
+              className="h-9 px-2.5 rounded-lg border border-border bg-surface text-xs font-medium text-foreground focus:outline-none focus:border-primary"
             >
               <option value="all">🕒 Tất cả thời gian</option>
               <option value="24h">Hôm nay / 24 giờ qua</option>
@@ -715,15 +715,15 @@ export default function AuditLogsPage() {
 
         {/* Active Filter Badges */}
         {(searchTerm || actorRoleFilter !== 'all' || actionTypeFilter !== 'all' || timeFilter !== 'all') && (
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#F0F0ED] text-xs">
-            <span className="text-[#737373]">Đang lọc:</span>
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border text-xs">
+            <span className="text-muted">Đang lọc:</span>
             {searchTerm && (
               <Badge variant="outline" className="gap-1 text-[11px]">
                 Từ khóa: &ldquo;{searchTerm}&rdquo;
                 <button
                   type="button"
                   onClick={() => setSearchTerm('')}
-                  className="hover:text-[#C44536] ml-1"
+                  className="hover:text-error ml-1"
                 >
                   ×
                 </button>
@@ -735,7 +735,7 @@ export default function AuditLogsPage() {
                 <button
                   type="button"
                   onClick={() => setActorRoleFilter('all')}
-                  className="hover:text-[#C44536] ml-1"
+                  className="hover:text-error ml-1"
                 >
                   ×
                 </button>
@@ -747,7 +747,7 @@ export default function AuditLogsPage() {
                 <button
                   type="button"
                   onClick={() => setActionTypeFilter('all')}
-                  className="hover:text-[#C44536] ml-1"
+                  className="hover:text-error ml-1"
                 >
                   ×
                 </button>
@@ -759,7 +759,7 @@ export default function AuditLogsPage() {
                 <button
                   type="button"
                   onClick={() => setTimeFilter('all')}
-                  className="hover:text-[#C44536] ml-1"
+                  className="hover:text-error ml-1"
                 >
                   ×
                 </button>
@@ -773,7 +773,7 @@ export default function AuditLogsPage() {
                 setActionTypeFilter('all');
                 setTimeFilter('all');
               }}
-              className="text-xs text-[#315C4C] hover:underline font-semibold ml-auto"
+              className="text-xs text-primary hover:underline font-semibold ml-auto"
             >
               Xóa tất cả bộ lọc
             </button>
@@ -782,14 +782,14 @@ export default function AuditLogsPage() {
       </Card>
 
       {/* Main Audit Log Feed / Table */}
-      <Card className="border-[#E8E8E5] bg-white shadow-xs overflow-hidden">
-        <CardHeader className="py-3 px-4 sm:px-5 bg-[#FAFAF8] border-b border-[#E8E8E5] flex flex-row items-center justify-between">
+      <Card className="border-border bg-surface shadow-xs overflow-hidden">
+        <CardHeader className="py-3 px-4 sm:px-5 bg-background border-b border-border flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-sm font-bold text-[#202124] flex items-center gap-2">
-              <SlidersHorizontal className="w-4 h-4 text-[#315C4C]" />
+            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+              <SlidersHorizontal className="w-4 h-4 text-primary" />
               <span>Dòng Nhật Ký Hoạt Động Chi Tiết</span>
             </CardTitle>
-            <p className="text-xs text-[#737373] mt-0.5">
+            <p className="text-xs text-muted mt-0.5">
               Hiển thị {filteredLogs.length} / {logs.length} bản ghi thao tác
             </p>
           </div>
@@ -797,23 +797,23 @@ export default function AuditLogsPage() {
 
         {filteredLogs.length === 0 ? (
           <div className="py-16 px-4 text-center space-y-2">
-            <FileText className="w-10 h-10 text-[#9E9E9C] mx-auto" />
-            <p className="text-sm font-semibold text-[#202124]">
+            <FileText className="w-10 h-10 text-muted mx-auto" />
+            <p className="text-sm font-semibold text-foreground">
               Không tìm thấy thao tác nào phù hợp
             </p>
-            <p className="text-xs text-[#737373] max-w-sm mx-auto">
+            <p className="text-xs text-muted max-w-sm mx-auto">
               Thử thay đổi từ khóa tìm kiếm hoặc chọn lại bộ lọc hành động / đối tượng bên trên.
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-[#F0F0ED]">
+          <div className="divide-y divide-border">
             {filteredLogs.map((log) => {
               const hasChanges = Boolean(log.changes && log.changes.length > 0);
 
               return (
                 <div
                   key={log.id}
-                  className="p-3.5 sm:p-4 hover:bg-[#FBFBFA] transition-colors flex flex-col md:flex-row md:items-start justify-between gap-3"
+                  className="p-3.5 sm:p-4 hover:bg-background transition-colors flex flex-col md:flex-row md:items-start justify-between gap-3"
                 >
                   {/* Left Column: Actor & Timeline */}
                   <div className="space-y-1.5 flex-1 min-w-0">
@@ -825,39 +825,39 @@ export default function AuditLogsPage() {
                       {renderActionBadge(log.action_type)}
 
                       {/* Relative Time */}
-                      <span className="text-[11px] text-[#737373] flex items-center gap-1 font-mono">
-                        <Clock className="w-3 h-3 text-[#9E9E9C]" />
+                      <span className="text-[11px] text-muted flex items-center gap-1 font-mono">
+                        <Clock className="w-3 h-3 text-muted" />
                         {formatRelativeTime(log.timestamp)}
                       </span>
                     </div>
 
                     {/* Detailed Human-Readable Description */}
-                    <p className="text-xs sm:text-sm text-[#202124] font-medium leading-relaxed">
+                    <p className="text-xs sm:text-sm text-foreground font-medium leading-relaxed">
                       {log.description}
                     </p>
 
                     {/* Changes Diff Tags (if available) */}
                     {hasChanges && (
                       <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                        <span className="text-[10px] font-semibold text-[#737373] uppercase tracking-wider">
+                        <span className="text-[10px] font-semibold text-muted uppercase tracking-wider">
                           Thay đổi:
                         </span>
                         {log.changes!.map((ch, idx) => (
                           <span
                             key={idx}
-                            className="inline-flex items-center gap-1 text-[11px] bg-[#F7F7F5] px-2 py-0.5 rounded border border-[#E8E8E5] font-mono text-[#202124]"
+                            className="inline-flex items-center gap-1 text-[11px] bg-background px-2 py-0.5 rounded border border-border font-mono text-foreground"
                           >
-                            <span className="text-[#737373]">{ch.field_label || ch.field}:</span>
+                            <span className="text-muted">{ch.field_label || ch.field}:</span>
                             {ch.old_value !== undefined && (
-                              <span className="text-[#C44536] line-through text-[10px]">
+                              <span className="text-error line-through text-[10px]">
                                 {String(ch.old_value)}
                               </span>
                             )}
                             {ch.old_value !== undefined && ch.new_value !== undefined && (
-                              <ArrowRight className="w-2.5 h-2.5 text-[#9E9E9C]" />
+                              <ArrowRight className="w-2.5 h-2.5 text-muted" />
                             )}
                             {ch.new_value !== undefined && (
-                              <span className="text-[#2F7D55] font-bold">
+                              <span className="text-primary font-bold">
                                 {String(ch.new_value)}
                               </span>
                             )}
@@ -868,16 +868,16 @@ export default function AuditLogsPage() {
 
                     {/* Context Meta (Booth, Event) */}
                     {(log.booth_name || log.event_name) && (
-                      <div className="flex flex-wrap items-center gap-3 text-[10px] text-[#737373] pt-0.5">
+                      <div className="flex flex-wrap items-center gap-3 text-[10px] text-muted pt-0.5">
                         {log.booth_name && (
                           <span className="flex items-center gap-1">
-                            <Store className="w-3 h-3 text-[#9E9E9C]" />
+                            <Store className="w-3 h-3 text-muted" />
                             {log.booth_name}
                           </span>
                         )}
                         {log.event_name && (
                           <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-[#9E9E9C]" />
+                            <Calendar className="w-3 h-3 text-muted" />
                             {log.event_name}
                           </span>
                         )}
@@ -888,8 +888,8 @@ export default function AuditLogsPage() {
                   {/* Right Column: Actions */}
                   <div className="flex flex-wrap items-center gap-2 shrink-0 md:self-center justify-end">
                     {log.is_rolled_back ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded bg-[#EAF4EE] text-[#2F7D55] border border-[#2F7D55]/30">
-                        <CheckCircle2 className="w-3 h-3 text-[#2F7D55]" />
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded bg-success-bg text-primary border border-primary/30">
+                        <CheckCircle2 className="w-3 h-3 text-primary" />
                         <span>Đã hoàn tác</span>
                       </span>
                     ) : (
@@ -911,7 +911,7 @@ export default function AuditLogsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-xs h-7 px-2.5 gap-1 text-[#737373] hover:text-[#202124]"
+                      className="text-xs h-7 px-2.5 gap-1 text-muted hover:text-foreground"
                       onClick={() => setSelectedLog(log)}
                     >
                       <Info className="w-3.5 h-3.5" />
@@ -921,7 +921,7 @@ export default function AuditLogsPage() {
                       type="button"
                       title="Xóa dòng log này"
                       onClick={() => deleteLog(log.id)}
-                      className="p-1.5 text-[#9E9E9C] hover:text-[#C44536] hover:bg-[#FDF1F0] rounded transition-colors"
+                      className="p-1.5 text-muted hover:text-error hover:bg-error-bg rounded transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -942,60 +942,60 @@ export default function AuditLogsPage() {
       >
         {selectedLog && (
           <div className="space-y-4 text-xs">
-            <div className="p-3 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5] space-y-2">
+            <div className="p-3 bg-background rounded-lg border border-border space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[#737373]">Mã bản ghi (Log ID):</span>
-                <span className="font-mono font-bold text-[#202124]">{selectedLog.id}</span>
+                <span className="text-muted">Mã bản ghi (Log ID):</span>
+                <span className="font-mono font-bold text-foreground">{selectedLog.id}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[#737373]">Thời gian chính xác:</span>
-                <span className="font-mono text-[#202124]">{formatDate(selectedLog.timestamp)}</span>
+                <span className="text-muted">Thời gian chính xác:</span>
+                <span className="font-mono text-foreground">{formatDate(selectedLog.timestamp)}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[#737373]">Đối tượng thực hiện:</span>
-                <span className="font-bold text-[#202124]">
+                <span className="text-muted">Đối tượng thực hiện:</span>
+                <span className="font-bold text-foreground">
                   {selectedLog.actor_name} ({selectedLog.actor_role})
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[#737373]">Hành động:</span>
+                <span className="text-muted">Hành động:</span>
                 <span>{renderActionBadge(selectedLog.action_type)}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[#737373]">Thực thể tác động:</span>
-                <span className="font-semibold text-[#202124]">
+                <span className="text-muted">Thực thể tác động:</span>
+                <span className="font-semibold text-foreground">
                   {selectedLog.entity_name} ({selectedLog.entity_type})
                 </span>
               </div>
             </div>
 
             <div>
-              <span className="font-bold text-[#202124] block mb-1">Mô tả đầy đủ:</span>
-              <p className="p-3 bg-white rounded-[6px] border border-[#E8E8E5] text-[#202124] leading-relaxed">
+              <span className="font-bold text-foreground block mb-1">Mô tả đầy đủ:</span>
+              <p className="p-3 bg-surface rounded-lg border border-border text-foreground leading-relaxed">
                 {selectedLog.description}
               </p>
             </div>
 
             {selectedLog.changes && selectedLog.changes.length > 0 && (
               <div>
-                <span className="font-bold text-[#202124] block mb-1">Dữ liệu thay đổi (Diff):</span>
-                <div className="border border-[#E8E8E5] rounded-[6px] overflow-hidden">
+                <span className="font-bold text-foreground block mb-1">Dữ liệu thay đổi (Diff):</span>
+                <div className="border border-border rounded-lg overflow-hidden">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-[#FAFAF8] border-b border-[#E8E8E5]">
+                    <thead className="bg-background border-b border-border">
                       <tr>
-                        <th className="p-2 font-semibold text-[#737373]">Trường dữ liệu</th>
-                        <th className="p-2 font-semibold text-[#737373]">Giá trị cũ</th>
-                        <th className="p-2 font-semibold text-[#737373]">Giá trị mới</th>
+                        <th className="p-2 font-semibold text-muted">Trường dữ liệu</th>
+                        <th className="p-2 font-semibold text-muted">Giá trị cũ</th>
+                        <th className="p-2 font-semibold text-muted">Giá trị mới</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#F0F0ED]">
+                    <tbody className="divide-y divide-border">
                       {selectedLog.changes.map((c, idx) => (
                         <tr key={idx}>
-                          <td className="p-2 font-mono text-[#202124]">{c.field_label || c.field}</td>
-                          <td className="p-2 text-[#C44536] font-mono">
+                          <td className="p-2 font-mono text-foreground">{c.field_label || c.field}</td>
+                          <td className="p-2 text-error font-mono">
                             {c.old_value !== undefined ? String(c.old_value) : '—'}
                           </td>
-                          <td className="p-2 text-[#2F7D55] font-bold font-mono">
+                          <td className="p-2 text-primary font-bold font-mono">
                             {c.new_value !== undefined ? String(c.new_value) : '—'}
                           </td>
                         </tr>
@@ -1007,7 +1007,7 @@ export default function AuditLogsPage() {
             )}
 
             {selectedLog.is_rolled_back ? (
-              <div className="p-3 bg-[#EAF4EE] border border-[#2F7D55]/30 rounded-[6px] text-xs text-[#2F7D55] flex items-center gap-2">
+              <div className="p-3 bg-success-bg border border-primary/30 rounded-lg text-xs text-primary flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
                 <span>
                   Thao tác này đã được hoàn tác thành công
@@ -1017,7 +1017,7 @@ export default function AuditLogsPage() {
               </div>
             ) : null}
 
-            <div className="flex items-center justify-between gap-2 pt-3 border-t border-[#F0F0ED]">
+            <div className="flex items-center justify-between gap-2 pt-3 border-t border-border">
               {!selectedLog.is_rolled_back ? (
                 <Button
                   variant="outline"
@@ -1064,10 +1064,10 @@ export default function AuditLogsPage() {
           <div className="space-y-4 text-xs">
             {rollbackStatus ? (
               <div
-                className={`p-3 rounded-[6px] border flex items-start gap-2 ${
+                className={`p-3 rounded-lg border flex items-start gap-2 ${
                   rollbackStatus.success
-                    ? 'bg-[#EAF4EE] border-[#2F7D55]/30 text-[#2F7D55]'
-                    : 'bg-[#FDF1F0] border-[#F8B4AF] text-[#8C2318]'
+                    ? 'bg-success-bg border-primary/30 text-primary'
+                    : 'bg-error-bg border-[#F8B4AF] text-[#8C2318]'
                 }`}
               >
                 {rollbackStatus.success ? (
@@ -1084,7 +1084,7 @@ export default function AuditLogsPage() {
               </div>
             ) : (
               <>
-                <div className="p-3 bg-[#FFF7ED] rounded-[6px] border border-[#FDBA74] text-[#C2410C] flex items-start gap-2">
+                <div className="p-3 bg-[#FFF7ED] rounded-lg border border-[#FDBA74] text-[#C2410C] flex items-start gap-2">
                   <Undo2 className="w-4 h-4 shrink-0 mt-0.5" />
                   <div>
                     <p className="font-bold">Cảnh báo hoàn tác dữ liệu:</p>
@@ -1095,18 +1095,18 @@ export default function AuditLogsPage() {
                   </div>
                 </div>
 
-                <div className="bg-[#F8F9FA] p-3 rounded-[6px] border border-[#E8E8E5] space-y-2">
-                  <div className="flex justify-between items-center text-[11px] text-[#737373]">
+                <div className="bg-[#F8F9FA] p-3 rounded-lg border border-border space-y-2">
+                  <div className="flex justify-between items-center text-[11px] text-muted">
                     <span>Hành động ban đầu:</span>
-                    <span className="font-semibold text-[#202124]">{rollbackTargetLog.description}</span>
+                    <span className="font-semibold text-foreground">{rollbackTargetLog.description}</span>
                   </div>
-                  <div className="flex justify-between items-center text-[11px] text-[#737373]">
+                  <div className="flex justify-between items-center text-[11px] text-muted">
                     <span>Người thực hiện:</span>
-                    <span className="font-medium text-[#202124]">{rollbackTargetLog.actor_name}</span>
+                    <span className="font-medium text-foreground">{rollbackTargetLog.actor_name}</span>
                   </div>
-                  <div className="flex justify-between items-center text-[11px] text-[#737373]">
+                  <div className="flex justify-between items-center text-[11px] text-muted">
                     <span>Thời gian ghi nhận:</span>
-                    <span className="font-mono text-[#202124]">
+                    <span className="font-mono text-foreground">
                       {new Date(rollbackTargetLog.timestamp).toLocaleString('vi-VN')}
                     </span>
                   </div>
@@ -1114,24 +1114,24 @@ export default function AuditLogsPage() {
 
                 {rollbackTargetLog.changes && rollbackTargetLog.changes.length > 0 && (
                   <div>
-                    <p className="font-bold text-[#202124] mb-1">Dữ liệu sẽ được khôi phục về giá trị cũ:</p>
-                    <div className="border border-[#E8E8E5] rounded-[6px] overflow-hidden">
+                    <p className="font-bold text-foreground mb-1">Dữ liệu sẽ được khôi phục về giá trị cũ:</p>
+                    <div className="border border-border rounded-lg overflow-hidden">
                       <table className="w-full text-left text-xs">
-                        <thead className="bg-[#FAFAF8] border-b border-[#E8E8E5]">
+                        <thead className="bg-background border-b border-border">
                           <tr>
-                            <th className="p-2 font-semibold text-[#737373]">Trường dữ liệu</th>
-                            <th className="p-2 font-semibold text-[#737373]">Giá trị hiện tại</th>
-                            <th className="p-2 font-semibold text-[#2F7D55]">Sẽ khôi phục lại thành</th>
+                            <th className="p-2 font-semibold text-muted">Trường dữ liệu</th>
+                            <th className="p-2 font-semibold text-muted">Giá trị hiện tại</th>
+                            <th className="p-2 font-semibold text-primary">Sẽ khôi phục lại thành</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-[#F0F0ED]">
+                        <tbody className="divide-y divide-border">
                           {rollbackTargetLog.changes.map((c, idx) => (
                             <tr key={idx}>
-                              <td className="p-2 font-mono text-[#202124]">{c.field_label || c.field}</td>
-                              <td className="p-2 text-[#737373] line-through font-mono">
+                              <td className="p-2 font-mono text-foreground">{c.field_label || c.field}</td>
+                              <td className="p-2 text-muted line-through font-mono">
                                 {c.new_value !== undefined ? String(c.new_value) : '—'}
                               </td>
-                              <td className="p-2 text-[#2F7D55] font-bold font-mono">
+                              <td className="p-2 text-primary font-bold font-mono">
                                 {c.old_value !== undefined ? String(c.old_value) : '—'}
                               </td>
                             </tr>
@@ -1144,12 +1144,12 @@ export default function AuditLogsPage() {
               </>
             )}
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#F0F0ED]">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
               {rollbackStatus ? (
                 <Button
                   variant="primary"
                   size="sm"
-                  className="bg-[#2F7D55] hover:bg-[#256343] text-white font-semibold"
+                  className="bg-primary hover:bg-[#256343] text-primary-foreground font-semibold"
                   onClick={() => {
                     setRollbackTargetLog(null);
                     setRollbackStatus(null);
@@ -1195,14 +1195,14 @@ export default function AuditLogsPage() {
         description="Bạn có chắc chắn muốn xóa toàn bộ lịch sử thao tác không? Hành động này không thể hoàn tác."
       >
         <div className="space-y-4 text-xs">
-          <div className="p-3 bg-[#FDF1F0] rounded-[6px] border border-[#F8B4AF] text-[#8C2318] flex items-start gap-2">
+          <div className="p-3 bg-error-bg rounded-lg border border-[#F8B4AF] text-[#8C2318] flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
             <p>
               Toàn bộ lịch sử đối soát và hoạt động của đối tác collab và nhân viên sẽ bị xóa khỏi bộ nhớ. Hãy cân nhắc <strong>Xuất file JSON</strong> trước khi xóa!
             </p>
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#F0F0ED]">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
             <Button
               variant="outline"
               size="sm"
@@ -1213,7 +1213,7 @@ export default function AuditLogsPage() {
             <Button
               variant="primary"
               size="sm"
-              className="bg-[#C44536] hover:bg-[#A8372A] border-none text-white font-bold"
+              className="bg-error hover:bg-[#A8372A] border-none text-white font-bold"
               onClick={() => {
                 clearLogs();
                 setIsConfirmClearOpen(false);

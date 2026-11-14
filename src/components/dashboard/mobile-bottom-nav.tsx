@@ -79,7 +79,7 @@ export function MobileBottomNav({
       {/* Thumb-Zone Bottom Navigation Bar (Mobile < md) */}
       <nav
         aria-label="Mobile navigation"
-        className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border-t border-[#E8E8E5] shadow-[0_-4px_20px_rgba(0,0,0,0.06)] pb-[max(0.35rem,env(safe-area-inset-bottom))] pt-1 px-1 print:hidden"
+        className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-surface/95 dark:bg-surface/95 backdrop-blur-md border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.06)] pb-[max(0.35rem,env(safe-area-inset-bottom))] pt-1 px-1 print:hidden"
       >
         <div className="grid grid-cols-5 items-end max-w-lg mx-auto">
           {primaryTabs.map((tab) => {
@@ -96,8 +96,8 @@ export function MobileBottomNav({
                   className={cn(
                     'flex items-center justify-center px-3.5 py-1 rounded-full transition-colors',
                     active
-                      ? 'bg-[#315C4C]/15 text-[#315C4C] dark:bg-[#3E7A65]/25 dark:text-[#5ED69D]'
-                      : 'text-[#737373] hover:text-[#202124] dark:text-[#9BA1A6] dark:hover:text-white'
+                      ? 'bg-primary/15 text-primary dark:bg-primary/25 dark:text-success'
+                      : 'text-muted hover:text-foreground dark:text-muted dark:hover:text-white'
                   )}
                 >
                   <Icon className="w-[19px] h-[19px]" strokeWidth={active ? 2.4 : 2} />
@@ -105,7 +105,7 @@ export function MobileBottomNav({
                 <span
                   className={cn(
                     'text-[10.5px] leading-tight truncate max-w-[68px]',
-                    active ? 'font-bold text-[#315C4C] dark:text-[#5ED69D]' : 'font-medium text-[#737373] dark:text-[#9BA1A6]'
+                    active ? 'font-bold text-primary dark:text-success' : 'font-medium text-muted dark:text-muted'
                   )}
                 >
                   {tab.label}
@@ -120,10 +120,10 @@ export function MobileBottomNav({
             onClick={onCloseMenu}
             className="flex flex-col items-center justify-center pb-1 min-h-[56px] gap-0.5 select-none active:scale-95 transition-transform"
           >
-            <span className="flex items-center justify-center w-12 h-9 -mt-3 rounded-2xl bg-[#315C4C] dark:bg-[#3E7A65] text-amber-300 shadow-md ring-4 ring-white dark:ring-[#111215] border border-[#315C4C]/30">
-              <TabletSmartphone className="w-5 h-5 text-amber-300" />
+            <span className="flex items-center justify-center w-12 h-9 -mt-3 rounded-2xl bg-primary dark:bg-primary text-gold-text shadow-md ring-4 ring-white dark:ring-background border border-primary/30">
+              <TabletSmartphone className="w-5 h-5 text-gold-text" />
             </span>
-            <span className="text-[10.5px] font-black text-[#315C4C] dark:text-[#5ED69D] leading-tight">
+            <span className="text-[10.5px] font-black text-primary dark:text-success leading-tight">
               {t('posShort')}
             </span>
           </Link>
@@ -142,8 +142,8 @@ export function MobileBottomNav({
                   className={cn(
                     'flex items-center justify-center px-3.5 py-1 rounded-full transition-colors',
                     active
-                      ? 'bg-[#315C4C]/15 text-[#315C4C] dark:bg-[#3E7A65]/25 dark:text-[#5ED69D]'
-                      : 'text-[#737373] hover:text-[#202124] dark:text-[#9BA1A6] dark:hover:text-white'
+                      ? 'bg-primary/15 text-primary dark:bg-primary/25 dark:text-success'
+                      : 'text-muted hover:text-foreground dark:text-muted dark:hover:text-white'
                   )}
                 >
                   <Icon className="w-[19px] h-[19px]" strokeWidth={active ? 2.4 : 2} />
@@ -151,7 +151,7 @@ export function MobileBottomNav({
                 <span
                   className={cn(
                     'text-[10.5px] leading-tight truncate max-w-[68px]',
-                    active ? 'font-bold text-[#315C4C] dark:text-[#5ED69D]' : 'font-medium text-[#737373] dark:text-[#9BA1A6]'
+                    active ? 'font-bold text-primary dark:text-success' : 'font-medium text-muted dark:text-muted'
                   )}
                 >
                   {trailingTab.label}
@@ -172,8 +172,8 @@ export function MobileBottomNav({
               className={cn(
                 'relative flex items-center justify-center px-3.5 py-1 rounded-full transition-colors',
                 isMenuOpen || isSecondaryRouteActive
-                  ? 'bg-[#EBF1EE] text-[#315C4C]'
-                  : 'text-[#737373] hover:text-[#202124]'
+                  ? 'bg-warning-bg text-primary'
+                  : 'text-muted hover:text-foreground'
               )}
             >
               <LayoutGrid
@@ -185,8 +185,8 @@ export function MobileBottomNav({
               className={cn(
                 'text-[10.5px] leading-tight',
                 isMenuOpen || isSecondaryRouteActive
-                  ? 'font-bold text-[#315C4C]'
-                  : 'font-medium text-[#737373]'
+                  ? 'font-bold text-primary'
+                  : 'font-medium text-muted'
               )}
             >
               {t('moreMenu')}
@@ -205,23 +205,23 @@ export function MobileBottomNav({
           />
 
           {/* Sheet Surface */}
-          <div className="relative bg-white dark:bg-neutral-900 rounded-t-[20px] border-t border-[#E8E8E5] shadow-2xl max-h-[86vh] flex flex-col animate-in slide-in-from-bottom-4 duration-200 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="relative bg-surface dark:bg-surface rounded-t-[20px] border-t border-border shadow-2xl max-h-[86vh] flex flex-col animate-in slide-in-from-bottom-4 duration-200 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             {/* Drag Handle */}
             <div className="pt-2.5 pb-1 flex justify-center shrink-0">
-              <div className="w-10 h-1 rounded-full bg-[#D6D6D2]" />
+              <div className="w-10 h-1 rounded-full bg-border-strong" />
             </div>
 
             {/* Sheet Header: User Info + Quick Close / Logout */}
-            <div className="px-4 py-2.5 border-b border-[#E8E8E5] flex items-center justify-between gap-2 shrink-0">
+            <div className="px-4 py-2.5 border-b border-border flex items-center justify-between gap-2 shrink-0">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-full bg-[#EBF1EE] text-[#315C4C] flex items-center justify-center text-sm font-bold shrink-0">
+                <div className="w-9 h-9 rounded-full bg-warning-bg text-primary flex items-center justify-center text-sm font-bold shrink-0">
                   {user?.fullName?.charAt(0) || <UserIcon className="w-4 h-4" />}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-[#202124] truncate">
+                  <p className="text-xs font-bold text-foreground truncate">
                     {user?.fullName || 'HikaruStore Crew'}
                   </p>
-                  <p className="text-[11px] text-[#737373] capitalize truncate">
+                  <p className="text-[11px] text-muted capitalize truncate">
                     {user?.role === 'collab_partner' && user?.collabPartnerName
                       ? `Collab: ${user.collabPartnerName}`
                       : user?.role || 'owner'}
@@ -233,7 +233,7 @@ export function MobileBottomNav({
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[8px] text-[11px] font-semibold text-[#C44536] bg-[#FDF1F0] hover:opacity-90 cursor-pointer"
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-error bg-error-bg hover:opacity-90 cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   <span>Đăng xuất</span>
@@ -241,7 +241,7 @@ export function MobileBottomNav({
                 <button
                   type="button"
                   onClick={onCloseMenu}
-                  className="p-2 rounded-full bg-[#F7F7F5] text-[#737373] hover:text-[#202124] cursor-pointer"
+                  className="p-2 rounded-full bg-background text-muted hover:text-foreground cursor-pointer"
                   aria-label="Đóng menu"
                 >
                   <X className="w-4 h-4" />
@@ -253,7 +253,7 @@ export function MobileBottomNav({
             <div className="flex-1 overflow-y-auto px-4 py-3.5 space-y-4">
               {/* Workspace Switcher */}
               <div className="space-y-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#737373] px-0.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted px-0.5">
                   Không gian làm việc
                 </span>
                 <WorkspaceSwitcher />
@@ -262,7 +262,7 @@ export function MobileBottomNav({
               {/* Categorized Launcher Tiles */}
               {sections.map((section) => (
                 <div key={section.id} className="space-y-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#737373] px-0.5 block">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted px-0.5 block">
                     {t(section.labelKey)}
                   </span>
                   <div className="grid grid-cols-3 gap-2">
@@ -277,21 +277,21 @@ export function MobileBottomNav({
                           href={item.href}
                           onClick={onCloseMenu}
                           className={cn(
-                            'relative flex flex-col items-center justify-center p-2.5 rounded-[12px] border text-center gap-1.5 min-h-[76px] active:scale-95 transition-all',
+                            'relative flex flex-col items-center justify-center p-2.5 rounded-2xl border text-center gap-1.5 min-h-[76px] active:scale-95 transition-all',
                             active
-                              ? 'bg-[#EBF1EE] border-[#315C4C] shadow-2xs'
-                              : 'bg-[#FAFAF8] border-[#E8E8E5] hover:bg-[#F0F0ED]'
+                              ? 'bg-warning-bg border-primary shadow-2xs'
+                              : 'bg-background border-border hover:bg-surface-hover'
                           )}
                         >
                           {item.badge && (
-                            <span className="absolute top-1.5 right-1.5 text-[8px] font-bold px-1 rounded bg-[#B7791F]/15 text-[#8C5D17] uppercase">
+                            <span className="absolute top-1.5 right-1.5 text-[8px] font-bold px-1 rounded bg-warning/15 text-warning uppercase">
                               {item.badge}
                             </span>
                           )}
                           <div
                             className={cn(
-                              'w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0',
-                              active ? 'bg-[#315C4C] text-white' : item.tileToneClass
+                              'w-9 h-9 rounded-lg flex items-center justify-center shrink-0',
+                              active ? 'bg-primary text-primary-foreground' : item.tileToneClass
                             )}
                           >
                             <Icon className="w-[18px] h-[18px]" />
@@ -299,7 +299,7 @@ export function MobileBottomNav({
                           <span
                             className={cn(
                               'text-[11px] leading-tight line-clamp-1',
-                              active ? 'font-bold text-[#315C4C]' : 'font-semibold text-[#202124]'
+                              active ? 'font-bold text-primary' : 'font-semibold text-foreground'
                             )}
                           >
                             {label}
@@ -312,21 +312,21 @@ export function MobileBottomNav({
               ))}
 
               {/* Guest Preview + Display Controls */}
-              <div className="pt-2 border-t border-[#E8E8E5] space-y-2.5">
+              <div className="pt-2 border-t border-border space-y-2.5">
                 <button
                   type="button"
                   onClick={() => {
                     onCloseMenu();
                     useAuthStore.getState().enterGuestPreview();
                   }}
-                  className="w-full flex items-center justify-center gap-2 h-10 rounded-[10px] border border-[#315C4C]/30 bg-[#EBF1EE]/60 text-[#315C4C] text-xs font-bold cursor-pointer active:scale-[0.99]"
+                  className="w-full flex items-center justify-center gap-2 h-10 rounded-lg border border-primary/30 bg-warning-bg/60 text-primary text-xs font-bold cursor-pointer active:scale-[0.99]"
                 >
                   <Eye className="w-4 h-4" />
                   <span>Xem thử Giao diện Gian hàng Khách</span>
                 </button>
 
-                <div className="flex items-center justify-between gap-2 p-2.5 rounded-[10px] bg-[#F7F7F5] border border-[#E8E8E5]">
-                  <span className="text-[11px] font-semibold text-[#737373]">Hiển thị:</span>
+                <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-background border border-border">
+                  <span className="text-[11px] font-semibold text-muted">Hiển thị:</span>
                   <div className="flex items-center gap-2">
                     <ThemeToggle />
                     <LanguageSwitcher />

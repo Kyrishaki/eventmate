@@ -267,15 +267,15 @@ ${url}`;
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#E8E8E5]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-border">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-[#202124]">{t('title')}</h1>
+            <h1 className="text-xl font-bold tracking-tight text-foreground">{t('title')}</h1>
             <Badge variant="outline" className="text-[11px] font-mono">
               {workspaceBooths.length} quầy bán
             </Badge>
           </div>
-          <p className="text-xs text-[#737373] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Quản lý các gian hàng riêng hoặc gian hàng hợp tác liên danh (Collab) cho từng sự kiện.
           </p>
         </div>
@@ -292,7 +292,7 @@ ${url}`;
             <span>{t('createButton')}</span>
           </Button>
         ) : (
-          <Badge variant="outline" className="text-xs text-[#737373]">
+          <Badge variant="outline" className="text-xs text-muted">
             Chế độ Chỉ Xem
           </Badge>
         )}
@@ -301,12 +301,12 @@ ${url}`;
       {/* Filters Bar: Event and Collab Type */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 text-xs text-[#737373] dark:text-neutral-400 shrink-0">
+          <div className="flex items-center gap-1.5 text-xs text-muted dark:text-muted shrink-0">
             <Calendar className="w-3.5 h-3.5" />
             <span>{t('selectEvent')}:</span>
           </div>
           <select
-            className="h-8 flex-1 w-full min-w-0 max-w-full truncate rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2.5 text-xs text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C]"
+            className="h-8 flex-1 w-full min-w-0 max-w-full truncate rounded-lg border border-border dark:border-border bg-surface dark:bg-surface px-2.5 text-xs text-foreground dark:text-foreground focus:outline-none focus:border-primary"
             value={selectedEventFilter}
             onChange={(e) => setSelectedEventFilter(e.target.value)}
           >
@@ -321,12 +321,12 @@ ${url}`;
 
         {/* Filter by Solo vs Collab */}
         <div className="flex items-center gap-2 flex-1 sm:flex-none min-w-0">
-          <div className="flex items-center gap-1.5 text-xs text-[#737373] dark:text-neutral-400 shrink-0 sm:border-l sm:border-[#E8E8E5] sm:dark:border-neutral-700 sm:pl-3">
+          <div className="flex items-center gap-1.5 text-xs text-muted dark:text-muted shrink-0 sm:border-l sm:border-border sm:dark:border-border sm:pl-3">
             <Users2 className="w-3.5 h-3.5" />
             <span>Mô hình:</span>
           </div>
           <select
-            className="h-8 flex-1 sm:flex-none w-full sm:w-auto min-w-0 max-w-full truncate rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2.5 text-xs text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C]"
+            className="h-8 flex-1 sm:flex-none w-full sm:w-auto min-w-0 max-w-full truncate rounded-lg border border-border dark:border-border bg-surface dark:bg-surface px-2.5 text-xs text-foreground dark:text-foreground focus:outline-none focus:border-primary"
             value={selectedTypeFilter}
             onChange={(e) => setSelectedTypeFilter(e.target.value)}
           >
@@ -339,11 +339,11 @@ ${url}`;
 
       {/* Booths Grid */}
       {filteredBooths.length === 0 ? (
-        <Card className="border-[#E8E8E5] shadow-xs">
+        <Card className="border-border shadow-xs">
           <CardContent className="p-12 text-center">
-            <Store className="w-10 h-10 text-[#9E9E9C] mx-auto mb-3" />
-            <h3 className="text-sm font-semibold text-[#202124]">{t('noBooths')}</h3>
-            <p className="text-xs text-[#737373] mt-1 max-w-sm mx-auto">{t('noBoothsDesc')}</p>
+            <Store className="w-10 h-10 text-muted mx-auto mb-3" />
+            <h3 className="text-sm font-semibold text-foreground">{t('noBooths')}</h3>
+            <p className="text-xs text-muted mt-1 max-w-sm mx-auto">{t('noBoothsDesc')}</p>
             {workspaceEvents.length > 0 && (
               <Button variant="outline" size="sm" className="mt-4 gap-1" onClick={openCreateModal}>
                 <Plus className="w-3.5 h-3.5" />
@@ -364,18 +364,18 @@ ${url}`;
             return (
               <Card
                 key={booth.id}
-                className="border-[#E8E8E5] bg-white shadow-2xs hover:border-[#D6D6D2] transition-colors flex flex-col justify-between"
+                className="border-border bg-surface shadow-2xs hover:border-border-strong transition-colors flex flex-col justify-between"
               >
                 <div className="p-5">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <h3 className="text-sm font-bold text-[#202124] tracking-tight">
+                        <h3 className="text-sm font-bold text-foreground tracking-tight">
                           {booth.name}
                         </h3>
                       </div>
                       <div className="flex items-center gap-1.5 mt-1">
-                        <span className="font-mono text-[10px] text-[#737373] bg-[#F0F0ED] px-1.5 py-0.5 rounded">
+                        <span className="font-mono text-[10px] text-muted bg-surface-hover px-1.5 py-0.5 rounded">
                           {booth.code}
                         </span>
                         {isCollab ? (
@@ -396,43 +396,43 @@ ${url}`;
                     </Badge>
                   </div>
 
-                  <p className="text-xs text-[#737373] mt-2 flex items-center gap-1.5">
-                    <Calendar className="w-3 h-3 text-[#9E9E9C] shrink-0" />
+                  <p className="text-xs text-muted mt-2 flex items-center gap-1.5">
+                    <Calendar className="w-3 h-3 text-muted shrink-0" />
                     <span className="truncate">{event?.name || 'Sự kiện'}</span>
                   </p>
 
                   {isCollab && (
-                    <div className="mt-3 p-3 bg-[#FEF7EC] rounded-[6px] border border-[#B7791F]/30 space-y-2">
+                    <div className="mt-3 p-3 bg-warning-bg rounded-lg border border-warning/30 space-y-2">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-[#8C5D17] flex items-center gap-1">
-                          <Handshake className="w-3.5 h-3.5 text-[#B7791F]" />
+                        <span className="font-bold text-warning flex items-center gap-1">
+                          <Handshake className="w-3.5 h-3.5 text-warning" />
                           <span>Đối tác: {booth.collab_partner || 'Chưa đặt tên'}</span>
                         </span>
-                        <span className="font-mono text-[11px] text-[#B7791F] font-bold bg-white px-1.5 py-0.5 rounded border border-[#B7791F]/20">
+                        <span className="font-mono text-[11px] text-warning font-bold bg-surface px-1.5 py-0.5 rounded border border-warning/20">
                           {booth.revenue_share_ratio || 50}% Doanh số
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 pt-1 border-t border-[#B7791F]/20">
+                      <div className="flex items-center gap-1.5 pt-1 border-t border-warning/20">
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-7 text-xs gap-1 border-[#315C4C]/40 text-[#315C4C] hover:bg-[#EAF4EE] flex-1 font-bold"
+                          className="h-7 text-xs gap-1 border-primary/40 text-primary hover:bg-success-bg flex-1 font-bold"
                           onClick={() => openCreateCollabAccountModal(booth)}
                           title="Cấp tài khoản đăng nhập trực tiếp cho Đối tác Collab"
                         >
-                          <KeyRound className="w-3 h-3 text-[#315C4C]" />
+                          <KeyRound className="w-3 h-3 text-primary" />
                           <span>Cấp Account Collab</span>
                         </Button>
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-7 text-xs gap-1 border-[#B7791F]/40 text-[#8C5D17] hover:bg-[#FDF2E2] font-semibold"
+                          className="h-7 text-xs gap-1 border-warning/40 text-warning hover:bg-[#FDF2E2] font-semibold"
                           onClick={() => openShareCollabModal(booth)}
                           title="Chia sẻ Cổng liên kết web"
                         >
-                          <Share2 className="w-3 h-3 text-[#B7791F]" />
+                          <Share2 className="w-3 h-3 text-warning" />
                           <span>Link Web</span>
                         </Button>
                         <Link
@@ -447,7 +447,7 @@ ${url}`;
                             type="button"
                             variant="secondary"
                             size="sm"
-                            className="h-7 px-2 text-xs gap-1 bg-white text-[#B7791F] hover:bg-[#FDF2E2] border border-[#B7791F]/30 font-semibold"
+                            className="h-7 px-2 text-xs gap-1 bg-surface text-warning hover:bg-[#FDF2E2] border border-warning/30 font-semibold"
                             title="Mở xem cổng đối tác"
                           >
                             <ExternalLink className="w-3 h-3" />
@@ -457,22 +457,22 @@ ${url}`;
                     </div>
                   )}
 
-                  <div className="mt-4 p-3 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5] space-y-1.5 text-xs">
+                  <div className="mt-4 p-3 bg-background rounded-lg border border-border space-y-1.5 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="text-[#737373]">Hạn mức đã cấp:</span>
-                      <span className="font-semibold text-[#202124]">
+                      <span className="text-muted">Hạn mức đã cấp:</span>
+                      <span className="font-semibold text-foreground">
                         {totalAllocatedItems} món
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[#737373]">Đã bán:</span>
-                      <span className="font-semibold text-[#2F7D55]">
+                      <span className="text-muted">Đã bán:</span>
+                      <span className="font-semibold text-primary">
                         {totalSoldItems} món
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[#737373]">Còn lại tại quầy:</span>
-                      <span className="font-bold text-[#315C4C]">
+                      <span className="text-muted">Còn lại tại quầy:</span>
+                      <span className="font-bold text-primary">
                         {Math.max(0, totalAllocatedItems - totalSoldItems)} món
                       </span>
                     </div>
@@ -480,14 +480,14 @@ ${url}`;
                 </div>
 
                 {/* Footer Actions */}
-                <div className="px-5 py-3 border-t border-[#F0F0ED] bg-[#FAFAF8] rounded-b-[8px] flex items-center justify-between">
+                <div className="px-5 py-3 border-t border-border bg-background rounded-b-[8px] flex items-center justify-between">
                   <div className="flex items-center gap-1">
                     {editable ? (
                       <>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 px-2 text-xs text-[#737373]"
+                          className="h-7 px-2 text-xs text-muted"
                           onClick={() => openEditModal(booth)}
                         >
                           <Edit2 className="w-3 h-3" />
@@ -495,7 +495,7 @@ ${url}`;
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 px-2 text-xs text-[#C44536] hover:bg-[#FDF1F0]"
+                          className="h-7 px-2 text-xs text-error hover:bg-error-bg"
                           onClick={() => {
                             if (confirm('Bạn có chắc muốn xóa gian hàng này?')) {
                               deleteBooth(booth.id);
@@ -506,7 +506,7 @@ ${url}`;
                         </Button>
                       </>
                     ) : (
-                      <span className="text-[11px] text-[#9E9E9C] italic">Chỉ xem</span>
+                      <span className="text-[11px] text-muted italic">Chỉ xem</span>
                     )}
                   </div>
 
@@ -546,7 +546,7 @@ ${url}`;
             <select
               id="booth-event"
               required
-              className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-sm text-[#202124] focus:outline-none focus:border-[#315C4C]"
+              className="flex h-9 w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-foreground focus:outline-none focus:border-primary"
               value={eventId}
               onChange={(e) => setEventId(e.target.value)}
             >
@@ -589,7 +589,7 @@ ${url}`;
               <Label htmlFor="booth-status">{t('status')}</Label>
               <select
                 id="booth-status"
-                className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-sm text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                className="flex h-9 w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-foreground focus:outline-none focus:border-primary"
                 value={status}
                 onChange={(e) => setStatus(e.target.value as BoothStatus)}
               >
@@ -601,11 +601,11 @@ ${url}`;
           </div>
 
           {/* Collab Booth Options */}
-          <div className="p-3 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5] space-y-3">
+          <div className="p-3 bg-background rounded-lg border border-border space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-[#202124]">Mô hình quầy bán</p>
-                <p className="text-[11px] text-[#737373]">
+                <p className="text-xs font-semibold text-foreground">Mô hình quầy bán</p>
+                <p className="text-[11px] text-muted">
                   Chọn nếu đây là gian hàng hợp tác / liên danh với nghệ sĩ hoặc đối tác khác
                 </p>
               </div>
@@ -615,8 +615,8 @@ ${url}`;
                   onClick={() => setBoothType('solo')}
                   className={`px-2 py-1 text-xs rounded font-medium ${
                     boothType === 'solo'
-                      ? 'bg-[#315C4C] text-white'
-                      : 'bg-white border text-[#737373]'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-surface border text-muted'
                   }`}
                 >
                   Độc lập
@@ -626,8 +626,8 @@ ${url}`;
                   onClick={() => setBoothType('collab')}
                   className={`px-2 py-1 text-xs rounded font-medium ${
                     boothType === 'collab'
-                      ? 'bg-[#B7791F] text-white'
-                      : 'bg-white border text-[#737373]'
+                      ? 'bg-warning text-white'
+                      : 'bg-surface border text-muted'
                   }`}
                 >
                   Collab
@@ -636,7 +636,7 @@ ${url}`;
             </div>
 
             {boothType === 'collab' && (
-              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#E8E8E5]">
+              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
                 <div className="space-y-1">
                   <Label htmlFor="collab-name">Tên Đối tác Collab</Label>
                   <Input
@@ -644,7 +644,7 @@ ${url}`;
                     placeholder="VD: The Cassette, Cá Hồi Hoang..."
                     value={collabPartner}
                     onChange={(e) => setCollabPartner(e.target.value)}
-                    className="bg-white text-xs h-8"
+                    className="bg-surface text-xs h-8"
                   />
                 </div>
                 <div className="space-y-1">
@@ -656,14 +656,14 @@ ${url}`;
                     max={100}
                     value={revenueShareRatio}
                     onChange={(e) => setRevenueShareRatio(Number(e.target.value))}
-                    className="bg-white text-xs h-8"
+                    className="bg-surface text-xs h-8"
                   />
                 </div>
               </div>
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F0ED]">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
             <Button
               type="button"
               variant="outline"
@@ -688,7 +688,7 @@ ${url}`;
           description={`Giao diện Quản trị chuẩn HikaruStore dành cho đối tác "${selectedCollabBooth.collab_partner || 'Đối tác'}". Đối tác tự quản lý sản phẩm của mình, kho hàng của Admin được khóa an toàn (Chỉ đọc).`}
         >
           <div className="space-y-4">
-            <div className="p-3 bg-[#FEF7EC] rounded-[6px] border border-[#B7791F]/30 space-y-1.5 text-xs text-[#8C5D17]">
+            <div className="p-3 bg-warning-bg rounded-lg border border-warning/30 space-y-1.5 text-xs text-warning">
               <div className="flex items-center justify-between font-bold">
                 <span>Gian hàng: {selectedCollabBooth.name} ({selectedCollabBooth.code})</span>
                 <span>Tỷ lệ: {selectedCollabBooth.revenue_share_ratio || 50}% Đối tác</span>
@@ -704,7 +704,7 @@ ${url}`;
                 <Input
                   readOnly
                   value={getCollabShareUrl(selectedCollabBooth)}
-                  className="font-mono text-xs bg-[#F7F7F5] select-all"
+                  className="font-mono text-xs bg-background select-all"
                 />
                 <Button
                   type="button"
@@ -713,7 +713,7 @@ ${url}`;
                   className="shrink-0 text-xs gap-1"
                   onClick={() => handleCopyCollabShare(selectedCollabBooth)}
                 >
-                  {copiedShareText ? <Check className="w-3.5 h-3.5 text-[#2F7D55]" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedShareText ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copiedShareText ? 'Đã copy' : 'Copy'}</span>
                 </Button>
               </div>
@@ -721,7 +721,7 @@ ${url}`;
 
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Mẫu tin nhắn gửi qua Zalo / Telegram:</Label>
-              <div className="p-3 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[6px] text-xs font-mono text-[#202124] whitespace-pre-wrap leading-relaxed">
+              <div className="p-3 bg-background border border-border rounded-lg text-xs font-mono text-foreground whitespace-pre-wrap leading-relaxed">
 {`🎪 CỔNG HỢP TÁC GIAN HÀNG SỰ KIỆN — EVENTMATE
 • Sự kiện: ${events.find((e) => e.id === selectedCollabBooth.event_id)?.name || 'Sự kiện chung'}
 • Gian hàng liên danh: ${selectedCollabBooth.name} (${selectedCollabBooth.code})
@@ -733,7 +733,7 @@ ${getCollabShareUrl(selectedCollabBooth)}`}
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-[#F0F0ED]">
+            <div className="flex items-center justify-between pt-3 border-t border-border">
               <button
                 type="button"
                 onClick={() => {
@@ -744,7 +744,7 @@ ${getCollabShareUrl(selectedCollabBooth)}`}
                   );
                   window.location.href = '/dashboard';
                 }}
-                className="inline-flex items-center gap-1.5 text-xs text-[#315C4C] font-semibold hover:underline cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline cursor-pointer"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span>Mở xem thử giao diện Đối tác (Chế độ Collab)</span>
@@ -763,7 +763,7 @@ ${getCollabShareUrl(selectedCollabBooth)}`}
                   type="button"
                   variant="primary"
                   size="sm"
-                  className="bg-[#B7791F] hover:bg-[#975F16] border-none text-white font-bold gap-1.5"
+                  className="bg-warning hover:bg-[#975F16] border-none text-white font-bold gap-1.5"
                   onClick={() => handleCopyCollabShare(selectedCollabBooth)}
                 >
                   {copiedShareText ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
@@ -786,8 +786,8 @@ ${getCollabShareUrl(selectedCollabBooth)}`}
         >
           {collabCreatedSuccess ? (
             <div className="space-y-4">
-              <div className="p-3.5 bg-[#EAF4EE] border border-[#2F7D55]/30 rounded-[8px] flex items-start gap-2.5 text-xs text-[#1D5438]">
-                <ShieldCheck className="w-5 h-5 text-[#2F7D55] shrink-0 mt-0.5" />
+              <div className="p-3.5 bg-success-bg border border-primary/30 rounded-lg flex items-start gap-2.5 text-xs text-[#1D5438]">
+                <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                 <div>
                   <p className="font-bold text-sm text-[#1D5438]">
                     Đã cấp tài khoản đối tác thành công!
@@ -798,36 +798,36 @@ ${getCollabShareUrl(selectedCollabBooth)}`}
                 </div>
               </div>
 
-              <div className="p-4 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[8px] space-y-2 text-xs">
-                <div className="flex justify-between items-center py-1 border-b border-[#E8E8E5]">
-                  <span className="text-[#737373]">Thương hiệu / Đối tác:</span>
-                  <span className="font-bold text-[#202124]">{collabCreatedSuccess.collabPartnerName}</span>
+              <div className="p-4 bg-background border border-border rounded-lg space-y-2 text-xs">
+                <div className="flex justify-between items-center py-1 border-b border-border">
+                  <span className="text-muted">Thương hiệu / Đối tác:</span>
+                  <span className="font-bold text-foreground">{collabCreatedSuccess.collabPartnerName}</span>
                 </div>
-                <div className="flex justify-between items-center py-1 border-b border-[#E8E8E5]">
-                  <span className="text-[#737373]">Gian hàng được cấp:</span>
-                  <span className="font-semibold text-[#315C4C]">{selectedCollabBooth.name} ({selectedCollabBooth.code})</span>
+                <div className="flex justify-between items-center py-1 border-b border-border">
+                  <span className="text-muted">Gian hàng được cấp:</span>
+                  <span className="font-semibold text-primary">{selectedCollabBooth.name} ({selectedCollabBooth.code})</span>
                 </div>
-                <div className="flex justify-between items-center py-1 border-b border-[#E8E8E5]">
-                  <span className="text-[#737373]">Tên đăng nhập:</span>
-                  <span className="font-mono font-bold text-sm text-[#202124] bg-white px-2 py-0.5 rounded border border-[#E8E8E5]">
+                <div className="flex justify-between items-center py-1 border-b border-border">
+                  <span className="text-muted">Tên đăng nhập:</span>
+                  <span className="font-mono font-bold text-sm text-foreground bg-surface px-2 py-0.5 rounded border border-border">
                     {collabCreatedSuccess.username}
                   </span>
                 </div>
-                <div className="flex justify-between items-center py-1 border-b border-[#E8E8E5]">
-                  <span className="text-[#737373]">Mật khẩu:</span>
-                  <span className="font-mono font-bold text-sm text-[#202124] bg-white px-2 py-0.5 rounded border border-[#E8E8E5]">
+                <div className="flex justify-between items-center py-1 border-b border-border">
+                  <span className="text-muted">Mật khẩu:</span>
+                  <span className="font-mono font-bold text-sm text-foreground bg-surface px-2 py-0.5 rounded border border-border">
                     {collabCreatedSuccess.password}
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-1">
-                  <span className="text-[#737373]">Link đăng nhập:</span>
-                  <span className="font-mono text-[11px] text-[#315C4C]">
+                  <span className="text-muted">Link đăng nhập:</span>
+                  <span className="font-mono text-[11px] text-primary">
                     /login
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F0ED]">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
                 <Button
                   type="button"
                   variant="outline"
@@ -851,12 +851,12 @@ ${getCollabShareUrl(selectedCollabBooth)}`}
           ) : (
             <form onSubmit={handleCreateCollabAccount} className="space-y-4">
               {collabModalError && (
-                <div className="p-2.5 bg-[#FDF1F0] border border-[#FADBD8] text-[#C44536] rounded text-xs">
+                <div className="p-2.5 bg-error-bg border border-error-bg text-error rounded text-xs">
                   {collabModalError}
                 </div>
               )}
 
-              <div className="p-3 bg-[#FAF5FF] border border-[#A855F7]/30 rounded-[6px] text-xs text-[#6B21A8] space-y-1">
+              <div className="p-3 bg-[#FAF5FF] border border-[#A855F7]/30 rounded-lg text-xs text-[#6B21A8] space-y-1">
                 <div className="flex items-center justify-between font-semibold">
                   <span>Gian hàng: {selectedCollabBooth.name} ({selectedCollabBooth.code})</span>
                   <Badge variant="warning" className="text-[10px]">
@@ -925,7 +925,7 @@ ${getCollabShareUrl(selectedCollabBooth)}`}
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F0ED]">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
                 <Button
                   type="button"
                   variant="outline"
@@ -938,7 +938,7 @@ ${getCollabShareUrl(selectedCollabBooth)}`}
                   type="submit"
                   variant="primary"
                   size="sm"
-                  className="font-bold bg-[#315C4C] hover:bg-[#254639] gap-1.5"
+                  className="font-bold bg-primary hover:bg-gold-text gap-1.5"
                 >
                   <KeyRound className="w-3.5 h-3.5" />
                   <span>Khởi tạo & Cấp tài khoản</span>

@@ -325,7 +325,7 @@ export function CameraBarcodeScanner({
     >
       <div className="space-y-3">
         {/* Viewfinder Camera Box */}
-        <div className="relative aspect-[4/3] sm:aspect-video bg-black rounded-[10px] overflow-hidden flex items-center justify-center border-2 border-[#315C4C]/40 shadow-inner">
+        <div className="relative aspect-[4/3] sm:aspect-video bg-black rounded-lg overflow-hidden flex items-center justify-center border-2 border-primary/40 shadow-inner">
           <video
             ref={videoRef}
             playsInline
@@ -336,7 +336,7 @@ export function CameraBarcodeScanner({
           {/* Scanner Reticle & Laser Overlay */}
           <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
             {/* Darkened mask around reticle */}
-            <div className="relative w-64 h-48 sm:w-72 sm:h-52 border-2 border-[#2F7D55] rounded-xl overflow-hidden shadow-[0_0_0_9999px_rgba(0,0,0,0.55)]">
+            <div className="relative w-64 h-48 sm:w-72 sm:h-52 border-2 border-primary rounded-xl overflow-hidden shadow-[0_0_0_9999px_rgba(0,0,0,0.55)]">
               {/* Corner guides */}
               <div className="absolute top-0 left-0 w-5 h-5 border-t-4 border-l-4 border-white rounded-tl" />
               <div className="absolute top-0 right-0 w-5 h-5 border-t-4 border-r-4 border-white rounded-tr" />
@@ -355,7 +355,7 @@ export function CameraBarcodeScanner({
                 type="button"
                 onClick={toggleTorch}
                 className={`p-2 rounded-full backdrop-blur-md transition-colors ${
-                  torchEnabled ? 'bg-[#B7791F] text-white' : 'bg-black/50 text-white hover:bg-black/70'
+                  torchEnabled ? 'bg-warning text-white' : 'bg-black/50 text-white hover:bg-black/70'
                 }`}
                 title={torchEnabled ? 'Tắt đèn pin' : 'Bật đèn pin'}
               >
@@ -376,7 +376,7 @@ export function CameraBarcodeScanner({
               type="button"
               onClick={() => setSoundEnabled(!soundEnabled)}
               className={`p-2 rounded-full backdrop-blur-md transition-colors ${
-                soundEnabled ? 'bg-black/50 text-white' : 'bg-[#C44536]/80 text-white'
+                soundEnabled ? 'bg-black/50 text-white' : 'bg-error/80 text-white'
               }`}
               title={soundEnabled ? 'Tắt âm thanh bíp' : 'Bật âm thanh bíp'}
             >
@@ -386,11 +386,11 @@ export function CameraBarcodeScanner({
 
           {/* Scanned Success HUD Overlay */}
           {lastScannedResult && (
-            <div className="absolute bottom-3 inset-x-3 bg-[#EAF4EE]/95 border border-[#2F7D55] backdrop-blur-md p-2.5 rounded-lg shadow-lg flex items-center gap-2.5 animate-in slide-in-from-bottom-2 z-10">
-              <CheckCircle2 className="w-5 h-5 text-[#2F7D55] shrink-0" />
+            <div className="absolute bottom-3 inset-x-3 bg-success-bg/95 border border-primary backdrop-blur-md p-2.5 rounded-lg shadow-lg flex items-center gap-2.5 animate-in slide-in-from-bottom-2 z-10">
+              <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
               <div className="min-w-0 flex-1 text-xs">
-                <p className="font-bold text-[#202124] truncate">{lastScannedResult.name}</p>
-                <p className="text-[11px] text-[#2F7D55] font-semibold truncate">
+                <p className="font-bold text-foreground truncate">{lastScannedResult.name}</p>
+                <p className="text-[11px] text-primary font-semibold truncate">
                   Đã thêm {lastScannedResult.variantName} (SKU: {lastScannedResult.sku}) vào giỏ!
                 </p>
               </div>
@@ -399,7 +399,7 @@ export function CameraBarcodeScanner({
 
           {/* Error Message HUD */}
           {errorMessage && (
-            <div className="absolute bottom-3 inset-x-3 bg-[#FDF1F0]/95 border border-[#C44536] backdrop-blur-md p-2 rounded-lg text-xs text-[#C44536] font-semibold flex items-center gap-2 z-10">
+            <div className="absolute bottom-3 inset-x-3 bg-error-bg/95 border border-error backdrop-blur-md p-2 rounded-lg text-xs text-error font-semibold flex items-center gap-2 z-10">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span className="truncate">{errorMessage}</span>
             </div>
@@ -409,13 +409,13 @@ export function CameraBarcodeScanner({
         {/* Manual SKU Input Fallback & USB Scanner Support */}
         <form onSubmit={handleManualSubmit} className="flex gap-2">
           <div className="relative flex-1">
-            <Barcode className="w-4 h-4 text-[#9E9E9C] absolute left-3 top-2.5 pointer-events-none" />
+            <Barcode className="w-4 h-4 text-muted absolute left-3 top-2.5 pointer-events-none" />
             <Input
               type="text"
               placeholder="Hoặc gõ mã SKU / quét bằng súng quét USB..."
               value={manualCode}
               onChange={(e) => setManualCode(e.target.value)}
-              className="pl-9 h-9 text-xs bg-white"
+              className="pl-9 h-9 text-xs bg-surface"
               autoFocus
             />
           </div>
@@ -424,7 +424,7 @@ export function CameraBarcodeScanner({
           </Button>
         </form>
 
-        <p className="text-[11px] text-[#737373] text-center">
+        <p className="text-[11px] text-muted text-center">
           ⚡ Tương thích với tất cả súng quét mã vạch cầm tay, tem Barcode 1D (EAN/Code128) và mã QR 2D.
         </p>
       </div>

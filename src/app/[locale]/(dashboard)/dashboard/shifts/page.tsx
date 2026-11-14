@@ -35,14 +35,14 @@ export default function ShiftsPage() {
   const totalDifference = pastShifts.reduce((sum, s) => sum + (s.cashDifference || 0), 0);
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-5 bg-[#0F0F10] text-[#F4F4F2] font-sans">
+    <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-5 bg-background text-foreground font-sans">
       {/* Top Filter Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <select
             value={selectedEventId}
             onChange={(e) => setSelectedEventId(e.target.value)}
-            className="h-11 px-3.5 bg-[#19191B] border border-[#2E2E32] rounded-[10px] text-[#F4F4F2] text-[14px] focus:outline-none focus:border-[#F5B301] cursor-pointer"
+            className="h-11 px-3.5 bg-surface border border-border rounded-lg text-foreground text-[14px] focus:outline-none focus:border-primary cursor-pointer"
           >
             <option value="all">Tất cả sự kiện</option>
             {events.map((evt) => (
@@ -51,7 +51,7 @@ export default function ShiftsPage() {
               </option>
             ))}
           </select>
-          <span className="text-[13px] text-[#A3A3A0]">
+          <span className="text-[13px] text-muted">
             Theo dõi dòng tiền mặt đầu ca và đối soát két đóng ca
           </span>
         </div>
@@ -59,32 +59,32 @@ export default function ShiftsPage() {
 
       {/* 4 Stat Cards */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-4.5 flex flex-col gap-1.5">
-          <span className="text-[13px] text-[#A3A3A0]">Ca đang mở</span>
-          <span className="text-[28px] font-bold text-[#F4F4F2]">{openShiftsCount}</span>
+        <div className="bg-surface border border-border rounded-2xl p-4.5 flex flex-col gap-1.5">
+          <span className="text-[13px] text-muted">Ca đang mở</span>
+          <span className="text-[28px] font-bold text-foreground">{openShiftsCount}</span>
         </div>
 
-        <div className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-4.5 flex flex-col gap-1.5">
-          <span className="text-[13px] text-[#A3A3A0]">Tiền mặt đang ở các quầy</span>
-          <span className="text-[28px] font-bold text-[#F4F4F2]">
+        <div className="bg-surface border border-border rounded-2xl p-4.5 flex flex-col gap-1.5">
+          <span className="text-[13px] text-muted">Tiền mặt đang ở các quầy</span>
+          <span className="text-[28px] font-bold text-foreground">
             {formatCurrency(cashAtBooths, 'VND')}
           </span>
         </div>
 
-        <div className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-4.5 flex flex-col gap-1.5">
-          <span className="text-[13px] text-[#A3A3A0]">Ca đã chốt</span>
-          <span className="text-[28px] font-bold text-[#F4F4F2]">{closedShiftsCount}</span>
+        <div className="bg-surface border border-border rounded-2xl p-4.5 flex flex-col gap-1.5">
+          <span className="text-[13px] text-muted">Ca đã chốt</span>
+          <span className="text-[28px] font-bold text-foreground">{closedShiftsCount}</span>
         </div>
 
-        <div className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] p-4.5 flex flex-col gap-1.5">
-          <span className="text-[13px] text-[#A3A3A0]">Chênh lệch két</span>
+        <div className="bg-surface border border-border rounded-2xl p-4.5 flex flex-col gap-1.5">
+          <span className="text-[13px] text-muted">Chênh lệch két</span>
           <span
             className={`text-[28px] font-bold ${
               totalDifference < 0
-                ? 'text-[#FF8A8A]'
+                ? 'text-error'
                 : totalDifference > 0
-                ? 'text-[#4CC38A]'
-                : 'text-[#F4F4F2]'
+                ? 'text-success'
+                : 'text-foreground'
             }`}
           >
             {totalDifference !== 0
@@ -95,10 +95,10 @@ export default function ShiftsPage() {
       </section>
 
       {/* Shifts Table */}
-      <section className="bg-[#19191B] border border-[#2E2E32] rounded-[16px] px-5 py-2 overflow-x-auto">
+      <section className="bg-surface border border-border rounded-2xl px-5 py-2 overflow-x-auto">
         <div className="min-w-[840px]">
           {/* Header */}
-          <div className="grid grid-cols-[1fr_140px_100px_110px_120px_120px_120px_110px] gap-3 py-3 border-b border-[#2E2E32] text-[13px] text-[#A3A3A0]">
+          <div className="grid grid-cols-[1fr_140px_100px_110px_120px_120px_120px_110px] gap-3 py-3 border-b border-border text-[13px] text-muted">
             <span>Quầy</span>
             <span>Thu ngân</span>
             <span>Mở ca</span>
@@ -111,7 +111,7 @@ export default function ShiftsPage() {
 
           {/* Rows */}
           {filteredShifts.length === 0 ? (
-            <div className="py-12 text-center text-[14px] text-[#A3A3A0]">
+            <div className="py-12 text-center text-[14px] text-muted">
               Chưa có ca làm việc nào được mở. Thu ngân có thể mở ca trực tiếp tại màn hình POS.
             </div>
           ) : (
@@ -133,32 +133,32 @@ export default function ShiftsPage() {
               return (
                 <div
                   key={s.id}
-                  className="grid grid-cols-[1fr_140px_100px_110px_120px_120px_120px_110px] gap-3 py-3.5 border-b border-[#2E2E32] items-center text-[14.5px]"
+                  className="grid grid-cols-[1fr_140px_100px_110px_120px_120px_120px_110px] gap-3 py-3.5 border-b border-border items-center text-[14.5px]"
                 >
-                  <span className="font-semibold text-[#F4F4F2] truncate">{s.boothName}</span>
-                  <span className="text-[#A3A3A0] truncate">{s.cashierName}</span>
+                  <span className="font-semibold text-foreground truncate">{s.boothName}</span>
+                  <span className="text-muted truncate">{s.cashierName}</span>
                   <span>{openTime}</span>
-                  <span className={isOpen ? 'text-[#4CC38A] font-semibold' : 'text-[#F4F4F2]'}>
+                  <span className={isOpen ? 'text-success font-semibold' : 'text-foreground'}>
                     {closeTime}
                   </span>
-                  <span className="text-right font-medium text-[#A3A3A0]">
+                  <span className="text-right font-medium text-muted">
                     {formatCurrency(s.startingCashFloat, 'VND')}
                   </span>
-                  <span className="text-right font-medium text-[#F4F4F2]">
+                  <span className="text-right font-medium text-foreground">
                     {formatCurrency(s.totalCashSales, 'VND')}
                   </span>
-                  <span className="text-right font-medium text-[#F4F4F2]">
+                  <span className="text-right font-medium text-foreground">
                     {s.closingCashCount !== undefined ? formatCurrency(s.closingCashCount, 'VND') : '—'}
                   </span>
                   <span
                     className={`text-right font-bold ${
                       isOpen
-                        ? 'text-[#A3A3A0]'
+                        ? 'text-muted'
                         : diff < 0
-                        ? 'text-[#FF8A8A]'
+                        ? 'text-error'
                         : diff > 0
-                        ? 'text-[#4CC38A]'
-                        : 'text-[#4CC38A]'
+                        ? 'text-success'
+                        : 'text-success'
                     }`}
                   >
                     {isOpen
@@ -174,7 +174,7 @@ export default function ShiftsPage() {
         </div>
       </section>
 
-      <p className="text-[13px] text-[#A3A3A0] leading-relaxed">
+      <p className="text-[13px] text-muted leading-relaxed">
         Chênh lệch = két đếm được − (tiền đầu ca + bán tiền mặt). Khi chốt ca bị lệch tiền, thu ngân cần ghi rõ lý do giải trình; quản lý kiểm tra đối soát trực tiếp với két tiền quầy.
       </p>
     </div>

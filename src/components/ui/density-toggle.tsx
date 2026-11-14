@@ -26,7 +26,7 @@ export function DensityToggle({ className }: { className?: string }) {
     return (
       <div
         className={cn(
-          'h-8 px-2 rounded-[6px] border border-[#E8E8E5] bg-white opacity-40 shrink-0',
+          'h-8 px-2 rounded-lg border border-border bg-surface opacity-40 shrink-0',
           className
         )}
       />
@@ -48,12 +48,12 @@ export function DensityToggle({ className }: { className?: string }) {
       title={`${current.desc} — Nhấn để đổi tỉ lệ (100% → 90% → 80%)`}
       aria-label="Đổi tỉ lệ hiển thị"
       className={cn(
-        'h-8 px-2 sm:px-2.5 rounded-[6px] border border-[#E8E8E5] bg-white text-[#737373] hover:text-[#202124] hover:bg-[#F0F0ED] transition-all flex items-center gap-1 shrink-0 shadow-2xs cursor-pointer text-xs font-semibold',
-        density !== 'comfortable' && 'text-[#315C4C] border-[#315C4C]/30 bg-[#315C4C]/5',
+        'h-8 px-2 sm:px-2.5 rounded-lg border border-border bg-surface text-muted hover:text-foreground hover:bg-surface-hover transition-all flex items-center gap-1 shrink-0 shadow-2xs cursor-pointer text-xs font-semibold',
+        density !== 'comfortable' && 'text-primary border-primary/30 bg-primary/5',
         className
       )}
     >
-      <Scaling className="w-3.5 h-3.5 text-[#315C4C]" />
+      <Scaling className="w-3.5 h-3.5 text-primary" />
       <span className="text-[11px] font-mono leading-none">{current.pct}</span>
     </button>
   );

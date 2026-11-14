@@ -125,8 +125,8 @@ export function ReceiptModal({
     <Modal isOpen={isOpen} onClose={onClose} title="Hóa Đơn & Biên Nhận Thanh Toán" maxWidth="md">
       <div className="space-y-4">
         {/* Actions Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2 border-b border-[#E8E8E5] no-print">
-          <p className="text-xs text-[#737373]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2 border-b border-border no-print">
+          <p className="text-xs text-muted">
             Hóa đơn nhiệt chuẩn khổ 58mm / 80mm hoặc in Bluetooth
           </p>
           <div className="flex items-center gap-2 flex-wrap">
@@ -138,7 +138,7 @@ export function ReceiptModal({
               className="text-xs gap-1.5 h-8"
               title="Sao chép toàn bộ biên lai dạng văn bản"
             >
-              {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-[#2F7D55]" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copied ? 'Đã sao chép' : 'Sao chép'}</span>
             </Button>
 
@@ -149,10 +149,10 @@ export function ReceiptModal({
               disabled={isPrintingBt}
               isLoading={isPrintingBt}
               onClick={handlePrintBluetooth}
-              className="text-xs gap-1.5 h-8 border-[#315C4C]/40 text-[#315C4C] hover:bg-[#EAF4EE]"
+              className="text-xs gap-1.5 h-8 border-primary/40 text-primary hover:bg-success-bg"
               title="In trực tiếp ra máy in nhiệt mini cầm tay qua Bluetooth không dây"
             >
-              <Bluetooth className="w-3.5 h-3.5 text-[#315C4C]" />
+              <Bluetooth className="w-3.5 h-3.5 text-primary" />
               <span>In Bluetooth</span>
             </Button>
 
@@ -161,7 +161,7 @@ export function ReceiptModal({
               variant="primary"
               size="sm"
               onClick={handlePrint}
-              className="text-xs gap-1.5 h-8 bg-[#315C4C] text-white hover:bg-[#254639]"
+              className="text-xs gap-1.5 h-8 bg-primary text-primary-foreground hover:bg-gold-text"
               title="In hóa đơn qua trình duyệt hoặc lưu file PDF"
             >
               <Printer className="w-3.5 h-3.5" />
@@ -172,10 +172,10 @@ export function ReceiptModal({
 
         {btStatus && (
           <div
-            className={`p-2.5 rounded-[6px] text-xs flex items-center gap-2 no-print animate-in fade-in ${
+            className={`p-2.5 rounded-lg text-xs flex items-center gap-2 no-print animate-in fade-in ${
               btStatus.success
-                ? 'bg-[#EAF4EE] text-[#2F7D55] border border-[#CEE6D7]'
-                : 'bg-[#FDF1F0] text-[#C44536] border border-[#FADBD8]'
+                ? 'bg-success-bg text-primary border border-[#CEE6D7]'
+                : 'bg-error-bg text-error border border-error-bg'
             }`}
           >
             {btStatus.success ? (
@@ -188,43 +188,43 @@ export function ReceiptModal({
         )}
 
         {/* Thermal Receipt Preview Paper */}
-        <div className="bg-[#FAFAF8] dark:bg-neutral-900 p-4 sm:p-6 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-800 flex justify-center">
+        <div className="bg-background dark:bg-surface p-4 sm:p-6 rounded-lg border border-border dark:border-border flex justify-center">
           <div
             id="thermal-receipt"
-            className="w-full max-w-[340px] bg-white dark:bg-neutral-950 p-5 rounded-[4px] shadow-sm border border-[#E8E8E5] dark:border-neutral-800 font-mono text-[11px] leading-relaxed text-[#202124] dark:text-neutral-100 space-y-3"
+            className="w-full max-w-[340px] bg-surface dark:bg-background p-5 rounded-lg shadow-sm border border-border dark:border-border font-mono text-[11px] leading-relaxed text-foreground dark:text-foreground space-y-3"
           >
             {/* Header */}
-            <div className="text-center pb-3 border-b border-dashed border-[#D6D6D2] dark:border-neutral-700 space-y-1">
+            <div className="text-center pb-3 border-b border-dashed border-border-strong dark:border-border space-y-1">
               <div className="h-10 w-auto mx-auto flex items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/logo.png" alt="Logo" className="h-10 w-auto max-w-[85px] object-contain mx-auto" />
               </div>
               <p className="font-bold text-sm uppercase tracking-wider">{activeWorkspace?.name || 'HIKARUSTORE'}</p>
               {activeWorkspace?.owner_name && (
-                <p className="text-[10px] text-[#737373] dark:text-neutral-400">Đại diện: {activeWorkspace.owner_name}</p>
+                <p className="text-[10px] text-muted dark:text-muted">Đại diện: {activeWorkspace.owner_name}</p>
               )}
               {activeWorkspace?.phone && (
-                <p className="text-[10px] text-[#737373] dark:text-neutral-400">Hotline: {activeWorkspace.phone}</p>
+                <p className="text-[10px] text-muted dark:text-muted">Hotline: {activeWorkspace.phone}</p>
               )}
               {activeWorkspace?.address && (
-                <p className="text-[9.5px] text-[#737373] dark:text-neutral-400 leading-tight px-2">{activeWorkspace.address}</p>
+                <p className="text-[9.5px] text-muted dark:text-muted leading-tight px-2">{activeWorkspace.address}</p>
               )}
-              <p className="text-[11px] font-semibold text-[#315C4C] pt-1">{currentEvent}</p>
-              <p className="text-[10px] text-[#737373] dark:text-neutral-400">{currentBooth}</p>
+              <p className="text-[11px] font-semibold text-primary pt-1">{currentEvent}</p>
+              <p className="text-[10px] text-muted dark:text-muted">{currentBooth}</p>
             </div>
 
             {/* Meta Info */}
-            <div className="text-[10px] space-y-1 pb-2 border-b border-dashed border-[#D6D6D2] dark:border-neutral-700">
+            <div className="text-[10px] space-y-1 pb-2 border-b border-dashed border-border-strong dark:border-border">
               <div className="flex justify-between">
-                <span className="text-[#737373] dark:text-neutral-400">Mã đơn hàng:</span>
+                <span className="text-muted dark:text-muted">Mã đơn hàng:</span>
                 <span className="font-bold">{order.order_number}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#737373] dark:text-neutral-400">Thời gian:</span>
+                <span className="text-muted dark:text-muted">Thời gian:</span>
                 <span>{formatDate(order.created_at)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#737373] dark:text-neutral-400">Hình thức:</span>
+                <span className="text-muted dark:text-muted">Hình thức:</span>
                 <span className="font-semibold uppercase">
                   {order.payment_method === 'cash' ? 'Tiền mặt' : 'VietQR Chuyển khoản'}
                 </span>
@@ -232,8 +232,8 @@ export function ReceiptModal({
             </div>
 
             {/* Line Items */}
-            <div className="space-y-1.5 py-2 border-b border-dashed border-[#D6D6D2] dark:border-neutral-700">
-              <div className="flex justify-between font-bold text-[10px] text-[#737373] dark:text-neutral-400 pb-1">
+            <div className="space-y-1.5 py-2 border-b border-dashed border-border-strong dark:border-border">
+              <div className="flex justify-between font-bold text-[10px] text-muted dark:text-muted pb-1">
                 <span>MÓN HÀNG</span>
                 <span>THÀNH TIỀN</span>
               </div>
@@ -245,14 +245,14 @@ export function ReceiptModal({
                       <span className="truncate pr-2">
                         {productName}
                         {collabPartner && (
-                          <span className="text-[9px] text-[#B7791F] ml-1 font-normal">[Collab: {collabPartner}]</span>
+                          <span className="text-[9px] text-warning ml-1 font-normal">[Collab: {collabPartner}]</span>
                         )}
                       </span>
                       <span className="shrink-0">
                         {formatCurrency(it.unit_price * it.quantity, activeWorkspace?.currency || 'VND')}
                       </span>
                     </div>
-                    <div className="flex justify-between text-[10px] text-[#737373] dark:text-neutral-400">
+                    <div className="flex justify-between text-[10px] text-muted dark:text-muted">
                       <span>
                         {variantName} x {it.quantity} @ {formatCurrency(it.unit_price, activeWorkspace?.currency || 'VND')}
                       </span>
@@ -264,24 +264,24 @@ export function ReceiptModal({
 
             {/* Totals */}
             <div className="space-y-1 pt-1 text-xs">
-              <div className="flex justify-between text-[11px] text-[#737373] dark:text-neutral-400">
+              <div className="flex justify-between text-[11px] text-muted dark:text-muted">
                 <span>Tạm tính:</span>
                 <span>{formatCurrency(order.subtotal_amount, activeWorkspace?.currency || 'VND')}</span>
               </div>
               {order.discount_amount > 0 && (
-                <div className="flex justify-between text-[11px] text-[#C44536]">
+                <div className="flex justify-between text-[11px] text-error">
                   <span>Giảm giá:</span>
                   <span>-{formatCurrency(order.discount_amount, activeWorkspace?.currency || 'VND')}</span>
                 </div>
               )}
-              <div className="flex justify-between font-bold text-sm text-[#315C4C] pt-1 border-t border-[#E8E8E5] dark:border-neutral-700">
+              <div className="flex justify-between font-bold text-sm text-primary pt-1 border-t border-border dark:border-border">
                 <span>TỔNG THANH TOÁN:</span>
-                <span className={getEffectiveOrderStatus(order) !== 'completed' ? 'line-through text-[#737373]' : ''}>
+                <span className={getEffectiveOrderStatus(order) !== 'completed' ? 'line-through text-muted' : ''}>
                   {formatCurrency(order.final_amount, activeWorkspace?.currency || 'VND')}
                 </span>
               </div>
               {getEffectiveOrderStatus(order) === 'cancelled' && (
-                <div className="mt-2 p-2 border border-dashed border-[#C44536] bg-[#FDF1F0] text-[#C44536] text-center space-y-0.5 rounded">
+                <div className="mt-2 p-2 border border-dashed border-error bg-error-bg text-error text-center space-y-0.5 rounded">
                   <p className="font-bold text-[11px]">*** ĐƠN HÀNG ĐÃ HỦY (VOID) ***</p>
                   {order.cancellation_reason && (
                     <p className="text-[9px]">Lý do: {order.cancellation_reason}</p>
@@ -289,7 +289,7 @@ export function ReceiptModal({
                 </div>
               )}
               {getEffectiveOrderStatus(order) === 'refunded' && (
-                <div className="mt-2 p-2 border border-dashed border-[#B7791F] bg-[#FEF7EC] text-[#B7791F] text-center space-y-0.5 rounded">
+                <div className="mt-2 p-2 border border-dashed border-warning bg-warning-bg text-warning text-center space-y-0.5 rounded">
                   <p className="font-bold text-[11px]">
                     *** BIÊN BẢN HOÀN TIỀN ({order.refund_record_number || 'RF'}) ***
                   </p>
@@ -304,16 +304,16 @@ export function ReceiptModal({
             </div>
 
             {/* Footer QR & Message */}
-            <div className="text-center pt-3 border-t border-dashed border-[#D6D6D2] dark:border-neutral-700 space-y-2">
-              <p className="text-[10px] text-[#737373] dark:text-neutral-400 italic">
+            <div className="text-center pt-3 border-t border-dashed border-border-strong dark:border-border space-y-2">
+              <p className="text-[10px] text-muted dark:text-muted italic">
                 {activeWorkspace?.slogan || 'Cảm ơn bạn đã đồng hành và ủng hộ nghệ sĩ!'}
                 <br />
                 Vui lòng kiểm tra hàng hóa kỹ trước khi rời quầy.
               </p>
-              <div className="w-16 h-16 mx-auto bg-neutral-100 dark:bg-neutral-800 rounded flex items-center justify-center border border-dashed border-neutral-300 dark:border-neutral-600">
-                <QrCode className="w-10 h-10 text-neutral-600 dark:text-neutral-300" />
+              <div className="w-16 h-16 mx-auto bg-surface-hover dark:bg-surface-hover rounded flex items-center justify-center border border-dashed border-border dark:border-border">
+                <QrCode className="w-10 h-10 text-muted dark:text-muted" />
               </div>
-              <p className="text-[9px] text-[#9E9E9C] font-mono">#{order.id}</p>
+              <p className="text-[9px] text-muted font-mono">#{order.id}</p>
             </div>
           </div>
         </div>

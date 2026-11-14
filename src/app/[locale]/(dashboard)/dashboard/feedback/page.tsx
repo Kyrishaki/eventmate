@@ -129,14 +129,14 @@ export default function DashboardFeedbackPage() {
     switch (type) {
       case 'bug':
         return (
-          <Badge variant="outline" className="text-[10px] border-[#C44536] text-[#C44536] bg-[#C44536]/10 gap-1">
+          <Badge variant="outline" className="text-[10px] border-error text-error bg-error/10 gap-1">
             <Bug className="w-3 h-3" />
             <span>Báo lỗi</span>
           </Badge>
         );
       case 'feature':
         return (
-          <Badge variant="outline" className="text-[10px] border-[#315C4C] text-[#315C4C] bg-[#315C4C]/10 gap-1">
+          <Badge variant="outline" className="text-[10px] border-primary text-primary bg-primary/10 gap-1">
             <Lightbulb className="w-3 h-3" />
             <span>Góp ý tính năng</span>
           </Badge>
@@ -150,7 +150,7 @@ export default function DashboardFeedbackPage() {
         );
       default:
         return (
-          <Badge variant="outline" className="text-[10px] border-[#737373] text-[#737373] bg-[#737373]/10 gap-1">
+          <Badge variant="outline" className="text-[10px] border-muted text-muted bg-muted/10 gap-1">
             <MessageSquare className="w-3 h-3" />
             <span>Ý kiến</span>
           </Badge>
@@ -162,13 +162,13 @@ export default function DashboardFeedbackPage() {
     switch (sev) {
       case 'critical':
         return (
-          <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-[#FDF1F0] text-[#C44536] border border-[#C44536]/30 animate-pulse">
+          <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-error-bg text-error border border-error/30 animate-pulse">
             🚨 Khẩn cấp
           </span>
         );
       case 'high':
         return (
-          <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold bg-[#FEF7EC] text-[#B7791F] border border-[#B7791F]/30">
+          <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold bg-warning-bg text-warning border border-warning/30">
             Cao
           </span>
         );
@@ -180,7 +180,7 @@ export default function DashboardFeedbackPage() {
         );
       case 'low':
         return (
-          <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-[#F7F7F5] text-[#737373] border border-[#E8E8E5]">
+          <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-background text-muted border border-border">
             Thấp
           </span>
         );
@@ -191,7 +191,7 @@ export default function DashboardFeedbackPage() {
     switch (status) {
       case 'pending':
         return (
-          <span className="text-[10px] px-2 py-0.5 rounded font-semibold bg-[#FEF7EC] text-[#B7791F] border border-[#B7791F]/30">
+          <span className="text-[10px] px-2 py-0.5 rounded font-semibold bg-warning-bg text-warning border border-warning/30">
             ⏳ Chờ xử lý
           </span>
         );
@@ -203,13 +203,13 @@ export default function DashboardFeedbackPage() {
         );
       case 'resolved':
         return (
-          <span className="text-[10px] px-2 py-0.5 rounded font-semibold bg-[#EBF1EE] text-[#2F7D55] border border-[#2F7D55]/30">
+          <span className="text-[10px] px-2 py-0.5 rounded font-semibold bg-warning-bg text-primary border border-primary/30">
             ✅ Đã hoàn thành
           </span>
         );
       case 'closed':
         return (
-          <span className="text-[10px] px-2 py-0.5 rounded font-medium bg-[#F7F7F5] text-[#737373] border border-[#E8E8E5]">
+          <span className="text-[10px] px-2 py-0.5 rounded font-medium bg-background text-muted border border-border">
             Đã đóng
           </span>
         );
@@ -219,17 +219,17 @@ export default function DashboardFeedbackPage() {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#E8E8E5]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-border">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-[#202124]">
+            <h1 className="text-xl font-bold tracking-tight text-foreground">
               Hộp thư Báo cáo Lỗi & Góp ý Cải thiện
             </h1>
             <Badge variant="outline" className="text-[11px] font-mono">
               {totalCount} phản hồi
             </Badge>
           </div>
-          <p className="text-xs text-[#737373] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Tổng hợp toàn bộ phản hồi từ người dùng, thu ngân và đối tác để đối chiếu và lên kế hoạch update web.
           </p>
         </div>
@@ -244,12 +244,12 @@ export default function DashboardFeedbackPage() {
           >
             {copiedRoadmap ? (
               <>
-                <Check className="w-3.5 h-3.5 text-[#2F7D55]" />
+                <Check className="w-3.5 h-3.5 text-primary" />
                 <span>Đã chép danh sách!</span>
               </>
             ) : (
               <>
-                <Copy className="w-3.5 h-3.5 text-[#315C4C]" />
+                <Copy className="w-3.5 h-3.5 text-primary" />
                 <span>Chép Kế hoạch Update</span>
               </>
             )}
@@ -280,63 +280,63 @@ export default function DashboardFeedbackPage() {
 
       {/* KPI Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="p-3 sm:p-4 bg-white border-[#E8E8E5] shadow-xs">
-          <div className="flex items-center justify-between text-[#737373] mb-1">
+        <Card className="p-3 sm:p-4 bg-surface border-border shadow-xs">
+          <div className="flex items-center justify-between text-muted mb-1">
             <span className="text-[11px] sm:text-xs font-medium">Tổng số phản hồi</span>
-            <div className="w-6 h-6 rounded-[4px] bg-[#F7F7F5] border border-[#E8E8E5] flex items-center justify-center text-[#315C4C]">
+            <div className="w-6 h-6 rounded-lg bg-background border border-border flex items-center justify-center text-primary">
               <MessageSquare className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-bold text-[#202124]">
+          <div className="text-xl sm:text-2xl font-bold text-foreground">
             {totalCount}
           </div>
-          <p className="text-[10px] text-[#737373] mt-0.5">Từ mọi nguồn và thiết bị</p>
+          <p className="text-[10px] text-muted mt-0.5">Từ mọi nguồn và thiết bị</p>
         </Card>
 
-        <Card className="p-3 sm:p-4 bg-white border-[#E8E8E5] shadow-xs">
-          <div className="flex items-center justify-between text-[#737373] mb-1">
-            <span className="text-[11px] sm:text-xs font-medium text-[#C44536]">Lỗi cần fix</span>
-            <div className="w-6 h-6 rounded-[4px] bg-[#FDF1F0] border border-[#C44536]/20 flex items-center justify-center text-[#C44536]">
+        <Card className="p-3 sm:p-4 bg-surface border-border shadow-xs">
+          <div className="flex items-center justify-between text-muted mb-1">
+            <span className="text-[11px] sm:text-xs font-medium text-error">Lỗi cần fix</span>
+            <div className="w-6 h-6 rounded-lg bg-error-bg border border-error/20 flex items-center justify-center text-error">
               <Bug className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-bold text-[#C44536]">
+          <div className="text-xl sm:text-2xl font-bold text-error">
             {bugsPending}
           </div>
-          <p className="text-[10px] text-[#C44536] mt-0.5">Đang chờ xử lý / kiểm tra</p>
+          <p className="text-[10px] text-error mt-0.5">Đang chờ xử lý / kiểm tra</p>
         </Card>
 
-        <Card className="p-3 sm:p-4 bg-white border-[#E8E8E5] shadow-xs">
-          <div className="flex items-center justify-between text-[#737373] mb-1">
-            <span className="text-[11px] sm:text-xs font-medium text-[#315C4C]">Ý tưởng tính năng</span>
-            <div className="w-6 h-6 rounded-[4px] bg-[#EBF1EE] border border-[#315C4C]/20 flex items-center justify-center text-[#315C4C]">
+        <Card className="p-3 sm:p-4 bg-surface border-border shadow-xs">
+          <div className="flex items-center justify-between text-muted mb-1">
+            <span className="text-[11px] sm:text-xs font-medium text-primary">Ý tưởng tính năng</span>
+            <div className="w-6 h-6 rounded-lg bg-warning-bg border border-primary/20 flex items-center justify-center text-primary">
               <Lightbulb className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-bold text-[#315C4C]">
+          <div className="text-xl sm:text-2xl font-bold text-primary">
             {featuresCount}
           </div>
-          <p className="text-[10px] text-[#737373] mt-0.5">Đề xuất cải thiện từ người dùng</p>
+          <p className="text-[10px] text-muted mt-0.5">Đề xuất cải thiện từ người dùng</p>
         </Card>
 
-        <Card className="p-3 sm:p-4 bg-white border-[#E8E8E5] shadow-xs">
-          <div className="flex items-center justify-between text-[#737373] mb-1">
-            <span className="text-[11px] sm:text-xs font-medium text-[#2F7D55]">Đã giải quyết</span>
-            <div className="w-6 h-6 rounded-[4px] bg-[#EBF1EE] border border-[#2F7D55]/20 flex items-center justify-center text-[#2F7D55]">
+        <Card className="p-3 sm:p-4 bg-surface border-border shadow-xs">
+          <div className="flex items-center justify-between text-muted mb-1">
+            <span className="text-[11px] sm:text-xs font-medium text-primary">Đã giải quyết</span>
+            <div className="w-6 h-6 rounded-lg bg-warning-bg border border-primary/20 flex items-center justify-center text-primary">
               <CheckCircle2 className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-bold text-[#2F7D55]">
+          <div className="text-xl sm:text-2xl font-bold text-primary">
             {resolvedCount}
           </div>
-          <p className="text-[10px] text-[#737373] mt-0.5">Đã fix & đưa vào bản update</p>
+          <p className="text-[10px] text-muted mt-0.5">Đã fix & đưa vào bản update</p>
         </Card>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-[8px] border border-[#E8E8E5] shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-surface rounded-lg border border-border shadow-xs">
         <div className="relative max-w-xs w-full">
-          <Search className="w-3.5 h-3.5 text-[#9E9E9C] absolute left-3 top-2.5" />
+          <Search className="w-3.5 h-3.5 text-muted absolute left-3 top-2.5" />
           <Input
             placeholder="Tìm theo tiêu đề, người gửi, module..."
             value={searchQuery}
@@ -346,14 +346,14 @@ export default function DashboardFeedbackPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1 text-xs text-[#737373]">
-            <Filter className="w-3.5 h-3.5 text-[#315C4C]" />
+          <div className="flex items-center gap-1 text-xs text-muted">
+            <Filter className="w-3.5 h-3.5 text-primary" />
             <span>Loại:</span>
           </div>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="h-8 text-xs rounded-[6px] border border-[#E8E8E5] bg-[#F7F7F5] px-2.5 text-[#202124] focus:outline-none"
+            className="h-8 text-xs rounded-lg border border-border bg-background px-2.5 text-foreground focus:outline-none"
           >
             <option value="all">Tất cả loại</option>
             <option value="bug">🐞 Báo lỗi (Bug)</option>
@@ -362,12 +362,12 @@ export default function DashboardFeedbackPage() {
             <option value="other">💬 Ý kiến khác</option>
           </select>
 
-          <span className="text-[#E8E8E5]">|</span>
+          <span className="text-surface-hover">|</span>
 
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="h-8 text-xs rounded-[6px] border border-[#E8E8E5] bg-[#F7F7F5] px-2.5 text-[#202124] focus:outline-none"
+            className="h-8 text-xs rounded-lg border border-border bg-background px-2.5 text-foreground focus:outline-none"
           >
             <option value="all">Tất cả trạng thái</option>
             <option value="pending">Chờ xử lý</option>
@@ -376,12 +376,12 @@ export default function DashboardFeedbackPage() {
             <option value="closed">Đã đóng</option>
           </select>
 
-          <span className="text-[#E8E8E5]">|</span>
+          <span className="text-surface-hover">|</span>
 
           <select
             value={filterSeverity}
             onChange={(e) => setFilterSeverity(e.target.value)}
-            className="h-8 text-xs rounded-[6px] border border-[#E8E8E5] bg-[#F7F7F5] px-2.5 text-[#202124] focus:outline-none"
+            className="h-8 text-xs rounded-lg border border-border bg-background px-2.5 text-foreground focus:outline-none"
           >
             <option value="all">Tất cả mức độ</option>
             <option value="critical">🚨 Khẩn cấp</option>
@@ -393,13 +393,13 @@ export default function DashboardFeedbackPage() {
       </div>
 
       {/* Items List */}
-      <Card className="border-[#E8E8E5] shadow-xs bg-white">
-        <CardHeader className="py-3 px-4 border-b border-[#F0F0ED] flex flex-row items-center justify-between">
+      <Card className="border-border shadow-xs bg-surface">
+        <CardHeader className="py-3 px-4 border-b border-border flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-sm font-semibold text-[#202124]">
+            <CardTitle className="text-sm font-semibold text-foreground">
               Danh sách tiếp nhận ({filteredItems.length} mục)
             </CardTitle>
-            <CardDescription className="text-xs text-[#737373]">
+            <CardDescription className="text-xs text-muted">
               Bấm vào từng mục để cập nhật tiến độ xử lý và ghi chú cho bản cập nhật mới
             </CardDescription>
           </div>
@@ -407,21 +407,21 @@ export default function DashboardFeedbackPage() {
         <CardContent className="p-0">
           {filteredItems.length === 0 ? (
             <div className="text-center py-12 px-4">
-              <CheckCircle2 className="w-10 h-10 text-[#2F7D55] mx-auto mb-2 opacity-60" />
-              <p className="text-xs font-semibold text-[#202124]">
+              <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-2 opacity-60" />
+              <p className="text-xs font-semibold text-foreground">
                 Không tìm thấy phản hồi nào phù hợp bộ lọc
               </p>
-              <p className="text-[11px] text-[#737373] mt-0.5">
+              <p className="text-[11px] text-muted mt-0.5">
                 Mọi ý kiến đóng góp từ máy POS hoặc Dashboard sẽ xuất hiện tại đây.
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-[#F0F0ED]">
+            <div className="divide-y divide-border">
               {filteredItems.map((item) => {
                 return (
                   <div
                     key={item.id}
-                    className="p-4 hover:bg-[#FBFBFA] transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
+                    className="p-4 hover:bg-background transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
                   >
                     {/* Left: Info */}
                     <div className="space-y-1.5 flex-1 min-w-0">
@@ -436,17 +436,17 @@ export default function DashboardFeedbackPage() {
 
                       <h3
                         onClick={() => handleSelectItem(item)}
-                        className="text-xs sm:text-sm font-bold text-[#202124] hover:text-[#315C4C] cursor-pointer transition-colors"
+                        className="text-xs sm:text-sm font-bold text-foreground hover:text-primary cursor-pointer transition-colors"
                       >
                         {item.title}
                       </h3>
 
-                      <p className="text-xs text-[#555555] line-clamp-2">
+                      <p className="text-xs text-muted line-clamp-2">
                         {item.description}
                       </p>
 
                       {item.admin_notes && (
-                        <div className="text-[11px] bg-[#EBF1EE]/60 text-[#2F7D55] p-2 rounded-[6px] border border-[#2F7D55]/20 flex items-start gap-1.5 mt-1.5">
+                        <div className="text-[11px] bg-warning-bg/60 text-primary p-2 rounded-lg border border-primary/20 flex items-start gap-1.5 mt-1.5">
                           <Check className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                           <span>
                             <strong>Ghi chú cập nhật:</strong> {item.admin_notes}
@@ -454,7 +454,7 @@ export default function DashboardFeedbackPage() {
                         </div>
                       )}
 
-                      <div className="flex items-center gap-3 text-[10px] text-[#737373] pt-1">
+                      <div className="flex items-center gap-3 text-[10px] text-muted pt-1">
                         <span>
                           Người báo: <strong>{item.reporter_name || 'Khách'}</strong> ({item.reporter_role || 'staff'})
                         </span>
@@ -466,7 +466,7 @@ export default function DashboardFeedbackPage() {
                             <button
                               type="button"
                               onClick={() => setViewScreenshotUrl(item.screenshot_url!)}
-                              className="text-[#315C4C] hover:underline font-semibold flex items-center gap-0.5"
+                              className="text-primary hover:underline font-semibold flex items-center gap-0.5"
                             >
                               <Eye className="w-3 h-3" />
                               <span>Xem ảnh lỗi</span>
@@ -481,7 +481,7 @@ export default function DashboardFeedbackPage() {
                       <select
                         value={item.status}
                         onChange={(e) => updateStatus(item.id, e.target.value as FeedbackStatus)}
-                        className="h-8 text-xs font-semibold rounded-[6px] border border-[#E8E8E5] bg-white px-2 text-[#202124] focus:outline-none cursor-pointer"
+                        className="h-8 text-xs font-semibold rounded-lg border border-border bg-surface px-2 text-foreground focus:outline-none cursor-pointer"
                       >
                         <option value="pending">Chờ xử lý</option>
                         <option value="in_progress">Đang xử lý</option>
@@ -506,7 +506,7 @@ export default function DashboardFeedbackPage() {
                             deleteFeedback(item.id);
                           }
                         }}
-                        className="h-8 px-2 text-[#C44536] hover:bg-[#FDF1F0]"
+                        className="h-8 px-2 text-error hover:bg-error-bg"
                         title="Xóa mục này"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -540,10 +540,10 @@ export default function DashboardFeedbackPage() {
             </div>
 
             <div>
-              <h2 className="text-sm font-bold text-[#202124]">
+              <h2 className="text-sm font-bold text-foreground">
                 {selectedItem.title}
               </h2>
-              <p className="text-xs text-[#555555] mt-1 whitespace-pre-wrap bg-[#FBFBFA] p-3 rounded-[6px] border border-[#E8E8E5]">
+              <p className="text-xs text-muted mt-1 whitespace-pre-wrap bg-background p-3 rounded-lg border border-border">
                 {selectedItem.description}
               </p>
             </div>
@@ -551,8 +551,8 @@ export default function DashboardFeedbackPage() {
             {/* Attached Screenshot */}
             {selectedItem.screenshot_url && (
               <div className="space-y-1">
-                <span className="text-xs font-bold text-[#202124]">Ảnh minh chứng đính kèm:</span>
-                <div className="max-h-60 overflow-hidden rounded-[6px] border border-[#E8E8E5] bg-black/5 flex items-center justify-center">
+                <span className="text-xs font-bold text-foreground">Ảnh minh chứng đính kèm:</span>
+                <div className="max-h-60 overflow-hidden rounded-lg border border-border bg-black/5 flex items-center justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={selectedItem.screenshot_url}
@@ -566,23 +566,23 @@ export default function DashboardFeedbackPage() {
             )}
 
             {/* Diagnostics Metadata */}
-            <div className="p-3 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5] text-xs space-y-1 text-[#737373]">
+            <div className="p-3 bg-background rounded-lg border border-border text-xs space-y-1 text-muted">
               <div className="flex justify-between">
                 <span>Người báo cáo:</span>
-                <span className="font-semibold text-[#202124]">
+                <span className="font-semibold text-foreground">
                   {selectedItem.reporter_name} ({selectedItem.reporter_role})
                 </span>
               </div>
               {selectedItem.reporter_email && (
                 <div className="flex justify-between">
                   <span>Liên hệ:</span>
-                  <span className="text-[#202124]">{selectedItem.reporter_email}</span>
+                  <span className="text-foreground">{selectedItem.reporter_email}</span>
                 </div>
               )}
               {selectedItem.page_url && (
                 <div className="flex justify-between truncate">
                   <span>Trang gặp lỗi:</span>
-                  <span className="text-[#315C4C] truncate max-w-xs">{selectedItem.page_url}</span>
+                  <span className="text-primary truncate max-w-xs">{selectedItem.page_url}</span>
                 </div>
               )}
               {selectedItem.device_info && (
@@ -596,9 +596,9 @@ export default function DashboardFeedbackPage() {
             </div>
 
             {/* Admin Resolution Notes Editor */}
-            <div className="space-y-1.5 pt-2 border-t border-[#E8E8E5]">
-              <label className="text-xs font-bold text-[#202124] flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-[#2F7D55]" />
+            <div className="space-y-1.5 pt-2 border-t border-border">
+              <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-primary" />
                 <span>Ghi chú xử lý / Kế hoạch update của Admin:</span>
               </label>
               <textarea
@@ -606,12 +606,12 @@ export default function DashboardFeedbackPage() {
                 placeholder="VD: Đã fix trong bản build mới; hoặc Sẽ triển khai vào tuần tới..."
                 value={editingNotes}
                 onChange={(e) => setEditingNotes(e.target.value)}
-                className="flex w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-2 text-xs text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                className="flex w-full rounded-lg border border-border bg-surface px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary"
               />
             </div>
 
             {/* Modal Actions */}
-            <div className="flex items-center justify-between pt-3 border-t border-[#F0F0ED]">
+            <div className="flex items-center justify-between pt-3 border-t border-border">
               <div className="flex items-center gap-2">
                 <Button
                   type="button"
@@ -621,7 +621,7 @@ export default function DashboardFeedbackPage() {
                     updateStatus(selectedItem.id, 'resolved', editingNotes);
                     setSelectedItem(null);
                   }}
-                  className="text-xs text-[#2F7D55] border-[#2F7D55]/30 hover:bg-[#EBF1EE]"
+                  className="text-xs text-primary border-primary/30 hover:bg-warning-bg"
                 >
                   <Check className="w-3.5 h-3.5" />
                   <span>Đánh dấu Đã hoàn thành</span>
@@ -656,7 +656,7 @@ export default function DashboardFeedbackPage() {
           title="Ảnh Minh Chứng Báo Cáo Lỗi"
           maxWidth="xl"
         >
-          <div className="p-2 text-center bg-black/5 rounded-[6px] overflow-hidden">
+          <div className="p-2 text-center bg-black/5 rounded-lg overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={viewScreenshotUrl}

@@ -51,9 +51,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!hasMounted || !hasAuthHydrated) {
     return (
-      <div className="min-h-screen bg-[#F7F7F5] dark:bg-neutral-950 flex flex-col items-center justify-center gap-3">
-        <div className="w-6 h-6 border-2 border-[#315C4C] border-t-transparent rounded-full animate-spin" />
-        <span className="text-xs text-[#737373] font-medium">Đang khôi phục phiên đăng nhập...</span>
+      <div className="min-h-screen bg-background dark:bg-background flex flex-col items-center justify-center gap-3">
+        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs text-muted font-medium">Đang khôi phục phiên đăng nhập...</span>
       </div>
     );
   }
@@ -78,7 +78,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // - Tablet (md to < lg): Persistent 76px NavigationRail + expandable Drawer overlay
   // - Desktop (lg+): Collapsible 256px NavigationDrawer <-> 76px NavigationRail
   return (
-    <div className="min-h-screen bg-[#F7F7F5] dark:bg-neutral-950 flex flex-col">
+    <div className="min-h-screen bg-background dark:bg-background flex flex-col">
       <div className="flex-1 flex">
         <Sidebar
           isOpen={tabletDrawerOpen}
@@ -92,11 +92,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div
           className={cn(
             'flex-1 flex flex-col min-w-0 transition-[padding] duration-200 md:pl-[76px]',
-            sidebarCollapsed ? 'lg:pl-[76px]' : 'lg:pl-64'
+            sidebarCollapsed ? 'lg:pl-[76px]' : 'lg:pl-60'
           )}
         >
           <Topbar onOpenMobileMenu={() => setMobileMenuOpen(true)} />
-          <main className="flex-1 px-2.5 py-3 pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:py-6 md:pb-8 lg:p-8 max-w-7xl w-full mx-auto">
+          <main className="flex-1 px-4 py-6 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-8 lg:px-8 w-full mx-auto">
             {children}
           </main>
         </div>

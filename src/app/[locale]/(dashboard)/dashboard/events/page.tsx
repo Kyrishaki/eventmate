@@ -154,15 +154,15 @@ export default function EventsPage() {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#E8E8E5]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-border">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-[#202124]">{t('title')}</h1>
+            <h1 className="text-xl font-bold tracking-tight text-foreground">{t('title')}</h1>
             <Badge variant="outline" className="text-[11px] font-mono">
               {workspaceEvents.length} {t('title').toLowerCase()}
             </Badge>
           </div>
-          <p className="text-xs text-[#737373] mt-0.5">{t('description')}</p>
+          <p className="text-xs text-muted mt-0.5">{t('description')}</p>
         </div>
 
         {editable ? (
@@ -173,7 +173,7 @@ export default function EventsPage() {
             </Button>
           </div>
         ) : (
-          <Badge variant="outline" className="text-xs text-[#737373]">
+          <Badge variant="outline" className="text-xs text-muted">
             Chế độ Chỉ Xem (Khách)
           </Badge>
         )}
@@ -186,18 +186,18 @@ export default function EventsPage() {
             placeholder={tCommon('search')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 text-xs w-full bg-white dark:bg-neutral-900"
+            className="h-8 text-xs w-full bg-surface dark:bg-surface"
           />
         </div>
       </div>
 
       {/* Events List */}
       {filteredEvents.length === 0 ? (
-        <Card className="border-[#E8E8E5] shadow-xs">
+        <Card className="border-border shadow-xs">
           <CardContent className="p-12 text-center">
-            <CalendarDays className="w-10 h-10 text-[#9E9E9C] mx-auto mb-3" />
-            <h3 className="text-sm font-semibold text-[#202124]">{t('noEvents')}</h3>
-            <p className="text-xs text-[#737373] mt-1 max-w-sm mx-auto">{t('noEventsDesc')}</p>
+            <CalendarDays className="w-10 h-10 text-muted mx-auto mb-3" />
+            <h3 className="text-sm font-semibold text-foreground">{t('noEvents')}</h3>
+            <p className="text-xs text-muted mt-1 max-w-sm mx-auto">{t('noEventsDesc')}</p>
             <div className="mt-4 flex items-center justify-center gap-2">
               <Button variant="outline" size="sm" className="gap-1" onClick={openCreateModal}>
                 <Plus className="w-3.5 h-3.5" />
@@ -213,10 +213,10 @@ export default function EventsPage() {
             return (
               <Card
                 key={evt.id}
-                className="border-[#E8E8E5] bg-white shadow-2xs hover:border-[#D6D6D2] transition-colors flex flex-col justify-between overflow-hidden"
+                className="border-border bg-surface shadow-2xs hover:border-border-strong transition-colors flex flex-col justify-between overflow-hidden"
               >
                 {evt.banner_url && (
-                  <div className="relative w-full h-36 bg-[#121212] overflow-hidden border-b border-[#F0F0ED]">
+                  <div className="relative w-full h-36 bg-[#121212] overflow-hidden border-b border-border">
                     <img
                       src={evt.banner_url}
                       alt={evt.name}
@@ -227,7 +227,7 @@ export default function EventsPage() {
                 )}
                 <div className="p-5">
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <h3 className="text-sm font-bold text-[#202124] tracking-tight truncate">
+                    <h3 className="text-sm font-bold text-foreground tracking-tight truncate">
                       {evt.name}
                     </h3>
                     <Badge variant={statusBadgeVariant(evt.status)} className="capitalize text-[10px]">
@@ -236,24 +236,24 @@ export default function EventsPage() {
                   </div>
 
                   {evt.description && (
-                    <p className="text-xs text-[#737373] line-clamp-2 mb-3">
+                    <p className="text-xs text-muted line-clamp-2 mb-3">
                       {evt.description}
                     </p>
                   )}
 
-                  <div className="space-y-1.5 text-xs text-[#737373] border-t border-[#F0F0ED] pt-3">
+                  <div className="space-y-1.5 text-xs text-muted border-t border-border pt-3">
                     {evt.location && (
                       <div className="flex items-center gap-2">
-                        <MapPin className="w-3.5 h-3.5 text-[#9E9E9C] shrink-0" />
+                        <MapPin className="w-3.5 h-3.5 text-muted shrink-0" />
                         <span className="truncate">{evt.location}</span>
                       </div>
                     )}
                     <div className="flex items-center gap-2">
-                      <Clock className="w-3.5 h-3.5 text-[#9E9E9C] shrink-0" />
+                      <Clock className="w-3.5 h-3.5 text-muted shrink-0" />
                       <span>{formatDate(evt.start_date)}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Store className="w-3.5 h-3.5 text-[#9E9E9C] shrink-0" />
+                      <Store className="w-3.5 h-3.5 text-muted shrink-0" />
                       <span>
                         {eventBooths.length} gian hàng đã thiết lập
                       </span>
@@ -262,14 +262,14 @@ export default function EventsPage() {
                 </div>
 
                 {/* Card Action Footer */}
-                <div className="px-5 py-3 border-t border-[#F0F0ED] bg-[#FAFAF8] rounded-b-[8px] flex items-center justify-between">
+                <div className="px-5 py-3 border-t border-border bg-background rounded-b-[8px] flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     {editable ? (
                       <>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 px-2 text-xs text-[#737373]"
+                          className="h-7 px-2 text-xs text-muted"
                           onClick={() => openEditModal(evt)}
                         >
                           <Edit2 className="w-3 h-3 mr-1" />
@@ -278,7 +278,7 @@ export default function EventsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 px-2 text-xs text-[#C44536] hover:bg-[#FDF1F0]"
+                          className="h-7 px-2 text-xs text-error hover:bg-error-bg"
                           onClick={() => {
                             if (confirm('Bạn có chắc muốn xóa sự kiện này?')) {
                               deleteEvent(evt.id);
@@ -289,7 +289,7 @@ export default function EventsPage() {
                         </Button>
                       </>
                     ) : (
-                      <span className="text-[11px] text-[#9E9E9C] italic">Chế độ xem</span>
+                      <span className="text-[11px] text-muted italic">Chế độ xem</span>
                     )}
                   </div>
 
@@ -298,10 +298,10 @@ export default function EventsPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleExportEventExcel(evt)}
-                      className="h-7 px-2 text-xs gap-1 text-[#2F7D55] border-[#2F7D55]/30 hover:bg-[#EAF4EE] font-medium"
+                      className="h-7 px-2 text-xs gap-1 text-primary border-primary/30 hover:bg-success-bg font-medium"
                       title="Xuất toàn bộ dữ liệu sự kiện này ra file Excel (.xlsx)"
                     >
-                      <Download className="w-3 h-3 text-[#2F7D55]" />
+                      <Download className="w-3 h-3 text-primary" />
                       <span>Xuất Excel</span>
                     </Button>
                     {eventBooths.some((b) => b.booth_type === 'collab' || !!b.collab_partner) && (
@@ -336,7 +336,7 @@ export default function EventsPage() {
         <form onSubmit={handleSave} className="space-y-4">
           {/* Banner Preview if available */}
           {bannerUrl && (
-            <div className="relative rounded-[6px] overflow-hidden border border-[#E8E8E5] max-h-36 bg-[#121212]">
+            <div className="relative rounded-lg overflow-hidden border border-border max-h-36 bg-[#121212]">
               <img
                 src={bannerUrl}
                 alt="Banner preview"
@@ -400,7 +400,7 @@ export default function EventsPage() {
             <Label htmlFor="evt-status">{t('status')}</Label>
             <select
               id="evt-status"
-              className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-1.5 text-sm text-[#202124] focus:outline-none focus:border-[#315C4C]"
+              className="flex h-9 w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-foreground focus:outline-none focus:border-primary"
               value={status}
               onChange={(e) => setStatus(e.target.value as EventStatus)}
             >
@@ -417,14 +417,14 @@ export default function EventsPage() {
             <textarea
               id="evt-desc"
               rows={3}
-              className="flex w-full rounded-[6px] border border-[#E8E8E5] bg-white px-3 py-2 text-sm text-[#202124] focus:outline-none focus:border-[#315C4C]"
+              className="flex w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
               placeholder={t('descriptionPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F0ED]">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
             <Button
               type="button"
               variant="outline"

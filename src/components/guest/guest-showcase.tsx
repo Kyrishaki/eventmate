@@ -456,7 +456,7 @@ export function GuestShowcase() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F7F5] dark:bg-neutral-950 text-[#202124] dark:text-neutral-100 flex flex-col font-sans transition-colors">
+    <div className="min-h-screen bg-background dark:bg-background text-foreground dark:text-foreground flex flex-col font-sans transition-colors">
       {/* Staff Preview Bar (ONLY rendered when Admin/Staff is previewing) */}
       {hasStaffPreviewSession && (
         <div className="bg-[#18222F] text-white px-4 py-2 flex items-center justify-between text-xs sticky top-0 z-50 border-b border-slate-700 shadow-sm">
@@ -472,7 +472,7 @@ export function GuestShowcase() {
               exitGuestPreview();
               window.location.href = '/dashboard';
             }}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-[6px] bg-[#315C4C] hover:bg-[#284A3D] text-white font-semibold text-xs transition-colors cursor-pointer shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary hover:bg-primary-hover text-primary-foreground font-semibold text-xs transition-colors cursor-pointer shrink-0"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Trở lại Quản trị</span>
@@ -484,7 +484,7 @@ export function GuestShowcase() {
       <header
         className={`sticky ${
           hasStaffPreviewSession ? 'top-[37px]' : 'top-0'
-        } z-40 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border-b border-[#E8E8E5] dark:border-neutral-800`}
+        } z-40 bg-surface/95 dark:bg-surface/95 backdrop-blur-md border-b border-border dark:border-border`}
       >
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 sm:h-18 flex items-center justify-between gap-2 sm:gap-4">
           {/* Brand Logo */}
@@ -500,10 +500,10 @@ export function GuestShowcase() {
               className="h-8 sm:h-12 w-auto max-w-[40px] sm:max-w-[96px] object-contain shrink-0"
             />
             <div className="min-w-0">
-              <span className="font-extrabold text-sm sm:text-xl tracking-tight text-[#202124] dark:text-neutral-100 block truncate">
+              <span className="font-extrabold text-sm sm:text-xl tracking-tight text-foreground dark:text-foreground block truncate">
                 {storeName}
               </span>
-              <span className="hidden sm:block text-[11px] sm:text-xs text-[#737373] dark:text-neutral-400 truncate">
+              <span className="hidden sm:block text-[11px] sm:text-xs text-muted dark:text-muted truncate">
                 Official Merchandise Store
               </span>
             </div>
@@ -513,9 +513,9 @@ export function GuestShowcase() {
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <a
               href={hotlineHref}
-              className="hidden lg:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-[6px] bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 hover:border-amber-500 text-[#202124] dark:text-neutral-200 transition-colors"
+              className="hidden lg:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-background dark:bg-surface-hover border border-border dark:border-border hover:border-primary text-foreground dark:text-foreground transition-colors"
             >
-              <Phone className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <Phone className="w-3.5 h-3.5 text-gold-text dark:text-gold-text" />
               <span>{hotlineDisplay}</span>
             </a>
 
@@ -527,14 +527,14 @@ export function GuestShowcase() {
                 }
                 setMyReservationsOpen(true);
               }}
-              className="inline-flex items-center gap-1.5 h-8.5 sm:h-9 px-2 sm:px-3 rounded-[6px] text-xs font-semibold border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-amber-500 text-[#202124] dark:text-neutral-200 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 h-8.5 sm:h-9 px-2 sm:px-3 rounded-lg text-xs font-semibold border border-border dark:border-border bg-surface dark:bg-surface-hover hover:border-primary text-foreground dark:text-foreground transition-colors cursor-pointer"
               title="Tra cứu hàng đã keep bằng số điện thoại"
             >
-              <Ticket className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 shrink-0" />
+              <Ticket className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold-text shrink-0" />
               <span className="hidden md:inline">Tra cứu hàng đã keep</span>
               <span className="hidden sm:inline md:hidden">Keep</span>
               {savedPhoneReservations.length > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500 text-neutral-950">
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-primary text-primary-foreground">
                   {savedPhoneReservations.length}
                 </span>
               )}
@@ -543,7 +543,7 @@ export function GuestShowcase() {
             <button
               type="button"
               onClick={() => setBagOpen(true)}
-              className="relative inline-flex items-center gap-1.5 h-8.5 sm:h-9 px-2.5 sm:px-3 rounded-[6px] text-xs font-bold bg-amber-500 hover:bg-amber-400 text-neutral-950 transition-colors shadow-xs cursor-pointer border border-amber-600/20"
+              className="relative inline-flex items-center gap-1.5 h-8.5 sm:h-9 px-2.5 sm:px-3 rounded-lg text-xs font-bold bg-primary hover:bg-primary-hover text-primary-foreground transition-colors shadow-xs cursor-pointer border border-primary/20"
               title="Mở giỏ hàng & đăng ký giữ đồ"
             >
               <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
@@ -557,7 +557,7 @@ export function GuestShowcase() {
 
             <Link
               href="/login"
-              className="inline-flex items-center gap-1 h-8.5 sm:h-9 px-2 sm:px-3 rounded-[6px] text-xs font-bold border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 text-[#202124] dark:text-neutral-100 hover:border-amber-500 transition-colors shadow-2xs cursor-pointer"
+              className="inline-flex items-center gap-1 h-8.5 sm:h-9 px-2 sm:px-3 rounded-lg text-xs font-bold border border-border dark:border-border bg-background dark:bg-surface-hover text-foreground dark:text-foreground hover:border-primary transition-colors shadow-2xs cursor-pointer"
               title="Đăng nhập tài khoản Quản trị viên (Admin) / Nhân viên"
             >
               <LogIn className="w-3.5 h-3.5 shrink-0" />
@@ -571,14 +571,14 @@ export function GuestShowcase() {
 
       {/* Toast feedback when adding to bag */}
       {justAddedToast && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-full bg-[#202124] dark:bg-emerald-700 text-white text-xs font-semibold shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 dark:text-white shrink-0" />
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-full bg-foreground dark:bg-emerald-700 text-white text-xs font-semibold shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3">
+          <CheckCircle2 className="w-4 h-4 text-success dark:text-white shrink-0" />
           <span>{justAddedToast}</span>
           {bagCount > 0 && (
             <button
               type="button"
               onClick={() => setBagOpen(true)}
-              className="underline font-bold text-emerald-300 dark:text-white ml-1 cursor-pointer"
+              className="underline font-bold text-success dark:text-white ml-1 cursor-pointer"
             >
               Xem giỏ ({bagCount})
             </button>
@@ -589,13 +589,21 @@ export function GuestShowcase() {
       {/* Main Storefront Catalog */}
       <main
         id="catalog-section"
-        className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 w-full space-y-5"
+        className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex-1 w-full space-y-4"
       >
+        <section aria-label="Cách giữ hàng" className="rounded-2xl border border-border bg-surface p-4">
+          <h1 className="text-lg font-bold text-foreground">Chọn món yêu thích, nhận tại quầy</h1>
+          <ol className="mt-3 grid grid-cols-3 gap-3 border-t border-border pt-3 text-xs text-muted sm:text-sm">
+            <li><strong className="block font-semibold text-foreground">1. Chọn món</strong>Thêm vào giỏ giữ hàng</li>
+            <li><strong className="block font-semibold text-foreground">2. Chuyển khoản</strong>Thanh toán để giữ hàng</li>
+            <li><strong className="block font-semibold text-foreground">3. Nhận tại quầy</strong>Đọc số điện thoại</li>
+          </ol>
+        </section>
         {/* Upcoming/Active Events & Pickup Locations Strip */}
         {realEvents.length > 0 && (
-          <div className="bg-white dark:bg-neutral-900 rounded-[10px] border border-[#E8E8E5] dark:border-neutral-800 px-3.5 py-2.5 shadow-2xs flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-[#5F6368] dark:text-neutral-400 flex items-center gap-1.5 mr-1">
-              <Calendar className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400" />
+          <div className="bg-surface dark:bg-surface rounded-lg border border-border dark:border-border px-3.5 py-2.5 shadow-2xs flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold text-muted dark:text-muted flex items-center gap-1.5 mr-1">
+              <Calendar className="w-3.5 h-3.5 text-primary dark:text-success" />
               <span>Sự kiện có quầy nhận hàng:</span>
             </span>
             {realEvents.map((ev) => (
@@ -607,8 +615,8 @@ export function GuestShowcase() {
                 }
                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-colors cursor-pointer ${
                   selectedEventId === ev.id
-                    ? 'bg-[#315C4C] text-white border-[#315C4C]'
-                    : 'bg-[#F7F7F5] dark:bg-neutral-800 text-[#202124] dark:text-neutral-200 border-[#E8E8E5] dark:border-neutral-700 hover:border-[#315C4C]'
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background dark:bg-surface-hover text-foreground dark:text-foreground border-border dark:border-border hover:border-primary'
                 }`}
               >
                 <MapPin className="w-3 h-3 opacity-80" />
@@ -619,23 +627,23 @@ export function GuestShowcase() {
         )}
         {/* Filter & Search Toolbar */}
         {allActiveProducts.length > 0 && (
-          <div className="bg-white dark:bg-neutral-900 rounded-[10px] border border-[#E8E8E5] dark:border-neutral-800 p-3.5 sm:p-4 shadow-2xs space-y-3">
+          <div className="bg-surface dark:bg-surface rounded-lg border border-border dark:border-border p-3.5 sm:p-4 shadow-2xs space-y-3">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               {/* Search Box & Event Filter */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-1 max-w-2xl">
                 <div className="relative flex-1">
-                  <Search className="w-4 h-4 text-[#737373] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Search className="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <Input
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Tìm tên sản phẩm, nhân vật, mẫu..."
-                    className="pl-9 pr-8 h-9.5 text-xs sm:text-sm bg-[#F7F7F5] dark:bg-neutral-800 border-[#E8E8E5] dark:border-neutral-700"
+                    className="pl-9 pr-8 h-9.5 text-xs sm:text-sm bg-background dark:bg-surface-hover border-border dark:border-border"
                   />
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#737373] hover:text-[#202124] dark:hover:text-white cursor-pointer"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-foreground dark:hover:text-white cursor-pointer"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -646,7 +654,7 @@ export function GuestShowcase() {
                   <select
                     value={selectedEventId}
                     onChange={(e) => setSelectedEventId(e.target.value)}
-                    className="h-9.5 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-3 text-xs font-semibold text-[#202124] dark:text-neutral-200 focus:outline-none cursor-pointer"
+                    className="h-9.5 rounded-lg border border-border dark:border-border bg-background dark:bg-surface-hover px-3 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none cursor-pointer"
                   >
                     <option value="all">Tất cả sự kiện</option>
                     {realEvents.map((ev) => (
@@ -660,15 +668,15 @@ export function GuestShowcase() {
             </div>
 
             {/* Phân loại & Nguồn hàng: 100% Dropdown Chuẩn */}
-            <div className="flex flex-wrap items-center gap-2.5 pt-2.5 border-t border-[#F0F0ED] dark:border-neutral-800">
+            <div className="flex flex-wrap items-center gap-2.5 pt-2.5 border-t border-border dark:border-border">
               {/* Category Dropdown */}
               <div className="flex items-center gap-1.5 flex-1 min-w-[170px] sm:flex-none">
-                <Tag className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
-                <span className="text-xs font-bold text-[#737373] dark:text-neutral-400 shrink-0">Phân loại:</span>
+                <Tag className="w-3.5 h-3.5 text-primary dark:text-success shrink-0" />
+                <span className="text-xs font-bold text-muted dark:text-muted shrink-0">Phân loại:</span>
                 <select
                   value={selectedCategoryId}
                   onChange={(e) => setSelectedCategoryId(e.target.value)}
-                  className="h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full sm:w-auto"
+                  className="h-8 rounded-lg border border-border dark:border-border bg-background dark:bg-surface-hover px-2 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary w-full sm:w-auto"
                 >
                   <option value="all">Tất cả danh mục ({allActiveProducts.length})</option>
                   {categories.map((cat) => {
@@ -686,12 +694,12 @@ export function GuestShowcase() {
               {/* Source Dropdown (if collab items exist) */}
               {collabProdsCount > 0 && (
                 <div className="flex items-center gap-1.5 flex-1 min-w-[150px] sm:flex-none">
-                  <Store className="w-3.5 h-3.5 text-[#737373] dark:text-neutral-400 shrink-0" />
-                  <span className="text-xs font-bold text-[#737373] dark:text-neutral-400 shrink-0">Nguồn:</span>
+                  <Store className="w-3.5 h-3.5 text-muted dark:text-muted shrink-0" />
+                  <span className="text-xs font-bold text-muted dark:text-muted shrink-0">Nguồn:</span>
                   <select
                     value={sourceFilter}
                     onChange={(e) => setSourceFilter(e.target.value as any)}
-                    className="h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full sm:w-auto"
+                    className="h-8 rounded-lg border border-border dark:border-border bg-background dark:bg-surface-hover px-2 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary w-full sm:w-auto"
                   >
                     <option value="all">Tất cả ({allActiveProducts.length})</option>
                     <option value="store">Chính hãng ({storeProdsCount})</option>
@@ -705,7 +713,7 @@ export function GuestShowcase() {
                 <button
                   type="button"
                   onClick={handleClearFilters}
-                  className="h-8 px-2.5 text-xs text-[#C44536] hover:bg-[#FDF1F0] dark:hover:bg-rose-950/40 border border-[#F8B4AF] dark:border-rose-900 rounded-[6px] gap-1 font-semibold flex items-center ml-auto transition-colors cursor-pointer"
+                  className="h-8 px-2.5 text-xs text-error hover:bg-error-bg dark:hover:bg-rose-950/40 border border-[#F8B4AF] dark:border-rose-900 rounded-lg gap-1 font-semibold flex items-center ml-auto transition-colors cursor-pointer"
                 >
                   <RotateCcw className="w-3 h-3" />
                   <span>Đặt lại</span>
@@ -717,15 +725,15 @@ export function GuestShowcase() {
 
         {/* Storefront Empty States vs Product Grid */}
         {allActiveProducts.length === 0 ? (
-          <div className="py-16 px-6 text-center bg-white dark:bg-neutral-900 rounded-[12px] border border-[#E8E8E5] dark:border-neutral-800 space-y-4 max-w-2xl mx-auto shadow-2xs">
-            <div className="w-16 h-16 rounded-2xl bg-[#EAF4EE] dark:bg-emerald-950/60 text-[#2F7D55] dark:text-emerald-400 flex items-center justify-center mx-auto">
+          <div className="py-16 px-6 text-center bg-surface dark:bg-surface rounded-2xl border border-border dark:border-border space-y-4 max-w-2xl mx-auto shadow-2xs">
+            <div className="w-16 h-16 rounded-2xl bg-success-bg dark:bg-success-bg/60 text-primary dark:text-success flex items-center justify-center mx-auto">
               <Sparkles className="w-8 h-8" />
             </div>
             <div className="space-y-1.5">
-              <h2 className="text-lg sm:text-xl font-extrabold text-[#202124] dark:text-neutral-100">
+              <h2 className="text-lg sm:text-xl font-extrabold text-foreground dark:text-foreground">
                 Gian hàng đang cập nhật bộ sưu tập mới
               </h2>
-              <p className="text-xs sm:text-sm text-[#737373] dark:text-neutral-400 max-w-md mx-auto leading-relaxed">
+              <p className="text-xs sm:text-sm text-muted dark:text-muted max-w-md mx-auto leading-relaxed">
                 Các mẫu merchandise sắp mở bán đang được chuẩn bị lên kệ. Bạn có thể liên hệ trực
                 tiếp qua Zalo hoặc Hotline để đặt hàng trước hoặc nhận thông báo sớm nhất.
               </p>
@@ -735,27 +743,27 @@ export function GuestShowcase() {
                 href={zaloHref}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 h-10 px-5 rounded-[8px] bg-[#315C4C] hover:bg-[#284A3D] text-white text-xs sm:text-sm font-bold transition-colors"
+                className="inline-flex items-center gap-2 h-10 px-5 rounded-lg bg-primary hover:bg-primary-hover text-primary-foreground text-xs sm:text-sm font-bold transition-colors"
               >
                 <MessageCircle className="w-4 h-4" />
                 <span>Liên hệ Zalo: {hotlineDisplay}</span>
               </a>
               <a
                 href={hotlineHref}
-                className="inline-flex items-center gap-2 h-10 px-4 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 text-[#202124] dark:text-neutral-100 text-xs sm:text-sm font-semibold hover:border-[#315C4C] transition-colors"
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-lg border border-border dark:border-border bg-background dark:bg-surface-hover text-foreground dark:text-foreground text-xs sm:text-sm font-semibold hover:border-primary transition-colors"
               >
-                <Phone className="w-4 h-4 text-[#315C4C] dark:text-emerald-400" />
+                <Phone className="w-4 h-4 text-primary dark:text-success" />
                 <span>Gọi Hotline</span>
               </a>
             </div>
           </div>
         ) : visibleProducts.length === 0 ? (
-          <div className="p-12 text-center bg-white dark:bg-neutral-900 rounded-[12px] border border-[#E8E8E5] dark:border-neutral-800 space-y-3">
-            <Package className="w-12 h-12 text-[#9E9E9C] mx-auto" />
-            <h3 className="text-sm sm:text-base font-bold text-[#202124] dark:text-neutral-200">
+          <div className="p-12 text-center bg-surface dark:bg-surface rounded-2xl border border-border dark:border-border space-y-3">
+            <Package className="w-12 h-12 text-muted mx-auto" />
+            <h3 className="text-sm sm:text-base font-bold text-foreground dark:text-foreground">
               Không tìm thấy sản phẩm phù hợp
             </h3>
-            <p className="text-xs sm:text-sm text-[#737373] dark:text-neutral-400">
+            <p className="text-xs sm:text-sm text-muted dark:text-muted">
               Hãy thử từ khóa khác hoặc đặt lại bộ lọc để xem toàn bộ sản phẩm.
             </p>
             {hasActiveFilters && (
@@ -774,7 +782,7 @@ export function GuestShowcase() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
             {visibleProducts.map((prod) => {
               const prodVariants = variants.filter((v) => v.product_id === prod.id);
               const activeVarId = selectedVariantMap[prod.id] || prodVariants[0]?.id;
@@ -793,13 +801,13 @@ export function GuestShowcase() {
               return (
                 <article
                   key={prod.id}
-                  className="rounded-[12px] bg-white dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-800 overflow-hidden shadow-2xs hover:shadow-md hover:border-amber-500/40 transition-all flex flex-col justify-between group"
+                  className="rounded-2xl bg-surface dark:bg-surface border border-border dark:border-border overflow-hidden shadow-2xs hover:shadow-md hover:border-primary/40 transition-all flex flex-col justify-between group"
                 >
                   <div>
                     {/* Clickable Product Image: Aspect-Square & Object-Contain */}
                     <div
                       onClick={() => handleOpenProductDetail(prod)}
-                      className="relative aspect-square bg-[#F8F9FA] dark:bg-neutral-800/80 overflow-hidden flex items-center justify-center p-2 sm:p-2.5 cursor-pointer"
+                      className="relative aspect-square bg-[#F8F9FA] dark:bg-surface-hover/80 overflow-hidden flex items-center justify-center p-2 sm:p-2.5 cursor-pointer"
                     >
                       {prod.image_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -809,7 +817,7 @@ export function GuestShowcase() {
                           className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
-                        <Package className="w-8 h-8 sm:w-10 sm:h-10 text-[#9E9E9C]" />
+                        <Package className="w-8 h-8 sm:w-10 sm:h-10 text-muted" />
                       )}
 
                       {/* Single Clean Stock Badge */}
@@ -827,7 +835,7 @@ export function GuestShowcase() {
                             Đã giữ hết
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-neutral-700/90 text-white shadow-xs">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-surface-hover/90 text-white shadow-xs">
                             Tạm hết hàng
                           </span>
                         )}
@@ -835,7 +843,7 @@ export function GuestShowcase() {
 
                       {/* Subtle Quick View Overlay on Hover */}
                       <div className="absolute inset-x-0 bottom-0 p-2 sm:p-2.5 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex justify-end">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/90 text-[#202124] text-[10px] font-bold">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface/90 text-foreground text-[10px] font-bold">
                           <Eye className="w-3 h-3" />
                           Xem chi tiết
                         </span>
@@ -846,7 +854,7 @@ export function GuestShowcase() {
                     <div className="p-2.5 sm:p-4 space-y-1.5 sm:space-y-2.5">
                       {/* Single Metadata Row (Category & optional Collab tag) */}
                       <div className="flex items-center justify-between gap-1 text-[10px] sm:text-[11px]">
-                        <span className="font-bold text-amber-700 dark:text-amber-400 truncate">
+                        <span className="font-bold text-gold-text dark:text-gold-text truncate">
                           {category?.name || 'Merchandise'}
                         </span>
                         {prod.collab_partner && (
@@ -859,18 +867,18 @@ export function GuestShowcase() {
 
                       <h3
                         onClick={() => handleOpenProductDetail(prod)}
-                        className="font-bold text-xs sm:text-[15px] text-[#202124] dark:text-neutral-100 line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] leading-snug cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+                        className="font-bold text-xs sm:text-[15px] text-foreground dark:text-foreground line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] leading-snug cursor-pointer hover:text-gold-text dark:hover:text-gold-text transition-colors"
                       >
                         {prod.name}
                       </h3>
 
                       {/* Price */}
                       <div className="flex items-baseline justify-between">
-                        <span className="text-sm sm:text-lg font-extrabold text-amber-600 dark:text-amber-400">
+                        <span className="text-base sm:text-lg font-bold text-foreground">
                           {formatCurrency(activeVariant?.price || 0, currency)}
                         </span>
                         {prodVariants.length > 1 && (
-                          <span className="text-[10px] sm:text-[11px] text-[#737373] dark:text-neutral-400 hidden xs:inline">
+                          <span className="text-[10px] sm:text-[11px] text-muted dark:text-muted hidden xs:inline">
                             {prodVariants.length} mẫu
                           </span>
                         )}
@@ -893,8 +901,8 @@ export function GuestShowcase() {
                                 }
                                 className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-[5px] text-[10px] sm:text-[11px] font-semibold transition-colors max-w-[120px] truncate cursor-pointer ${
                                   isSelected
-                                    ? 'bg-amber-500 text-neutral-950 shadow-2xs font-bold'
-                                    : 'bg-[#F0F0ED] dark:bg-neutral-800 text-[#202124] dark:text-neutral-300 hover:bg-[#E4E4E0] dark:hover:bg-neutral-700'
+                                    ? 'bg-primary text-primary-foreground shadow-2xs font-bold'
+                                    : 'bg-surface-hover dark:bg-surface-hover text-foreground dark:text-muted hover:bg-[#E4E4E0] dark:hover:bg-surface-hover'
                                 }`}
                                 title={v.name}
                               >
@@ -906,7 +914,7 @@ export function GuestShowcase() {
                             <button
                               type="button"
                               onClick={() => handleOpenProductDetail(prod)}
-                              className="px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-[5px] text-[10px] sm:text-[11px] font-semibold bg-amber-500/15 text-amber-800 dark:text-amber-300 hover:underline cursor-pointer"
+                              className="px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-[5px] text-[10px] sm:text-[11px] font-semibold bg-primary/15 text-gold-text dark:text-gold-text hover:underline cursor-pointer"
                             >
                               +{hiddenVariantsCount} mẫu
                             </button>
@@ -923,9 +931,9 @@ export function GuestShowcase() {
                       variant="outline"
                       size="sm"
                       onClick={() => setOnlineModalProduct(prod)}
-                      className="h-8 sm:h-9 text-[11px] sm:text-xs font-semibold gap-1 border-[#E8E8E5] dark:border-neutral-700 hover:border-amber-500 text-[#202124] dark:text-neutral-200"
+                      className="h-8 sm:h-9 text-[11px] sm:text-xs font-semibold gap-1 border-border dark:border-border hover:border-primary text-foreground dark:text-foreground"
                     >
-                      <MessageCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                      <MessageCircle className="w-3.5 h-3.5 text-gold-text dark:text-gold-text" />
                       <span>Mua Online</span>
                     </Button>
 
@@ -937,7 +945,7 @@ export function GuestShowcase() {
                       onClick={() =>
                         activeVariant && addToBag(prod, activeVariant, 1, false)
                       }
-                      className="h-8 sm:h-9 text-[11px] sm:text-xs font-bold gap-1 bg-amber-500 hover:bg-amber-400 text-neutral-950 disabled:opacity-50 border border-amber-600/20"
+                      className="h-8 sm:h-9 text-[11px] sm:text-xs font-bold gap-1 bg-primary hover:bg-primary-hover text-primary-foreground disabled:opacity-50 border border-primary/20"
                     >
                       <Bookmark className="w-3.5 h-3.5" />
                       <span>{isAvailable ? 'Giữ đồ ngay' : 'Hết hàng'}</span>
@@ -971,7 +979,7 @@ export function GuestShowcase() {
               <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
                 {/* Product Visual */}
                 <div className="md:col-span-5">
-                  <div className="aspect-square rounded-[10px] bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 overflow-hidden flex items-center justify-center">
+                  <div className="aspect-square rounded-lg bg-background dark:bg-surface-hover border border-border dark:border-border overflow-hidden flex items-center justify-center">
                     {detailProduct.image_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -980,7 +988,7 @@ export function GuestShowcase() {
                         className="w-full h-full object-contain p-2"
                       />
                     ) : (
-                      <Package className="w-12 h-12 text-[#9E9E9C]" />
+                      <Package className="w-12 h-12 text-muted" />
                     )}
                   </div>
                 </div>
@@ -1002,16 +1010,16 @@ export function GuestShowcase() {
                     </div>
 
                     <div>
-                      <span className="text-2xl font-extrabold text-[#315C4C] dark:text-emerald-400">
+                      <span className="text-2xl font-extrabold text-primary dark:text-success">
                         {formatCurrency(activeVariant?.price || 0, currency)}
                       </span>
-                      <p className="text-xs mt-1 text-[#737373] dark:text-neutral-400">
+                      <p className="text-xs mt-1 text-muted dark:text-muted">
                         Tình trạng:{' '}
                         <strong
                           className={
                             availCount > 0
-                              ? 'text-[#2F7D55] dark:text-emerald-400'
-                              : 'text-[#C44536] dark:text-red-400'
+                              ? 'text-primary dark:text-success'
+                              : 'text-error dark:text-red-400'
                           }
                         >
                           {availCount > 0 ? `Còn ${availCount} sản phẩm` : 'Tạm hết hàng'}
@@ -1020,7 +1028,7 @@ export function GuestShowcase() {
                     </div>
 
                     {detailProduct.description && (
-                      <p className="text-xs sm:text-sm text-[#5F6368] dark:text-neutral-300 leading-relaxed bg-[#F7F7F5] dark:bg-neutral-800/70 p-3 rounded-[8px]">
+                      <p className="text-xs sm:text-sm text-muted dark:text-muted leading-relaxed bg-background dark:bg-surface-hover/70 p-3 rounded-lg">
                         {detailProduct.description}
                       </p>
                     )}
@@ -1045,12 +1053,12 @@ export function GuestShowcase() {
                                   });
                                   setDetailQty(1);
                                 }}
-                                className={`px-2.5 py-1.5 rounded-[6px] text-xs font-semibold border transition-colors cursor-pointer ${
+                                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
                                   isSelected
-                                    ? 'bg-[#315C4C] text-white border-[#315C4C]'
+                                    ? 'bg-primary text-primary-foreground border-primary'
                                     : vAvail > 0
-                                    ? 'bg-white dark:bg-neutral-800 text-[#202124] dark:text-neutral-200 border-[#E8E8E5] dark:border-neutral-700 hover:border-[#315C4C]'
-                                    : 'bg-neutral-100 dark:bg-neutral-900 text-[#9E9E9C] border-dashed border-[#E8E8E5] dark:border-neutral-800'
+                                    ? 'bg-surface dark:bg-surface-hover text-foreground dark:text-foreground border-border dark:border-border hover:border-primary'
+                                    : 'bg-surface-hover dark:bg-surface text-muted border-dashed border-border dark:border-border'
                                 }`}
                               >
                                 {v.name} ({vAvail})
@@ -1065,12 +1073,12 @@ export function GuestShowcase() {
                     {availCount > 0 && (
                       <div className="flex items-center gap-3 pt-1">
                         <Label className="text-xs font-bold">Số lượng:</Label>
-                        <div className="inline-flex items-center border border-[#E8E8E5] dark:border-neutral-700 rounded-[6px] bg-white dark:bg-neutral-800 p-0.5">
+                        <div className="inline-flex items-center border border-border dark:border-border rounded-lg bg-surface dark:bg-surface-hover p-0.5">
                           <button
                             type="button"
                             onClick={() => setDetailQty(Math.max(1, detailQty - 1))}
                             disabled={detailQty <= 1}
-                            className="h-8 w-8 flex items-center justify-center rounded hover:bg-[#F0F0ED] dark:hover:bg-neutral-700 disabled:opacity-40 cursor-pointer"
+                            className="h-8 w-8 flex items-center justify-center rounded hover:bg-surface-hover dark:hover:bg-surface-hover disabled:opacity-40 cursor-pointer"
                           >
                             <Minus className="w-3.5 h-3.5" />
                           </button>
@@ -1081,7 +1089,7 @@ export function GuestShowcase() {
                               setDetailQty(Math.min(availCount, detailQty + 1))
                             }
                             disabled={detailQty >= availCount}
-                            className="h-8 w-8 flex items-center justify-center rounded hover:bg-[#F0F0ED] dark:hover:bg-neutral-700 disabled:opacity-40 cursor-pointer"
+                            className="h-8 w-8 flex items-center justify-center rounded hover:bg-surface-hover dark:hover:bg-surface-hover disabled:opacity-40 cursor-pointer"
                           >
                             <Plus className="w-3.5 h-3.5" />
                           </button>
@@ -1091,7 +1099,7 @@ export function GuestShowcase() {
                   </div>
 
                   {/* Modal Footer Actions */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-3 border-t border-[#F0F0ED] dark:border-neutral-800">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-3 border-t border-border dark:border-border">
                     <Button
                       type="button"
                       variant="outline"
@@ -1101,7 +1109,7 @@ export function GuestShowcase() {
                       }}
                       className="h-10 text-xs font-semibold gap-1.5"
                     >
-                      <MessageCircle className="w-4 h-4 text-[#315C4C] dark:text-emerald-400" />
+                      <MessageCircle className="w-4 h-4 text-primary dark:text-success" />
                       <span>Đặt Ship COD Online</span>
                     </Button>
 
@@ -1114,7 +1122,7 @@ export function GuestShowcase() {
                         addToBag(detailProduct, activeVariant, detailQty, true);
                         setDetailProduct(null);
                       }}
-                      className="h-10 text-xs font-bold gap-1.5 bg-[#315C4C] hover:bg-[#254639] text-white"
+                      className="h-10 text-xs font-bold gap-1.5 bg-primary hover:bg-gold-text text-primary-foreground"
                     >
                       <ShoppingBag className="w-4 h-4" />
                       <span>
@@ -1143,11 +1151,11 @@ export function GuestShowcase() {
       >
         {bag.length === 0 ? (
           <div className="py-10 text-center space-y-3">
-            <ShoppingBag className="w-10 h-10 text-[#9E9E9C] mx-auto" />
-            <p className="text-sm font-bold text-[#202124] dark:text-neutral-200">
+            <ShoppingBag className="w-10 h-10 text-muted mx-auto" />
+            <p className="text-sm font-bold text-foreground dark:text-foreground">
               Giỏ giữ đồ của bạn đang trống
             </p>
-            <p className="text-xs text-[#737373]">
+            <p className="text-xs text-muted">
               Nhấn &ldquo;Giữ đồ ngay&rdquo; trên bất kỳ sản phẩm nào để gom chung thành một vé giữ đồ.
             </p>
             <Button variant="outline" size="sm" onClick={() => setBagOpen(false)}>
@@ -1161,9 +1169,9 @@ export function GuestShowcase() {
               {bag.map((item) => (
                 <div
                   key={item.variantId}
-                  className="p-2.5 rounded-[8px] bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 flex items-center gap-3"
+                  className="p-2.5 rounded-lg bg-background dark:bg-surface-hover border border-border dark:border-border flex items-center gap-3"
                 >
-                  <div className="w-11 h-11 rounded bg-white dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-700 overflow-hidden shrink-0 flex items-center justify-center">
+                  <div className="w-11 h-11 rounded bg-surface dark:bg-surface border border-border dark:border-border overflow-hidden shrink-0 flex items-center justify-center">
                     {item.imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -1172,14 +1180,14 @@ export function GuestShowcase() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <Package className="w-5 h-5 text-[#9E9E9C]" />
+                      <Package className="w-5 h-5 text-muted" />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold truncate text-[#202124] dark:text-neutral-100">
+                    <p className="text-xs font-bold truncate text-foreground dark:text-foreground">
                       {item.productName}
                     </p>
-                    <p className="text-[11px] text-[#737373] dark:text-neutral-400 truncate">
+                    <p className="text-[11px] text-muted dark:text-muted truncate">
                       {item.variantName} • {formatCurrency(item.unitPrice, currency)}
                     </p>
                   </div>
@@ -1187,7 +1195,7 @@ export function GuestShowcase() {
                     <button
                       type="button"
                       onClick={() => updateBagQty(item.variantId, -1)}
-                      className="w-7 h-7 rounded border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-900 flex items-center justify-center hover:bg-[#EDEDEA] cursor-pointer"
+                      className="w-7 h-7 rounded border border-border dark:border-border bg-surface dark:bg-surface flex items-center justify-center hover:bg-[#EDEDEA] cursor-pointer"
                     >
                       <Minus className="w-3 h-3" />
                     </button>
@@ -1196,14 +1204,14 @@ export function GuestShowcase() {
                       type="button"
                       onClick={() => updateBagQty(item.variantId, 1)}
                       disabled={item.quantity >= item.maxAvailable}
-                      className="w-7 h-7 rounded border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-900 flex items-center justify-center hover:bg-[#EDEDEA] disabled:opacity-40 cursor-pointer"
+                      className="w-7 h-7 rounded border border-border dark:border-border bg-surface dark:bg-surface flex items-center justify-center hover:bg-[#EDEDEA] disabled:opacity-40 cursor-pointer"
                     >
                       <Plus className="w-3 h-3" />
                     </button>
                     <button
                       type="button"
                       onClick={() => removeFromBag(item.variantId)}
-                      className="w-7 h-7 rounded text-[#C44536] hover:bg-[#FDF1F0] dark:hover:bg-red-950/40 flex items-center justify-center cursor-pointer ml-1"
+                      className="w-7 h-7 rounded text-error hover:bg-error-bg dark:hover:bg-red-950/40 flex items-center justify-center cursor-pointer ml-1"
                       title="Xóa khỏi giỏ"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -1214,14 +1222,14 @@ export function GuestShowcase() {
             </div>
 
             {/* Mode Switch: Pickup at Booth vs Online Ship */}
-            <div className="grid grid-cols-2 gap-1.5 p-1 rounded-[8px] bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700">
+            <div className="grid grid-cols-2 gap-1.5 p-1 rounded-lg bg-background dark:bg-surface-hover border border-border dark:border-border">
               <button
                 type="button"
                 onClick={() => setBagTab('pickup')}
-                className={`py-2 px-3 rounded-[6px] text-xs font-bold transition-colors cursor-pointer ${
+                className={`py-2 px-3 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                   bagTab === 'pickup'
-                    ? 'bg-[#315C4C] text-white shadow-2xs'
-                    : 'text-[#5F6368] dark:text-neutral-300 hover:text-[#202124]'
+                    ? 'bg-primary text-primary-foreground shadow-2xs'
+                    : 'text-muted dark:text-muted hover:text-foreground'
                 }`}
               >
                 🎟️ Keep đồ nhận tại quầy (CK Full 100%)
@@ -1229,10 +1237,10 @@ export function GuestShowcase() {
               <button
                 type="button"
                 onClick={() => setBagTab('online')}
-                className={`py-2 px-3 rounded-[6px] text-xs font-bold transition-colors cursor-pointer ${
+                className={`py-2 px-3 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                   bagTab === 'online'
-                    ? 'bg-[#315C4C] text-white shadow-2xs'
-                    : 'text-[#5F6368] dark:text-neutral-300 hover:text-[#202124]'
+                    ? 'bg-primary text-primary-foreground shadow-2xs'
+                    : 'text-muted dark:text-muted hover:text-foreground'
                 }`}
               >
                 🚚 Đặt Ship COD / Chuyển khoản
@@ -1280,7 +1288,7 @@ export function GuestShowcase() {
                       id="bag-pickup-booth"
                       value={selectedPickupBoothId}
                       onChange={(e) => setSelectedPickupBoothId(e.target.value)}
-                      className="flex h-9 w-full rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C]"
+                      className="flex h-9 w-full rounded-lg border border-border dark:border-border bg-surface dark:bg-surface-hover px-3 py-1.5 text-xs text-foreground dark:text-foreground focus:outline-none focus:border-primary"
                     >
                       {realBooths.map((bth) => {
                         const ev = realEvents.find((e) => e.id === bth.event_id);
@@ -1330,23 +1338,23 @@ export function GuestShowcase() {
                   </div>
 
                   {/* 30-Minute Hold Expiration Countdown Timer */}
-                  <div className="flex items-center justify-between p-3 rounded-[12px] bg-[#19191B] border border-[#F5B301]/40 text-[#F5B301]">
+                  <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-primary/40 text-primary">
                     <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 shrink-0 animate-pulse text-[#F5B301]" />
+                      <Clock className="w-4 h-4 shrink-0 animate-pulse text-primary" />
                       <span className="text-[13px] font-semibold">Thời gian giữ chỗ còn lại:</span>
                     </div>
-                    <span className="font-mono font-bold text-[16px] tracking-wider text-[#F5B301]">
+                    <span className="font-mono font-bold text-[16px] tracking-wider text-primary">
                       {formatCountdown(countdownSeconds)}
                     </span>
                   </div>
-                  <span className="text-[11.5px] text-[#A3A3A0] text-center block">
+                  <span className="text-[11.5px] text-muted text-center block">
                     Hàng được giữ 30 phút trong lúc chờ bạn chuyển khoản và tải ảnh minh chứng biên lai.
                   </span>
 
                   {/* VietQR & Bank Details Grid */}
-                  <div className="flex flex-col sm:flex-row gap-4 items-center bg-white dark:bg-neutral-900 p-3 sm:p-4 rounded-xl border border-[#E8E8E5] dark:border-neutral-800">
-                    <div className="flex flex-col items-center justify-center p-2.5 bg-amber-500/10 dark:bg-amber-500/15 rounded-xl border border-amber-500/30 shrink-0 w-full sm:w-auto">
-                      <div className="w-52 h-52 sm:w-60 sm:h-60 max-w-full aspect-square bg-white p-2.5 rounded-xl border border-amber-500/40 shadow-sm flex items-center justify-center">
+                  <div className="flex flex-col sm:flex-row gap-4 items-center bg-surface dark:bg-surface p-3 sm:p-4 rounded-xl border border-border dark:border-border">
+                    <div className="flex flex-col items-center justify-center p-2.5 bg-primary/10 dark:bg-primary/15 rounded-xl border border-primary/30 shrink-0 w-full sm:w-auto">
+                      <div className="w-52 h-52 sm:w-60 sm:h-60 max-w-full aspect-square bg-surface p-2.5 rounded-xl border border-primary/40 shadow-sm flex items-center justify-center">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={`https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-compact2.png?amount=${bagTotal}&addInfo=${encodeURIComponent(
@@ -1356,32 +1364,32 @@ export function GuestShowcase() {
                           className="w-full h-full object-contain"
                         />
                       </div>
-                      <span className="text-[11px] text-amber-800 dark:text-amber-300 font-bold mt-1.5 text-center">
+                      <span className="text-[11px] text-gold-text dark:text-gold-text font-bold mt-1.5 text-center">
                         Quét mã VietQR tự khớp số tiền
                       </span>
                     </div>
 
                     <div className="flex-1 space-y-2 text-xs w-full">
                       <div>
-                        <span className="text-[10.5px] text-[#737373] block">Ngân hàng thụ hưởng:</span>
-                        <span className="font-bold text-[#202124] dark:text-neutral-100 font-mono">
+                        <span className="text-[10.5px] text-muted block">Ngân hàng thụ hưởng:</span>
+                        <span className="font-bold text-foreground dark:text-foreground font-mono">
                           {getBankDisplayName(activeBankConfig.bankId)}
                         </span>
                       </div>
 
                       <div>
-                        <span className="text-[10.5px] text-[#737373] block">Số tài khoản:</span>
+                        <span className="text-[10.5px] text-muted block">Số tài khoản:</span>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="font-mono font-bold text-sm text-[#315C4C] dark:text-emerald-400 select-all">
+                          <span className="font-mono font-bold text-sm text-primary dark:text-success select-all">
                             {activeBankConfig.accountNo}
                           </span>
                           <button
                             type="button"
                             onClick={() => copyBankInfo(activeBankConfig.accountNo, 'acc')}
-                            className="p-1 rounded bg-[#F7F7F5] dark:bg-neutral-800 hover:bg-[#E8E8E5] text-[#737373] text-[10px] flex items-center gap-1 cursor-pointer"
+                            className="p-1 rounded bg-background dark:bg-surface-hover hover:bg-surface-hover text-muted text-[10px] flex items-center gap-1 cursor-pointer"
                           >
                             {copiedBankField === 'acc' ? (
-                              <Check className="w-3 h-3 text-[#2F7D55]" />
+                              <Check className="w-3 h-3 text-primary" />
                             ) : (
                               <Copy className="w-3 h-3" />
                             )}
@@ -1391,25 +1399,25 @@ export function GuestShowcase() {
                       </div>
 
                       <div>
-                        <span className="text-[10.5px] text-[#737373] block">Chủ tài khoản:</span>
-                        <span className="font-semibold text-[#202124] dark:text-neutral-100">
+                        <span className="text-[10.5px] text-muted block">Chủ tài khoản:</span>
+                        <span className="font-semibold text-foreground dark:text-foreground">
                           {activeBankConfig.accountName}
                         </span>
                       </div>
 
                       <div>
-                        <span className="text-[10.5px] text-[#737373] block">Số tiền CK (Full 100%):</span>
+                        <span className="text-[10.5px] text-muted block">Số tiền CK (Full 100%):</span>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="font-extrabold text-sm text-[#C44536] dark:text-red-400 font-mono">
+                          <span className="font-extrabold text-sm text-error dark:text-red-400 font-mono">
                             {formatCurrency(bagTotal, currency)}
                           </span>
                           <button
                             type="button"
                             onClick={() => copyBankInfo(String(bagTotal), 'amount')}
-                            className="p-1 rounded bg-[#F7F7F5] dark:bg-neutral-800 hover:bg-[#E8E8E5] text-[#737373] text-[10px] flex items-center gap-1 cursor-pointer"
+                            className="p-1 rounded bg-background dark:bg-surface-hover hover:bg-surface-hover text-muted text-[10px] flex items-center gap-1 cursor-pointer"
                           >
                             {copiedBankField === 'amount' ? (
-                              <Check className="w-3 h-3 text-[#2F7D55]" />
+                              <Check className="w-3 h-3 text-primary" />
                             ) : (
                               <Copy className="w-3 h-3" />
                             )}
@@ -1419,9 +1427,9 @@ export function GuestShowcase() {
                       </div>
 
                       <div>
-                        <span className="text-[10.5px] text-[#737373] block">Nội dung chuyển khoản:</span>
+                        <span className="text-[10.5px] text-muted block">Nội dung chuyển khoản:</span>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="font-mono font-bold text-xs text-[#2F7D55] dark:text-emerald-300 bg-[#EAF4EE] dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-[#2F7D55]/30">
+                          <span className="font-mono font-bold text-xs text-primary dark:text-success bg-success-bg dark:bg-success-bg/60 px-1.5 py-0.5 rounded border border-primary/30">
                             {`HKTS-${(guestPhone || '').trim().replace(/\D/g, '') || 'KEEP'}`}
                           </span>
                           <button
@@ -1432,10 +1440,10 @@ export function GuestShowcase() {
                                 'content'
                               )
                             }
-                            className="p-1 rounded bg-[#F7F7F5] dark:bg-neutral-800 hover:bg-[#E8E8E5] text-[#737373] text-[10px] flex items-center gap-1 cursor-pointer"
+                            className="p-1 rounded bg-background dark:bg-surface-hover hover:bg-surface-hover text-muted text-[10px] flex items-center gap-1 cursor-pointer"
                           >
                             {copiedBankField === 'content' ? (
-                              <Check className="w-3 h-3 text-[#2F7D55]" />
+                              <Check className="w-3 h-3 text-primary" />
                             ) : (
                               <Copy className="w-3 h-3" />
                             )}
@@ -1448,24 +1456,24 @@ export function GuestShowcase() {
 
                   {/* ĐÍNH KÈM ẢNH MINH CHỨNG CHUYỂN KHOẢN (BẮT BUỘC) */}
                   <div className="space-y-1.5 pt-1">
-                    <Label required className="text-xs font-bold text-[#202124] dark:text-neutral-100 flex items-center gap-1.5">
+                    <Label required className="text-xs font-bold text-foreground dark:text-foreground flex items-center gap-1.5">
                       <Camera className="w-4 h-4 text-[#9333EA]" />
                       <span>Ảnh Biên Lai / Minh Chứng Chuyển Khoản (BẮT BUỘC)</span>
                     </Label>
 
                     {proofImage ? (
-                      <div className="p-3 rounded-lg border-2 border-[#2F7D55] bg-[#EAF4EE]/60 dark:bg-emerald-950/30 flex items-center justify-between gap-3">
+                      <div className="p-3 rounded-lg border-2 border-primary bg-success-bg/60 dark:bg-success-bg/30 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded border border-[#2F7D55]/40 overflow-hidden bg-white shrink-0">
+                          <div className="w-12 h-12 rounded border border-primary/40 overflow-hidden bg-surface shrink-0">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={proofImage} alt="Biên lai chuyển khoản" className="w-full h-full object-cover" />
                           </div>
                           <div>
-                            <p className="font-bold text-xs text-[#2F7D55] flex items-center gap-1">
+                            <p className="font-bold text-xs text-primary flex items-center gap-1">
                               <CheckCircle2 className="w-3.5 h-3.5" />
                               <span>Đã đính kèm ảnh biên lai CK thành công</span>
                             </p>
-                            <p className="text-[11px] text-[#5F6368] dark:text-neutral-400">
+                            <p className="text-[11px] text-muted dark:text-muted">
                               Quầy sẽ đối soát số tiền và mã phiên khi bạn đến lấy hàng.
                             </p>
                           </div>
@@ -1473,14 +1481,14 @@ export function GuestShowcase() {
                         <button
                           type="button"
                           onClick={() => setProofImage(null)}
-                          className="text-xs font-semibold text-[#C44536] hover:underline shrink-0 cursor-pointer"
+                          className="text-xs font-semibold text-error hover:underline shrink-0 cursor-pointer"
                         >
                           Chọn ảnh khác
                         </button>
                       </div>
                     ) : (
                       <div>
-                        <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[#A855F7]/40 hover:border-[#9333EA] rounded-xl bg-white dark:bg-neutral-900 cursor-pointer transition-colors group">
+                        <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[#A855F7]/40 hover:border-[#9333EA] rounded-xl bg-surface dark:bg-surface cursor-pointer transition-colors group">
                           <input
                             type="file"
                             accept="image/*"
@@ -1491,12 +1499,12 @@ export function GuestShowcase() {
                           <div className="w-10 h-10 rounded-full bg-[#FAF5FF] dark:bg-purple-950/50 flex items-center justify-center text-[#9333EA] group-hover:scale-105 transition-transform mb-1.5">
                             <Upload className="w-5 h-5" />
                           </div>
-                          <p className="font-bold text-xs text-[#202124] dark:text-neutral-200">
+                          <p className="font-bold text-xs text-foreground dark:text-foreground">
                             {isProcessingProof
                               ? 'Đang nén & xử lý ảnh...'
                               : 'Nhấn để tải lên ảnh biên lai chuyển khoản'}
                           </p>
-                          <p className="text-[11px] text-[#737373] mt-0.5">
+                          <p className="text-[11px] text-muted mt-0.5">
                             Chụp màn hình ứng dụng ngân hàng sau khi chuyển khoản thành công
                           </p>
                         </label>
@@ -1505,13 +1513,13 @@ export function GuestShowcase() {
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-[#E8E8E5] dark:border-neutral-800">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-border dark:border-border">
                   <div>
-                    <span className="text-[11px] text-[#737373] block">Thanh toán CK Full 100%:</span>
-                    <span className="text-base font-extrabold text-[#315C4C] dark:text-emerald-400 font-mono">
+                    <span className="text-[11px] text-muted block">Thanh toán CK Full 100%:</span>
+                    <span className="text-base font-extrabold text-primary dark:text-success font-mono">
                       {formatCurrency(bagTotal, currency)}
                     </span>
-                    <span className="text-[10px] text-[#2F7D55] block font-semibold">
+                    <span className="text-[10px] text-primary block font-semibold">
                       (Đã thanh toán đủ • Không thu thêm khi nhận hàng)
                     </span>
                   </div>
@@ -1520,7 +1528,7 @@ export function GuestShowcase() {
                     variant="primary"
                     isLoading={isSubmittingKeep}
                     disabled={!proofImage || isSubmittingKeep}
-                    className="h-10 px-5 bg-[#315C4C] hover:bg-[#254639] text-white font-bold text-xs disabled:opacity-50"
+                    className="h-10 px-5 bg-primary hover:bg-gold-text text-primary-foreground font-bold text-xs disabled:opacity-50"
                   >
                     <CheckCircle2 className="w-4 h-4 mr-1.5" />
                     <span>Xác nhận Đã CK Full & Giữ Đồ</span>
@@ -1529,19 +1537,19 @@ export function GuestShowcase() {
               </form>
             ) : (
               <div className="space-y-3 text-xs">
-                <div className="p-3 rounded-[8px] bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 space-y-2">
+                <div className="p-3 rounded-lg bg-background dark:bg-surface-hover border border-border dark:border-border space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#202124] dark:text-neutral-100">
+                    <span className="font-bold text-foreground dark:text-foreground">
                       Tóm tắt đơn gửi Zalo / Fanpage
                     </span>
                     <button
                       type="button"
                       onClick={handleCopyOrderSummary}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-white dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-700 font-semibold hover:border-[#315C4C] cursor-pointer"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-surface dark:bg-surface border border-border dark:border-border font-semibold hover:border-primary cursor-pointer"
                     >
                       {copiedOrderText ? (
                         <>
-                          <Check className="w-3.5 h-3.5 text-[#2F7D55]" />
+                          <Check className="w-3.5 h-3.5 text-primary" />
                           <span>Đã chép</span>
                         </>
                       ) : (
@@ -1552,14 +1560,14 @@ export function GuestShowcase() {
                       )}
                     </button>
                   </div>
-                  <pre className="whitespace-pre-wrap font-sans text-[11px] text-[#5F6368] dark:text-neutral-300 bg-white dark:bg-neutral-900 p-2.5 rounded border border-[#E8E8E5] dark:border-neutral-700">
+                  <pre className="whitespace-pre-wrap font-sans text-[11px] text-muted dark:text-muted bg-surface dark:bg-surface p-2.5 rounded border border-border dark:border-border">
                     {buildOnlineOrderSummary()}
                   </pre>
                 </div>
 
                 {/* VietQR preview */}
-                <div className="p-3 rounded-[8px] bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 flex items-center gap-3">
-                  <div className="w-20 h-20 bg-white p-1 rounded border border-[#E8E8E5] shrink-0">
+                <div className="p-3 rounded-lg bg-background dark:bg-surface-hover border border-border dark:border-border flex items-center gap-3">
+                  <div className="w-20 h-20 bg-surface p-1 rounded border border-border shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={`https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-compact2.png?amount=${bagTotal}&addInfo=${encodeURIComponent(
@@ -1570,14 +1578,14 @@ export function GuestShowcase() {
                     />
                   </div>
                   <div className="space-y-0.5 text-[11px]">
-                    <p className="font-bold text-[#202124] dark:text-neutral-100">
+                    <p className="font-bold text-foreground dark:text-foreground">
                       Chuyển khoản {getBankDisplayName(activeBankConfig.bankId)}
                     </p>
-                    <p className="font-mono font-bold text-[#315C4C] dark:text-emerald-400">
+                    <p className="font-mono font-bold text-primary dark:text-success">
                       {activeBankConfig.accountNo}
                     </p>
                     <p>{activeBankConfig.accountName}</p>
-                    <p className="text-[#737373]">Hoặc gửi tin nhắn để ship COD tận nhà.</p>
+                    <p className="text-muted">Hoặc gửi tin nhắn để ship COD tận nhà.</p>
                   </div>
                 </div>
 
@@ -1586,14 +1594,14 @@ export function GuestShowcase() {
                     href={zaloHref}
                     target="_blank"
                     rel="noreferrer"
-                    className="h-10 rounded-[8px] bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold flex items-center justify-center gap-1.5"
+                    className="h-10 rounded-lg bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold flex items-center justify-center gap-1.5"
                   >
                     <MessageCircle className="w-4 h-4" />
                     <span>Gửi qua Zalo</span>
                   </a>
                   <a
                     href={hotlineHref}
-                    className="h-10 rounded-[8px] bg-[#315C4C] hover:bg-[#254639] text-white font-bold flex items-center justify-center gap-1.5"
+                    className="h-10 rounded-lg bg-primary hover:bg-gold-text text-primary-foreground font-bold flex items-center justify-center gap-1.5"
                   >
                     <Phone className="w-4 h-4" />
                     <span>Gọi {hotlineDisplay}</span>
@@ -1615,21 +1623,21 @@ export function GuestShowcase() {
           maxWidth="sm"
         >
           <div className="space-y-4 text-center">
-            <div className="w-12 h-12 rounded-full bg-[#EAF4EE] dark:bg-emerald-950/60 text-[#2F7D55] dark:text-emerald-400 flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-full bg-success-bg dark:bg-success-bg/60 text-primary dark:text-success flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-6 h-6" />
             </div>
 
-            <div className="p-4 rounded-[10px] bg-[#F7F7F5] dark:bg-neutral-800 border-2 border-dashed border-[#2F7D55]/40 space-y-3">
+            <div className="p-4 rounded-lg bg-background dark:bg-surface-hover border-2 border-dashed border-primary/40 space-y-3">
               <div>
-                <span className="text-[10px] uppercase font-bold text-[#2F7D55] dark:text-emerald-400 tracking-widest block">
+                <span className="text-[10px] uppercase font-bold text-primary dark:text-success tracking-widest block">
                   Đã chuyển khoản Full 100%
                 </span>
-                <span className="text-2xl font-black font-mono text-[#315C4C] dark:text-emerald-400 tracking-wider">
+                <span className="text-2xl font-black font-mono text-primary dark:text-success tracking-wider">
                   {confirmedReservation.code}
                 </span>
               </div>
 
-              <div className="w-32 h-32 mx-auto bg-white p-2 rounded-[8px] border border-[#E8E8E5] flex items-center justify-center">
+              <div className="w-32 h-32 mx-auto bg-surface p-2 rounded-lg border border-border flex items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
@@ -1640,20 +1648,20 @@ export function GuestShowcase() {
                 />
               </div>
 
-              <div className="text-xs text-left space-y-1.5 pt-2 border-t border-[#E8E8E5] dark:border-neutral-700">
+              <div className="text-xs text-left space-y-1.5 pt-2 border-t border-border dark:border-border">
                 <div className="flex justify-between gap-2">
-                  <span className="text-[#737373] shrink-0">Khách hàng:</span>
+                  <span className="text-muted shrink-0">Khách hàng:</span>
                   <span className="font-bold text-right">{confirmedReservation.customer_name}</span>
                 </div>
                 <div className="flex justify-between gap-2">
-                  <span className="text-[#737373] shrink-0">Số điện thoại nhận:</span>
-                  <span className="font-mono font-bold text-[#315C4C] dark:text-emerald-400">
+                  <span className="text-muted shrink-0">Số điện thoại nhận:</span>
+                  <span className="font-mono font-bold text-primary dark:text-success">
                     {confirmedReservation.customer_phone}
                   </span>
                 </div>
                 <div className="space-y-1 pt-1">
-                  <span className="text-[#737373] block">Sản phẩm đã giữ:</span>
-                  <ul className="space-y-0.5 text-[#202124] dark:text-neutral-200 font-semibold">
+                  <span className="text-muted block">Sản phẩm đã giữ:</span>
+                  <ul className="space-y-0.5 text-foreground dark:text-foreground font-semibold">
                     {confirmedReservation.items.map((item, idx) => (
                       <li key={`${item.variant_id}-${idx}`}>
                         • {item.quantity}× {item.product_name} ({item.variant_name})
@@ -1661,9 +1669,9 @@ export function GuestShowcase() {
                     ))}
                   </ul>
                 </div>
-                <div className="flex justify-between pt-1.5 border-t border-[#E8E8E5] dark:border-neutral-700">
-                  <span className="text-[#737373]">Đã CK Full 100%:</span>
-                  <span className="font-extrabold text-[#2F7D55] dark:text-emerald-400 font-mono">
+                <div className="flex justify-between pt-1.5 border-t border-border dark:border-border">
+                  <span className="text-muted">Đã CK Full 100%:</span>
+                  <span className="font-extrabold text-primary dark:text-success font-mono">
                     {formatCurrency(
                       confirmedReservation.deposit_paid || confirmedReservation.total_amount,
                       currency
@@ -1671,13 +1679,13 @@ export function GuestShowcase() {
                   </span>
                 </div>
                 <div className="flex justify-between text-[11px]">
-                  <span className="text-[#737373]">Còn lại khi nhận:</span>
-                  <span className="font-bold text-[#2F7D55]">0 đ (Đã thanh toán đủ)</span>
+                  <span className="text-muted">Còn lại khi nhận:</span>
+                  <span className="font-bold text-primary">0 đ (Đã thanh toán đủ)</span>
                 </div>
               </div>
             </div>
 
-            <div className="p-2.5 rounded bg-[#EAF4EE] dark:bg-emerald-950/40 border border-[#2F7D55]/30 text-xs text-[#254639] dark:text-emerald-300 font-medium text-left">
+            <div className="p-2.5 rounded bg-success-bg dark:bg-success-bg/40 border border-primary/30 text-xs text-gold-text dark:text-success font-medium text-left">
               💡 <strong>Lưu ý nhận hàng:</strong> Khi đến quầy sự kiện, bạn chỉ cần đọc đúng Số Điện Thoại: <strong className="font-mono">{confirmedReservation.customer_phone}</strong> là nhân viên sẽ đối soát và giao hàng ngay!
             </div>
 
@@ -1699,7 +1707,7 @@ export function GuestShowcase() {
                 type="button"
                 variant="primary"
                 onClick={() => setConfirmedReservation(null)}
-                className="flex-1 h-10 bg-[#315C4C] hover:bg-[#254639] text-white font-bold text-xs"
+                className="flex-1 h-10 bg-primary hover:bg-gold-text text-primary-foreground font-bold text-xs"
               >
                 Hoàn tất
               </Button>
@@ -1721,14 +1729,14 @@ export function GuestShowcase() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <a
                 href={hotlineHref}
-                className="p-3.5 rounded-[8px] border border-[#315C4C]/30 bg-[#EBF1EE] dark:bg-emerald-950/30 flex items-center gap-3 hover:border-[#315C4C] transition-colors"
+                className="p-3.5 rounded-lg border border-primary/30 bg-warning-bg dark:bg-success-bg/30 flex items-center gap-3 hover:border-primary transition-colors"
               >
-                <div className="w-9 h-9 rounded-full bg-[#315C4C] text-white flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0">
                   <Phone className="w-4 h-4" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-[#737373] uppercase font-bold">Gọi Hotline</p>
-                  <p className="text-sm font-extrabold text-[#315C4C] dark:text-emerald-400">
+                  <p className="text-[10px] text-muted uppercase font-bold">Gọi Hotline</p>
+                  <p className="text-sm font-extrabold text-primary dark:text-success">
                     {hotlineDisplay}
                   </p>
                 </div>
@@ -1738,13 +1746,13 @@ export function GuestShowcase() {
                 href={zaloHref}
                 target="_blank"
                 rel="noreferrer"
-                className="p-3.5 rounded-[8px] border border-[#1D4ED8]/30 bg-[#EFF6FF] dark:bg-blue-950/30 flex items-center gap-3 hover:border-[#1D4ED8] transition-colors"
+                className="p-3.5 rounded-lg border border-[#1D4ED8]/30 bg-[#EFF6FF] dark:bg-blue-950/30 flex items-center gap-3 hover:border-[#1D4ED8] transition-colors"
               >
                 <div className="w-9 h-9 rounded-full bg-[#1D4ED8] text-white flex items-center justify-center shrink-0">
                   <MessageCircle className="w-4 h-4" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-[#737373] uppercase font-bold">Nhắn Zalo</p>
+                  <p className="text-[10px] text-muted uppercase font-bold">Nhắn Zalo</p>
                   <p className="text-sm font-extrabold text-[#1D4ED8] dark:text-blue-400">
                     {hotlineDisplay}
                   </p>
@@ -1752,8 +1760,8 @@ export function GuestShowcase() {
               </a>
             </div>
 
-            <div className="p-3.5 bg-[#F7F7F5] dark:bg-neutral-800 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-700 flex flex-col sm:flex-row items-center gap-4">
-              <div className="w-28 h-28 bg-white p-1 rounded border border-[#E8E8E5] shrink-0">
+            <div className="p-3.5 bg-background dark:bg-surface-hover rounded-lg border border-border dark:border-border flex flex-col sm:flex-row items-center gap-4">
+              <div className="w-28 h-28 bg-surface p-1 rounded border border-border shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-compact2.png?amount=0&addInfo=HKTS-ONL&accountName=${encodeURIComponent(
@@ -1764,19 +1772,19 @@ export function GuestShowcase() {
                 />
               </div>
               <div className="space-y-1 text-center sm:text-left">
-                <p className="font-bold text-[#202124] dark:text-neutral-200">
+                <p className="font-bold text-foreground dark:text-foreground">
                   Thông tin chuyển khoản chính thức
                 </p>
-                <p className="text-[#737373] dark:text-neutral-300">
+                <p className="text-muted dark:text-muted">
                   Ngân hàng: <strong>{getBankDisplayName(activeBankConfig.bankId)}</strong> • STK:{' '}
-                  <strong className="font-mono text-[#202124] dark:text-white">
+                  <strong className="font-mono text-foreground dark:text-white">
                     {activeBankConfig.accountNo}
                   </strong>
                 </p>
-                <p className="text-[#737373] dark:text-neutral-300">
+                <p className="text-muted dark:text-muted">
                   Chủ TK: <strong>{activeBankConfig.accountName}</strong>
                 </p>
-                <p className="text-[11px] text-[#8C5D17] dark:text-amber-300 bg-[#FEF7EC] dark:bg-amber-950/40 px-2 py-1 rounded border border-[#B7791F]/30">
+                <p className="text-[11px] text-warning dark:text-gold-text bg-warning-bg dark:bg-amber-950/40 px-2 py-1 rounded border border-warning/30">
                   Nội dung CK: <strong>HKTS-[SĐT]</strong>
                 </p>
               </div>
@@ -1806,8 +1814,8 @@ export function GuestShowcase() {
       >
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="lookup-phone-input" className="text-xs font-bold text-[#202124] dark:text-neutral-100 flex items-center gap-1.5">
-              <Phone className="w-4 h-4 text-[#315C4C]" />
+            <Label htmlFor="lookup-phone-input" className="text-xs font-bold text-foreground dark:text-foreground flex items-center gap-1.5">
+              <Phone className="w-4 h-4 text-primary" />
               <span>Số điện thoại đặt keep đồ:</span>
             </Label>
             <div className="relative">
@@ -1823,7 +1831,7 @@ export function GuestShowcase() {
                 <button
                   type="button"
                   onClick={() => setLookupInput('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#737373] hover:text-[#202124] dark:hover:text-white cursor-pointer"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-foreground dark:hover:text-white cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1833,7 +1841,7 @@ export function GuestShowcase() {
               <button
                 type="button"
                 onClick={() => setLookupInput(guestPhone)}
-                className="text-[11px] text-[#315C4C] dark:text-emerald-400 font-semibold hover:underline cursor-pointer"
+                className="text-[11px] text-primary dark:text-success font-semibold hover:underline cursor-pointer"
               >
                 Tra cứu nhanh bằng SĐT đã lưu: {guestPhone}
               </button>
@@ -1843,19 +1851,19 @@ export function GuestShowcase() {
           <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
             {!cleanLookup ? (
               <div className="text-center py-8 space-y-2">
-                <div className="w-12 h-12 rounded-full bg-[#F7F7F5] dark:bg-neutral-800 text-[#737373] flex items-center justify-center mx-auto">
-                  <Phone className="w-5 h-5 text-[#315C4C]" />
+                <div className="w-12 h-12 rounded-full bg-background dark:bg-surface-hover text-muted flex items-center justify-center mx-auto">
+                  <Phone className="w-5 h-5 text-primary" />
                 </div>
-                <p className="text-xs text-[#737373] dark:text-neutral-400">
+                <p className="text-xs text-muted dark:text-muted">
                   Nhập số điện thoại bạn đã dùng khi giữ đồ ở trên để xem lại danh sách đơn hàng.
                 </p>
               </div>
             ) : matchedReservations.length === 0 ? (
-              <div className="text-center py-8 space-y-2 bg-[#F7F7F5] dark:bg-neutral-800 rounded-xl p-4">
-                <p className="text-xs font-bold text-[#202124] dark:text-neutral-100">
+              <div className="text-center py-8 space-y-2 bg-background dark:bg-surface-hover rounded-xl p-4">
+                <p className="text-xs font-bold text-foreground dark:text-foreground">
                   Không tìm thấy đơn keep nào với số điện thoại &ldquo;{lookupInput || guestPhone}&rdquo;.
                 </p>
-                <p className="text-[11px] text-[#737373] dark:text-neutral-400">
+                <p className="text-[11px] text-muted dark:text-muted">
                   Vui lòng kiểm tra lại số điện thoại hoặc liên hệ Hotline/Zalo {hotlineDisplay} để được hỗ trợ kiểm tra trực tiếp.
                 </p>
               </div>
@@ -1866,19 +1874,19 @@ export function GuestShowcase() {
                 return (
                   <div
                     key={res.id}
-                    className="p-4 rounded-xl bg-[#F7F7F5] dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 space-y-3 text-xs"
+                    className="p-4 rounded-xl bg-background dark:bg-surface-hover border border-border dark:border-border space-y-3 text-xs"
                   >
-                    <div className="flex items-center justify-between pb-2 border-b border-[#E8E8E5] dark:border-neutral-700">
+                    <div className="flex items-center justify-between pb-2 border-b border-border dark:border-border">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-sm text-[#315C4C] dark:text-emerald-400 font-mono">
+                          <span className="font-bold text-sm text-primary dark:text-success font-mono">
                             {res.code}
                           </span>
-                          <span className="text-[10px] text-[#737373]">
+                          <span className="text-[10px] text-muted">
                             • {new Date(res.created_at).toLocaleDateString('vi-VN')}
                           </span>
                         </div>
-                        <p className="text-[11px] text-[#555] dark:text-neutral-300 mt-0.5">
+                        <p className="text-[11px] text-[#555] dark:text-muted mt-0.5">
                           Khách: <strong>{res.customer_name}</strong> — SĐT:{' '}
                           <strong className="font-mono">{res.customer_phone}</strong>
                         </p>
@@ -1903,8 +1911,8 @@ export function GuestShowcase() {
 
                     {/* Địa điểm quầy nhận */}
                     {(booth || ev) && (
-                      <div className="flex items-center gap-1.5 text-[11px] text-[#5F6368] dark:text-neutral-300">
-                        <MapPin className="w-3.5 h-3.5 text-[#315C4C] shrink-0" />
+                      <div className="flex items-center gap-1.5 text-[11px] text-muted dark:text-muted">
+                        <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
                         <span>
                           Nhận tại: <strong>{booth?.name || 'Quầy sự kiện'}</strong>
                           {ev ? ` (${ev.name})` : ''}
@@ -1913,23 +1921,23 @@ export function GuestShowcase() {
                     )}
 
                     {/* Danh sách món */}
-                    <div className="p-3 bg-white dark:bg-neutral-900 rounded-lg border border-[#E8E8E5] dark:border-neutral-700 space-y-1.5">
-                      <span className="text-[10.5px] uppercase font-bold text-[#737373] tracking-wide block">
+                    <div className="p-3 bg-surface dark:bg-surface rounded-lg border border-border dark:border-border space-y-1.5">
+                      <span className="text-[10.5px] uppercase font-bold text-muted tracking-wide block">
                         Các món hàng đã giữ:
                       </span>
                       <ul className="space-y-1">
                         {res.items.map((i, idx) => (
                           <li
                             key={idx}
-                            className="flex items-center justify-between text-xs text-[#202124] dark:text-neutral-200"
+                            className="flex items-center justify-between text-xs text-foreground dark:text-foreground"
                           >
                             <span>
                               <strong>{i.quantity}×</strong> {i.product_name}{' '}
-                              <span className="text-[#737373]">
+                              <span className="text-muted">
                                 ({i.variant_name || 'Tiêu chuẩn'})
                               </span>
                             </span>
-                            <span className="font-mono font-semibold text-[#315C4C] dark:text-emerald-400">
+                            <span className="font-mono font-semibold text-primary dark:text-success">
                               {formatCurrency(i.unit_price * i.quantity, currency)}
                             </span>
                           </li>
@@ -1940,8 +1948,8 @@ export function GuestShowcase() {
                     {/* Tổng tiền & tình trạng thanh toán */}
                     <div className="flex items-center justify-between pt-1">
                       <div>
-                        <span className="text-[10px] text-[#737373] block">Thanh toán:</span>
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-[#2F7D55] dark:text-emerald-400">
+                        <span className="text-[10px] text-muted block">Thanh toán:</span>
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-primary dark:text-success">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           <span>
                             Đã CK Full 100% (
@@ -1950,19 +1958,19 @@ export function GuestShowcase() {
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[10px] text-[#737373] block">Còn nợ tại quầy:</span>
-                        <span className="font-bold text-xs text-[#2F7D55]">0 đ</span>
+                        <span className="text-[10px] text-muted block">Còn nợ tại quầy:</span>
+                        <span className="font-bold text-xs text-primary">0 đ</span>
                       </div>
                     </div>
 
                     {/* Ảnh biên lai đã gửi nếu có */}
                     {res.proof_image_url && (
-                      <div className="pt-2 border-t border-[#E8E8E5] dark:border-neutral-700 flex items-center justify-between">
-                        <span className="text-[11px] text-[#737373] flex items-center gap-1">
-                          <Camera className="w-3 h-3 text-[#2F7D55]" />
+                      <div className="pt-2 border-t border-border dark:border-border flex items-center justify-between">
+                        <span className="text-[11px] text-muted flex items-center gap-1">
+                          <Camera className="w-3 h-3 text-primary" />
                           <span>Biên lai chuyển khoản đã lưu</span>
                         </span>
-                        <div className="w-10 h-10 rounded border border-[#E8E8E5] overflow-hidden bg-white shrink-0">
+                        <div className="w-10 h-10 rounded border border-border overflow-hidden bg-surface shrink-0">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={res.proof_image_url}
@@ -1973,7 +1981,7 @@ export function GuestShowcase() {
                       </div>
                     )}
 
-                    <div className="p-2 rounded bg-[#EAF4EE] dark:bg-emerald-950/40 border border-[#2F7D55]/20 text-[11px] text-[#254639] dark:text-emerald-300">
+                    <div className="p-2 rounded bg-success-bg dark:bg-success-bg/40 border border-primary/20 text-[11px] text-gold-text dark:text-success">
                       💡 Khi đến quầy, bạn chỉ cần đọc số điện thoại:{' '}
                       <strong className="font-mono">{res.customer_phone}</strong> hoặc đưa mã vé{' '}
                       <strong>{res.code}</strong> là nhận hàng ngay.
@@ -1987,10 +1995,10 @@ export function GuestShowcase() {
       </Modal>
 
       {/* Clean Storefront Footer */}
-      <footer className="bg-white dark:bg-neutral-900 border-t border-[#E8E8E5] dark:border-neutral-800 py-8 text-xs text-[#737373] dark:text-neutral-400">
+      <footer className="bg-surface dark:bg-surface border-t border-border dark:border-border py-8 text-xs text-muted dark:text-muted">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
           <div className="space-y-1">
-            <p className="font-bold text-[#202124] dark:text-neutral-100">
+            <p className="font-bold text-foreground dark:text-foreground">
               © 2026 {storeName}. All rights reserved.
             </p>
             {(activeWorkspace?.address || activeWorkspace?.owner_name) && (
@@ -2005,7 +2013,7 @@ export function GuestShowcase() {
           <div className="flex flex-wrap items-center gap-4 text-[11px] justify-center sm:justify-end">
             <a
               href={hotlineHref}
-              className="font-semibold text-[#315C4C] dark:text-emerald-400 hover:underline"
+              className="font-semibold text-primary dark:text-success hover:underline"
             >
               Hotline: {hotlineDisplay}
             </a>
@@ -2027,7 +2035,7 @@ export function GuestShowcase() {
                   window.location.href = '/login';
                 }
               }}
-              className="inline-flex items-center gap-1 text-[#737373] hover:text-[#202124] dark:hover:text-neutral-200 cursor-pointer transition-colors"
+              className="inline-flex items-center gap-1 text-muted hover:text-foreground dark:hover:text-foreground cursor-pointer transition-colors"
             >
               <LogIn className="w-3 h-3" />
               <span>{hasStaffPreviewSession ? 'Quay lại Quản trị' : 'Cổng nhân viên'}</span>

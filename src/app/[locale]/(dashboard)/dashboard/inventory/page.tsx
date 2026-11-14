@@ -598,12 +598,12 @@ export default function InventoryPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-[#202124]">{t('title')}</h1>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#EBF1EE] text-[#315C4C] border border-[#315C4C]/20">
+            <h1 className="text-xl font-bold tracking-tight text-foreground">{t('title')}</h1>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-warning-bg text-primary border border-primary/20">
               {workspaceProducts.length} sản phẩm · {activeVariants.length} mã loại
             </span>
           </div>
-          <p className="text-xs text-[#737373] mt-0.5">{t('description')}</p>
+          <p className="text-xs text-muted mt-0.5">{t('description')}</p>
         </div>
 
         {selectedBooth && (
@@ -613,10 +613,10 @@ export default function InventoryPage() {
                 variant="outline"
                 size="sm"
                 onClick={handleAllocateMaxAllProducts}
-                className="gap-1.5 text-xs h-9 px-3 rounded-lg border-[#315C4C]/40 text-[#315C4C] hover:bg-[#EAF4EE] font-semibold shadow-2xs"
+                className="gap-1.5 text-xs h-9 px-3 rounded-lg border-primary/40 text-primary hover:bg-success-bg font-semibold shadow-2xs"
                 title="Cấp toàn bộ số lượng khả dụng còn trong kho tổng ra quầy đang chọn"
               >
-                <Sparkles className="w-3.5 h-3.5 text-[#315C4C]" />
+                <Sparkles className="w-3.5 h-3.5 text-primary" />
                 <span>
                   Cấp hết kho (+{boothStats.unallocatedInWarehouse})
                 </span>
@@ -663,45 +663,45 @@ export default function InventoryPage() {
 
       {/* 4 Clear Inventory KPI Cards (Ergonomic vertical card stack on mobile) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3 sm:p-3.5 flex flex-col justify-between gap-2 shadow-2xs">
+        <div className="bg-surface border border-border rounded-xl p-3 sm:p-3.5 flex flex-col justify-between gap-2 shadow-2xs">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] sm:text-xs font-semibold text-[#737373] leading-tight">
+            <p className="text-[11px] sm:text-xs font-semibold text-muted leading-tight">
               Còn bán tại quầy
             </p>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#EAF4EE] flex items-center justify-center text-[#2F7D55] shrink-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-success-bg flex items-center justify-center text-primary shrink-0">
               <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-1.5 flex-wrap">
-            <span className="text-lg sm:text-xl font-extrabold text-[#2F7D55] font-mono leading-none">
+            <span className="text-lg sm:text-xl font-extrabold text-primary font-mono leading-none">
               {boothStats.boothAvailable.toLocaleString('vi-VN')}
             </span>
-            <span className="text-[11px] text-[#737373] font-medium">
+            <span className="text-[11px] text-muted font-medium">
               / {boothStats.boothAllocated} đã cấp
             </span>
           </div>
         </div>
 
-        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3 sm:p-3.5 flex flex-col justify-between gap-2 shadow-2xs">
+        <div className="bg-surface border border-border rounded-xl p-3 sm:p-3.5 flex flex-col justify-between gap-2 shadow-2xs">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] sm:text-xs font-semibold text-[#737373] leading-tight">
+            <p className="text-[11px] sm:text-xs font-semibold text-muted leading-tight">
               Có thể cấp thêm
             </p>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FEF7EC] flex items-center justify-center text-[#B7791F] shrink-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-warning-bg flex items-center justify-center text-warning shrink-0">
               <Boxes className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-1.5 flex-wrap">
-            <span className="text-lg sm:text-xl font-extrabold text-[#B7791F] font-mono leading-none">
+            <span className="text-lg sm:text-xl font-extrabold text-warning font-mono leading-none">
               +{boothStats.unallocatedInWarehouse.toLocaleString('vi-VN')}
             </span>
-            <span className="text-[11px] text-[#737373] font-medium">khả dụng</span>
+            <span className="text-[11px] text-muted font-medium">khả dụng</span>
           </div>
         </div>
 
-        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3 sm:p-3.5 flex flex-col justify-between gap-2 shadow-2xs">
+        <div className="bg-surface border border-border rounded-xl p-3 sm:p-3.5 flex flex-col justify-between gap-2 shadow-2xs">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] sm:text-xs font-semibold text-[#737373] leading-tight">
+            <p className="text-[11px] sm:text-xs font-semibold text-muted leading-tight">
               Khóa Online & VIP
             </p>
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#EFF6FF] flex items-center justify-center text-[#1D4ED8] shrink-0">
@@ -712,43 +712,43 @@ export default function InventoryPage() {
             <span className="text-lg sm:text-xl font-extrabold text-[#1D4ED8] font-mono leading-none">
               {totalHeldAll.toLocaleString('vi-VN')}
             </span>
-            <span className="text-[11px] text-[#737373] font-medium">
+            <span className="text-[11px] text-muted font-medium">
               / {totalStockAll} tổng kho
             </span>
           </div>
         </div>
 
-        <div className="bg-white border border-[#E8E8E5] rounded-xl p-3 sm:p-3.5 flex flex-col justify-between gap-2 shadow-2xs">
+        <div className="bg-surface border border-border rounded-xl p-3 sm:p-3.5 flex flex-col justify-between gap-2 shadow-2xs">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] sm:text-xs font-semibold text-[#737373] leading-tight">
+            <p className="text-[11px] sm:text-xs font-semibold text-muted leading-tight">
               Đã bán qua POS
             </p>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#F7F7F5] border border-[#E8E8E5] flex items-center justify-center text-[#737373] shrink-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-background border border-border flex items-center justify-center text-muted shrink-0">
               <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-1.5 flex-wrap">
-            <span className="text-lg sm:text-xl font-extrabold text-[#202124] font-mono leading-none">
+            <span className="text-lg sm:text-xl font-extrabold text-foreground font-mono leading-none">
               {totalSoldAll.toLocaleString('vi-VN')}
             </span>
-            <span className="text-[11px] text-[#737373] font-medium">món đã xuất</span>
+            <span className="text-[11px] text-muted font-medium">món đã xuất</span>
           </div>
         </div>
       </div>
 
       {/* Unified Event & Booth Selector + Filter & Search Toolbar */}
-      <div className="bg-white border border-[#E8E8E5] rounded-xl shadow-2xs overflow-hidden divide-y divide-[#F0F0ED]">
+      <div className="bg-surface border border-border rounded-xl shadow-2xs overflow-hidden divide-y divide-border">
         {/* Top Row: Event & Booth Selection (Clean Vertical Stack on Mobile) */}
-        <div className="p-3 sm:p-3.5 flex flex-col gap-3 bg-white">
+        <div className="p-3 sm:p-3.5 flex flex-col gap-3 bg-surface">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center gap-2.5 sm:gap-3">
             {/* Event Selector */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 min-w-0">
-              <span className="text-[11px] font-semibold text-[#737373] flex items-center gap-1.5 shrink-0 whitespace-nowrap">
-                <Calendar className="w-3.5 h-3.5 text-[#315C4C]" />
+              <span className="text-[11px] font-semibold text-muted flex items-center gap-1.5 shrink-0 whitespace-nowrap">
+                <Calendar className="w-3.5 h-3.5 text-primary" />
                 <span>Sự kiện:</span>
               </span>
               <select
-                className="h-9 w-full sm:w-auto sm:min-w-[220px] rounded-lg border border-[#E8E8E5] bg-[#F7F7F5] px-2.5 text-[13px] font-semibold text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                className="h-9 w-full sm:w-auto sm:min-w-[220px] rounded-lg border border-border bg-background px-2.5 text-[13px] font-semibold text-foreground focus:outline-none focus:border-primary"
                 value={selectedEventId}
                 onChange={(e) => handleSelectEvent(e.target.value)}
               >
@@ -773,17 +773,17 @@ export default function InventoryPage() {
 
             {/* Mobile Booth Selector Dropdown (No clipped pills!) */}
             <div className="sm:hidden flex flex-col gap-1 min-w-0">
-              <span className="text-[11px] font-semibold text-[#737373] flex items-center gap-1.5 shrink-0">
-                <Store className="w-3.5 h-3.5 text-[#315C4C]" />
+              <span className="text-[11px] font-semibold text-muted flex items-center gap-1.5 shrink-0">
+                <Store className="w-3.5 h-3.5 text-primary" />
                 <span>Quầy đang chọn:</span>
               </span>
               {eventBooths.length === 0 ? (
-                <span className="text-xs text-[#737373] italic">
+                <span className="text-xs text-muted italic">
                   Sự kiện chưa có quầy bán nào
                 </span>
               ) : (
                 <select
-                  className="h-9 w-full rounded-lg border border-[#E8E8E5] bg-[#F7F7F5] px-2.5 text-[13px] font-semibold text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                  className="h-9 w-full rounded-lg border border-border bg-background px-2.5 text-[13px] font-semibold text-foreground focus:outline-none focus:border-primary"
                   value={selectedBoothId}
                   onChange={(e) => setSelectedBoothId(e.target.value)}
                 >
@@ -803,12 +803,12 @@ export default function InventoryPage() {
 
             {/* Desktop/Tablet Booth Selector Pills */}
             <div className="hidden sm:flex items-center gap-1.5 flex-wrap py-0.5">
-              <span className="text-[11px] font-semibold text-[#737373] flex items-center gap-1 mr-1 shrink-0">
-                <Store className="w-3.5 h-3.5 text-[#315C4C]" />
+              <span className="text-[11px] font-semibold text-muted flex items-center gap-1 mr-1 shrink-0">
+                <Store className="w-3.5 h-3.5 text-primary" />
                 <span>Quầy:</span>
               </span>
               {eventBooths.length === 0 ? (
-                <span className="text-xs text-[#737373] italic">
+                <span className="text-xs text-muted italic">
                   Sự kiện chưa có quầy bán nào
                 </span>
               ) : (
@@ -825,8 +825,8 @@ export default function InventoryPage() {
                       className={cn(
                         'px-3 py-1.5 text-xs rounded-lg font-bold transition-all flex items-center gap-1.5 cursor-pointer border shrink-0 whitespace-nowrap',
                         isSelected
-                          ? 'bg-[#315C4C] text-white border-[#315C4C] shadow-xs'
-                          : 'bg-[#F7F7F5] text-[#202124] border-[#E8E8E5] hover:border-[#315C4C]/40'
+                          ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+                          : 'bg-background text-foreground border-border hover:border-primary/40'
                       )}
                     >
                       <span>{b.name}</span>
@@ -834,8 +834,8 @@ export default function InventoryPage() {
                         className={cn(
                           'text-[10px] font-mono px-1.5 py-0.2 rounded',
                           isSelected
-                            ? 'bg-white/20 text-white'
-                            : 'bg-white text-[#737373] border border-[#E8E8E5]'
+                            ? 'bg-surface/20 text-white'
+                            : 'bg-surface text-muted border border-border'
                         )}
                       >
                         {bAllocTotal} món
@@ -847,24 +847,24 @@ export default function InventoryPage() {
             </div>
           </div>
 
-          <div className="text-[11px] text-[#737373] flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#2F7D55] shrink-0" />
+          <div className="text-[11px] text-muted flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
             <span>Hàng Online & Giữ VIP được khóa tự động, không thể cấp nhầm ra quầy</span>
           </div>
         </div>
 
         {/* Bottom Row: 2x2 Filter Tabs on Mobile + Search + View Switcher */}
-        <div className="p-2.5 sm:p-3 bg-white flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
+        <div className="p-2.5 sm:p-3 bg-surface flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
           {/* Quick Filter Tabs (Clean 2x2 Grid on Mobile -> Flex Row on Tablet+) */}
-          <div className="grid grid-cols-2 sm:flex items-center gap-1.5 p-1 bg-[#F7F7F5] rounded-lg border border-[#E8E8E5] text-xs shrink-0">
+          <div className="grid grid-cols-2 sm:flex items-center gap-1.5 p-1 bg-background rounded-lg border border-border text-xs shrink-0">
             <button
               type="button"
               onClick={() => setStockFilter('all')}
               className={cn(
                 'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center justify-between sm:justify-start gap-1.5 cursor-pointer',
                 stockFilter === 'all'
-                  ? 'bg-[#315C4C] text-white shadow-2xs'
-                  : 'text-[#737373] hover:text-[#202124]'
+                  ? 'bg-primary text-primary-foreground shadow-2xs'
+                  : 'text-muted hover:text-foreground'
               )}
             >
               <span className="truncate">Tất cả</span>
@@ -872,8 +872,8 @@ export default function InventoryPage() {
                 className={cn(
                   'text-[10px] font-mono px-1.5 rounded',
                   stockFilter === 'all'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-[#E8E8E5] text-[#202124]'
+                    ? 'bg-surface/20 text-white'
+                    : 'bg-surface-hover text-foreground'
                 )}
               >
                 {enrichedVariants.length}
@@ -886,20 +886,20 @@ export default function InventoryPage() {
               className={cn(
                 'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center justify-between sm:justify-start gap-1.5 cursor-pointer',
                 stockFilter === 'allocated'
-                  ? 'bg-[#2F7D55] text-white shadow-2xs'
-                  : 'text-[#737373] hover:text-[#202124]'
+                  ? 'bg-primary text-primary-foreground shadow-2xs'
+                  : 'text-muted hover:text-foreground'
               )}
             >
               <span className="flex items-center gap-1 truncate">
-                <CheckCircle2 className={cn('w-3.5 h-3.5 shrink-0', stockFilter === 'allocated' ? 'text-white' : 'text-[#2F7D55]')} />
+                <CheckCircle2 className={cn('w-3.5 h-3.5 shrink-0', stockFilter === 'allocated' ? 'text-white' : 'text-primary')} />
                 <span className="truncate">Đã cấp quầy</span>
               </span>
               <span
                 className={cn(
                   'text-[10px] font-mono px-1.5 rounded',
                   stockFilter === 'allocated'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-[#EAF4EE] text-[#2F7D55]'
+                    ? 'bg-surface/20 text-white'
+                    : 'bg-success-bg text-primary'
                 )}
               >
                 {countAllocated}
@@ -912,20 +912,20 @@ export default function InventoryPage() {
               className={cn(
                 'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center justify-between sm:justify-start gap-1.5 cursor-pointer',
                 stockFilter === 'has_unallocated'
-                  ? 'bg-[#B7791F] text-white shadow-2xs'
-                  : 'text-[#737373] hover:text-[#202124]'
+                  ? 'bg-warning text-white shadow-2xs'
+                  : 'text-muted hover:text-foreground'
               )}
             >
               <span className="flex items-center gap-1 truncate">
-                <Boxes className={cn('w-3.5 h-3.5 shrink-0', stockFilter === 'has_unallocated' ? 'text-white' : 'text-[#B7791F]')} />
+                <Boxes className={cn('w-3.5 h-3.5 shrink-0', stockFilter === 'has_unallocated' ? 'text-white' : 'text-warning')} />
                 <span className="truncate">Cấp thêm</span>
               </span>
               <span
                 className={cn(
                   'text-[10px] font-mono px-1.5 rounded',
                   stockFilter === 'has_unallocated'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-[#FEF7EC] text-[#B7791F]'
+                    ? 'bg-surface/20 text-white'
+                    : 'bg-warning-bg text-warning'
                 )}
               >
                 {countHasUnallocated}
@@ -938,20 +938,20 @@ export default function InventoryPage() {
               className={cn(
                 'px-2.5 py-1.5 rounded-md font-semibold transition-all flex items-center justify-between sm:justify-start gap-1.5 cursor-pointer',
                 stockFilter === 'low_or_empty'
-                  ? 'bg-[#C44536] text-white shadow-2xs'
-                  : 'text-[#737373] hover:text-[#202124]'
+                  ? 'bg-error text-white shadow-2xs'
+                  : 'text-muted hover:text-foreground'
               )}
             >
               <span className="flex items-center gap-1 truncate">
-                <AlertCircle className={cn('w-3.5 h-3.5 shrink-0', stockFilter === 'low_or_empty' ? 'text-white' : 'text-[#C44536]')} />
+                <AlertCircle className={cn('w-3.5 h-3.5 shrink-0', stockFilter === 'low_or_empty' ? 'text-white' : 'text-error')} />
                 <span className="truncate">Sắp hết</span>
               </span>
               <span
                 className={cn(
                   'text-[10px] font-mono px-1.5 rounded',
                   stockFilter === 'low_or_empty'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-[#FDF1F0] text-[#C44536]'
+                    ? 'bg-surface/20 text-white'
+                    : 'bg-error-bg text-error'
                 )}
               >
                 {countLowOrEmpty}
@@ -962,18 +962,18 @@ export default function InventoryPage() {
           {/* Right: Search + View Mode on clean flex row */}
           <div className="flex items-center gap-2 flex-1 lg:justify-end">
             <div className="relative flex-1 sm:max-w-xs">
-              <Search className="w-3.5 h-3.5 text-[#9E9E9C] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Search className="w-3.5 h-3.5 text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <Input
                 placeholder="Tìm sản phẩm, size, mã loại..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-9 pl-8 pr-7 text-xs rounded-lg bg-white w-full"
+                className="h-9 pl-8 pr-7 text-xs rounded-lg bg-surface w-full"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9E9E9C] hover:text-[#202124]"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
                   title="Xóa tìm kiếm"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -981,15 +981,15 @@ export default function InventoryPage() {
               )}
             </div>
 
-            <div className="flex items-center p-0.5 rounded-lg bg-[#F7F7F5] border border-[#E8E8E5] shrink-0">
+            <div className="flex items-center p-0.5 rounded-lg bg-background border border-border shrink-0">
               <button
                 type="button"
                 onClick={() => setViewMode('grouped')}
                 className={cn(
                   'px-2.5 py-1.5 rounded-md transition-all flex items-center gap-1.5 text-xs font-semibold cursor-pointer',
                   viewMode === 'grouped'
-                    ? 'bg-[#315C4C] text-white shadow-2xs'
-                    : 'text-[#737373] hover:text-[#202124]'
+                    ? 'bg-primary text-primary-foreground shadow-2xs'
+                    : 'text-muted hover:text-foreground'
                 )}
                 title="Gom nhóm theo từng sản phẩm (Dễ nhìn & Dễ thao tác)"
               >
@@ -1002,8 +1002,8 @@ export default function InventoryPage() {
                 className={cn(
                   'px-2.5 py-1.5 rounded-md transition-all flex items-center gap-1.5 text-xs font-semibold cursor-pointer',
                   viewMode === 'table'
-                    ? 'bg-[#315C4C] text-white shadow-2xs'
-                    : 'text-[#737373] hover:text-[#202124]'
+                    ? 'bg-primary text-primary-foreground shadow-2xs'
+                    : 'text-muted hover:text-foreground'
                 )}
                 title="Xem dạng bảng gọn"
               >
@@ -1016,17 +1016,17 @@ export default function InventoryPage() {
       </div>
 
       {/* Detailed Inventory Sorting & Filter Control Toolbar */}
-      <div className="bg-white dark:bg-neutral-850 border border-[#E8E8E5] dark:border-neutral-800 rounded-xl p-3 shadow-2xs space-y-2.5">
+      <div className="bg-surface dark:bg-surface border border-border dark:border-border rounded-xl p-3 shadow-2xs space-y-2.5">
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
             {/* Sorting Select */}
             <div className="flex items-center gap-1.5 min-w-[170px]">
-              <ArrowUpDown className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
-              <span className="text-xs font-bold text-[#737373] dark:text-neutral-400 shrink-0">Sắp xếp:</span>
+              <ArrowUpDown className="w-3.5 h-3.5 text-primary dark:text-success shrink-0" />
+              <span className="text-xs font-bold text-muted dark:text-muted shrink-0">Sắp xếp:</span>
               <select
                 value={inventorySortBy}
                 onChange={(e) => setInventorySortBy(e.target.value as any)}
-                className="h-8 rounded-lg border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-900 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] flex-1 sm:flex-none"
+                className="h-8 rounded-lg border border-border dark:border-border bg-background dark:bg-surface px-2 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary flex-1 sm:flex-none"
               >
                 <option value="name_asc">Tên: A → Z (Mặc định)</option>
                 <option value="name_desc">Tên: Z → A</option>
@@ -1041,12 +1041,12 @@ export default function InventoryPage() {
 
             {/* Category Filter */}
             <div className="flex items-center gap-1.5 min-w-[150px]">
-              <Tag className="w-3.5 h-3.5 text-[#737373] dark:text-neutral-400 shrink-0" />
-              <span className="text-xs font-bold text-[#737373] dark:text-neutral-400 shrink-0">Danh mục:</span>
+              <Tag className="w-3.5 h-3.5 text-muted dark:text-muted shrink-0" />
+              <span className="text-xs font-bold text-muted dark:text-muted shrink-0">Danh mục:</span>
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="h-8 rounded-lg border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-900 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] flex-1 sm:flex-none"
+                className="h-8 rounded-lg border border-border dark:border-border bg-background dark:bg-surface px-2 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary flex-1 sm:flex-none"
               >
                 <option value="all">Tất cả danh mục</option>
                 {categories.map((c) => (
@@ -1059,12 +1059,12 @@ export default function InventoryPage() {
 
             {/* Source Filter */}
             <div className="flex items-center gap-1.5 min-w-[140px]">
-              <Store className="w-3.5 h-3.5 text-[#737373] dark:text-neutral-400 shrink-0" />
-              <span className="text-xs font-bold text-[#737373] dark:text-neutral-400 shrink-0">Nguồn:</span>
+              <Store className="w-3.5 h-3.5 text-muted dark:text-muted shrink-0" />
+              <span className="text-xs font-bold text-muted dark:text-muted shrink-0">Nguồn:</span>
               <select
                 value={sourceFilter}
                 onChange={(e) => setSourceFilter(e.target.value as any)}
-                className="h-8 rounded-lg border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-900 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] flex-1 sm:flex-none"
+                className="h-8 rounded-lg border border-border dark:border-border bg-background dark:bg-surface px-2 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary flex-1 sm:flex-none"
               >
                 <option value="all">Tất cả nguồn hàng</option>
                 <option value="store">👑 Shop chính (HikaruStore)</option>
@@ -1075,15 +1075,15 @@ export default function InventoryPage() {
 
           {/* Result counter & Reset */}
           <div className="flex items-center gap-2.5 shrink-0 ml-auto">
-            <span className="text-xs text-[#737373] dark:text-neutral-400 font-medium">
-              Đang hiển thị <strong className="text-[#315C4C] dark:text-emerald-400 font-bold">{filteredEnrichedVariants.length}</strong> / {enrichedVariants.length} phân loại
+            <span className="text-xs text-muted dark:text-muted font-medium">
+              Đang hiển thị <strong className="text-primary dark:text-success font-bold">{filteredEnrichedVariants.length}</strong> / {enrichedVariants.length} phân loại
             </span>
             {isInventoryFilterActive && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={resetInventoryFilters}
-                className="h-7 px-2.5 text-xs text-[#C44536] hover:bg-[#FDF1F0] border-[#F8B4AF] gap-1 font-semibold"
+                className="h-7 px-2.5 text-xs text-error hover:bg-error-bg border-[#F8B4AF] gap-1 font-semibold"
                 title="Đặt lại toàn bộ bộ lọc và sắp xếp về mặc định"
               >
                 <RotateCcw className="w-3 h-3" />
@@ -1096,8 +1096,8 @@ export default function InventoryPage() {
 
       {/* Sandbox Test Mode Notice Banner */}
       {isTestEvent(selectedEventId) && (
-        <div className="flex items-center gap-2 p-3 rounded-xl bg-[#FEF7EC] border border-[#B7791F]/30 text-xs text-[#B7791F] shadow-xs">
-          <FlaskConical className="w-4 h-4 shrink-0 text-[#B7791F]" />
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-warning-bg border border-warning/30 text-xs text-warning shadow-xs">
+          <FlaskConical className="w-4 h-4 shrink-0 text-warning" />
           <span>
             <strong>Quầy hàng thử nghiệm (Sandbox):</strong> Lượng hàng cấp và doanh số tại quầy
             test POS được cách ly độc lập, <strong>hoàn toàn không ảnh hưởng</strong> đến tồn kho
@@ -1108,20 +1108,20 @@ export default function InventoryPage() {
 
       {/* Main Inventory Content */}
       {!selectedBooth ? (
-        <Card className="border-[#E8E8E5] rounded-xl shadow-xs">
+        <Card className="border-border rounded-xl shadow-xs">
           <CardContent className="p-12 text-center">
-            <Store className="w-10 h-10 text-[#9E9E9C] mx-auto mb-3" />
-            <p className="text-xs text-[#737373]">{t('selectBoothPrompt')}</p>
+            <Store className="w-10 h-10 text-muted mx-auto mb-3" />
+            <p className="text-xs text-muted">{t('selectBoothPrompt')}</p>
           </CardContent>
         </Card>
       ) : filteredEnrichedVariants.length === 0 ? (
-        <Card className="border-[#E8E8E5] rounded-xl shadow-xs">
+        <Card className="border-border rounded-xl shadow-xs">
           <CardContent className="p-12 text-center">
-            <Package className="w-10 h-10 text-[#9E9E9C] mx-auto mb-3" />
-            <h3 className="text-sm font-semibold text-[#202124]">
+            <Package className="w-10 h-10 text-muted mx-auto mb-3" />
+            <h3 className="text-sm font-semibold text-foreground">
               Không tìm thấy mã hàng phù hợp
             </h3>
-            <p className="text-xs text-[#737373] mt-1">
+            <p className="text-xs text-muted mt-1">
               Thử đổi bộ lọc trạng thái hoặc từ khóa tìm kiếm của bạn.
             </p>
             {(searchQuery || stockFilter !== 'all') && (
@@ -1170,12 +1170,12 @@ export default function InventoryPage() {
               return (
                 <Card
                   key={product.id}
-                  className="border-[#E8E8E5] bg-white rounded-xl shadow-2xs p-4 hover:border-[#315C4C]/35 transition-all"
+                  className="border-border bg-surface rounded-xl shadow-2xs p-4 hover:border-primary/35 transition-all"
                 >
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
                     {/* Col 1-4: Product Image + Name + SKU + Price */}
                     <div className="lg:col-span-4 flex items-center gap-3.5 min-w-0">
-                      <div className="w-14 h-14 rounded-xl bg-[#F7F7F5] border border-[#E8E8E5] overflow-hidden shrink-0 flex items-center justify-center">
+                      <div className="w-14 h-14 rounded-xl bg-background border border-border overflow-hidden shrink-0 flex items-center justify-center">
                         {thumbUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
@@ -1184,13 +1184,13 @@ export default function InventoryPage() {
                             className="w-full h-full object-contain p-1"
                           />
                         ) : (
-                          <Package className="w-6 h-6 text-[#9E9E9C]" />
+                          <Package className="w-6 h-6 text-muted" />
                         )}
                       </div>
 
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <h3 className="text-sm font-bold text-[#202124] truncate">
+                          <h3 className="text-sm font-bold text-foreground truncate">
                             {product.name}
                           </h3>
                           {product.collab_partner && (
@@ -1202,10 +1202,10 @@ export default function InventoryPage() {
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2 mt-1">
-                          <span className="text-xs font-extrabold text-[#315C4C] font-mono">
+                          <span className="text-xs font-extrabold text-primary font-mono">
                             {formatCurrency(v.price, currency)}
                           </span>
-                          <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[#F7F7F5] border border-[#E8E8E5] text-[#737373]">
+                          <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-background border border-border text-muted">
                             {v.name} · {v.sku}
                           </span>
                         </div>
@@ -1217,8 +1217,8 @@ export default function InventoryPage() {
                       <div
                         onClick={() => canEditThisProd && openMasterStockModal(product)}
                         className={cn(
-                          'bg-[#F7F7F5] border border-[#E8E8E5] rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-xs transition-colors',
-                          canEditThisProd ? 'cursor-pointer hover:border-[#315C4C]/50' : ''
+                          'bg-background border border-border rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-xs transition-colors',
+                          canEditThisProd ? 'cursor-pointer hover:border-primary/50' : ''
                         )}
                         title={
                           canEditThisProd
@@ -1227,31 +1227,31 @@ export default function InventoryPage() {
                         }
                       >
                         <div>
-                          <span className="text-[10px] text-[#737373] block">Tổng kho</span>
-                          <span className="font-bold text-[#202124] font-mono text-sm">
+                          <span className="text-[10px] text-muted block">Tổng kho</span>
+                          <span className="font-bold text-foreground font-mono text-sm">
                             {v.total_inventory}
                           </span>
                         </div>
 
-                        <div className="h-6 w-px bg-[#E8E8E5]" />
+                        <div className="h-6 w-px bg-surface-hover" />
 
                         <div>
-                          <span className="text-[10px] text-[#737373] block">Khóa Onl / VIP</span>
+                          <span className="text-[10px] text-muted block">Khóa Onl / VIP</span>
                           <div className="flex items-center gap-1 font-mono text-xs">
                             <span className="font-bold text-[#1D4ED8]">{stock.online} Onl</span>
-                            <span className="text-[#9E9E9C]">·</span>
-                            <span className="font-bold text-[#B7791F]">{stock.preord} VIP</span>
+                            <span className="text-muted">·</span>
+                            <span className="font-bold text-warning">{stock.preord} VIP</span>
                           </div>
                         </div>
 
-                        <div className="h-6 w-px bg-[#E8E8E5]" />
+                        <div className="h-6 w-px bg-surface-hover" />
 
                         <div className="text-right">
-                          <span className="text-[10px] text-[#737373] block">Cấp thêm được</span>
+                          <span className="text-[10px] text-muted block">Cấp thêm được</span>
                           <span
                             className={cn(
                               'font-extrabold font-mono text-sm',
-                              centralStorageRemaining > 0 ? 'text-[#2F7D55]' : 'text-[#737373]'
+                              centralStorageRemaining > 0 ? 'text-primary' : 'text-muted'
                             )}
                           >
                             +{centralStorageRemaining}
@@ -1260,7 +1260,7 @@ export default function InventoryPage() {
                       </div>
 
                       {isOverReserved && (
-                        <div className="mt-1 flex items-center justify-between text-[10px] text-[#C44536] px-1">
+                        <div className="mt-1 flex items-center justify-between text-[10px] text-error px-1">
                           <span>
                             ⚠️ Khóa Onl+VIP ({totalHeldOnlineVip}) &gt; Tổng kho (
                             {v.total_inventory})
@@ -1284,18 +1284,18 @@ export default function InventoryPage() {
                         className={cn(
                           'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border',
                           availableToSell <= 0
-                            ? 'bg-[#FDF1F0] text-[#C44536] border-[#C44536]/20'
+                            ? 'bg-error-bg text-error border-error/20'
                             : availableToSell <= 5
-                            ? 'bg-[#FEF7EC] text-[#B7791F] border-[#B7791F]/20'
-                            : 'bg-[#EAF4EE] text-[#2F7D55] border-[#2F7D55]/20'
+                            ? 'bg-warning-bg text-warning border-warning/20'
+                            : 'bg-success-bg text-primary border-primary/20'
                         )}
                       >
                         <span>Còn bán tại quầy:</span>
                         <span className="font-mono text-sm font-extrabold">{availableToSell}</span>
                       </div>
-                      <span className="text-[11px] text-[#737373] pl-0.5">
+                      <span className="text-[11px] text-muted pl-0.5">
                         Đã bán:{' '}
-                        <strong className="text-[#202124] font-mono">{currentSoldQty}</strong> /{' '}
+                        <strong className="text-foreground font-mono">{currentSoldQty}</strong> /{' '}
                         <span className="font-mono">{currentAllocQty}</span> đã cấp
                       </span>
                     </div>
@@ -1305,10 +1305,10 @@ export default function InventoryPage() {
                       {canEditThisProd ? (
                         <>
                           <div className="flex items-center justify-between sm:justify-end gap-1.5">
-                            <div className="inline-flex items-center gap-1 bg-[#F7F7F5] p-1 rounded-xl border border-[#E8E8E5]">
+                            <div className="inline-flex items-center gap-1 bg-background p-1 rounded-xl border border-border">
                               <button
                                 type="button"
-                                className="h-8 w-8 rounded-lg bg-white hover:bg-[#E8E8E5] text-[#202124] flex items-center justify-center font-bold text-xs border border-[#E8E8E5] disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
+                                className="h-8 w-8 rounded-lg bg-surface hover:bg-surface-hover text-foreground flex items-center justify-center font-bold text-xs border border-border disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
                                 title={
                                   currentAllocQty <= currentSoldQty
                                     ? `Không thể giảm dưới số lượng đã bán (${currentSoldQty})`
@@ -1355,13 +1355,13 @@ export default function InventoryPage() {
                                     );
                                   }
                                 }}
-                                className="w-16 h-8 text-center text-sm font-extrabold font-mono bg-white border border-[#E8E8E5] rounded-lg text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                                className="w-16 h-8 text-center text-sm font-extrabold font-mono bg-surface border border-border rounded-lg text-foreground focus:outline-none focus:border-primary"
                                 title={`Nhập trực tiếp số lượng cấp cho quầy (Tối thiểu: ${currentSoldQty}, Tối đa: ${maxAllowedBoothAlloc})`}
                               />
 
                               <button
                                 type="button"
-                                className="h-8 w-8 rounded-lg bg-white hover:bg-[#E8E8E5] text-[#202124] flex items-center justify-center font-bold text-xs border border-[#E8E8E5] disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
+                                className="h-8 w-8 rounded-lg bg-surface hover:bg-surface-hover text-foreground flex items-center justify-center font-bold text-xs border border-border disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
                                 title={
                                   centralStorageRemaining < 1
                                     ? 'Đã đạt tối đa số lượng khả dụng'
@@ -1381,7 +1381,7 @@ export default function InventoryPage() {
                                 onClick={() =>
                                   handleDirectSetAllocation(v.id, v.name, maxAllowedBoothAlloc)
                                 }
-                                className="h-8 px-2.5 rounded-lg text-[11px] font-bold bg-[#EAF4EE] text-[#2F7D55] border border-[#2F7D55]/30 hover:bg-[#2F7D55] hover:text-white transition-colors shrink-0 cursor-pointer"
+                                className="h-8 px-2.5 rounded-lg text-[11px] font-bold bg-success-bg text-primary border border-primary/30 hover:bg-primary hover:text-primary-foreground transition-colors shrink-0 cursor-pointer"
                                 title={`Cấp toàn bộ +${centralStorageRemaining} món khả dụng ra quầy này`}
                               >
                                 Cấp tối đa ({maxAllowedBoothAlloc})
@@ -1393,7 +1393,7 @@ export default function InventoryPage() {
                                 onClick={() =>
                                   handleDirectSetAllocation(v.id, v.name, currentSoldQty)
                                 }
-                                className="h-8 px-2.5 rounded-lg text-[11px] font-semibold bg-[#F7F7F5] text-[#737373] border border-[#E8E8E5] hover:text-[#C44536] transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
+                                className="h-8 px-2.5 rounded-lg text-[11px] font-semibold bg-background text-muted border border-border hover:text-error transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
                                 title={`Thu hồi ${availableToSell} món chưa bán về lại kho tổng`}
                               >
                                 <RotateCcw className="w-3 h-3" />
@@ -1404,19 +1404,19 @@ export default function InventoryPage() {
                             <button
                               type="button"
                               onClick={() => openMasterStockModal(product)}
-                              className="h-8 w-8 rounded-lg bg-[#F7F7F5] border border-[#E8E8E5] text-[#737373] hover:text-[#202124] flex items-center justify-center shrink-0 cursor-pointer"
+                              className="h-8 w-8 rounded-lg bg-background border border-border text-muted hover:text-foreground flex items-center justify-center shrink-0 cursor-pointer"
                               title="Chỉnh sửa Tổng kho gốc / Online / Giữ VIP"
                             >
-                              <SlidersHorizontal className="w-3.5 h-3.5 text-[#B7791F]" />
+                              <SlidersHorizontal className="w-3.5 h-3.5 text-warning" />
                             </button>
                           </div>
 
-                          <span className="text-[10px] text-[#737373] font-mono text-right">
+                          <span className="text-[10px] text-muted font-mono text-right">
                             Tối đa cấp được: {maxAllowedBoothAlloc} món
                           </span>
                         </>
                       ) : (
-                        <span className="px-3 py-1.5 text-xs font-semibold text-[#737373] bg-[#F7F7F5] rounded-lg border border-[#E8E8E5]">
+                        <span className="px-3 py-1.5 text-xs font-semibold text-muted bg-background rounded-lg border border-border">
                           Đã cấp: {currentAllocQty} (Chỉ xem)
                         </span>
                       )}
@@ -1437,12 +1437,12 @@ export default function InventoryPage() {
             return (
               <Card
                 key={product.id}
-                className="border-[#E8E8E5] bg-white rounded-xl shadow-2xs overflow-hidden"
+                className="border-border bg-surface rounded-xl shadow-2xs overflow-hidden"
               >
                 {/* Solid Dark-Mode-Safe Product Group Header */}
-                <div className="p-3.5 sm:p-4 bg-[#F7F7F5] border-b border-[#E8E8E5] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="p-3.5 sm:p-4 bg-background border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-start sm:items-center gap-3 min-w-0">
-                    <div className="w-12 h-12 rounded-xl bg-white border border-[#E8E8E5] overflow-hidden shrink-0 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-xl bg-surface border border-border overflow-hidden shrink-0 flex items-center justify-center">
                       {thumbUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -1451,13 +1451,13 @@ export default function InventoryPage() {
                           className="w-full h-full object-contain p-1"
                         />
                       ) : (
-                        <Package className="w-6 h-6 text-[#9E9E9C]" />
+                        <Package className="w-6 h-6 text-muted" />
                       )}
                     </div>
 
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <h3 className="text-sm sm:text-[15px] font-bold text-[#202124] line-clamp-2 leading-snug">
+                        <h3 className="text-sm sm:text-[15px] font-bold text-foreground line-clamp-2 leading-snug">
                           {product.name}
                         </h3>
                         {product.collab_partner && (
@@ -1469,17 +1469,17 @@ export default function InventoryPage() {
                       </div>
 
                       <div className="flex flex-wrap items-center gap-1.5 mt-1.5 text-[11px]">
-                        <span className="px-2 py-0.5 rounded bg-white border border-[#E8E8E5] text-[#737373] font-medium">
+                        <span className="px-2 py-0.5 rounded bg-surface border border-border text-muted font-medium">
                           {items.length} phân loại
                         </span>
-                        <span className="px-2 py-0.5 rounded bg-white border border-[#E8E8E5] text-[#202124] font-semibold">
+                        <span className="px-2 py-0.5 rounded bg-surface border border-border text-foreground font-semibold">
                           Đã cấp: <strong className="font-mono">{prodTotalBoothAlloc}</strong>
                         </span>
-                        <span className="px-2 py-0.5 rounded bg-[#EAF4EE] text-[#2F7D55] font-semibold">
+                        <span className="px-2 py-0.5 rounded bg-success-bg text-primary font-semibold">
                           Còn bán: <strong className="font-mono">{prodTotalBoothAvail}</strong>
                         </span>
                         {prodTotalUnallocated > 0 && (
-                          <span className="px-2 py-0.5 rounded bg-[#FEF7EC] text-[#B7791F] font-semibold">
+                          <span className="px-2 py-0.5 rounded bg-warning-bg text-warning font-semibold">
                             Cấp thêm: <strong className="font-mono">+{prodTotalUnallocated}</strong>
                           </span>
                         )}
@@ -1496,7 +1496,7 @@ export default function InventoryPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleAllocateMaxForProduct(product)}
-                            className="h-8 px-3 text-xs gap-1.5 rounded-lg border-[#2F7D55]/40 text-[#2F7D55] hover:bg-[#EAF4EE] font-semibold bg-white"
+                            className="h-8 px-3 text-xs gap-1.5 rounded-lg border-primary/40 text-primary hover:bg-success-bg font-semibold bg-surface"
                             title="Cấp toàn bộ số lượng khả dụng của tất cả các size ra quầy này"
                           >
                             <ArrowUpRight className="w-3.5 h-3.5" />
@@ -1507,16 +1507,16 @@ export default function InventoryPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => openMasterStockModal(product)}
-                          className="h-8 px-3 text-xs gap-1.5 rounded-lg bg-white font-semibold"
+                          className="h-8 px-3 text-xs gap-1.5 rounded-lg bg-surface font-semibold"
                           title="Chỉnh sửa Tổng kho vật lý, số lượng Giữ VIP hoặc đơn Khách đặt Online"
                         >
-                          <SlidersHorizontal className="w-3.5 h-3.5 text-[#B7791F]" />
+                          <SlidersHorizontal className="w-3.5 h-3.5 text-warning" />
                           <span>Chỉnh kho gốc / Online</span>
                         </Button>
                       </>
                     ) : isPartner ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-[#737373] bg-white rounded-lg border border-[#E8E8E5]">
-                        <Lock className="w-3 h-3 text-[#9E9E9C]" />
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-muted bg-surface rounded-lg border border-border">
+                        <Lock className="w-3 h-3 text-muted" />
                         <span>Kho Admin (Chỉ đọc)</span>
                       </span>
                     ) : null}
@@ -1524,7 +1524,7 @@ export default function InventoryPage() {
                 </div>
 
                 {/* Variants Rows inside Multi-Variant Product Card */}
-                <div className="divide-y divide-[#F0F0ED]">
+                <div className="divide-y divide-border">
                   {items.map((item) => {
                     const {
                       variant: v,
@@ -1542,53 +1542,53 @@ export default function InventoryPage() {
                     return (
                       <div
                         key={v.id}
-                        className="p-3.5 hover:bg-[#F7F7F5] transition-colors grid grid-cols-1 lg:grid-cols-12 gap-4 items-center"
+                        className="p-3.5 hover:bg-background transition-colors grid grid-cols-1 lg:grid-cols-12 gap-4 items-center"
                       >
                         {/* Col 1-3: Variant Name, SKU & Price */}
                         <div className="lg:col-span-3 flex items-center justify-between lg:block">
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold text-[#202124]">{v.name}</span>
-                              <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-[#F7F7F5] border border-[#E8E8E5] text-[#737373]">
+                              <span className="text-sm font-bold text-foreground">{v.name}</span>
+                              <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-background border border-border text-muted">
                                 {v.sku}
                               </span>
                             </div>
-                            <span className="text-xs font-bold text-[#315C4C] font-mono mt-0.5 block">
+                            <span className="text-xs font-bold text-primary font-mono mt-0.5 block">
                               {formatCurrency(v.price, currency)}
                             </span>
                           </div>
                         </div>
 
                         {/* Col 4-7: Central Warehouse Breakdown */}
-                        <div className="lg:col-span-4 bg-[#F7F7F5] border border-[#E8E8E5] rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-xs">
+                        <div className="lg:col-span-4 bg-background border border-border rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-xs">
                           <div>
-                            <span className="text-[10px] text-[#737373] block">Tổng kho</span>
-                            <span className="font-bold text-[#202124] font-mono text-sm">
+                            <span className="text-[10px] text-muted block">Tổng kho</span>
+                            <span className="font-bold text-foreground font-mono text-sm">
                               {v.total_inventory}
                             </span>
                           </div>
 
-                          <div className="h-6 w-px bg-[#E8E8E5]" />
+                          <div className="h-6 w-px bg-surface-hover" />
 
                           <div>
-                            <span className="text-[10px] text-[#737373] block">
+                            <span className="text-[10px] text-muted block">
                               Khóa Onl / VIP
                             </span>
                             <div className="flex items-center gap-1.5 font-mono text-xs">
                               <span className="font-bold text-[#1D4ED8]">{stock.online} Onl</span>
-                              <span className="text-[#9E9E9C]">·</span>
-                              <span className="font-bold text-[#B7791F]">{stock.preord} VIP</span>
+                              <span className="text-muted">·</span>
+                              <span className="font-bold text-warning">{stock.preord} VIP</span>
                             </div>
                           </div>
 
-                          <div className="h-6 w-px bg-[#E8E8E5]" />
+                          <div className="h-6 w-px bg-surface-hover" />
 
                           <div className="text-right">
-                            <span className="text-[10px] text-[#737373] block">Cấp thêm được</span>
+                            <span className="text-[10px] text-muted block">Cấp thêm được</span>
                             <span
                               className={cn(
                                 'font-extrabold font-mono text-sm',
-                                centralStorageRemaining > 0 ? 'text-[#2F7D55]' : 'text-[#737373]'
+                                centralStorageRemaining > 0 ? 'text-primary' : 'text-muted'
                               )}
                             >
                               +{centralStorageRemaining}
@@ -1602,10 +1602,10 @@ export default function InventoryPage() {
                             className={cn(
                               'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border',
                               availableToSell <= 0
-                                ? 'bg-[#FDF1F0] text-[#C44536] border-[#C44536]/20'
+                                ? 'bg-error-bg text-error border-error/20'
                                 : availableToSell <= 5
-                                ? 'bg-[#FEF7EC] text-[#B7791F] border-[#B7791F]/20'
-                                : 'bg-[#EAF4EE] text-[#2F7D55] border-[#2F7D55]/20'
+                                ? 'bg-warning-bg text-warning border-warning/20'
+                                : 'bg-success-bg text-primary border-primary/20'
                             )}
                           >
                             <span>Còn bán tại quầy:</span>
@@ -1613,9 +1613,9 @@ export default function InventoryPage() {
                               {availableToSell}
                             </span>
                           </div>
-                          <span className="text-[11px] text-[#737373] pl-0.5">
+                          <span className="text-[11px] text-muted pl-0.5">
                             Đã bán:{' '}
-                            <strong className="text-[#202124] font-mono">{currentSoldQty}</strong> /{' '}
+                            <strong className="text-foreground font-mono">{currentSoldQty}</strong> /{' '}
                             <span className="font-mono">{currentAllocQty}</span> đã cấp
                           </span>
                         </div>
@@ -1625,10 +1625,10 @@ export default function InventoryPage() {
                           {canEditThisProd ? (
                             <>
                               <div className="flex items-center justify-between sm:justify-end gap-1.5">
-                                <div className="inline-flex items-center gap-1 bg-[#F7F7F5] p-1 rounded-xl border border-[#E8E8E5]">
+                                <div className="inline-flex items-center gap-1 bg-background p-1 rounded-xl border border-border">
                                   <button
                                     type="button"
-                                    className="h-8 w-8 rounded-lg bg-white hover:bg-[#E8E8E5] text-[#202124] flex items-center justify-center font-bold text-xs border border-[#E8E8E5] disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
+                                    className="h-8 w-8 rounded-lg bg-surface hover:bg-surface-hover text-foreground flex items-center justify-center font-bold text-xs border border-border disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
                                     title={
                                       currentAllocQty <= currentSoldQty
                                         ? `Không thể giảm dưới số lượng đã bán (${currentSoldQty})`
@@ -1675,13 +1675,13 @@ export default function InventoryPage() {
                                         );
                                       }
                                     }}
-                                    className="w-16 h-8 text-center text-sm font-extrabold font-mono bg-white border border-[#E8E8E5] rounded-lg text-[#202124] focus:outline-none focus:border-[#315C4C]"
+                                    className="w-16 h-8 text-center text-sm font-extrabold font-mono bg-surface border border-border rounded-lg text-foreground focus:outline-none focus:border-primary"
                                     title={`Nhập trực tiếp tổng số lượng cấp cho quầy (Tối thiểu: ${currentSoldQty}, Tối đa: ${maxAllowedBoothAlloc})`}
                                   />
 
                                   <button
                                     type="button"
-                                    className="h-8 w-8 rounded-lg bg-white hover:bg-[#E8E8E5] text-[#202124] flex items-center justify-center font-bold text-xs border border-[#E8E8E5] disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
+                                    className="h-8 w-8 rounded-lg bg-surface hover:bg-surface-hover text-foreground flex items-center justify-center font-bold text-xs border border-border disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
                                     title={
                                       centralStorageRemaining < 1
                                         ? 'Đã đạt mức tối đa khả dụng'
@@ -1705,7 +1705,7 @@ export default function InventoryPage() {
                                         maxAllowedBoothAlloc
                                       )
                                     }
-                                    className="h-8 px-2.5 rounded-lg text-[11px] font-bold bg-[#EAF4EE] text-[#2F7D55] border border-[#2F7D55]/30 hover:bg-[#2F7D55] hover:text-white transition-colors shrink-0 cursor-pointer"
+                                    className="h-8 px-2.5 rounded-lg text-[11px] font-bold bg-success-bg text-primary border border-primary/30 hover:bg-primary hover:text-primary-foreground transition-colors shrink-0 cursor-pointer"
                                     title={`Cấp toàn bộ +${centralStorageRemaining} món khả dụng cho quầy này`}
                                   >
                                     Cấp tối đa ({maxAllowedBoothAlloc})
@@ -1717,7 +1717,7 @@ export default function InventoryPage() {
                                     onClick={() =>
                                       handleDirectSetAllocation(v.id, v.name, currentSoldQty)
                                     }
-                                    className="h-8 px-2.5 rounded-lg text-[11px] font-semibold bg-[#F7F7F5] text-[#737373] border border-[#E8E8E5] hover:text-[#C44536] transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
+                                    className="h-8 px-2.5 rounded-lg text-[11px] font-semibold bg-background text-muted border border-border hover:text-error transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
                                     title={`Thu hồi ${availableToSell} món chưa bán về lại kho tổng`}
                                   >
                                     <RotateCcw className="w-3 h-3" />
@@ -1726,12 +1726,12 @@ export default function InventoryPage() {
                                 ) : null}
                               </div>
 
-                              <span className="text-[10px] text-[#737373] font-mono text-right">
+                              <span className="text-[10px] text-muted font-mono text-right">
                                 Tối đa cấp được: {maxAllowedBoothAlloc} món
                               </span>
                             </>
                           ) : (
-                            <span className="px-3 py-1.5 text-xs font-semibold text-[#737373] bg-[#F7F7F5] rounded-lg border border-[#E8E8E5]">
+                            <span className="px-3 py-1.5 text-xs font-semibold text-muted bg-background rounded-lg border border-border">
                               Đã cấp: {currentAllocQty} (Chỉ xem)
                             </span>
                           )}
@@ -1748,10 +1748,10 @@ export default function InventoryPage() {
         /* =========================================================
            COMPACT TABLE VIEW (6 Clear Columns)
            ========================================================= */
-        <Card className="border-[#E8E8E5] bg-white rounded-xl shadow-2xs overflow-hidden">
+        <Card className="border-border bg-surface rounded-xl shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="bg-[#F7F7F5] border-b border-[#E8E8E5] text-[#737373] uppercase text-[10.5px] font-bold tracking-wider">
+              <thead className="bg-background border-b border-border text-muted uppercase text-[10.5px] font-bold tracking-wider">
                 <tr>
                   <th className="py-3 px-4">Sản phẩm & Phân loại</th>
                   <th className="py-3 px-4 text-center">Tổng kho & Đã khóa</th>
@@ -1763,7 +1763,7 @@ export default function InventoryPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F0F0ED]">
+              <tbody className="divide-y divide-border">
                 {filteredEnrichedVariants.map((item) => {
                   const {
                     variant: v,
@@ -1781,10 +1781,10 @@ export default function InventoryPage() {
                     allocInputs[v.id] !== undefined ? allocInputs[v.id] : String(currentAllocQty);
 
                   return (
-                    <tr key={v.id} className="hover:bg-[#F7F7F5] transition-colors">
+                    <tr key={v.id} className="hover:bg-background transition-colors">
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-[#F7F7F5] border border-[#E8E8E5] overflow-hidden shrink-0 flex items-center justify-center">
+                          <div className="w-10 h-10 rounded-lg bg-background border border-border overflow-hidden shrink-0 flex items-center justify-center">
                             {thumbUrl ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img
@@ -1793,16 +1793,16 @@ export default function InventoryPage() {
                                 className="w-full h-full object-contain p-1"
                               />
                             ) : (
-                              <Package className="w-4 h-4 text-[#9E9E9C]" />
+                              <Package className="w-4 h-4 text-muted" />
                             )}
                           </div>
                           <div>
-                            <p className="font-bold text-xs text-[#202124]">{product?.name}</p>
+                            <p className="font-bold text-xs text-foreground">{product?.name}</p>
                             <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className="text-[11px] font-semibold text-[#315C4C]">
+                              <span className="text-[11px] font-semibold text-primary">
                                 {v.name}
                               </span>
-                              <span className="text-[10px] font-mono text-[#737373]">
+                              <span className="text-[10px] font-mono text-muted">
                                 ({v.sku})
                               </span>
                             </div>
@@ -1811,12 +1811,12 @@ export default function InventoryPage() {
                       </td>
 
                       <td className="py-3 px-4 text-center">
-                        <span className="font-bold text-[#202124] font-mono text-xs">
+                        <span className="font-bold text-foreground font-mono text-xs">
                           {v.total_inventory}
                         </span>
-                        <span className="block text-[10px] text-[#737373] font-mono">
+                        <span className="block text-[10px] text-muted font-mono">
                           Onl: <strong className="text-[#1D4ED8]">{stock.online}</strong> · VIP:{' '}
-                          <strong className="text-[#B7791F]">{stock.preord}</strong>
+                          <strong className="text-warning">{stock.preord}</strong>
                         </span>
                       </td>
 
@@ -1825,15 +1825,15 @@ export default function InventoryPage() {
                           className={cn(
                             'inline-flex items-center px-2 py-0.5 rounded-md font-mono font-bold text-xs',
                             centralStorageRemaining > 0
-                              ? 'bg-[#EAF4EE] text-[#2F7D55]'
-                              : 'bg-[#F7F7F5] text-[#737373]'
+                              ? 'bg-success-bg text-primary'
+                              : 'bg-background text-muted'
                           )}
                         >
                           +{centralStorageRemaining}
                         </span>
                       </td>
 
-                      <td className="py-3 px-4 text-center font-mono font-bold text-xs text-[#202124]">
+                      <td className="py-3 px-4 text-center font-mono font-bold text-xs text-foreground">
                         {currentSoldQty}
                       </td>
 
@@ -1842,8 +1842,8 @@ export default function InventoryPage() {
                           className={cn(
                             'inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 rounded-lg text-xs font-extrabold font-mono border',
                             availableToSell <= 0
-                              ? 'bg-[#FDF1F0] text-[#C44536] border-[#C44536]/20'
-                              : 'bg-[#EAF4EE] text-[#2F7D55] border-[#2F7D55]/20'
+                              ? 'bg-error-bg text-error border-error/20'
+                              : 'bg-success-bg text-primary border-primary/20'
                           )}
                         >
                           {availableToSell}
@@ -1853,10 +1853,10 @@ export default function InventoryPage() {
                       <td className="py-3 px-4 text-right">
                         {canEditThis ? (
                           <div className="inline-flex items-center justify-end gap-1.5">
-                            <div className="inline-flex items-center gap-1 bg-[#F7F7F5] p-1 rounded-lg border border-[#E8E8E5]">
+                            <div className="inline-flex items-center gap-1 bg-background p-1 rounded-lg border border-border">
                               <button
                                 type="button"
-                                className="h-7 w-7 rounded bg-white hover:bg-[#E8E8E5] text-[#202124] flex items-center justify-center font-bold text-xs border border-[#E8E8E5] disabled:opacity-35"
+                                className="h-7 w-7 rounded bg-surface hover:bg-surface-hover text-foreground flex items-center justify-center font-bold text-xs border border-border disabled:opacity-35"
                                 disabled={currentAllocQty <= currentSoldQty}
                                 onClick={() => handleStockTransfer(v.id, v.name, -1)}
                               >
@@ -1898,12 +1898,12 @@ export default function InventoryPage() {
                                     );
                                   }
                                 }}
-                                className="w-16 h-7 text-center text-xs font-extrabold font-mono bg-white border border-[#E8E8E5] rounded text-[#202124]"
+                                className="w-16 h-7 text-center text-xs font-extrabold font-mono bg-surface border border-border rounded text-foreground"
                               />
 
                               <button
                                 type="button"
-                                className="h-7 w-7 rounded bg-white hover:bg-[#E8E8E5] text-[#202124] flex items-center justify-center font-bold text-xs border border-[#E8E8E5] disabled:opacity-35"
+                                className="h-7 w-7 rounded bg-surface hover:bg-surface-hover text-foreground flex items-center justify-center font-bold text-xs border border-border disabled:opacity-35"
                                 disabled={centralStorageRemaining < 1}
                                 onClick={() => handleStockTransfer(v.id, v.name, 1)}
                               >
@@ -1918,14 +1918,14 @@ export default function InventoryPage() {
                                 onClick={() =>
                                   handleDirectSetAllocation(v.id, v.name, maxAllowedBoothAlloc)
                                 }
-                                className="h-7 px-2 rounded text-[10px] font-bold bg-[#EAF4EE] text-[#2F7D55] border border-[#2F7D55]/30 hover:bg-[#2F7D55] hover:text-white transition-colors"
+                                className="h-7 px-2 rounded text-[10px] font-bold bg-success-bg text-primary border border-primary/30 hover:bg-primary hover:text-primary-foreground transition-colors"
                               >
                                 Cấp tối đa ({maxAllowedBoothAlloc})
                               </button>
                             )}
                           </div>
                         ) : (
-                          <span className="font-mono font-bold text-xs text-[#737373]">
+                          <span className="font-mono font-bold text-xs text-muted">
                             {currentAllocQty}
                           </span>
                         )}
@@ -1960,23 +1960,23 @@ export default function InventoryPage() {
                 return (
                   <div
                     key={mv.id}
-                    className="p-3.5 bg-[#F7F7F5] rounded-xl border border-[#E8E8E5] space-y-3"
+                    className="p-3.5 bg-background rounded-xl border border-border space-y-3"
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-bold text-xs text-[#202124]">{mv.name}</h4>
-                        <span className="font-mono text-[10px] text-[#737373]">
+                        <h4 className="font-bold text-xs text-foreground">{mv.name}</h4>
+                        <span className="font-mono text-[10px] text-muted">
                           Mã: {mv.sku} • Đã bán tại quầy: {mv.offlineSold || 0}
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[10px] text-[#737373] block">
+                        <span className="text-[10px] text-muted block">
                           Khả dụng cấp cho quầy:
                         </span>
                         <span
                           className={cn(
                             'text-xs font-extrabold font-mono',
-                            offlineAvailable <= 0 ? 'text-[#C44536]' : 'text-[#2F7D55]'
+                            offlineAvailable <= 0 ? 'text-error' : 'text-primary'
                           )}
                         >
                           {offlineAvailable} món
@@ -1986,7 +1986,7 @@ export default function InventoryPage() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-semibold text-[#202124]">
+                        <Label className="text-[11px] font-semibold text-foreground">
                           Tổng số lượng nhập kho:
                         </Label>
                         <Input
@@ -2000,13 +2000,13 @@ export default function InventoryPage() {
                               prev.map((item, i) => (i === idx ? { ...item, total: val } : item))
                             );
                           }}
-                          className="h-8 text-xs bg-white font-mono"
+                          className="h-8 text-xs bg-surface font-mono"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-semibold text-[#B7791F] flex items-center gap-1">
-                          <Bookmark className="w-3 h-3 text-[#B7791F]" />
+                        <Label className="text-[11px] font-semibold text-warning flex items-center gap-1">
+                          <Bookmark className="w-3 h-3 text-warning" />
                           <span>Tự giữ / Đặt trước (VIP):</span>
                         </Label>
                         <Input
@@ -2022,7 +2022,7 @@ export default function InventoryPage() {
                               )
                             );
                           }}
-                          className="h-8 text-xs bg-white border-[#B7791F]/40 font-mono"
+                          className="h-8 text-xs bg-surface border-warning/40 font-mono"
                         />
                       </div>
 
@@ -2042,7 +2042,7 @@ export default function InventoryPage() {
                               prev.map((item, i) => (i === idx ? { ...item, online: val } : item))
                             );
                           }}
-                          className="h-8 text-xs bg-white border-[#3B82F6]/40 font-mono"
+                          className="h-8 text-xs bg-surface border-[#3B82F6]/40 font-mono"
                         />
                       </div>
                     </div>
@@ -2051,7 +2051,7 @@ export default function InventoryPage() {
               })}
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F0ED]">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
               <Button
                 type="button"
                 variant="outline"

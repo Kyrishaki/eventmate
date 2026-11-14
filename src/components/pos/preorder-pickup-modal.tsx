@@ -192,7 +192,7 @@ export function PreorderPickupModal({
           {/* Top Search & Filter Tabs */}
           <div className="space-y-2.5">
             <div className="relative">
-              <Search className="w-4 h-4 text-[#9E9E9C] absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2" />
               <Input
                 placeholder="Tìm mã đơn, tên, số điện thoại..."
                 value={searchQuery}
@@ -201,18 +201,18 @@ export function PreorderPickupModal({
               />
             </div>
 
-            <div className="flex items-center gap-1.5 p-1 bg-[#F0F0ED] dark:bg-neutral-800 rounded-[6px] text-xs">
+            <div className="flex items-center gap-1.5 p-1 bg-surface-hover dark:bg-surface-hover rounded-lg text-xs">
               <button
                 type="button"
                 onClick={() => setFilterTab('pending')}
-                className={`flex-1 py-1 px-2 rounded-[4px] font-semibold transition-colors flex items-center justify-center gap-1 ${
+                className={`flex-1 py-1 px-2 rounded-lg font-semibold transition-colors flex items-center justify-center gap-1 ${
                   filterTab === 'pending'
-                    ? 'bg-white dark:bg-neutral-700 text-[#B7791F] dark:text-amber-300 shadow-2xs'
-                    : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124] dark:hover:text-neutral-200'
+                    ? 'bg-surface dark:bg-surface-hover text-warning dark:text-gold-text shadow-2xs'
+                    : 'text-muted dark:text-muted hover:text-foreground dark:hover:text-foreground'
                 }`}
               >
                 <span>Chờ nhận</span>
-                <span className="text-[10px] bg-[#FEF7EC] dark:bg-amber-950/60 px-1.5 py-0.2 rounded font-mono text-[#B7791F] dark:text-amber-300">
+                <span className="text-[10px] bg-warning-bg dark:bg-amber-950/60 px-1.5 py-0.2 rounded font-mono text-warning dark:text-gold-text">
                   {pendingCount}
                 </span>
               </button>
@@ -220,14 +220,14 @@ export function PreorderPickupModal({
               <button
                 type="button"
                 onClick={() => setFilterTab('picked_up')}
-                className={`flex-1 py-1 px-2 rounded-[4px] font-semibold transition-colors flex items-center justify-center gap-1 ${
+                className={`flex-1 py-1 px-2 rounded-lg font-semibold transition-colors flex items-center justify-center gap-1 ${
                   filterTab === 'picked_up'
-                    ? 'bg-white dark:bg-neutral-700 text-[#2F7D55] dark:text-emerald-300 shadow-2xs'
-                    : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124] dark:hover:text-neutral-200'
+                    ? 'bg-surface dark:bg-surface-hover text-primary dark:text-success shadow-2xs'
+                    : 'text-muted dark:text-muted hover:text-foreground dark:hover:text-foreground'
                 }`}
               >
                 <span>Đã nhận</span>
-                <span className="text-[10px] bg-[#EBF1EE] dark:bg-emerald-950/60 px-1.5 py-0.2 rounded font-mono text-[#2F7D55] dark:text-emerald-300">
+                <span className="text-[10px] bg-warning-bg dark:bg-success-bg/60 px-1.5 py-0.2 rounded font-mono text-primary dark:text-success">
                   {pickedUpCount}
                 </span>
               </button>
@@ -235,10 +235,10 @@ export function PreorderPickupModal({
               <button
                 type="button"
                 onClick={() => setFilterTab('cancelled')}
-                className={`flex-1 py-1 px-2 rounded-[4px] font-semibold transition-colors flex items-center justify-center gap-1 ${
+                className={`flex-1 py-1 px-2 rounded-lg font-semibold transition-colors flex items-center justify-center gap-1 ${
                   filterTab === 'cancelled'
-                    ? 'bg-white dark:bg-neutral-700 text-red-600 dark:text-red-400 shadow-2xs'
-                    : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124] dark:hover:text-neutral-200'
+                    ? 'bg-surface dark:bg-surface-hover text-red-600 dark:text-red-400 shadow-2xs'
+                    : 'text-muted dark:text-muted hover:text-foreground dark:hover:text-foreground'
                 }`}
               >
                 <span>Đã từ chối</span>
@@ -250,10 +250,10 @@ export function PreorderPickupModal({
               <button
                 type="button"
                 onClick={() => setFilterTab('all')}
-                className={`py-1 px-2.5 rounded-[4px] font-medium transition-colors ${
+                className={`py-1 px-2.5 rounded-lg font-medium transition-colors ${
                   filterTab === 'all'
-                    ? 'bg-white dark:bg-neutral-700 text-[#202124] dark:text-neutral-100 shadow-2xs font-semibold'
-                    : 'text-[#737373] dark:text-neutral-400 hover:text-[#202124] dark:hover:text-neutral-200'
+                    ? 'bg-surface dark:bg-surface-hover text-foreground dark:text-foreground shadow-2xs font-semibold'
+                    : 'text-muted dark:text-muted hover:text-foreground dark:hover:text-foreground'
                 }`}
               >
                 Tất cả ({preorders.length})
@@ -262,11 +262,11 @@ export function PreorderPickupModal({
           </div>
 
           {/* Preorders List */}
-          <div className="max-h-[380px] overflow-y-auto divide-y divide-[#F0F0ED] dark:divide-neutral-800 border border-[#E8E8E5] dark:border-neutral-800 rounded-[8px]">
+          <div className="max-h-[380px] overflow-y-auto divide-y divide-border dark:divide-border border border-border dark:border-border rounded-lg">
             {filteredPreorders.length === 0 ? (
-              <div className="p-8 text-center space-y-1.5 text-xs text-[#737373] dark:text-neutral-400">
-                <Package className="w-8 h-8 text-[#9E9E9C] dark:text-neutral-500 mx-auto mb-1" />
-                <p className="font-semibold text-[#202124] dark:text-neutral-100">Không tìm thấy đơn đặt trước nào</p>
+              <div className="p-8 text-center space-y-1.5 text-xs text-muted dark:text-muted">
+                <Package className="w-8 h-8 text-muted dark:text-muted mx-auto mb-1" />
+                <p className="font-semibold text-foreground dark:text-foreground">Không tìm thấy đơn đặt trước nào</p>
                 <p>Thử tìm theo tên khách hoặc mã đơn khác.</p>
               </div>
             ) : (
@@ -277,17 +277,17 @@ export function PreorderPickupModal({
                 return (
                   <div
                     key={po.id}
-                    className="p-3 hover:bg-[#FBFBFA] dark:hover:bg-neutral-850 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                    className="p-3 hover:bg-background dark:hover:bg-surface transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
                   >
                     <div className="space-y-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="font-mono font-bold text-xs text-[#202124] dark:text-neutral-200 bg-[#F0F0ED] dark:bg-neutral-800 px-1.5 py-0.5 rounded border border-[#E8E8E5] dark:border-neutral-700">
+                        <span className="font-mono font-bold text-xs text-foreground dark:text-foreground bg-surface-hover dark:bg-surface-hover px-1.5 py-0.5 rounded border border-border dark:border-border">
                           #{po.code}
                         </span>
 
                         {po.preorder_type === 'vip_hold' ? (
-                          <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#8C5D17] dark:text-amber-300 bg-[#FEF7EC] dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-[#B7791F]/20 dark:border-amber-800/60">
-                            <Bookmark className="w-2.5 h-2.5 text-[#B7791F] dark:text-amber-400" />
+                          <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-warning dark:text-gold-text bg-warning-bg dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-warning/20 dark:border-amber-800/60">
+                            <Bookmark className="w-2.5 h-2.5 text-warning dark:text-gold-text" />
                             Giữ chỗ VIP
                           </span>
                         ) : (
@@ -316,35 +316,35 @@ export function PreorderPickupModal({
                       </div>
 
                       {/* Customer Info */}
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[#737373] dark:text-neutral-400">
-                        <span className="font-bold text-[#202124] dark:text-neutral-100 flex items-center gap-1">
-                          <User className="w-3 h-3 text-[#9E9E9C] dark:text-neutral-400" />
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-muted dark:text-muted">
+                        <span className="font-bold text-foreground dark:text-foreground flex items-center gap-1">
+                          <User className="w-3 h-3 text-muted dark:text-muted" />
                           {po.customer_name}
                         </span>
                         {po.customer_phone && (
                           <span className="flex items-center gap-1">
-                            <Phone className="w-3 h-3 text-[#9E9E9C] dark:text-neutral-400" />
+                            <Phone className="w-3 h-3 text-muted dark:text-muted" />
                             {po.customer_phone}
                           </span>
                         )}
                       </div>
 
                       {/* Merch Items */}
-                      <div className="text-[11px] text-[#202124] dark:text-neutral-200 font-medium pt-0.5">
+                      <div className="text-[11px] text-foreground dark:text-foreground font-medium pt-0.5">
                         {po.items.map((i, idx) => (
                           <span key={idx} className="mr-2 inline-block">
-                            • <strong className="text-[#315C4C] dark:text-emerald-400">{i.quantity}x</strong> {i.product_name} ({i.variant_name})
+                            • <strong className="text-primary dark:text-success">{i.quantity}x</strong> {i.product_name} ({i.variant_name})
                           </span>
                         ))}
                       </div>
 
                       {po.notes && (
-                        <p className="text-[10px] text-[#737373] dark:text-neutral-400 italic">Ghi chú: {po.notes}</p>
+                        <p className="text-[10px] text-muted dark:text-muted italic">Ghi chú: {po.notes}</p>
                       )}
 
                       {/* Picked up info */}
                       {isPickedUp && po.picked_up_at && (
-                        <div className="text-[10px] text-[#2F7D55] dark:text-emerald-400 font-medium flex items-center gap-1 pt-0.5">
+                        <div className="text-[10px] text-primary dark:text-success font-medium flex items-center gap-1 pt-0.5">
                           <CheckCircle2 className="w-3 h-3" />
                           <span>Đã giao lúc: {formatDate(po.picked_up_at)} ({po.picked_up_by})</span>
                         </div>
@@ -369,7 +369,7 @@ export function PreorderPickupModal({
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 text-xs gap-1 border-[#2F7D55]/30 dark:border-emerald-800 text-[#2F7D55] dark:text-emerald-400 hover:bg-[#EBF1EE] dark:hover:bg-emerald-950/40"
+                            className="h-8 text-xs gap-1 border-primary/30 dark:border-emerald-800 text-primary dark:text-success hover:bg-warning-bg dark:hover:bg-success-bg/40"
                             onClick={() => setViewProofUrl(po.proof_image_url!)}
                           >
                             <ImageIcon className="w-3.5 h-3.5" />
@@ -401,7 +401,7 @@ export function PreorderPickupModal({
                           <Button
                             variant="primary"
                             size="sm"
-                            className="h-8 text-xs gap-1.5 bg-[#B7791F] hover:bg-[#975F16] dark:bg-amber-600 dark:hover:bg-amber-700 border-none text-white font-bold shadow-xs cursor-pointer"
+                            className="h-8 text-xs gap-1.5 bg-warning hover:bg-[#975F16] dark:bg-amber-600 dark:hover:bg-amber-700 border-none text-white font-bold shadow-xs cursor-pointer"
                             onClick={() => {
                               setSelectedPreorder(po);
                               setProofImage(null);
@@ -421,7 +421,7 @@ export function PreorderPickupModal({
             )}
           </div>
 
-          <div className="flex items-center justify-between text-xs text-[#737373] pt-1">
+          <div className="flex items-center justify-between text-xs text-muted pt-1">
             <span>Toàn bộ hàng đặt trước đã được giữ riêng trong kho, không bán lẻ tại quầy.</span>
             <Button variant="outline" size="sm" onClick={onClose}>
               Đóng
@@ -446,19 +446,19 @@ export function PreorderPickupModal({
         {selectedPreorder && (
           <div className="space-y-4 text-xs">
             {/* Customer & Item Summary */}
-            <div className="p-3 bg-[#F7F7F5] dark:bg-neutral-800 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 space-y-1.5">
-              <div className="flex items-center justify-between font-bold text-sm text-[#202124] dark:text-neutral-100">
+            <div className="p-3 bg-background dark:bg-surface-hover rounded-lg border border-border dark:border-border space-y-1.5">
+              <div className="flex items-center justify-between font-bold text-sm text-foreground dark:text-foreground">
                 <span>Khách hàng: {selectedPreorder.customer_name}</span>
-                <span className="text-[#315C4C] dark:text-emerald-400">
+                <span className="text-primary dark:text-success">
                   {formatCurrency(selectedPreorder.total_amount, activeWorkspace?.currency || 'VND')}
                 </span>
               </div>
-              <p className="text-[#737373] dark:text-neutral-400">
+              <p className="text-muted dark:text-muted">
                 Điện thoại: {selectedPreorder.customer_phone || 'Chưa cung cấp'}
               </p>
-              <div className="pt-1 border-t border-[#E8E8E5] dark:border-neutral-700">
-                <span className="font-semibold text-[#202124] dark:text-neutral-100 block mb-1">Mặt hàng bàn giao:</span>
-                <ul className="space-y-0.5 list-disc pl-4 text-[#202124] dark:text-neutral-200">
+              <div className="pt-1 border-t border-border dark:border-border">
+                <span className="font-semibold text-foreground dark:text-foreground block mb-1">Mặt hàng bàn giao:</span>
+                <ul className="space-y-0.5 list-disc pl-4 text-foreground dark:text-foreground">
                   {selectedPreorder.items.map((i, idx) => (
                     <li key={idx}>
                       <strong>{i.quantity} món</strong> — {i.product_name} ({i.variant_name})
@@ -470,8 +470,8 @@ export function PreorderPickupModal({
 
             {/* MANDATORY PROOF CAPTURE SECTION */}
             <div className="space-y-2">
-              <Label required className="text-xs font-bold text-[#202124] dark:text-neutral-100 flex items-center gap-1.5">
-                <Camera className="w-4 h-4 text-[#C44536]" />
+              <Label required className="text-xs font-bold text-foreground dark:text-foreground flex items-center gap-1.5">
+                <Camera className="w-4 h-4 text-error" />
                 <span>Ảnh Minh Chứng Nhận Hàng (BẮT BUỘC)</span>
               </Label>
 
@@ -494,8 +494,8 @@ export function PreorderPickupModal({
 
               {proofImage ? (
                 /* Photo Preview */
-                <div className="relative rounded-[8px] border-2 border-[#2F7D55] dark:border-emerald-600 p-2 bg-[#EBF1EE]/40 dark:bg-emerald-950/20 text-center space-y-2">
-                  <div className="relative max-h-48 overflow-hidden rounded-[6px] flex items-center justify-center bg-black/5 dark:bg-black/40">
+                <div className="relative rounded-lg border-2 border-primary dark:border-emerald-600 p-2 bg-warning-bg/40 dark:bg-success-bg/20 text-center space-y-2">
+                  <div className="relative max-h-48 overflow-hidden rounded-lg flex items-center justify-center bg-black/5 dark:bg-black/40">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={proofImage}
@@ -512,7 +512,7 @@ export function PreorderPickupModal({
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-center gap-1.5 text-[#2F7D55] dark:text-emerald-300 font-bold text-xs">
+                  <div className="flex items-center justify-center gap-1.5 text-primary dark:text-success font-bold text-xs">
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Đã ghi nhận ảnh minh chứng hợp lệ!</span>
                   </div>
@@ -530,16 +530,16 @@ export function PreorderPickupModal({
                 </div>
               ) : (
                 /* Photo Capture Buttons */
-                <div className="p-4 border-2 border-dashed border-[#B7791F]/40 dark:border-amber-800/60 rounded-[8px] bg-[#FEF7EC]/50 dark:bg-amber-950/20 text-center space-y-3">
-                  <div className="w-10 h-10 rounded-full bg-[#FEF7EC] dark:bg-amber-950/60 text-[#B7791F] dark:text-amber-400 flex items-center justify-center mx-auto">
+                <div className="p-4 border-2 border-dashed border-warning/40 dark:border-amber-800/60 rounded-lg bg-warning-bg/50 dark:bg-amber-950/20 text-center space-y-3">
+                  <div className="w-10 h-10 rounded-full bg-warning-bg dark:bg-amber-950/60 text-warning dark:text-gold-text flex items-center justify-center mx-auto">
                     <Camera className="w-5 h-5" />
                   </div>
 
                   <div>
-                    <p className="font-bold text-[#8C5D17] dark:text-amber-300 text-xs">
+                    <p className="font-bold text-warning dark:text-gold-text text-xs">
                       Chụp ảnh khách nhận hàng / Biên lai đối chiếu
                     </p>
-                    <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-0.5 max-w-xs mx-auto">
+                    <p className="text-[11px] text-muted dark:text-muted mt-0.5 max-w-xs mx-auto">
                       Để tránh khiếu nại hoặc mất mát, hệ thống yêu cầu ảnh minh chứng trước khi kích hoạt nút xác nhận.
                     </p>
                   </div>
@@ -549,7 +549,7 @@ export function PreorderPickupModal({
                       type="button"
                       variant="primary"
                       size="sm"
-                      className="w-full sm:w-auto text-xs gap-1.5 bg-[#B7791F] hover:bg-[#975F16] dark:bg-amber-600 dark:hover:bg-amber-700 border-none text-white font-bold"
+                      className="w-full sm:w-auto text-xs gap-1.5 bg-warning hover:bg-[#975F16] dark:bg-amber-600 dark:hover:bg-amber-700 border-none text-white font-bold"
                       onClick={() => cameraInputRef.current?.click()}
                     >
                       <Camera className="w-3.5 h-3.5" />
@@ -560,7 +560,7 @@ export function PreorderPickupModal({
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="w-full sm:w-auto text-xs gap-1.5 bg-white dark:bg-neutral-800"
+                      className="w-full sm:w-auto text-xs gap-1.5 bg-surface dark:bg-surface-hover"
                       onClick={() => fileInputRef.current?.click()}
                     >
                       <Upload className="w-3.5 h-3.5" />
@@ -573,7 +573,7 @@ export function PreorderPickupModal({
 
             {/* Error Message */}
             {errorMessage && (
-              <div className="p-2.5 bg-[#FDF1F0] border border-[#F8B4AF] text-[#C44536] rounded-[6px] font-semibold text-xs flex items-center gap-1.5">
+              <div className="p-2.5 bg-error-bg border border-[#F8B4AF] text-error rounded-lg font-semibold text-xs flex items-center gap-1.5">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span>{errorMessage}</span>
               </div>
@@ -592,7 +592,7 @@ export function PreorderPickupModal({
             </div>
 
             {/* Modal Actions */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-[#F0F0ED] dark:border-neutral-800">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-border dark:border-border">
               <Button
                 type="button"
                 variant="outline"
@@ -628,8 +628,8 @@ export function PreorderPickupModal({
                   disabled={!proofImage || isSubmitting}
                   className={`font-bold text-xs gap-1.5 ${
                     proofImage
-                      ? 'bg-[#2F7D55] hover:bg-[#256344] text-white'
-                      : 'bg-[#E8E8E5] dark:bg-neutral-800 text-[#9E9E9C] dark:text-neutral-500 cursor-not-allowed'
+                      ? 'bg-primary hover:bg-[#256344] text-primary-foreground'
+                      : 'bg-surface-hover dark:bg-surface-hover text-muted dark:text-muted cursor-not-allowed'
                   }`}
                   onClick={handleConfirmPickup}
                 >
@@ -658,7 +658,7 @@ export function PreorderPickupModal({
         {rejectTarget && (
           <div className="space-y-4 text-xs">
             {/* Target Customer Info */}
-            <div className="p-3 bg-red-50/60 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 rounded-[8px] space-y-1.5">
+            <div className="p-3 bg-red-50/60 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 rounded-lg space-y-1.5">
               <div className="flex items-center justify-between font-bold text-sm text-red-900 dark:text-red-200">
                 <span>Khách hàng: {rejectTarget.customer_name}</span>
                 <span>{formatCurrency(rejectTarget.total_amount, activeWorkspace?.currency || 'VND')}</span>
@@ -666,7 +666,7 @@ export function PreorderPickupModal({
               <p className="text-red-700 dark:text-red-300">
                 SĐT: {rejectTarget.customer_phone || 'Chưa cung cấp'}
               </p>
-              <div className="pt-1 border-t border-red-200/60 dark:border-red-800/60 text-neutral-800 dark:text-neutral-200">
+              <div className="pt-1 border-t border-red-200/60 dark:border-red-800/60 text-muted dark:text-foreground">
                 <span className="font-semibold block mb-0.5">Sản phẩm đang giữ chỗ:</span>
                 <ul className="list-disc pl-4 space-y-0.5">
                   {rejectTarget.items.map((i, idx) => (
@@ -679,7 +679,7 @@ export function PreorderPickupModal({
             </div>
 
             {/* Warning Alert */}
-            <div className="flex items-start gap-2 p-2.5 rounded-[6px] bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300">
+            <div className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-gold-text dark:text-gold-text">
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
               <p className="text-[11px] leading-relaxed">
                 <strong>Lưu ý:</strong> Khi xác nhận từ chối, toàn bộ số lượng sản phẩm trên sẽ được <strong>tự động hoàn trả về kho khả dụng</strong> ngay lập tức để tiếp tục bán tại quầy hoặc cho khách khác.
@@ -688,7 +688,7 @@ export function PreorderPickupModal({
 
             {/* Reason Selection */}
             <div className="space-y-2">
-              <Label className="font-bold text-neutral-800 dark:text-neutral-200">
+              <Label className="font-bold text-muted dark:text-foreground">
                 Lý do từ chối bàn giao / hủy giữ chỗ:
               </Label>
               <div className="space-y-1.5">
@@ -701,10 +701,10 @@ export function PreorderPickupModal({
                 ].map((r) => (
                   <label
                     key={r}
-                    className={`flex items-center gap-2 p-2 rounded-[6px] border cursor-pointer transition-colors ${
+                    className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-colors ${
                       rejectReason === r
                         ? 'border-red-500 bg-red-50/50 dark:bg-red-950/40 text-red-900 dark:text-red-200 font-semibold'
-                        : 'border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 text-neutral-700 dark:text-neutral-300'
+                        : 'border-border dark:border-border hover:bg-surface-hover dark:hover:bg-surface text-muted dark:text-muted'
                     }`}
                   >
                     <input
@@ -733,7 +733,7 @@ export function PreorderPickupModal({
             </div>
 
             {/* Modal Actions */}
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-200 dark:border-neutral-800">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-border dark:border-border">
               <Button
                 type="button"
                 variant="outline"
@@ -770,7 +770,7 @@ export function PreorderPickupModal({
       >
         {viewProofUrl && (
           <div className="space-y-3 text-center">
-            <div className="max-h-[450px] overflow-hidden rounded-[8px] border border-[#E8E8E5] dark:border-neutral-800 bg-[#F7F7F5] dark:bg-neutral-900 flex items-center justify-center p-2">
+            <div className="max-h-[450px] overflow-hidden rounded-lg border border-border dark:border-border bg-background dark:bg-surface flex items-center justify-center p-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={viewProofUrl}

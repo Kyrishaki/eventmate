@@ -43,9 +43,9 @@ export default function PosSyncPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F7F5] flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Top Header */}
-      <header className="h-14 sm:h-16 bg-white border-b border-[#E8E8E5] px-3 sm:px-4 flex items-center justify-between gap-2 sticky top-0 z-30 shadow-2xs">
+      <header className="h-14 sm:h-16 bg-surface border-b border-border px-3 sm:px-4 flex items-center justify-between gap-2 sticky top-0 z-30 shadow-2xs">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link href="/pos">
             <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs gap-1 font-semibold">
@@ -56,12 +56,12 @@ export default function PosSyncPage() {
           <div className="flex items-center gap-2 min-w-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="Logo" className="h-8 w-auto max-w-[44px] object-contain hidden sm:block shrink-0" />
-            <h1 className="text-sm font-bold text-[#202124] truncate">Đồng bộ Ngoại tuyến</h1>
+            <h1 className="text-sm font-bold text-foreground truncate">Đồng bộ Ngoại tuyến</h1>
           </div>
         </div>
 
         <Link href="/dashboard" className="shrink-0">
-          <Button variant="ghost" size="sm" className="h-8 px-2.5 text-xs font-semibold text-[#315C4C]">
+          <Button variant="ghost" size="sm" className="h-8 px-2.5 text-xs font-semibold text-primary">
             Quản lý
           </Button>
         </Link>
@@ -70,7 +70,7 @@ export default function PosSyncPage() {
       {/* Main Content */}
       <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-5">
         {syncResult && (
-          <div className="p-3 bg-[#EAF4EE] border border-[#CEE6D7] text-[#2F7D55] text-xs rounded-[6px] flex items-center gap-2">
+          <div className="p-3 bg-success-bg border border-[#CEE6D7] text-primary text-xs rounded-lg flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span>{syncResult}</span>
           </div>
@@ -78,37 +78,37 @@ export default function PosSyncPage() {
 
         {/* Sync Summary Cards */}
         <div className="grid grid-cols-1 min-[480px]:grid-cols-3 gap-3">
-          <Card className="p-3.5 sm:p-4 bg-white border-[#E8E8E5] shadow-2xs">
-            <span className="text-xs text-[#737373]">Chờ đồng bộ (Pending)</span>
-            <div className="text-xl sm:text-2xl font-bold text-[#B7791F] mt-1">
+          <Card className="p-3.5 sm:p-4 bg-surface border-border shadow-2xs">
+            <span className="text-xs text-muted">Chờ đồng bộ (Pending)</span>
+            <div className="text-xl sm:text-2xl font-bold text-warning mt-1">
               {pendingOrders.length} đơn
             </div>
-            <p className="text-[10px] text-[#737373] mt-0.5">Lưu trữ trong IndexedDB</p>
+            <p className="text-[10px] text-muted mt-0.5">Lưu trữ trong IndexedDB</p>
           </Card>
 
-          <Card className="p-3.5 sm:p-4 bg-white border-[#E8E8E5] shadow-2xs">
-            <span className="text-xs text-[#737373]">Đã xác nhận (Confirmed)</span>
-            <div className="text-xl sm:text-2xl font-bold text-[#2F7D55] mt-1">
+          <Card className="p-3.5 sm:p-4 bg-surface border-border shadow-2xs">
+            <span className="text-xs text-muted">Đã xác nhận (Confirmed)</span>
+            <div className="text-xl sm:text-2xl font-bold text-primary mt-1">
               {syncedOrders.length} đơn
             </div>
-            <p className="text-[10px] text-[#737373] mt-0.5">Đã tải lên Supabase</p>
+            <p className="text-[10px] text-muted mt-0.5">Đã tải lên Supabase</p>
           </Card>
 
-          <Card className="p-3.5 sm:p-4 bg-white border-[#E8E8E5] shadow-2xs">
-            <span className="text-xs text-[#737373]">Bộ nhớ cục bộ</span>
-            <div className="text-xl sm:text-2xl font-bold text-[#202124] mt-1 font-mono">
+          <Card className="p-3.5 sm:p-4 bg-surface border-border shadow-2xs">
+            <span className="text-xs text-muted">Bộ nhớ cục bộ</span>
+            <div className="text-xl sm:text-2xl font-bold text-foreground mt-1 font-mono">
               Dexie.js
             </div>
-            <p className="text-[10px] text-[#737373] mt-0.5">Sẵn sàng 100% khi mất mạng</p>
+            <p className="text-[10px] text-muted mt-0.5">Sẵn sàng 100% khi mất mạng</p>
           </Card>
         </div>
 
         {/* Sync Action Card */}
-        <Card className="border-[#E8E8E5] bg-white shadow-xs p-5 sm:p-6 text-center space-y-3">
-          <RefreshCw className={`w-8 h-8 text-[#315C4C] mx-auto ${isSyncing ? 'animate-spin' : ''}`} />
+        <Card className="border-border bg-surface shadow-xs p-5 sm:p-6 text-center space-y-3">
+          <RefreshCw className={`w-8 h-8 text-primary mx-auto ${isSyncing ? 'animate-spin' : ''}`} />
           <div>
-            <h3 className="text-base font-bold text-[#202124]">Đồng bộ Hàng đợi Đơn hàng</h3>
-            <p className="text-xs text-[#737373] max-w-md mx-auto mt-1">
+            <h3 className="text-base font-bold text-foreground">Đồng bộ Hàng đợi Đơn hàng</h3>
+            <p className="text-xs text-muted max-w-md mx-auto mt-1">
               Hệ thống sử dụng cơ chế Idempotency Key để đảm bảo không bao giờ bị nhân đôi đơn hàng khi kết nối lại mạng Internet.
             </p>
           </div>
@@ -131,25 +131,25 @@ export default function PosSyncPage() {
 
         {/* Pending Orders Detail list */}
         {pendingOrders.length > 0 && (
-          <Card className="border-[#E8E8E5] bg-white shadow-xs overflow-hidden">
-            <CardHeader className="py-3 px-4 sm:px-5 bg-[#FAFAF8] border-b border-[#E8E8E5]">
-              <CardTitle className="text-xs font-semibold text-[#737373] uppercase tracking-wider">
+          <Card className="border-border bg-surface shadow-xs overflow-hidden">
+            <CardHeader className="py-3 px-4 sm:px-5 bg-background border-b border-border">
+              <CardTitle className="text-xs font-semibold text-muted uppercase tracking-wider">
                 Danh sách đơn hàng đang chờ đẩy lên máy chủ
               </CardTitle>
             </CardHeader>
-            <div className="divide-y divide-[#F0F0ED]">
+            <div className="divide-y divide-border">
               {pendingOrders.map((ord) => (
                 <div key={ord.id} className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                   <div className="min-w-0 flex-1">
-                    <span className="font-mono font-bold text-[#202124]">
+                    <span className="font-mono font-bold text-foreground">
                       {ord.order_number}
                     </span>
-                    <p className="text-[11px] text-[#737373] mt-0.5 break-all">
+                    <p className="text-[11px] text-muted mt-0.5 break-all">
                       Tạo lúc: {formatDate(ord.created_at)} • Idempotency:{' '}
                       <span className="font-mono">{ord.idempotency_key}</span>
                     </p>
                   </div>
-                  <span className="font-bold text-[#315C4C] text-sm shrink-0">
+                  <span className="font-bold text-primary text-sm shrink-0">
                     {formatCurrency(ord.final_amount, activeWorkspace?.currency || 'VND')}
                   </span>
                 </div>

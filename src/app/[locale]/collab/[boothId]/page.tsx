@@ -83,22 +83,22 @@ export default function CollabPartnerRedirectPage() {
   }, [boothId, searchParams, booths, events, activeWorkspace, createBooth, createEvent, enterCollabPreview, router]);
 
   return (
-    <div className="min-h-screen bg-[#F7F7F5] dark:bg-neutral-950 flex flex-col items-center justify-center p-6 text-center select-none">
-      <div className="max-w-md w-full bg-white dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-800 rounded-2xl p-8 shadow-sm space-y-5">
+    <div className="min-h-screen bg-background dark:bg-background flex flex-col items-center justify-center p-6 text-center select-none">
+      <div className="max-w-md w-full bg-surface dark:bg-surface border border-border dark:border-border rounded-2xl p-8 shadow-sm space-y-5">
         <div className="w-14 h-14 rounded-2xl bg-[#FAF5FF] dark:bg-purple-950/50 border border-[#A855F7]/30 text-[#9333EA] dark:text-purple-300 flex items-center justify-center mx-auto shadow-2xs">
           <Handshake className="w-7 h-7" />
         </div>
 
         <div className="space-y-1.5">
-          <h2 className="text-lg font-bold text-[#202124] dark:text-neutral-100 tracking-tight">
+          <h2 className="text-lg font-bold text-foreground dark:text-foreground tracking-tight">
             Cổng Quản Trị Đối Tác Collab
           </h2>
-          <p className="text-xs text-[#737373] dark:text-neutral-400">
+          <p className="text-xs text-muted dark:text-muted">
             Hệ thống dùng chung giao diện Quản trị chuẩn HikaruStore. Hàng kho Admin được bảo vệ an toàn ở chế độ Chỉ đọc.
           </p>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-[#F7F7F5] dark:bg-neutral-800/60 border border-[#E8E8E5] dark:border-neutral-700/60 flex items-center justify-center gap-2.5 text-xs text-[#315C4C] dark:text-emerald-400 font-medium">
+        <div className="p-3.5 rounded-xl bg-background dark:bg-surface-hover/60 border border-border dark:border-border/60 flex items-center justify-center gap-2.5 text-xs text-primary dark:text-success font-medium">
           <Loader2 className="w-4 h-4 animate-spin shrink-0" />
           <span>{statusMessage}</span>
         </div>
@@ -106,7 +106,7 @@ export default function CollabPartnerRedirectPage() {
         <button
           type="button"
           onClick={() => router.replace('/dashboard')}
-          className="inline-flex items-center gap-1.5 text-xs text-[#737373] hover:text-[#202124] dark:hover:text-white font-medium cursor-pointer"
+          className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-foreground dark:hover:text-white font-medium cursor-pointer"
         >
           <span>Nhấn vào đây nếu không tự chuyển trang</span>
           <ArrowRight className="w-3.5 h-3.5" />

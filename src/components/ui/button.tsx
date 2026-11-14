@@ -25,23 +25,23 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      'astryx-button relative inline-flex items-center justify-center font-semibold text-center select-none transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--color-accent,#315C4C)] disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98] cursor-pointer rounded-[var(--radius-container,8px)]';
+      'astryx-button relative inline-flex items-center justify-center font-semibold text-center select-none transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98] cursor-pointer rounded-xl';
 
     const variants = {
       primary:
-        'bg-[#315C4C] hover:bg-[#284A3D] text-white shadow-xs border border-[#315C4C]/20 dark:bg-[#3E7A65] dark:hover:bg-[#4C8E77]',
+        'bg-primary hover:bg-primary-hover text-primary-foreground shadow-xs border border-primary/20 dark:bg-primary dark:hover:bg-primary-hover',
       gold:
-        'bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-neutral-950 font-bold shadow-xs border border-amber-600/30 dark:bg-amber-500 dark:hover:bg-amber-400',
+        'bg-primary hover:bg-primary-hover text-primary-foreground font-bold border border-primary',
       secondary:
-        'bg-[var(--color-surface,#FFFFFF)] hover:bg-[var(--color-surface-hover,#F0F0ED)] text-[var(--color-text-primary,#202124)] border border-[var(--color-border,#E8E8E5)] dark:bg-[#1B1D22] dark:hover:bg-[#24272E] dark:border-[#2C3038] dark:text-[#F2F3F5] shadow-2xs',
+        'bg-surface hover:bg-surface-hover text-foreground border border-border dark:bg-surface dark:hover:bg-surface-hover dark:border-border dark:text-foreground shadow-2xs',
       red:
-        'bg-[#C44536] hover:bg-[#AB3C2E] active:bg-[#923326] text-white font-bold shadow-xs border border-[#C44536]/30',
+        'bg-error-bg hover:bg-error-bg/80 text-error font-bold border border-error/40',
       outline:
-        'border border-[var(--color-border,#E8E8E5)] dark:border-[#2C3038] bg-transparent text-[var(--color-text-primary,#202124)] hover:bg-[var(--color-surface-hover,#F0F0ED)] dark:text-[#F2F3F5] dark:hover:bg-[#24272E]',
+        'border border-border dark:border-border bg-transparent text-foreground hover:bg-surface-hover dark:text-foreground dark:hover:bg-surface-hover',
       ghost:
-        'bg-transparent text-[var(--color-text-secondary,#737373)] hover:text-[var(--color-text-primary,#202124)] hover:bg-[var(--color-surface-hover,#F0F0ED)] dark:text-[#9BA1A6] dark:hover:text-white dark:hover:bg-[#24272E]',
+        'bg-transparent text-muted hover:text-foreground hover:bg-surface-hover dark:text-muted dark:hover:text-white dark:hover:bg-surface-hover',
       destructive:
-        'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 active:bg-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-950/70',
+        'bg-error-bg text-error border border-error/40 hover:bg-error-bg/80',
     };
 
     const elevations = {
@@ -52,10 +52,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const sizes = {
-      sm: 'h-8 px-3 text-xs gap-1.5',
-      md: 'h-9 px-4 text-sm gap-2',
-      lg: 'h-11 px-5 text-base gap-2.5',
-      icon: 'h-9 w-9 p-0 aspect-square',
+      sm: 'min-h-11 px-3 text-sm gap-1.5',
+      md: 'min-h-11 px-4 text-sm gap-2',
+      lg: 'min-h-14 px-5 text-base gap-2.5',
+      icon: 'min-h-11 min-w-11 p-0 aspect-square',
     };
 
     return (

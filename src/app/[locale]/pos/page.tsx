@@ -762,23 +762,23 @@ export default function PosTerminalPage() {
 
   if (!hasAuthHydrated) {
     return (
-      <div className="min-h-screen bg-[#F7F7F5] flex flex-col items-center justify-center p-4">
-        <div className="w-8 h-8 border-3 border-[#315C4C] border-t-transparent rounded-full animate-spin" />
-        <span className="text-xs text-[#737373] mt-3 font-medium">Đang khôi phục ca bán hàng...</span>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs text-muted mt-3 font-medium">Đang khôi phục ca bán hàng...</span>
       </div>
     );
   }
 
   if (!isAuthenticated || !user) {
     return (
-      <div className="min-h-screen bg-[#F7F7F5] flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-sm bg-white border border-[#E8E8E5] rounded-[8px] p-6 text-center space-y-4 shadow-xs">
-          <div className="w-12 h-12 rounded-full bg-[#EBF1EE] text-[#315C4C] flex items-center justify-center mx-auto">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-sm bg-surface border border-border rounded-lg p-6 text-center space-y-4 shadow-xs">
+          <div className="w-12 h-12 rounded-full bg-warning-bg text-primary flex items-center justify-center mx-auto">
             <Store className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-[#202124]">Màn hình Bán hàng</h3>
-            <p className="text-xs text-[#737373] mt-1 leading-relaxed">
+            <h3 className="text-base font-bold text-foreground">Màn hình Bán hàng</h3>
+            <p className="text-xs text-muted mt-1 leading-relaxed">
               Vui lòng đăng nhập bằng tài khoản Thu ngân hoặc Quản trị viên để bán hàng tại quầy.
             </p>
           </div>
@@ -793,7 +793,7 @@ export default function PosTerminalPage() {
               variant="outline"
               size="md"
               onClick={loginAsGuest}
-              className="w-full text-xs text-[#737373] gap-1.5"
+              className="w-full text-xs text-muted gap-1.5"
             >
               <Eye className="w-3.5 h-3.5" />
               <span>Xem giao diện với tư cách Khách</span>
@@ -805,9 +805,9 @@ export default function PosTerminalPage() {
   }
 
   return (
-    <div className="min-h-screen lg:h-[100dvh] lg:overflow-hidden bg-[#F7F7F5] flex flex-col select-none">
+    <div className="min-h-screen lg:h-[100dvh] lg:overflow-hidden bg-background flex flex-col select-none">
       {/* POS Top Navigation Bar */}
-      <header className="bg-white border-b border-[#E8E8E5] sticky top-0 z-30 shadow-2xs shrink-0">
+      <header className="bg-surface border-b border-border sticky top-0 z-30 shadow-2xs shrink-0">
         {/* Main Bar */}
         <div className="h-14 sm:h-16 px-3 sm:px-5 flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
@@ -821,22 +821,22 @@ export default function PosTerminalPage() {
                 />
               </div>
               <div className="hidden md:flex flex-col">
-                <span className="font-extrabold text-sm sm:text-base text-[#202124] leading-tight">HikaruStore</span>
-                <span className="text-[10.5px] text-[#315C4C] font-bold leading-none">Bán hàng</span>
+                <span className="font-extrabold text-sm sm:text-base text-foreground leading-tight">HikaruStore</span>
+                <span className="text-[10.5px] text-primary font-bold leading-none">Bán hàng</span>
               </div>
             </Link>
 
             <Link href="/dashboard" title="Về trang Quản lý">
-              <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs text-[#737373] hover:text-[#202124] gap-1">
+              <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs text-muted hover:text-foreground gap-1">
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span className="font-semibold hidden sm:inline">Quản lý</span>
               </Button>
             </Link>
 
             {/* Desktop selectors */}
-            <div className="hidden sm:flex items-center gap-2 border-l border-[#E8E8E5] pl-2.5 min-w-0">
+            <div className="hidden sm:flex items-center gap-2 border-l border-border pl-2.5 min-w-0">
               <select
-                className="h-8 rounded-[4px] border border-[#E8E8E5] bg-[#F7F7F5] px-2 text-xs font-semibold text-[#202124] focus:outline-none focus:border-[#315C4C] max-w-[170px] truncate"
+                className="h-8 rounded-lg border border-border bg-background px-2 text-xs font-semibold text-foreground focus:outline-none focus:border-primary max-w-[170px] truncate"
                 value={selectedEventId}
                 onChange={(e) => handleSelectEvent(e.target.value)}
               >
@@ -849,7 +849,7 @@ export default function PosTerminalPage() {
               </select>
 
               <select
-                className="h-8 rounded-[4px] border border-[#315C4C]/40 bg-[#F7F7F5] px-2 text-xs font-bold text-[#315C4C] focus:outline-none focus:border-[#315C4C] max-w-[150px] truncate"
+                className="h-8 rounded-lg border border-primary/40 bg-background px-2 text-xs font-bold text-primary focus:outline-none focus:border-primary max-w-[150px] truncate"
                 value={selectedBoothId}
                 onChange={(e) => handleSelectBooth(e.target.value)}
               >
@@ -871,15 +871,15 @@ export default function PosTerminalPage() {
               onClick={() => setIsOfflineModalOpen(true)}
               className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold border transition-colors cursor-pointer ${
                 isOnline
-                  ? 'bg-[#EAF4EE] text-[#2F7D55] border-[#CEE6D7]'
-                  : 'bg-[#FEF7EC] text-[#B7791F] border-[#F8E3C3]'
+                  ? 'bg-success-bg text-primary border-[#CEE6D7]'
+                  : 'bg-warning-bg text-warning border-[#F8E3C3]'
               }`}
               title="Xem trạng thái mạng & đồng bộ ngoại tuyến"
             >
-              <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-[#2F7D55]' : 'bg-[#B7791F]'}`} />
+              <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-primary' : 'bg-warning'}`} />
               <span>{isOnline ? 'Online' : 'Offline'}</span>
               {pendingOrdersCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-[#B7791F] text-white text-[9px] font-mono flex items-center justify-center">
+                <span className="w-4 h-4 rounded-full bg-warning text-white text-[9px] font-mono flex items-center justify-center">
                   {pendingOrdersCount}
                 </span>
               )}
@@ -889,7 +889,7 @@ export default function PosTerminalPage() {
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(true)}
-              className="p-1.5 rounded-[6px] border border-[#E8E8E5] bg-white text-[#737373] hover:text-[#202124] active:bg-[#F0F0ED] transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg border border-border bg-surface text-muted hover:text-foreground active:bg-surface-hover transition-colors cursor-pointer"
               aria-label="Menu tác vụ POS"
               title="Menu tác vụ POS"
             >
@@ -900,7 +900,7 @@ export default function PosTerminalPage() {
             <button
               type="button"
               onClick={() => setIsMobileCartOpen(true)}
-              className="relative p-2 rounded-[6px] bg-amber-500 text-neutral-950 font-bold active:scale-95 transition-transform cursor-pointer border border-amber-600/30"
+              className="relative p-2 rounded-lg bg-primary text-primary-foreground font-bold active:scale-95 transition-transform cursor-pointer border border-primary/30"
               aria-label="Giỏ hàng"
             >
               <ShoppingCart className="w-4 h-4" />
@@ -920,15 +920,15 @@ export default function PosTerminalPage() {
               onClick={() => setIsOfflineModalOpen(true)}
               className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium border cursor-pointer ${
                 isOnline
-                  ? 'bg-[#EAF4EE] text-[#2F7D55] border-[#CEE6D7]'
-                  : 'bg-[#FEF7EC] text-[#B7791F] border-[#F8E3C3]'
+                  ? 'bg-success-bg text-primary border-[#CEE6D7]'
+                  : 'bg-warning-bg text-warning border-[#F8E3C3]'
               }`}
               title="Trạng thái mạng & Đồng bộ dữ liệu ngoại tuyến"
             >
-              <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-[#2F7D55]' : 'bg-[#B7791F]'}`} />
+              <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-primary' : 'bg-warning'}`} />
               <span className="text-[11px] font-semibold">{isOnline ? 'Online' : 'Offline'}</span>
               {pendingOrdersCount > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#B7791F] text-white font-mono">
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-warning text-white font-mono">
                   {pendingOrdersCount} chờ đẩy
                 </span>
               )}
@@ -938,14 +938,14 @@ export default function PosTerminalPage() {
             <Button
               variant="outline"
               size="sm"
-              className="h-8 px-2.5 text-xs gap-1.5 border-[#B7791F]/40 text-[#8C5D17] hover:bg-[#FEF7EC] font-bold shadow-2xs"
+              className="h-8 px-2.5 text-xs gap-1.5 border-warning/40 text-warning hover:bg-warning-bg font-bold shadow-2xs"
               onClick={() => setIsPreorderPickupOpen(true)}
               title="Giao hàng cho khách đặt trước (Keep hàng - Cần chụp ảnh minh chứng)"
             >
-              <Package className="w-3.5 h-3.5 text-[#B7791F]" />
+              <Package className="w-3.5 h-3.5 text-warning" />
               <span>Giao Keep</span>
               {pendingPreordersCount > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#B7791F] text-white font-mono">
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-warning text-white font-mono">
                   {pendingPreordersCount}
                 </span>
               )}
@@ -958,8 +958,8 @@ export default function PosTerminalPage() {
               onClick={() => setIsShiftModalOpen(true)}
               className={`h-8 px-2 sm:px-2.5 text-xs gap-1.5 font-semibold shadow-2xs ${
                 activeShift && activeShift.status === 'open'
-                  ? 'border-[#2F7D55]/40 text-[#2F7D55] bg-[#EAF4EE] hover:bg-[#D8EDE0]'
-                  : 'border-[#B7791F]/40 text-[#8C5D17] bg-[#FEF7EC] hover:bg-[#FDF2E9]'
+                  ? 'border-primary/40 text-primary bg-success-bg hover:bg-[#D8EDE0]'
+                  : 'border-warning/40 text-warning bg-warning-bg hover:bg-warning-bg'
               }`}
               title={
                 activeShift && activeShift.status === 'open'
@@ -972,7 +972,7 @@ export default function PosTerminalPage() {
                 {activeShift && activeShift.status === 'open' ? 'Chốt ca' : 'Mở ca'}
               </span>
               {activeShift && activeShift.status === 'open' && (
-                <span className="w-1.5 h-1.5 rounded-full bg-[#2F7D55] animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
               )}
             </Button>
 
@@ -986,11 +986,11 @@ export default function PosTerminalPage() {
             <Button
               variant="outline"
               size="sm"
-              className="h-8 px-2 text-xs gap-1 text-[#C44536] border-[#C44536]/30 hover:bg-[#FDF1F0]"
+              className="h-8 px-2 text-xs gap-1 text-error border-error/30 hover:bg-error-bg"
               onClick={() => setIsFeedbackOpen(true)}
               title="Góp ý hoặc báo lỗi hệ thống"
             >
-              <Bug className="w-3.5 h-3.5 text-[#C44536]" />
+              <Bug className="w-3.5 h-3.5 text-error" />
               <span>Góp ý</span>
             </Button>
 
@@ -1001,9 +1001,9 @@ export default function PosTerminalPage() {
 
         {/* Offline Notice Banner */}
         {!isOnline && (
-          <div className="bg-[#FEF7EC] border-t border-b border-[#F8E3C3] px-3 sm:px-5 py-1.5 text-xs text-[#8C5D17] flex items-center justify-between">
+          <div className="bg-warning-bg border-t border-b border-[#F8E3C3] px-3 sm:px-5 py-1.5 text-xs text-warning flex items-center justify-between">
             <div className="flex items-center gap-2 truncate">
-              <WifiOff className="w-3.5 h-3.5 shrink-0 text-[#B7791F]" />
+              <WifiOff className="w-3.5 h-3.5 shrink-0 text-warning" />
               <span className="font-medium truncate">
                 Đang ở chế độ Bán Hàng Ngoại Tuyến (Offline) — Đơn hàng sẽ được lưu vào thiết bị (IndexedDB).
               </span>
@@ -1011,7 +1011,7 @@ export default function PosTerminalPage() {
             <button
               type="button"
               onClick={() => setIsOfflineModalOpen(true)}
-              className="font-bold underline shrink-0 text-[11px] hover:text-[#202124] ml-2 cursor-pointer"
+              className="font-bold underline shrink-0 text-[11px] hover:text-foreground ml-2 cursor-pointer"
             >
               Chi tiết ({pendingOrdersCount} đơn chờ)
             </button>
@@ -1020,20 +1020,20 @@ export default function PosTerminalPage() {
 
         {/* Auto-Sync Reconnection Toast */}
         {syncToast && (
-          <div className="bg-[#EAF4EE] border-t border-b border-[#CEE6D7] px-3 sm:px-5 py-1.5 text-xs text-[#2F7D55] flex items-center gap-2 animate-in slide-in-from-top-1">
+          <div className="bg-success-bg border-t border-b border-[#CEE6D7] px-3 sm:px-5 py-1.5 text-xs text-primary flex items-center gap-2 animate-in slide-in-from-top-1">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span className="font-semibold">{syncToast}</span>
           </div>
         )}
 
         {/* Mobile Sub-bar: Event & Booth Pickers (large touch targets) */}
-        <div className="sm:hidden px-3 py-2 bg-[#FAFAF8] dark:bg-neutral-900 border-t border-[#E8E8E5] dark:border-neutral-800 grid grid-cols-2 gap-2">
+        <div className="sm:hidden px-3 py-2 bg-background dark:bg-surface border-t border-border dark:border-border grid grid-cols-2 gap-2">
           <div>
-            <span className="text-[9px] font-bold text-[#737373] dark:text-neutral-400 uppercase tracking-wider block mb-0.5">
+            <span className="text-[9px] font-bold text-muted dark:text-muted uppercase tracking-wider block mb-0.5">
               Sự kiện
             </span>
             <select
-              className="w-full h-8 rounded-[4px] border border-[#E8E8E5] dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] truncate"
+              className="w-full h-8 rounded-lg border border-border dark:border-border bg-surface dark:bg-surface-hover px-2 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary truncate"
               value={selectedEventId}
               onChange={(e) => handleSelectEvent(e.target.value)}
             >
@@ -1047,11 +1047,11 @@ export default function PosTerminalPage() {
           </div>
 
           <div>
-            <span className="text-[9px] font-bold text-[#737373] dark:text-neutral-400 uppercase tracking-wider block mb-0.5">
+            <span className="text-[9px] font-bold text-muted dark:text-muted uppercase tracking-wider block mb-0.5">
               Gian hàng
             </span>
             <select
-              className="w-full h-8 rounded-[4px] border border-[#315C4C]/40 dark:border-emerald-600/40 bg-white dark:bg-neutral-800 px-2 text-xs font-bold text-[#315C4C] dark:text-emerald-400 focus:outline-none focus:border-[#315C4C] truncate"
+              className="w-full h-8 rounded-lg border border-primary/40 dark:border-emerald-600/40 bg-surface dark:bg-surface-hover px-2 text-xs font-bold text-primary dark:text-success focus:outline-none focus:border-primary truncate"
               value={selectedBoothId}
               onChange={(e) => handleSelectBooth(e.target.value)}
             >
@@ -1074,18 +1074,18 @@ export default function PosTerminalPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3 sm:mb-4">
             <div className="relative flex-1 w-full sm:max-w-md flex items-center gap-2">
               <div className="relative flex-1">
-                <Search className="w-4 h-4 text-[#9E9E9C] absolute left-3 top-2.5" />
+                <Search className="w-4 h-4 text-muted absolute left-3 top-2.5" />
                 <Input
                   placeholder="Tìm sản phẩm, mã loại..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9 text-xs bg-white dark:bg-neutral-900 w-full"
+                  className="pl-9 h-9 text-xs bg-surface dark:bg-surface w-full"
                 />
               </div>
               <button
                 type="button"
                 onClick={() => setIsScannerOpen(true)}
-                className="h-9 px-2.5 rounded-[6px] bg-[#315C4C] hover:bg-[#284a3d] text-white flex items-center gap-1.5 text-xs font-semibold shrink-0 shadow-2xs active:scale-95 transition-transform cursor-pointer"
+                className="h-9 px-2.5 rounded-lg bg-primary hover:bg-primary-hover text-primary-foreground flex items-center gap-1.5 text-xs font-semibold shrink-0 shadow-2xs active:scale-95 transition-transform cursor-pointer"
                 title="Quét mã vạch / QR sản phẩm bằng Camera"
                 aria-label="Quét mã vạch Camera"
               >
@@ -1098,21 +1098,21 @@ export default function PosTerminalPage() {
               <button
                 type="button"
                 onClick={() => setHideSoldOut(!hideSoldOut)}
-                className={`text-xs px-2.5 py-1.5 rounded-[6px] border font-medium transition-colors flex items-center gap-1.5 shadow-2xs whitespace-nowrap shrink-0 ${
+                className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-colors flex items-center gap-1.5 shadow-2xs whitespace-nowrap shrink-0 ${
                   hideSoldOut
-                    ? 'bg-[#EBF1EE] dark:bg-emerald-950/40 border-[#315C4C]/40 text-[#315C4C] dark:text-emerald-400 font-semibold'
-                    : 'bg-white dark:bg-neutral-800 border-[#E8E8E5] dark:border-neutral-700 text-[#737373] dark:text-neutral-300 hover:text-[#202124]'
+                    ? 'bg-warning-bg dark:bg-success-bg/40 border-primary/40 text-primary dark:text-success font-semibold'
+                    : 'bg-surface dark:bg-surface-hover border-border dark:border-border text-muted dark:text-muted hover:text-foreground'
                 }`}
                 title="Tự động ẩn sản phẩm hết hàng"
               >
                 {hideSoldOut ? (
                   <>
-                    <EyeOff className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400" />
+                    <EyeOff className="w-3.5 h-3.5 text-primary dark:text-success" />
                     <span>Ẩn hết ({soldOutPosCount})</span>
                   </>
                 ) : (
                   <>
-                    <Eye className="w-3.5 h-3.5 text-[#737373]" />
+                    <Eye className="w-3.5 h-3.5 text-muted" />
                     <span>Hiện tất cả</span>
                   </>
                 )}
@@ -1127,17 +1127,17 @@ export default function PosTerminalPage() {
           </div>
 
           {/* Bảng Sắp xếp & Bộ lọc Chi Tiết (Toàn bộ dùng Dropdown chuẩn) */}
-          <div className="bg-white dark:bg-neutral-850 border border-[#E8E8E5] dark:border-neutral-700/80 rounded-[8px] p-2.5 mb-3 shadow-2xs space-y-2">
+          <div className="bg-surface dark:bg-surface border border-border dark:border-border/80 rounded-lg p-2.5 mb-3 shadow-2xs space-y-2">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
               <div className="grid grid-cols-2 lg:flex lg:flex-wrap items-start lg:items-center gap-2 flex-1 min-w-0 w-full">
                 {/* 1. Phân loại / Danh mục (Dropdown) */}
                 <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-1 min-w-0 w-full lg:w-auto lg:flex-none">
-                  <Tag className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
-                  <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Phân loại:</span>
+                  <Tag className="w-3.5 h-3.5 text-primary dark:text-success shrink-0" />
+                  <span className="text-[11px] font-bold text-muted dark:text-muted shrink-0">Phân loại:</span>
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="h-9 lg:h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full min-w-0 lg:w-auto"
+                    className="h-9 lg:h-8 rounded-lg border border-border dark:border-border bg-background dark:bg-surface-hover px-2 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary w-full min-w-0 lg:w-auto"
                   >
                     <option value="all">Tất cả phân loại ({workspaceCategories.total})</option>
                     {workspaceCategories.list.map((cat) => (
@@ -1154,12 +1154,12 @@ export default function PosTerminalPage() {
                 </div>
 
                 <label className="flex flex-col lg:flex-row items-stretch lg:items-center gap-1 min-w-0 w-full lg:w-auto lg:flex-none">
-                  <Tag className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
-                  <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Tag:</span>
+                  <Tag className="w-3.5 h-3.5 text-primary dark:text-success shrink-0" />
+                  <span className="text-[11px] font-bold text-muted dark:text-muted shrink-0">Tag:</span>
                   <select
                     value={posTagFilter}
                     onChange={(e) => setPosTagFilter(e.target.value)}
-                    className="h-9 lg:h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full min-w-0 lg:w-auto"
+                    className="h-9 lg:h-8 rounded-lg border border-border dark:border-border bg-background dark:bg-surface-hover px-2 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary w-full min-w-0 lg:w-auto"
                   >
                     <option value="">Tất cả tag ({tagProducts.length})</option>
                     {productTags.map((tag) => (
@@ -1170,12 +1170,12 @@ export default function PosTerminalPage() {
 
                 {/* 2. Sắp xếp (Sorting Dropdown) */}
                 <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-1 min-w-0 w-full lg:w-auto lg:flex-none">
-                  <ArrowUpDown className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400 shrink-0" />
-                  <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Sắp xếp:</span>
+                  <ArrowUpDown className="w-3.5 h-3.5 text-primary dark:text-success shrink-0" />
+                  <span className="text-[11px] font-bold text-muted dark:text-muted shrink-0">Sắp xếp:</span>
                   <select
                     value={posSortBy}
                     onChange={(e) => setPosSortBy(e.target.value as any)}
-                    className="h-9 lg:h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full min-w-0 lg:w-auto"
+                    className="h-9 lg:h-8 rounded-lg border border-border dark:border-border bg-background dark:bg-surface-hover px-2 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary w-full min-w-0 lg:w-auto"
                   >
                     <option value="default">Mặc định</option>
                     <option value="name_asc">Tên: A → Z</option>
@@ -1191,12 +1191,12 @@ export default function PosTerminalPage() {
 
                 {/* 3. Nguồn hàng (Source Dropdown) */}
                 <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-1 min-w-0 w-full lg:w-auto lg:flex-none">
-                  <Store className="w-3.5 h-3.5 text-[#737373] dark:text-neutral-400 shrink-0" />
-                  <span className="text-[11px] font-bold text-[#737373] dark:text-neutral-400 shrink-0">Nguồn:</span>
+                  <Store className="w-3.5 h-3.5 text-muted dark:text-muted shrink-0" />
+                  <span className="text-[11px] font-bold text-muted dark:text-muted shrink-0">Nguồn:</span>
                   <select
                     value={posSourceFilter}
                     onChange={(e) => setPosSourceFilter(e.target.value as any)}
-                    className="h-9 lg:h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2 text-xs font-semibold text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] w-full min-w-0 lg:w-auto"
+                    className="h-9 lg:h-8 rounded-lg border border-border dark:border-border bg-background dark:bg-surface-hover px-2 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary w-full min-w-0 lg:w-auto"
                   >
                     <option value="all">Tất cả nguồn hàng</option>
                     <option value="store">👑 Shop chính (HikaruStore)</option>
@@ -1209,8 +1209,8 @@ export default function PosTerminalPage() {
 
               {/* Result counter & Reset Filter */}
               <div className="flex items-center gap-2 self-end lg:self-center lg:ml-auto">
-                <span className="text-xs text-[#737373] dark:text-neutral-400 font-medium">
-                  Hiển thị <strong className="text-[#315C4C] dark:text-emerald-400 font-bold">{filteredProducts.length}</strong> / {activeProducts.length} sản phẩm
+                <span className="text-xs text-muted dark:text-muted font-medium">
+                  Hiển thị <strong className="text-primary dark:text-success font-bold">{filteredProducts.length}</strong> / {activeProducts.length} sản phẩm
                 </span>
 
                 {isPosFilterActive && (
@@ -1218,7 +1218,7 @@ export default function PosTerminalPage() {
                     variant="outline"
                     size="sm"
                     onClick={resetPosFilters}
-                    className="h-7 px-2 text-xs text-[#C44536] hover:bg-[#FDF1F0] border-[#F8B4AF] gap-1 font-semibold"
+                    className="h-7 px-2 text-xs text-error hover:bg-error-bg border-[#F8B4AF] gap-1 font-semibold"
                     title="Đặt lại toàn bộ bộ lọc và sắp xếp về mặc định"
                   >
                     <RotateCcw className="w-3 h-3" />
@@ -1230,12 +1230,12 @@ export default function PosTerminalPage() {
           </div>
 
           {filteredProducts.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white border border-[#E8E8E5] rounded-[8px] my-auto">
-              <Package className="w-12 h-12 text-[#9E9E9C] mb-3" />
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-surface border border-border rounded-lg my-auto">
+              <Package className="w-12 h-12 text-muted mb-3" />
               {soldOutPosCount > 0 && hideSoldOut ? (
                 <>
-                  <h3 className="text-sm font-bold text-[#202124]">Tất cả sản phẩm đã hết hàng</h3>
-                  <p className="text-xs text-[#737373] mt-1 max-w-xs">
+                  <h3 className="text-sm font-bold text-foreground">Tất cả sản phẩm đã hết hàng</h3>
+                  <p className="text-xs text-muted mt-1 max-w-xs">
                     Có {soldOutPosCount} sản phẩm tại quầy này đã bán hết hoặc đang được giữ trong giỏ hàng.
                   </p>
                   <Button
@@ -1249,8 +1249,8 @@ export default function PosTerminalPage() {
                 </>
               ) : (
                 <>
-                  <h3 className="text-sm font-bold text-[#202124]">Chưa có sản phẩm nào tại quầy</h3>
-                  <p className="text-xs text-[#737373] mt-1 max-w-xs">
+                  <h3 className="text-sm font-bold text-foreground">Chưa có sản phẩm nào tại quầy</h3>
+                  <p className="text-xs text-muted mt-1 max-w-xs">
                     {workspaceEvents.length === 0
                       ? 'Hãy tạo Sự kiện và Gian hàng trong Dashboard trước để bắt đầu bán.'
                       : 'Hãy thêm sản phẩm và phân bổ số lượng tồn kho cho gian hàng này trong mục Quản lý Kho.'}
@@ -1298,11 +1298,11 @@ export default function PosTerminalPage() {
                 return (
                   <div
                     key={prod.id}
-                    className="rounded-[8px] border border-[#E8E8E5] bg-white overflow-hidden shadow-2xs hover:border-[#315C4C]/40 transition-colors flex flex-col justify-between"
+                    className="rounded-lg border border-border bg-surface overflow-hidden shadow-2xs hover:border-primary/40 transition-colors flex flex-col justify-between"
                   >
                     <div>
                       {/* Product Image: Aspect-Square 1:1 & Object-Contain to preserve original image format without cropping */}
-                      <div className="relative w-full aspect-square bg-[#F8F9FA] dark:bg-neutral-800/80 overflow-hidden flex items-center justify-center p-2.5">
+                      <div className="relative w-full aspect-square bg-[#F8F9FA] dark:bg-surface-hover/80 overflow-hidden flex items-center justify-center p-2.5">
                         {prod.image_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
@@ -1311,13 +1311,13 @@ export default function PosTerminalPage() {
                             className="w-full h-full object-contain drop-shadow-2xs transition-transform duration-200 hover:scale-105"
                           />
                         ) : (
-                          <Package className="w-10 h-10 text-[#9E9E9C]" />
+                          <Package className="w-10 h-10 text-muted" />
                         )}
 
                         {/* Origin Source Badge (Top Left - ONLY shown for Collab to keep Shop photos clean) */}
                         {prod.collab_partner && (
                           <div className="absolute top-1.5 left-1.5 z-10">
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#FEF7EC]/95 text-[#8C5D17] border border-[#B7791F]/30 backdrop-blur-[2px] shadow-2xs">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-warning-bg/95 text-warning border border-warning/30 backdrop-blur-[2px] shadow-2xs">
                               🤝 {prod.collab_partner}
                             </span>
                           </div>
@@ -1330,15 +1330,15 @@ export default function PosTerminalPage() {
                               Còn {availableStock}
                             </span>
                           ) : qtyInCart > 0 ? (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#315C4C] text-white">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-primary text-primary-foreground">
                               {qtyInCart} trong giỏ
                             </span>
                           ) : remoteHeldStock > 0 ? (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#B7791F] text-white" title="Đang trong giỏ của quầy khác">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-warning text-white" title="Đang trong giỏ của quầy khác">
                               Quầy khác giữ {remoteHeldStock}
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#C44536] text-white">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-error text-white">
                               Hết hàng
                             </span>
                           )}
@@ -1346,10 +1346,10 @@ export default function PosTerminalPage() {
                       </div>
 
                       <div className="p-2.5 sm:p-3">
-                        <h4 className="text-xs sm:text-[13px] font-bold text-[#202124] line-clamp-2 leading-snug min-h-[2.1rem]">
+                        <h4 className="text-xs sm:text-[13px] font-bold text-foreground line-clamp-2 leading-snug min-h-[2.1rem]">
                           {prod.name}
                         </h4>
-                        <p className="text-sm sm:text-base font-extrabold text-[#315C4C] mt-1 font-mono">
+                        <p className="text-sm sm:text-base font-extrabold text-primary mt-1 font-mono">
                           {formatCurrency(
                             activeVariant?.price || 0,
                             activeWorkspace?.currency || 'VND'
@@ -1362,17 +1362,17 @@ export default function PosTerminalPage() {
                             <button
                               type="button"
                               onClick={() => setVariantPickerProduct(prod)}
-                              className="w-full flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-[6px] bg-[#F7F7F5] border border-[#E8E8E5] text-[11px] font-semibold text-[#202124] hover:border-[#315C4C]/50 active:scale-[0.98] transition-all cursor-pointer"
+                              className="w-full flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-lg bg-background border border-border text-[11px] font-semibold text-foreground hover:border-primary/50 active:scale-[0.98] transition-all cursor-pointer"
                             >
                               <span className="truncate">{activeVariant?.name || 'Chọn mẫu'}</span>
-                              <span className="inline-flex items-center gap-0.5 shrink-0 text-[10px] font-bold text-[#315C4C] bg-[#EAF4EE] px-1.5 py-0.2 rounded">
+                              <span className="inline-flex items-center gap-0.5 shrink-0 text-[10px] font-bold text-primary bg-success-bg px-1.5 py-0.2 rounded">
                                 {prodVariants.length}
                                 <ChevronDown className="w-3 h-3" />
                               </span>
                             </button>
                           </div>
                         ) : activeVariant ? (
-                          <p className="sm:hidden text-[11px] text-[#737373] truncate mt-1">
+                          <p className="sm:hidden text-[11px] text-muted truncate mt-1">
                             {activeVariant.name}
                           </p>
                         ) : null}
@@ -1394,8 +1394,8 @@ export default function PosTerminalPage() {
                                   }
                                   className={`px-2 py-0.5 text-[10px] rounded font-medium transition-colors cursor-pointer ${
                                     isVarSelected
-                                      ? 'bg-[#315C4C] text-white'
-                                      : 'bg-[#F0F0ED] text-[#202124] hover:bg-[#E8E8E5]'
+                                      ? 'bg-primary text-primary-foreground'
+                                      : 'bg-surface-hover text-foreground hover:bg-surface-hover'
                                   }`}
                                 >
                                   {v.name}
@@ -1409,31 +1409,31 @@ export default function PosTerminalPage() {
                         {stockBreakdown && (
                           <>
                             {/* Mobile Compact Stock Chip */}
-                            <div className="sm:hidden mt-2 px-2 py-1 bg-[#F7F7F5] rounded border border-[#E8E8E5] flex items-center justify-between text-[11px]">
-                              <span className="text-[#315C4C] font-bold">
+                            <div className="sm:hidden mt-2 px-2 py-1 bg-background rounded border border-border flex items-center justify-between text-[11px]">
+                              <span className="text-primary font-bold">
                                 Quầy: {availableStock}
                               </span>
-                              <span className="text-[#737373]">
-                                Kho: <strong className="text-[#2F7D55]">{stockBreakdown.offlineAvailable}</strong>
+                              <span className="text-muted">
+                                Kho: <strong className="text-primary">{stockBreakdown.offlineAvailable}</strong>
                               </span>
                             </div>
 
                             {/* Desktop 5-State Breakdown */}
-                            <div className="hidden sm:block mt-2 p-1.5 bg-[#F7F7F5] rounded-[4px] border border-[#E8E8E5] text-[10px] space-y-0.5">
+                            <div className="hidden sm:block mt-2 p-1.5 bg-background rounded-lg border border-border text-[10px] space-y-0.5">
                               <div className="flex items-center justify-between font-semibold">
-                                <span className="text-[#315C4C]">
+                                <span className="text-primary">
                                   Tồn quầy: <strong>{availableStock}</strong>
                                 </span>
-                                <span className="text-[#737373]">
+                                <span className="text-muted">
                                   Số lượng: <strong>{stockBreakdown.total}</strong>
                                 </span>
                               </div>
-                              <div className="flex items-center justify-between text-[9px] text-[#737373]">
-                                <span>Onl: <strong className="text-[#202124]">{stockBreakdown.online}</strong></span>
-                                <span>Preord: <strong className="text-[#B7791F]">{stockBreakdown.preord}</strong></span>
-                                <span>Đã bán: <strong className="text-[#2F7D55]">{stockBreakdown.offlineSold}</strong></span>
+                              <div className="flex items-center justify-between text-[9px] text-muted">
+                                <span>Onl: <strong className="text-foreground">{stockBreakdown.online}</strong></span>
+                                <span>Preord: <strong className="text-warning">{stockBreakdown.preord}</strong></span>
+                                <span>Đã bán: <strong className="text-primary">{stockBreakdown.offlineSold}</strong></span>
                               </div>
-                              <div className="text-[9px] text-[#2F7D55] font-semibold pt-0.5 border-t border-[#E8E8E5]/60 flex justify-between">
+                              <div className="text-[9px] text-primary font-semibold pt-0.5 border-t border-border/60 flex justify-between">
                                 <span>Tồn bán offline:</span>
                                 <span>{stockBreakdown.offlineAvailable}</span>
                               </div>
@@ -1446,26 +1446,26 @@ export default function PosTerminalPage() {
                     {/* Add to Cart / Inline Stepper Touch Action */}
                     <div className="p-2.5 sm:p-3 pt-0">
                       {qtyInCart > 0 ? (
-                        <div className="flex items-center justify-between bg-[#EBF1EE] dark:bg-emerald-950/40 border border-[#315C4C]/40 dark:border-emerald-600/40 rounded-[6px] p-1 gap-1">
+                        <div className="flex items-center justify-between bg-warning-bg dark:bg-success-bg/40 border border-primary/40 dark:border-emerald-600/40 rounded-lg p-1 gap-1">
                           <button
                             type="button"
                             onClick={() => handleDecrease(activeVariant.id)}
-                            className="w-8 h-8 rounded bg-white dark:bg-neutral-800 text-[#202124] dark:text-neutral-100 flex items-center justify-center font-bold text-sm shadow-2xs hover:bg-[#F0F0ED] active:scale-95 transition-transform shrink-0"
+                            className="w-8 h-8 rounded bg-surface dark:bg-surface-hover text-foreground dark:text-foreground flex items-center justify-center font-bold text-sm shadow-2xs hover:bg-surface-hover active:scale-95 transition-transform shrink-0"
                             aria-label="Giảm số lượng"
                           >
                             <Minus className="w-3.5 h-3.5" />
                           </button>
                           <div className="text-center min-w-0 flex-1 px-0.5">
-                            <span className="font-bold text-xs text-[#315C4C] dark:text-emerald-400 leading-none block truncate">
+                            <span className="font-bold text-xs text-primary dark:text-success leading-none block truncate">
                               {qtyInCart}
                             </span>
-                            <span className="text-[9px] text-[#737373] dark:text-neutral-400 leading-none block truncate">trong giỏ</span>
+                            <span className="text-[9px] text-muted dark:text-muted leading-none block truncate">trong giỏ</span>
                           </div>
                           <button
                             type="button"
                             disabled={availableStock <= 0}
                             onClick={() => handleIncrease(activeVariant.id)}
-                            className="w-8 h-8 rounded bg-[#315C4C] text-white flex items-center justify-center font-bold text-sm shadow-2xs hover:bg-[#284a3d] disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform shrink-0"
+                            className="w-8 h-8 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shadow-2xs hover:bg-primary-hover disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform shrink-0"
                             title={availableStock <= 0 ? 'Đã đạt giới hạn tồn khả dụng' : 'Thêm 1'}
                             aria-label="Tăng số lượng"
                           >
@@ -1496,12 +1496,12 @@ export default function PosTerminalPage() {
         </main>
 
         {/* Right: Persistent Shopping Cart (Desktop - Fixed Checkout Footer) */}
-        <aside className="w-80 lg:w-96 border-l border-[#E8E8E5] bg-white flex-col justify-between hidden lg:flex h-full min-h-0 overflow-hidden">
+        <aside className="w-80 lg:w-96 border-l border-border bg-surface flex-col justify-between hidden lg:flex h-full min-h-0 overflow-hidden">
           {/* Cart Header */}
-          <div className="p-4 border-b border-[#E8E8E5] flex items-center justify-between shrink-0">
+          <div className="p-4 border-b border-border flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
-              <ShoppingCart className="w-4 h-4 text-[#315C4C]" />
-              <h3 className="text-sm font-bold text-[#202124]">Giỏ hàng</h3>
+              <ShoppingCart className="w-4 h-4 text-primary" />
+              <h3 className="text-sm font-bold text-foreground">Giỏ hàng</h3>
               <Badge variant="neutral" className="text-[10px]">
                 {totalCartUnits} món
               </Badge>
@@ -1510,7 +1510,7 @@ export default function PosTerminalPage() {
               <button
                 type="button"
                 onClick={clearCart}
-                className="text-[11px] text-[#C44536] hover:underline"
+                className="text-[11px] text-error hover:underline"
               >
                 Xóa giỏ
               </button>
@@ -1520,10 +1520,10 @@ export default function PosTerminalPage() {
           {/* Cart Item List */}
           <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-2.5">
             {cart.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center text-[#737373] py-12">
-                <ShoppingCart className="w-10 h-10 text-[#9E9E9C] mb-2 stroke-[1.5]" />
-                <p className="text-xs font-medium text-[#202124]">Giỏ hàng trống</p>
-                <p className="text-[11px] text-[#737373] mt-0.5">
+              <div className="h-full flex flex-col items-center justify-center text-center text-muted py-12">
+                <ShoppingCart className="w-10 h-10 text-muted mb-2 stroke-[1.5]" />
+                <p className="text-xs font-medium text-foreground">Giỏ hàng trống</p>
+                <p className="text-[11px] text-muted mt-0.5">
                   Chọn sản phẩm để thêm vào đơn
                 </p>
               </div>
@@ -1531,26 +1531,26 @@ export default function PosTerminalPage() {
               cart.map((item) => (
                 <div
                   key={item.variantId}
-                  className="p-2.5 rounded-[6px] border border-[#E8E8E5] bg-[#FBFBFA] flex items-center justify-between gap-2"
+                  className="p-2.5 rounded-lg border border-border bg-background flex items-center justify-between gap-2"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-[#202124] truncate">
+                    <p className="text-xs font-bold text-foreground truncate">
                       {item.productName}
                     </p>
-                    <p className="text-[11px] text-[#737373]">
+                    <p className="text-[11px] text-muted">
                       {item.variantName} • {item.sku}
                     </p>
-                    <p className="text-xs font-semibold text-[#315C4C] mt-0.5">
+                    <p className="text-xs font-semibold text-primary mt-0.5">
                       {formatCurrency(item.price, activeWorkspace?.currency || 'VND')}
                     </p>
                   </div>
 
                   {/* Quantity Stepper with Direct Input */}
-                  <div className="flex items-center gap-1 shrink-0 bg-white dark:bg-neutral-800 border border-[#E8E8E5] dark:border-neutral-700 rounded p-0.5">
+                  <div className="flex items-center gap-1 shrink-0 bg-surface dark:bg-surface-hover border border-border dark:border-border rounded p-0.5">
                     <button
                       type="button"
                       onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
-                      className="p-1 hover:bg-[#F0F0ED] dark:hover:bg-neutral-700 rounded text-[#202124] dark:text-neutral-200 transition-colors"
+                      className="p-1 hover:bg-surface-hover dark:hover:bg-surface-hover rounded text-foreground dark:text-foreground transition-colors"
                       title="Giảm 1"
                     >
                       <Minus className="w-3 h-3" />
@@ -1569,14 +1569,14 @@ export default function PosTerminalPage() {
                           updateQuantity(item.variantId, Math.min(val, Math.max(1, maxLimit)));
                         }
                       }}
-                      className="w-10 h-6 text-center text-xs font-bold font-mono bg-transparent border-0 text-[#202124] dark:text-neutral-100 focus:outline-none focus:ring-1 focus:ring-[#315C4C] rounded"
+                      className="w-10 h-6 text-center text-xs font-bold font-mono bg-transparent border-0 text-foreground dark:text-foreground focus:outline-none focus:ring-1 focus:ring-primary rounded"
                       title="Nhập trực tiếp số lượng mua"
                     />
                     <button
                       type="button"
                       disabled={getVariantAvailableStock(item.variantId) <= 0}
                       onClick={() => handleIncrease(item.variantId)}
-                      className="p-1 hover:bg-[#F0F0ED] dark:hover:bg-neutral-700 rounded text-[#202124] dark:text-neutral-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      className="p-1 hover:bg-surface-hover dark:hover:bg-surface-hover rounded text-foreground dark:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       title={getVariantAvailableStock(item.variantId) <= 0 ? 'Đã đạt số lượng tồn khả dụng' : 'Thêm 1'}
                     >
                       <Plus className="w-3 h-3" />
@@ -1586,7 +1586,7 @@ export default function PosTerminalPage() {
                   <button
                     type="button"
                     onClick={() => removeFromCart(item.variantId)}
-                    className="p-1 text-[#737373] hover:text-[#C44536]"
+                    className="p-1 text-muted hover:text-error"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -1596,15 +1596,15 @@ export default function PosTerminalPage() {
           </div>
 
           {/* Cart Pricing Summary & Checkout Button (Pinned permanently at bottom) */}
-          <div className="p-4 border-t border-[#E8E8E5] bg-[#FAFAF8] space-y-3 shrink-0">
+          <div className="p-4 border-t border-border bg-background space-y-3 shrink-0">
             <div className="space-y-1.5 text-xs">
-              <div className="flex items-center justify-between text-[#737373]">
+              <div className="flex items-center justify-between text-muted">
                 <span>Tạm tính:</span>
-                <span className="font-medium text-[#202124]">
+                <span className="font-medium text-foreground">
                   {formatCurrency(cartSubtotal, activeWorkspace?.currency || 'VND')}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-[#737373]">
+              <div className="flex items-center justify-between text-muted">
                 <span>Giảm giá:</span>
                 <input
                   type="number"
@@ -1612,12 +1612,12 @@ export default function PosTerminalPage() {
                   value={discountAmount || ''}
                   onChange={(e) => setDiscountAmount(Number(e.target.value))}
                   placeholder="0"
-                  className="w-24 text-right px-1.5 py-0.5 text-xs border rounded bg-white font-mono"
+                  className="w-24 text-right px-1.5 py-0.5 text-xs border rounded bg-surface font-mono"
                 />
               </div>
-              <div className="flex items-center justify-between text-sm font-bold text-[#202124] pt-2 border-t border-[#E8E8E5]">
+              <div className="flex items-center justify-between text-sm font-bold text-foreground pt-2 border-t border-border">
                 <span>Tổng cộng:</span>
-                <span className="text-base text-[#315C4C]">
+                <span className="text-base text-primary">
                   {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}
                 </span>
               </div>
@@ -1642,22 +1642,22 @@ export default function PosTerminalPage() {
 
       {/* Sticky Bottom Cart Bar on Mobile & Tablet */}
       {totalCartUnits > 0 && (
-        <div className="lg:hidden fixed bottom-0 inset-x-0 bg-white dark:bg-neutral-900 border-t border-[#E8E8E5] dark:border-neutral-800 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-lg z-30 flex items-center justify-between gap-3 animate-in slide-in-from-bottom-3 duration-200">
+        <div className="lg:hidden fixed bottom-0 inset-x-0 bg-surface dark:bg-surface border-t border-border dark:border-border p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-lg z-30 flex items-center justify-between gap-3 animate-in slide-in-from-bottom-3 duration-200">
           <div
             onClick={() => setIsMobileCartOpen(true)}
             className="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0"
           >
             <div className="relative shrink-0">
-              <div className="w-10 h-10 rounded-[6px] bg-[#315C4C] text-white flex items-center justify-center font-bold">
+              <div className="w-10 h-10 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold">
                 <ShoppingCart className="w-5 h-5" />
               </div>
-              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[#C44536] text-white text-[11px] font-bold flex items-center justify-center shadow-xs">
+              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-error text-white text-[11px] font-bold flex items-center justify-center shadow-xs">
                 {totalCartUnits}
               </span>
             </div>
             <div className="truncate">
-              <p className="text-[11px] text-[#737373] dark:text-neutral-400 leading-none">Giỏ hàng • {totalCartUnits} món</p>
-              <p className="text-base font-bold text-[#315C4C] dark:text-emerald-400 leading-tight mt-1">
+              <p className="text-[11px] text-muted dark:text-muted leading-none">Giỏ hàng • {totalCartUnits} món</p>
+              <p className="text-base font-bold text-primary dark:text-success leading-tight mt-1">
                 {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}
               </p>
             </div>
@@ -1679,7 +1679,7 @@ export default function PosTerminalPage() {
                 setTenderedCash(cartTotal);
                 openCheckoutModal();
               }}
-              className="h-10 px-4 text-xs font-bold bg-[#315C4C] text-white shadow-xs active:scale-95 transition-transform"
+              className="h-10 px-4 text-xs font-bold bg-primary text-primary-foreground shadow-xs active:scale-95 transition-transform"
             >
               Thanh toán
             </Button>
@@ -1697,27 +1697,27 @@ export default function PosTerminalPage() {
       >
         <div className="space-y-4">
           {cart.length === 0 ? (
-            <div className="text-center py-8 text-[#737373]">
-              <ShoppingCart className="w-8 h-8 mx-auto mb-2 text-[#9E9E9C]" />
+            <div className="text-center py-8 text-muted">
+              <ShoppingCart className="w-8 h-8 mx-auto mb-2 text-muted" />
               <p className="text-xs">Chưa có sản phẩm nào trong giỏ hàng</p>
             </div>
           ) : (
-            <div className="divide-y divide-[#F0F0ED] max-h-[45vh] overflow-y-auto -mx-2 px-2">
+            <div className="divide-y divide-border max-h-[45vh] overflow-y-auto -mx-2 px-2">
               {cart.map((item) => (
                 <div key={item.variantId} className="py-2.5 flex items-center justify-between gap-3 text-xs">
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-[#202124] truncate">{item.productName}</p>
-                    <p className="text-[11px] text-[#737373]">
+                    <p className="font-semibold text-foreground truncate">{item.productName}</p>
+                    <p className="text-[11px] text-muted">
                       {item.variantName} • {formatCurrency(item.price, activeWorkspace?.currency || 'VND')}
                     </p>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <div className="flex items-center border border-[#E8E8E5] rounded-[4px] bg-white">
+                    <div className="flex items-center border border-border rounded-lg bg-surface">
                       <button
                         type="button"
                         onClick={() => handleDecrease(item.variantId)}
-                        className="w-7 h-7 flex items-center justify-center text-[#737373] hover:text-[#202124] active:bg-[#F0F0ED]"
+                        className="w-7 h-7 flex items-center justify-center text-muted hover:text-foreground active:bg-surface-hover"
                       >
                         <Minus className="w-3 h-3" />
                       </button>
@@ -1726,7 +1726,7 @@ export default function PosTerminalPage() {
                         type="button"
                         disabled={getVariantAvailableStock(item.variantId) <= 0}
                         onClick={() => handleIncrease(item.variantId)}
-                        className="w-7 h-7 flex items-center justify-center text-[#737373] hover:text-[#202124] disabled:opacity-30 disabled:cursor-not-allowed active:bg-[#F0F0ED]"
+                        className="w-7 h-7 flex items-center justify-center text-muted hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed active:bg-surface-hover"
                         title={getVariantAvailableStock(item.variantId) <= 0 ? 'Đã đạt số lượng tồn khả dụng' : 'Thêm 1'}
                       >
                         <Plus className="w-3 h-3" />
@@ -1736,7 +1736,7 @@ export default function PosTerminalPage() {
                     <button
                       type="button"
                       onClick={() => removeFromCart(item.variantId)}
-                      className="p-1.5 text-[#C44536] hover:bg-[#FDF1F0] rounded"
+                      className="p-1.5 text-error hover:bg-error-bg rounded"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -1748,14 +1748,14 @@ export default function PosTerminalPage() {
 
           {/* Pricing summary */}
           {cart.length > 0 && (
-            <div className="space-y-2 pt-3 border-t border-[#E8E8E5] text-xs">
-              <div className="flex items-center justify-between text-[#737373]">
+            <div className="space-y-2 pt-3 border-t border-border text-xs">
+              <div className="flex items-center justify-between text-muted">
                 <span>Tạm tính:</span>
-                <span className="font-medium text-[#202124]">
+                <span className="font-medium text-foreground">
                   {formatCurrency(cartSubtotal, activeWorkspace?.currency || 'VND')}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-[#737373]">
+              <div className="flex items-center justify-between text-muted">
                 <span>Giảm giá:</span>
                 <input
                   type="number"
@@ -1763,12 +1763,12 @@ export default function PosTerminalPage() {
                   value={discountAmount || ''}
                   onChange={(e) => setDiscountAmount(Number(e.target.value))}
                   placeholder="0"
-                  className="w-24 text-right px-1.5 py-0.5 text-xs border rounded bg-white font-mono"
+                  className="w-24 text-right px-1.5 py-0.5 text-xs border rounded bg-surface font-mono"
                 />
               </div>
-              <div className="flex items-center justify-between text-sm font-bold text-[#202124] pt-2 border-t border-[#E8E8E5]">
+              <div className="flex items-center justify-between text-sm font-bold text-foreground pt-2 border-t border-border">
                 <span>Tổng cộng:</span>
-                <span className="text-base text-[#315C4C]">
+                <span className="text-base text-primary">
                   {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}
                 </span>
               </div>
@@ -1778,7 +1778,7 @@ export default function PosTerminalPage() {
                   variant="outline"
                   size="sm"
                   onClick={clearCart}
-                  className="h-10 text-xs text-[#C44536]"
+                  className="h-10 text-xs text-error"
                 >
                   Xóa giỏ
                 </Button>
@@ -1815,10 +1815,10 @@ export default function PosTerminalPage() {
             <button
               type="button"
               onClick={() => setPaymentMethod('qr_manual')}
-              className={`p-2.5 rounded-[6px] border text-xs font-bold flex flex-col items-center gap-1.5 transition-colors cursor-pointer ${
+              className={`p-2.5 rounded-lg border text-xs font-bold flex flex-col items-center gap-1.5 transition-colors cursor-pointer ${
                 paymentMethod === 'qr_manual'
-                  ? 'border-[#315C4C] bg-[#EBF1EE] text-[#315C4C]'
-                  : 'border-[#E8E8E5] bg-white text-[#737373] hover:bg-[#F7F7F5]'
+                  ? 'border-primary bg-warning-bg text-primary'
+                  : 'border-border bg-surface text-muted hover:bg-background'
               }`}
             >
               <QrCode className="w-5 h-5" />
@@ -1833,10 +1833,10 @@ export default function PosTerminalPage() {
                   applyCashPreset(cartTotal);
                 }
               }}
-              className={`p-2.5 rounded-[6px] border text-xs font-bold flex flex-col items-center gap-1.5 transition-colors cursor-pointer ${
+              className={`p-2.5 rounded-lg border text-xs font-bold flex flex-col items-center gap-1.5 transition-colors cursor-pointer ${
                 paymentMethod === 'cash'
-                  ? 'border-[#315C4C] bg-[#EBF1EE] text-[#315C4C]'
-                  : 'border-[#E8E8E5] bg-white text-[#737373] hover:bg-[#F7F7F5]'
+                  ? 'border-primary bg-warning-bg text-primary'
+                  : 'border-border bg-surface text-muted hover:bg-background'
               }`}
             >
               <Banknote className="w-5 h-5" />
@@ -1846,18 +1846,18 @@ export default function PosTerminalPage() {
 
           {/* Mode 1: VietQR Dynamic Code Generator */}
           {paymentMethod === 'qr_manual' && (
-            <div className="p-4 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[8px] text-center space-y-3.5">
+            <div className="p-4 bg-background border border-border rounded-lg text-center space-y-3.5">
               {/* Status badge */}
               <div
                 className={`flex items-center justify-center gap-2 text-xs font-semibold py-1.5 px-3 rounded-full mx-auto w-fit border ${
                   proofImage
-                    ? 'text-[#2F7D55] bg-[#EAF4EE] border-[#2F7D55]/30'
-                    : 'text-[#8C5D17] bg-[#FEF7EC] border-[#F5C27A]/50'
+                    ? 'text-primary bg-success-bg border-primary/30'
+                    : 'text-warning bg-warning-bg border-[#F5C27A]/50'
                 }`}
               >
                 <span
                   className={`w-2 h-2 rounded-full ${
-                    proofImage ? 'bg-[#2F7D55]' : 'bg-[#B7791F] animate-pulse'
+                    proofImage ? 'bg-primary' : 'bg-warning animate-pulse'
                   }`}
                 />
                 <span>
@@ -1876,7 +1876,7 @@ export default function PosTerminalPage() {
                     alt="QR chuyển khoản VietinBank — NGUYEN BAO THUONG — 109876880260"
                     className="w-full max-w-sm rounded-xl object-contain"
                   />
-                  <figcaption className="text-xs text-amber-700 dark:text-amber-400 text-center">
+                  <figcaption className="text-xs text-gold-text dark:text-gold-text text-center">
                     Đang offline: nhập số tiền và nội dung HKTS-{qrSessionRef} khi chuyển khoản.
                   </figcaption>
                 </figure>
@@ -1884,7 +1884,7 @@ export default function PosTerminalPage() {
                 <div className="flex flex-col items-center gap-2.5">
                   <div
                     onClick={() => setIsQrZoomOpen(true)}
-                    className="w-full max-w-[320px] sm:max-w-[360px] aspect-square mx-auto bg-white p-3 sm:p-4 rounded-2xl border-2 border-amber-500/40 shadow-md flex items-center justify-center relative cursor-pointer group hover:border-amber-500 transition-all"
+                    className="w-full max-w-[320px] sm:max-w-[360px] aspect-square mx-auto bg-surface p-3 sm:p-4 rounded-2xl border-2 border-primary/40 shadow-md flex items-center justify-center relative cursor-pointer group hover:border-primary transition-all"
                     title="Nhấn để phóng to toàn màn hình cho khách quét"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1896,8 +1896,8 @@ export default function PosTerminalPage() {
                       className="w-full h-full object-contain"
                     />
                     <div className="absolute inset-x-0 bottom-2.5 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-neutral-900/90 text-white px-3 py-1 rounded-full shadow-md">
-                        <Maximize2 className="w-3.5 h-3.5 text-amber-400" />
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-surface/90 text-white px-3 py-1 rounded-full shadow-md">
+                        <Maximize2 className="w-3.5 h-3.5 text-gold-text" />
                         Chạm để phóng to QR
                       </span>
                     </div>
@@ -1908,10 +1908,10 @@ export default function PosTerminalPage() {
                     <button
                       type="button"
                       onClick={() => setQrTemplate('compact2')}
-                      className={`px-2.5 py-1 rounded-[6px] text-[11px] font-bold transition-colors cursor-pointer ${
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
                         qrTemplate === 'compact2'
-                          ? 'bg-amber-500 text-neutral-950 shadow-2xs'
-                          : 'bg-[#F0F0ED] dark:bg-neutral-800 text-[#737373] dark:text-neutral-300 hover:text-[#202124]'
+                          ? 'bg-primary text-primary-foreground shadow-2xs'
+                          : 'bg-surface-hover dark:bg-surface-hover text-muted dark:text-muted hover:text-foreground'
                       }`}
                     >
                       Kèm logo ngân hàng
@@ -1919,10 +1919,10 @@ export default function PosTerminalPage() {
                     <button
                       type="button"
                       onClick={() => setQrTemplate('qr_only')}
-                      className={`px-2.5 py-1 rounded-[6px] text-[11px] font-bold transition-colors cursor-pointer ${
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
                         qrTemplate === 'qr_only'
-                          ? 'bg-amber-500 text-neutral-950 shadow-2xs'
-                          : 'bg-[#F0F0ED] dark:bg-neutral-800 text-[#737373] dark:text-neutral-300 hover:text-[#202124]'
+                          ? 'bg-primary text-primary-foreground shadow-2xs'
+                          : 'bg-surface-hover dark:bg-surface-hover text-muted dark:text-muted hover:text-foreground'
                       }`}
                       title="Chỉ hiển thị ô mã QR to kín khung, không viền chữ để máy quét nhanh nhất"
                     >
@@ -1931,20 +1931,20 @@ export default function PosTerminalPage() {
                     <button
                       type="button"
                       onClick={() => setIsQrZoomOpen(true)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[6px] text-[11px] font-bold bg-amber-500/15 text-amber-800 dark:text-amber-300 hover:bg-amber-500/25 border border-amber-500/30 transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-primary/15 text-gold-text dark:text-gold-text hover:bg-primary/25 border border-primary/30 transition-colors cursor-pointer"
                       title="Mở toàn màn hình cho khách quét từ xa"
                     >
-                      <Maximize2 className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                      <Maximize2 className="w-3 h-3 text-gold-text dark:text-gold-text" />
                       <span>Phóng to</span>
                     </button>
                   </div>
                 </div>
               )}
 
-              <div className="text-[11px] text-[#737373] space-y-1 bg-white p-2.5 rounded-[6px] border border-[#E8E8E5]">
+              <div className="text-[11px] text-muted space-y-1 bg-surface p-2.5 rounded-lg border border-border">
                 <div className="flex items-center justify-between">
                   <span>Ngân hàng:</span>
-                  <span className="font-bold text-[#202124]">{getBankDisplayName(activeBankConfig.bankId)}</span>
+                  <span className="font-bold text-foreground">{getBankDisplayName(activeBankConfig.bankId)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Số tài khoản:</span>
@@ -1955,27 +1955,27 @@ export default function PosTerminalPage() {
                         navigator.clipboard.writeText(activeBankConfig.accountNo);
                       }
                     }}
-                    className="flex items-center gap-1 font-mono font-extrabold text-[#202124] hover:text-[#315C4C] cursor-pointer"
+                    className="flex items-center gap-1 font-mono font-extrabold text-foreground hover:text-primary cursor-pointer"
                     title="Nhấn để sao chép"
                   >
                     <span>{activeBankConfig.accountNo}</span>
-                    <Copy className="w-3 h-3 text-[#737373]" />
+                    <Copy className="w-3 h-3 text-muted" />
                   </button>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Chủ tài khoản:</span>
-                  <span className="font-semibold text-[#202124]">{activeBankConfig.accountName}</span>
+                  <span className="font-semibold text-foreground">{activeBankConfig.accountName}</span>
                 </div>
-                <div className="flex items-center justify-between pt-1 border-t border-[#F0F0ED]">
-                  <span className="font-bold text-[#202124]">Số tiền cần CK:</span>
-                  <span className="font-extrabold text-[#2F7D55] text-sm">
+                <div className="flex items-center justify-between pt-1 border-t border-border">
+                  <span className="font-bold text-foreground">Số tiền cần CK:</span>
+                  <span className="font-extrabold text-primary text-sm">
                     {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Nội dung chuyển:</span>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-mono font-bold text-[#8C5D17] bg-[#FEF7EC] px-1.5 py-0.5 rounded border border-[#B7791F]/20 select-all">
+                    <span className="font-mono font-bold text-warning bg-warning-bg px-1.5 py-0.5 rounded border border-warning/20 select-all">
                       HKTS-{qrSessionRef}
                     </span>
                     <button
@@ -1985,7 +1985,7 @@ export default function PosTerminalPage() {
                           navigator.clipboard.writeText(`HKTS-${qrSessionRef}`);
                         }
                       }}
-                      className="p-0.5 px-1.5 rounded bg-[#F7F7F5] hover:bg-[#E8E8E5] text-[#737373] text-[10px] font-semibold flex items-center gap-1 cursor-pointer"
+                      className="p-0.5 px-1.5 rounded bg-background hover:bg-surface-hover text-muted text-[10px] font-semibold flex items-center gap-1 cursor-pointer"
                       title="Nhấn để sao chép nội dung CK"
                     >
                       <Copy className="w-2.5 h-2.5" />
@@ -1997,15 +1997,15 @@ export default function PosTerminalPage() {
 
               {/* Proof of Payment Photo Capture Section (MANDATORY for bank transfer orders) */}
               <div
-                className={`p-3 rounded-[8px] border text-left space-y-2 ${
+                className={`p-3 rounded-lg border text-left space-y-2 ${
                   proofImage
-                    ? 'bg-[#F7F7F5] dark:bg-neutral-800 border-[#2F7D55]/40'
-                    : 'bg-[#FEF7EC]/70 dark:bg-amber-950/20 border-[#B7791F]/50 dark:border-amber-700/60'
+                    ? 'bg-background dark:bg-surface-hover border-primary/40'
+                    : 'bg-warning-bg/70 dark:bg-amber-950/20 border-warning/50 dark:border-amber-700/60'
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-bold text-[#202124] dark:text-neutral-100 flex items-center gap-1.5">
-                    <Camera className="w-3.5 h-3.5 text-[#315C4C] dark:text-emerald-400" />
+                  <span className="text-xs font-bold text-foreground dark:text-foreground flex items-center gap-1.5">
+                    <Camera className="w-3.5 h-3.5 text-primary dark:text-success" />
                     <span>Ảnh minh chứng chuyển khoản:</span>
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300">
                       Bắt buộc
@@ -2023,32 +2023,32 @@ export default function PosTerminalPage() {
                 </div>
 
                 {proofImage ? (
-                  <div className="flex items-center gap-3 p-2 bg-[#EAF4EE] dark:bg-emerald-950/40 border border-[#2F7D55]/30 rounded-[6px]">
+                  <div className="flex items-center gap-3 p-2 bg-success-bg dark:bg-success-bg/40 border border-primary/30 rounded-lg">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={proofImage}
                       alt="Minh chứng chuyển khoản"
-                      className="w-16 h-16 object-cover rounded border border-[#2F7D55]/40 shrink-0"
+                      className="w-16 h-16 object-cover rounded border border-primary/40 shrink-0"
                     />
                     <div className="min-w-0 flex-1 text-xs">
-                      <p className="font-bold text-[#2F7D55] dark:text-emerald-400 flex items-center gap-1">
+                      <p className="font-bold text-primary dark:text-success flex items-center gap-1">
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         <span>Đã đính kèm ảnh chuyển khoản</span>
                       </p>
-                      <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-0.5">
+                      <p className="text-[11px] text-muted dark:text-muted mt-0.5">
                         Ảnh sẽ được lưu kèm đơn hàng để Quản lý / Admin đối soát.
                       </p>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <p className="text-[11px] text-[#8C5D17] dark:text-amber-300">
+                    <p className="text-[11px] text-warning dark:text-gold-text">
                       Vui lòng chụp màn hình hoặc bill chuyển khoản của khách trước khi bấm xác nhận đơn.
                     </p>
                     <div className="flex items-center gap-2">
                       <label
                         htmlFor="pos-proof-camera-input"
-                        className="flex-1 py-2 px-3 rounded-[6px] border border-[#315C4C] bg-[#EAF4EE] dark:bg-emerald-950/40 text-[#315C4C] dark:text-emerald-400 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-[#DDF0E4] cursor-pointer transition-colors shadow-2xs"
+                        className="flex-1 py-2 px-3 rounded-lg border border-primary bg-success-bg dark:bg-success-bg/40 text-primary dark:text-success text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-[#DDF0E4] cursor-pointer transition-colors shadow-2xs"
                       >
                         <Camera className="w-4 h-4 shrink-0" />
                         <span>{isCapturingProof ? 'Đang xử lý...' : 'Chụp ảnh màn hình CK'}</span>
@@ -2064,9 +2064,9 @@ export default function PosTerminalPage() {
 
                       <label
                         htmlFor="pos-proof-upload-input"
-                        className="py-2 px-3 rounded-[6px] border border-[#D5D5D0] dark:border-neutral-700 bg-white dark:bg-neutral-800 text-[#494949] dark:text-neutral-300 text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-[#F7F7F5] cursor-pointer transition-colors"
+                        className="py-2 px-3 rounded-lg border border-border-strong dark:border-border bg-surface dark:bg-surface-hover text-[#494949] dark:text-muted text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-background cursor-pointer transition-colors"
                       >
-                        <ImageIcon className="w-3.5 h-3.5 shrink-0 text-[#737373]" />
+                        <ImageIcon className="w-3.5 h-3.5 shrink-0 text-muted" />
                         <span>Tải ảnh từ máy</span>
                         <input
                           id="pos-proof-upload-input"
@@ -2090,7 +2090,7 @@ export default function PosTerminalPage() {
                   disabled={isSubmitting || !proofImage}
                   isLoading={isSubmitting}
                   onClick={() => handleCompleteOrder()}
-                  className="w-full gap-2 bg-[#2F7D55] hover:bg-[#256343] text-white font-extrabold text-xs py-3 shadow-sm transform active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full gap-2 bg-primary hover:bg-[#256343] text-primary-foreground font-extrabold text-xs py-3 shadow-sm transform active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <CheckCircle2 className="w-4 h-4 text-white" />
                   <span>
@@ -2105,11 +2105,11 @@ export default function PosTerminalPage() {
 
           {/* Mode 2: Cash Drawer & Change Calculator */}
           {paymentMethod === 'cash' && (
-            <div className="p-4 bg-[#F7F7F5] border border-[#E8E8E5] rounded-[8px] space-y-3 text-xs">
+            <div className="p-4 bg-background border border-border rounded-lg space-y-3 text-xs">
               {/* Total required */}
-              <div className="p-3 bg-white border border-[#E8E8E5] rounded-[6px] flex items-center justify-between">
-                <span className="font-semibold text-[#737373]">Cần thu:</span>
-                <span className="text-base font-extrabold text-[#315C4C]">
+              <div className="p-3 bg-surface border border-border rounded-lg flex items-center justify-between">
+                <span className="font-semibold text-muted">Cần thu:</span>
+                <span className="text-base font-extrabold text-primary">
                   {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}
                 </span>
               </div>
@@ -2117,8 +2117,8 @@ export default function PosTerminalPage() {
               {/* Manual input */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="tendered-cash" className="font-bold text-[#202124] flex items-center gap-1.5 text-xs">
-                    <Coins className="w-3.5 h-3.5 text-[#315C4C]" />
+                  <Label htmlFor="tendered-cash" className="font-bold text-foreground flex items-center gap-1.5 text-xs">
+                    <Coins className="w-3.5 h-3.5 text-primary" />
                     <span>Tiền khách đưa (Đơn vị nghìn đồng):</span>
                   </Label>
                   {tenderedCash > 0 && (
@@ -2128,7 +2128,7 @@ export default function PosTerminalPage() {
                         setTenderedCash(0);
                         setCashInputValue('');
                       }}
-                      className="text-[11px] font-semibold text-[#C5221F] hover:underline cursor-pointer"
+                      className="text-[11px] font-semibold text-error hover:underline cursor-pointer"
                     >
                       Xóa
                     </button>
@@ -2159,11 +2159,11 @@ export default function PosTerminalPage() {
                     }}
                     onFocus={(e) => e.target.select()}
                     placeholder="Gõ số nghìn (VD: 1 = 1k, 50 = 50k, 100 = 100k)..."
-                    className="h-12 text-xl font-mono font-extrabold bg-white text-[#202124] pr-24 focus:border-[#315C4C]"
+                    className="h-12 text-xl font-mono font-extrabold bg-surface text-foreground pr-24 focus:border-primary"
                     autoFocus
                   />
                   <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
-                    <span className="font-mono font-black text-sm text-[#315C4C] bg-[#EAF4EE] px-2 py-1 rounded border border-[#2F7D55]/30">
+                    <span className="font-mono font-black text-sm text-primary bg-success-bg px-2 py-1 rounded border border-primary/30">
                       .000 ₫
                     </span>
                   </div>
@@ -2171,13 +2171,13 @@ export default function PosTerminalPage() {
 
                 {/* Real converted amount indicator */}
                 <div className="flex items-center justify-between text-xs px-1">
-                  <span className="text-[#737373] flex items-center gap-1.5">
+                  <span className="text-muted flex items-center gap-1.5">
                     <span>Thực nhận:</span>
-                    <strong className="text-sm font-extrabold text-[#202124] font-mono">
+                    <strong className="text-sm font-extrabold text-foreground font-mono">
                       {formatCurrency(tenderedCash, activeWorkspace?.currency || 'VND')}
                     </strong>
                   </span>
-                  <span className="text-[11px] text-[#2F7D55] font-semibold bg-[#EAF4EE] px-2 py-0.5 rounded">
+                  <span className="text-[11px] text-primary font-semibold bg-success-bg px-2 py-0.5 rounded">
                     ⚡ Tự thêm 3 số 0 (1 = 1.000đ)
                   </span>
                 </div>
@@ -2187,7 +2187,7 @@ export default function PosTerminalPage() {
                   <button
                     type="button"
                     onClick={() => applyCashPreset(cartTotal)}
-                    className="h-8 px-2 rounded-[4px] border border-[#315C4C]/40 bg-[#EAF4EE] text-[#2F7D55] font-bold text-xs hover:bg-[#D8EDE0] active:scale-95 transition-all truncate cursor-pointer"
+                    className="h-8 px-2 rounded-lg border border-primary/40 bg-success-bg text-primary font-bold text-xs hover:bg-[#D8EDE0] active:scale-95 transition-all truncate cursor-pointer"
                   >
                     Đúng số tiền
                   </button>
@@ -2196,7 +2196,7 @@ export default function PosTerminalPage() {
                       key={preset}
                       type="button"
                       onClick={() => applyCashPreset(preset)}
-                      className="h-8 px-1.5 rounded-[4px] border border-[#E8E8E5] bg-white text-[#202124] font-semibold text-xs hover:bg-[#F7F7F5] active:scale-95 transition-all truncate font-mono cursor-pointer"
+                      className="h-8 px-1.5 rounded-lg border border-border bg-surface text-foreground font-semibold text-xs hover:bg-background active:scale-95 transition-all truncate font-mono cursor-pointer"
                     >
                       {preset >= 1000 ? `${preset / 1000}k` : preset}
                     </button>
@@ -2206,11 +2206,11 @@ export default function PosTerminalPage() {
 
               {/* Change / Shortage Status Display */}
               {tenderedCash === 0 ? (
-                <div className="p-2 rounded-[6px] bg-white border border-dashed border-[#D2D2CE] text-center text-[#737373] text-[11px]">
+                <div className="p-2 rounded-lg bg-surface border border-dashed border-border-strong text-center text-muted text-[11px]">
                   Nhập tiền khách đưa để tính tiền thối
                 </div>
               ) : isCashUnderpaid ? (
-                <div className="p-3 bg-[#FDF2E9] border border-[#C5221F]/30 rounded-[6px] space-y-0.5 text-xs text-[#C5221F]">
+                <div className="p-3 bg-warning-bg border border-error/30 rounded-lg space-y-0.5 text-xs text-error">
                   <div className="flex items-center justify-between font-bold">
                     <span className="flex items-center gap-1">
                       <AlertCircle className="w-3.5 h-3.5" />
@@ -2222,14 +2222,14 @@ export default function PosTerminalPage() {
                   </div>
                 </div>
               ) : (
-                <div className="p-3 bg-[#EAF4EE] border border-[#2F7D55]/30 rounded-[6px] space-y-1 text-xs text-[#2F7D55]">
+                <div className="p-3 bg-success-bg border border-primary/30 rounded-lg space-y-1 text-xs text-primary">
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-[#202124]">Tiền thối lại:</span>
-                    <span className="text-lg font-extrabold text-[#2F7D55]">
+                    <span className="font-semibold text-foreground">Tiền thối lại:</span>
+                    <span className="text-lg font-extrabold text-primary">
                       {cashChange === 0 ? '0 ₫ (Vừa đủ)' : formatCurrency(cashChange, activeWorkspace?.currency || 'VND')}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-[11px] text-[#737373] pt-0.5 border-t border-[#2F7D55]/20">
+                  <div className="flex items-center justify-between text-[11px] text-muted pt-0.5 border-t border-primary/20">
                     <span>Đã nhận: {formatCurrency(tenderedCash, activeWorkspace?.currency || 'VND')}</span>
                     <span>Đơn: {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}</span>
                   </div>
@@ -2248,11 +2248,11 @@ export default function PosTerminalPage() {
               placeholder="Ghi chú đơn hàng..."
               value={orderNotes}
               onChange={(e) => setOrderNotes(e.target.value)}
-              className="h-8 text-xs bg-white"
+              className="h-8 text-xs bg-surface"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F0ED]">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
             <Button
               type="button"
               variant="outline"
@@ -2288,13 +2288,13 @@ export default function PosTerminalPage() {
           onClick={() => setIsQrZoomOpen(false)}
         >
           <div
-            className="relative bg-white rounded-3xl p-5 sm:p-7 max-w-sm sm:max-w-md w-full shadow-2xl flex flex-col items-center text-center space-y-4 cursor-default"
+            className="relative bg-surface rounded-3xl p-5 sm:p-7 max-w-sm sm:max-w-md w-full shadow-2xl flex flex-col items-center text-center space-y-4 cursor-default"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
               onClick={() => setIsQrZoomOpen(false)}
-              className="absolute top-3.5 right-3.5 p-2 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 transition-colors cursor-pointer"
+              className="absolute top-3.5 right-3.5 p-2 rounded-full bg-surface-hover hover:bg-surface-hover text-muted transition-colors cursor-pointer"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />
@@ -2304,13 +2304,13 @@ export default function PosTerminalPage() {
               <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
                 Quét mã VietQR thanh toán
               </span>
-              <h3 className="font-extrabold text-xl text-neutral-950">
+              <h3 className="font-extrabold text-xl text-muted">
                 {formatCurrency(cartTotal, activeWorkspace?.currency || 'VND')}
               </h3>
             </div>
 
             {/* Giant QR Matrix - Max Clear Resolution */}
-            <div className="w-full max-w-[320px] sm:max-w-[360px] aspect-square bg-white border-2 border-neutral-200 rounded-2xl flex items-center justify-center p-2 shadow-inner">
+            <div className="w-full max-w-[320px] sm:max-w-[360px] aspect-square bg-surface border-2 border-border rounded-2xl flex items-center justify-center p-2 shadow-inner">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={isOnline
@@ -2322,14 +2322,14 @@ export default function PosTerminalPage() {
             </div>
 
             {/* Bank details summary */}
-            <div className="w-full bg-neutral-50 border border-neutral-200 rounded-xl p-3 text-neutral-900 space-y-1 text-xs">
+            <div className="w-full bg-surface-hover border border-border rounded-xl p-3 text-muted space-y-1 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-neutral-500">Nội dung CK:</span>
+                <span className="text-muted">Nội dung CK:</span>
                 <span className="font-mono font-black text-sm bg-amber-100 text-amber-950 px-2 py-0.5 rounded border border-amber-300">
                   HKTS-{qrSessionRef}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-[11px] text-neutral-600 pt-1 border-t border-neutral-200">
+              <div className="flex items-center justify-between text-[11px] text-muted pt-1 border-t border-border">
                 <span>{getBankDisplayName(activeBankConfig.bankId)} • {activeBankConfig.accountNo}</span>
                 <span className="font-semibold">{activeBankConfig.accountName}</span>
               </div>
@@ -2356,23 +2356,23 @@ export default function PosTerminalPage() {
       >
         {confirmedOrder && (
           <div className="text-center space-y-4">
-            <div className="w-14 h-14 rounded-full bg-[#EAF4EE] text-[#2F7D55] flex items-center justify-center mx-auto border border-[#2F7D55]/30">
+            <div className="w-14 h-14 rounded-full bg-success-bg text-primary flex items-center justify-center mx-auto border border-primary/30">
               <CheckCircle2 className="w-8 h-8" />
             </div>
 
             <div>
-              <p className="text-xs text-[#737373]">Mã đơn hàng</p>
-              <h3 className="text-xl font-bold font-mono text-[#202124]">
+              <p className="text-xs text-muted">Mã đơn hàng</p>
+              <h3 className="text-xl font-bold font-mono text-foreground">
                 {confirmedOrder.order_number}
               </h3>
-              <p className="text-xs text-[#315C4C] font-semibold mt-0.5">
+              <p className="text-xs text-primary font-semibold mt-0.5">
                 {confirmedOrder.payment_method === 'cash' ? 'Tiền mặt tại quầy' : 'Chuyển khoản VietQR'} •{' '}
                 {formatCurrency(
                   confirmedOrder.final_amount,
                   activeWorkspace?.currency || 'VND'
                 )}
               </p>
-              <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded bg-[#EAF4EE] text-[#2F7D55] text-xs font-semibold border border-[#2F7D55]/30">
+              <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded bg-success-bg text-primary text-xs font-semibold border border-primary/30">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>
                   Đã tự động trừ {confirmedOrder.items?.reduce((s, i) => s + i.quantity, 0)} sản phẩm ra khỏi tồn quầy!
@@ -2381,18 +2381,18 @@ export default function PosTerminalPage() {
             </div>
 
             {confirmedOrder.proof_image_url && (
-              <div className="p-2.5 bg-[#F7F7F5] dark:bg-neutral-800 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-700 flex items-center gap-3 text-left">
+              <div className="p-2.5 bg-background dark:bg-surface-hover rounded-lg border border-border dark:border-border flex items-center gap-3 text-left">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={confirmedOrder.proof_image_url}
                   alt="Minh chứng"
-                  className="w-12 h-12 object-cover rounded border border-[#2F7D55]/30 shrink-0"
+                  className="w-12 h-12 object-cover rounded border border-primary/30 shrink-0"
                 />
                 <div className="min-w-0 flex-1">
-                  <span className="text-[11px] font-bold text-[#2F7D55] dark:text-emerald-400 block">
+                  <span className="text-[11px] font-bold text-primary dark:text-success block">
                     ✓ Đã lưu ảnh minh chứng CK
                   </span>
-                  <span className="text-[10px] text-[#737373] dark:text-neutral-400">
+                  <span className="text-[10px] text-muted dark:text-muted">
                     Đã sẵn sàng trên Dashboard quản trị để đối soát
                   </span>
                 </div>
@@ -2400,14 +2400,14 @@ export default function PosTerminalPage() {
             )}
 
             {confirmedOrder.payment_method === 'cash' && confirmedOrder.tendered_amount != null && (
-              <div className="p-3 bg-[#EAF4EE] border border-[#2F7D55]/30 rounded-[6px] text-xs space-y-1">
-                <div className="flex justify-between text-[#737373]">
+              <div className="p-3 bg-success-bg border border-primary/30 rounded-lg text-xs space-y-1">
+                <div className="flex justify-between text-muted">
                   <span>Tiền khách đưa:</span>
-                  <span className="font-semibold text-[#202124]">
+                  <span className="font-semibold text-foreground">
                     {formatCurrency(confirmedOrder.tendered_amount, activeWorkspace?.currency || 'VND')}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm font-bold text-[#2F7D55]">
+                <div className="flex justify-between text-sm font-bold text-primary">
                   <span>Tiền thối lại:</span>
                   <span>
                     {formatCurrency(confirmedOrder.change_amount || 0, activeWorkspace?.currency || 'VND')}
@@ -2416,7 +2416,7 @@ export default function PosTerminalPage() {
               </div>
             )}
 
-            <div className="p-3 bg-[#F7F7F5] rounded-[6px] border border-[#E8E8E5] text-left text-xs space-y-1.5 max-h-40 overflow-y-auto">
+            <div className="p-3 bg-background rounded-lg border border-border text-left text-xs space-y-1.5 max-h-40 overflow-y-auto">
               {confirmedOrder.items?.map((item) => (
                 <div key={item.id} className="flex justify-between">
                   <span>
@@ -2430,7 +2430,7 @@ export default function PosTerminalPage() {
             </div>
 
             {!isOnline && (
-              <div className="p-2.5 bg-[#FEF7EC] border border-[#F8E3C3] text-[#B7791F] rounded-[4px] text-xs">
+              <div className="p-2.5 bg-warning-bg border border-[#F8E3C3] text-warning rounded-lg text-xs">
                 ⚠️ Đơn hàng đã được lưu ngoại tuyến an toàn vào thiết bị (IndexedDB). Sẽ tự động tải lên khi có mạng.
               </div>
             )}
@@ -2440,7 +2440,7 @@ export default function PosTerminalPage() {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="flex-1 text-xs gap-1 border-[#315C4C]/40 text-[#315C4C] hover:bg-[#EAF4EE]"
+                className="flex-1 text-xs gap-1 border-primary/40 text-primary hover:bg-success-bg"
                 onClick={() => setIsReceiptModalOpen(true)}
               >
                 <Printer className="w-3.5 h-3.5" />
@@ -2450,7 +2450,7 @@ export default function PosTerminalPage() {
                 type="button"
                 variant="primary"
                 size="sm"
-                className="flex-1 text-xs font-bold bg-[#315C4C] text-white"
+                className="flex-1 text-xs font-bold bg-primary text-primary-foreground"
                 onClick={() => setConfirmedOrder(null)}
               >
                 Tạo đơn tiếp theo
@@ -2504,30 +2504,30 @@ export default function PosTerminalPage() {
       >
         <div className="space-y-4">
           {/* Connection Status Card */}
-          <div className="p-3.5 rounded-[8px] border border-[#E8E8E5] bg-[#F7F7F5] space-y-2">
+          <div className="p-3.5 rounded-lg border border-border bg-background space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-[#737373]">Đường truyền mạng vật lý:</span>
+              <span className="text-xs text-muted">Đường truyền mạng vật lý:</span>
               <span
                 className={`text-xs font-bold flex items-center gap-1.5 ${
-                  isHardwareOnline ? 'text-[#2F7D55]' : 'text-[#C44536]'
+                  isHardwareOnline ? 'text-primary' : 'text-error'
                 }`}
               >
                 <span
                   className={`w-2 h-2 rounded-full ${
-                    isHardwareOnline ? 'bg-[#2F7D55]' : 'bg-[#C44536]'
+                    isHardwareOnline ? 'bg-primary' : 'bg-error'
                   }`}
                 />
                 {isHardwareOnline ? 'Có kết nối Internet' : 'Mất kết nối Internet'}
               </span>
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-[#E8E8E5]">
-              <span className="text-xs text-[#737373]">Trạng thái hoạt động POS:</span>
+            <div className="flex items-center justify-between pt-2 border-t border-border">
+              <span className="text-xs text-muted">Trạng thái hoạt động POS:</span>
               <span
                 className={`text-xs font-bold px-2 py-0.5 rounded border ${
                   isOnline
-                    ? 'bg-[#EAF4EE] text-[#2F7D55] border-[#CEE6D7]'
-                    : 'bg-[#FEF7EC] text-[#B7791F] border-[#F8E3C3]'
+                    ? 'bg-success-bg text-primary border-[#CEE6D7]'
+                    : 'bg-warning-bg text-warning border-[#F8E3C3]'
                 }`}
               >
                 {isOnline ? '🟢 Online (Trực tuyến)' : '🟠 Offline (Lưu trữ cục bộ)'}
@@ -2536,11 +2536,11 @@ export default function PosTerminalPage() {
           </div>
 
           {/* Offline Testing Simulation Toggle */}
-          <div className="p-3.5 rounded-[8px] border border-[#E8E8E5] bg-white space-y-2">
+          <div className="p-3.5 rounded-lg border border-border bg-surface space-y-2">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-[#202124]">Mô phỏng Chế độ Ngoại tuyến</p>
-                <p className="text-[11px] text-[#737373] mt-0.5">
+                <p className="text-xs font-bold text-foreground">Mô phỏng Chế độ Ngoại tuyến</p>
+                <p className="text-[11px] text-muted mt-0.5">
                   Thử nghiệm bán hàng khi mất mạng Internet.
                 </p>
               </div>
@@ -2551,24 +2551,24 @@ export default function PosTerminalPage() {
                   onChange={(e) => handleToggleOfflineMode(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-[#E8E8E5] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#B7791F]" />
+                <div className="w-11 h-6 bg-surface-hover peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-warning" />
               </label>
             </div>
             {isSimulatedOffline && (
-              <p className="text-[11px] text-[#8C5D17] bg-[#FEF7EC] p-2 rounded border border-[#F8E3C3]">
+              <p className="text-[11px] text-warning bg-warning-bg p-2 rounded border border-[#F8E3C3]">
                 ⚡ Đang bật mô phỏng ngoại tuyến. Các đơn hàng tạo mới sẽ được lưu trữ vào IndexedDB và chuyển sang hàng đợi đồng bộ.
               </p>
             )}
           </div>
 
           {/* Pending Sync Queue Card */}
-          <div className="p-3.5 rounded-[8px] border border-[#E8E8E5] bg-white space-y-3">
+          <div className="p-3.5 rounded-lg border border-border bg-surface space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-xs font-bold text-[#202124]">Đơn hàng chờ đồng bộ:</span>
-                <p className="text-[11px] text-[#737373]">Lưu trữ trong IndexedDB & LocalStorage</p>
+                <span className="text-xs font-bold text-foreground">Đơn hàng chờ đồng bộ:</span>
+                <p className="text-[11px] text-muted">Lưu trữ trong IndexedDB & LocalStorage</p>
               </div>
-              <span className="text-lg font-mono font-bold text-[#315C4C]">
+              <span className="text-lg font-mono font-bold text-primary">
                 {pendingOrdersCount} đơn
               </span>
             </div>
@@ -2595,8 +2595,8 @@ export default function PosTerminalPage() {
             </div>
           </div>
 
-          <div className="text-[11px] text-[#737373] bg-[#F7F7F5] p-2.5 rounded border border-[#E8E8E5] space-y-1">
-            <p className="font-semibold text-[#202124]">Cơ chế lưu trữ Offline của HikaruStore:</p>
+          <div className="text-[11px] text-muted bg-background p-2.5 rounded border border-border space-y-1">
+            <p className="font-semibold text-foreground">Cơ chế lưu trữ Offline của HikaruStore:</p>
             <ul className="list-disc list-inside space-y-0.5 text-[#555]">
               <li>Hỗ trợ Service Worker (PWA) giúp tải lại trang ngay cả khi ngắt toàn bộ Wifi/4G.</li>
               <li>Mọi đơn hàng tạo khi mất mạng được bảo toàn 100% bằng Idempotency Key.</li>
@@ -2622,18 +2622,18 @@ export default function PosTerminalPage() {
               setIsMobileMenuOpen(false);
               setIsScannerOpen(true);
             }}
-            className="w-full p-3 rounded-[8px] border border-[#315C4C]/40 bg-[#EAF4EE] hover:bg-[#D8EDE0] flex items-center justify-between text-left transition-colors cursor-pointer"
+            className="w-full p-3 rounded-lg border border-primary/40 bg-success-bg hover:bg-[#D8EDE0] flex items-center justify-between text-left transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#315C4C] text-white flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0">
                 <Scan className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs font-bold text-[#202124]">Quét mã vạch sản phẩm (Camera)</p>
-                <p className="text-[11px] text-[#2F7D55]">Dùng camera điện thoại quét barcode/QR để thêm vào giỏ</p>
+                <p className="text-xs font-bold text-foreground">Quét mã vạch sản phẩm (Camera)</p>
+                <p className="text-[11px] text-primary">Dùng camera điện thoại quét barcode/QR để thêm vào giỏ</p>
               </div>
             </div>
-            <span className="text-xs font-bold text-[#315C4C]">Quét ngay</span>
+            <span className="text-xs font-bold text-primary">Quét ngay</span>
           </button>
 
           {/* Shift / Cash Float */}
@@ -2643,24 +2643,24 @@ export default function PosTerminalPage() {
               setIsMobileMenuOpen(false);
               setIsShiftModalOpen(true);
             }}
-            className="w-full p-3 rounded-[8px] border border-[#E8E8E5] bg-white hover:bg-[#F7F7F5] flex items-center justify-between text-left transition-colors cursor-pointer"
+            className="w-full p-3 rounded-lg border border-border bg-surface hover:bg-background flex items-center justify-between text-left transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#EAF4EE] text-[#2F7D55] flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-full bg-success-bg text-primary flex items-center justify-center shrink-0">
                 <Banknote className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs font-bold text-[#202124]">
+                <p className="text-xs font-bold text-foreground">
                   {activeShift && activeShift.status === 'open' ? 'Quản lý ca bán hàng (Đang mở)' : 'Mở ca bán hàng'}
                 </p>
-                <p className="text-[11px] text-[#737373]">
+                <p className="text-[11px] text-muted">
                   {activeShift && activeShift.status === 'open'
                     ? `Két hiện tại: ${(activeShift.startingCashFloat + activeShift.totalCashSales).toLocaleString('vi-VN')} đ`
                     : 'Nhập tiền lẻ đầu ca để quản lý két'}
                 </p>
               </div>
             </div>
-            <span className="text-xs font-semibold text-[#315C4C]">
+            <span className="text-xs font-semibold text-primary">
               {activeShift && activeShift.status === 'open' ? 'Chốt ca' : 'Mở ca'}
             </span>
           </button>
@@ -2672,23 +2672,23 @@ export default function PosTerminalPage() {
               setIsMobileMenuOpen(false);
               setIsPreorderPickupOpen(true);
             }}
-            className="w-full p-3 rounded-[8px] border border-[#E8E8E5] bg-white hover:bg-[#F7F7F5] flex items-center justify-between text-left transition-colors cursor-pointer"
+            className="w-full p-3 rounded-lg border border-border bg-surface hover:bg-background flex items-center justify-between text-left transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#FEF7EC] text-[#B7791F] flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-full bg-warning-bg text-warning flex items-center justify-center shrink-0">
                 <Package className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs font-bold text-[#202124]">Trả hàng đặt trước (Pre-order)</p>
-                <p className="text-[11px] text-[#737373]">Xác nhận và chụp ảnh minh chứng nhận hàng</p>
+                <p className="text-xs font-bold text-foreground">Trả hàng đặt trước (Pre-order)</p>
+                <p className="text-[11px] text-muted">Xác nhận và chụp ảnh minh chứng nhận hàng</p>
               </div>
             </div>
             {pendingPreordersCount > 0 ? (
-              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#B7791F] text-white">
+              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-warning text-white">
                 {pendingPreordersCount} chờ nhận
               </span>
             ) : (
-              <span className="text-xs text-[#737373]">0</span>
+              <span className="text-xs text-muted">0</span>
             )}
           </button>
 
@@ -2696,18 +2696,18 @@ export default function PosTerminalPage() {
           <Link
             href="/pos/orders"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="w-full p-3 rounded-[8px] border border-[#E8E8E5] bg-white hover:bg-[#F7F7F5] flex items-center justify-between text-left transition-colors cursor-pointer"
+            className="w-full p-3 rounded-lg border border-border bg-surface hover:bg-background flex items-center justify-between text-left transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#F0F0ED] text-[#202124] flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-full bg-surface-hover text-foreground flex items-center justify-center shrink-0">
                 <History className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs font-bold text-[#202124]">Lịch sử đơn hàng POS</p>
-                <p className="text-[11px] text-[#737373]">Xem lại tất cả hóa đơn đã bán tại quầy</p>
+                <p className="text-xs font-bold text-foreground">Lịch sử đơn hàng POS</p>
+                <p className="text-[11px] text-muted">Xem lại tất cả hóa đơn đã bán tại quầy</p>
               </div>
             </div>
-            <span className="text-xs text-[#737373]">Xem &rarr;</span>
+            <span className="text-xs text-muted">Xem &rarr;</span>
           </Link>
 
           {/* Offline & Sync Center */}
@@ -2717,32 +2717,32 @@ export default function PosTerminalPage() {
               setIsMobileMenuOpen(false);
               setIsOfflineModalOpen(true);
             }}
-            className="w-full p-3 rounded-[8px] border border-[#E8E8E5] bg-white hover:bg-[#F7F7F5] flex items-center justify-between text-left transition-colors cursor-pointer"
+            className="w-full p-3 rounded-lg border border-border bg-surface hover:bg-background flex items-center justify-between text-left transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#EBF1EE] text-[#315C4C] flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-full bg-warning-bg text-primary flex items-center justify-center shrink-0">
                 <Wifi className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs font-bold text-[#202124]">Trạng thái Ngoại tuyến & Đồng bộ</p>
-                <p className="text-[11px] text-[#737373]">
+                <p className="text-xs font-bold text-foreground">Trạng thái Ngoại tuyến & Đồng bộ</p>
+                <p className="text-[11px] text-muted">
                   {isOnline ? '🟢 Đang có mạng' : '🟠 Đang ngoại tuyến'} • {pendingOrdersCount} đơn chờ đẩy
                 </p>
               </div>
             </div>
-            <span className="text-xs font-semibold text-[#315C4C]">Cài đặt</span>
+            <span className="text-xs font-semibold text-primary">Cài đặt</span>
           </button>
 
           {/* Display & Preferences */}
-          <div className="p-3 rounded-[8px] border border-[#E8E8E5] bg-[#FAFAF8] space-y-2.5">
-            <p className="text-[11px] font-bold text-[#737373] uppercase tracking-wider">
+          <div className="p-3 rounded-lg border border-border bg-background space-y-2.5">
+            <p className="text-[11px] font-bold text-muted uppercase tracking-wider">
               Tùy chỉnh hiển thị & Giao diện
             </p>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-[#202124]">Tỉ lệ màn hình:</span>
+              <span className="text-xs text-foreground">Tỉ lệ màn hình:</span>
               </div>
-            <div className="flex items-center justify-between pt-1 border-t border-[#E8E8E5]">
-              <span className="text-xs text-[#202124]">Chế độ sáng / tối:</span>
+            <div className="flex items-center justify-between pt-1 border-t border-border">
+              <span className="text-xs text-foreground">Chế độ sáng / tối:</span>
               <ThemeToggle />
             </div>
           </div>
@@ -2751,9 +2751,9 @@ export default function PosTerminalPage() {
           <Link
             href="/dashboard"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="w-full p-2.5 rounded-[6px] border border-[#E8E8E5] bg-white hover:bg-[#F7F7F5] text-[#202124] flex items-center justify-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
+            className="w-full p-2.5 rounded-lg border border-border bg-surface hover:bg-background text-foreground flex items-center justify-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
           >
-            <ArrowLeft className="w-4 h-4 text-[#315C4C]" />
+            <ArrowLeft className="w-4 h-4 text-primary" />
             <span>Quay lại Trang Quản lý (Dashboard)</span>
           </Link>
 
@@ -2764,7 +2764,7 @@ export default function PosTerminalPage() {
               setIsMobileMenuOpen(false);
               setIsFeedbackOpen(true);
             }}
-            className="w-full p-2.5 rounded-[6px] border border-[#C44536]/30 text-[#C44536] hover:bg-[#FDF1F0] flex items-center justify-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
+            className="w-full p-2.5 rounded-lg border border-error/30 text-error hover:bg-error-bg flex items-center justify-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
           >
             <Bug className="w-4 h-4" />
             <span>Góp ý & Báo lỗi hệ thống</span>
@@ -2810,8 +2810,8 @@ export default function PosTerminalPage() {
           return (
             <div className="space-y-3">
               {/* Product Summary Header */}
-              <div className="flex items-center gap-3 p-2.5 rounded-[8px] bg-[#F7F7F5] border border-[#E8E8E5]">
-                <div className="w-12 h-12 rounded-[6px] bg-white border border-[#E8E8E5] overflow-hidden shrink-0 flex items-center justify-center">
+              <div className="flex items-center gap-3 p-2.5 rounded-lg bg-background border border-border">
+                <div className="w-12 h-12 rounded-lg bg-surface border border-border overflow-hidden shrink-0 flex items-center justify-center">
                   {variantPickerProduct.image_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -2820,14 +2820,14 @@ export default function PosTerminalPage() {
                       className="w-full h-full object-contain p-0.5"
                     />
                   ) : (
-                    <Package className="w-6 h-6 text-[#9E9E9C]" />
+                    <Package className="w-6 h-6 text-muted" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold text-[#202124] line-clamp-2">
+                  <p className="text-xs font-bold text-foreground line-clamp-2">
                     {variantPickerProduct.name}
                   </p>
-                  <p className="text-[11px] text-[#737373] mt-0.5">
+                  <p className="text-[11px] text-muted mt-0.5">
                     {modalVariants.length} phân loại sản phẩm
                   </p>
                 </div>
@@ -2849,29 +2849,29 @@ export default function PosTerminalPage() {
                           [variantPickerProduct.id]: v.id,
                         })
                       }
-                      className={`p-3 rounded-[8px] border transition-colors flex items-center justify-between gap-3 cursor-pointer ${
+                      className={`p-3 rounded-lg border transition-colors flex items-center justify-between gap-3 cursor-pointer ${
                         isSelected
-                          ? 'bg-[#EAF4EE]/60 border-[#315C4C]'
-                          : 'bg-white border-[#E8E8E5] hover:border-[#315C4C]/40'
+                          ? 'bg-success-bg/60 border-primary'
+                          : 'bg-surface border-border hover:border-primary/40'
                       }`}
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-[#202124] leading-snug">
+                        <p className="text-sm font-bold text-foreground leading-snug">
                           {v.name}
                         </p>
                         <div className="flex flex-wrap items-center gap-2 mt-1 text-xs">
-                          <span className="font-bold text-[#315C4C] font-mono">
+                          <span className="font-bold text-primary font-mono">
                             {formatCurrency(v.price, activeWorkspace?.currency || 'VND')}
                           </span>
-                          <span className="text-[11px] font-mono text-[#737373]">
+                          <span className="text-[11px] font-mono text-muted">
                             {v.sku}
                           </span>
                           {stock > 0 ? (
-                            <span className="px-1.5 py-0.5 rounded bg-[#EAF4EE] text-[#2F7D55] text-[10px] font-bold">
+                            <span className="px-1.5 py-0.5 rounded bg-success-bg text-primary text-[10px] font-bold">
                               Còn {stock}
                             </span>
                           ) : (
-                            <span className="px-1.5 py-0.5 rounded bg-[#FDF1F0] text-[#C44536] text-[10px] font-bold">
+                            <span className="px-1.5 py-0.5 rounded bg-error-bg text-error text-[10px] font-bold">
                               Hết hàng
                             </span>
                           )}
@@ -2880,22 +2880,22 @@ export default function PosTerminalPage() {
 
                       <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
                         {inCart > 0 ? (
-                          <div className="flex items-center gap-1.5 bg-[#EBF1EE] border border-[#315C4C]/40 rounded-[6px] p-1">
+                          <div className="flex items-center gap-1.5 bg-warning-bg border border-primary/40 rounded-lg p-1">
                             <button
                               type="button"
                               onClick={() => handleDecrease(v.id)}
-                              className="w-8 h-8 rounded bg-white text-[#202124] flex items-center justify-center font-bold border border-[#E8E8E5]"
+                              className="w-8 h-8 rounded bg-surface text-foreground flex items-center justify-center font-bold border border-border"
                             >
                               <Minus className="w-3.5 h-3.5" />
                             </button>
-                            <span className="w-6 text-center font-bold text-xs text-[#315C4C]">
+                            <span className="w-6 text-center font-bold text-xs text-primary">
                               {inCart}
                             </span>
                             <button
                               type="button"
                               disabled={stock <= 0}
                               onClick={() => handleIncrease(v.id)}
-                              className="w-8 h-8 rounded bg-[#315C4C] text-white flex items-center justify-center font-bold disabled:opacity-30"
+                              className="w-8 h-8 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold disabled:opacity-30"
                             >
                               <Plus className="w-3.5 h-3.5" />
                             </button>
@@ -2934,7 +2934,7 @@ export default function PosTerminalPage() {
                 })}
               </div>
 
-              <div className="pt-2 border-t border-[#E8E8E5] flex justify-end">
+              <div className="pt-2 border-t border-border flex justify-end">
                 <Button
                   type="button"
                   variant="outline"

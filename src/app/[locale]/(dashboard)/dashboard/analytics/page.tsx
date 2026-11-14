@@ -189,17 +189,17 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#E8E8E5]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-border">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-[#202124]">
+            <h1 className="text-xl font-bold tracking-tight text-foreground">
               Báo cáo & Phân tích Doanh thu
             </h1>
             <Badge variant="outline" className="text-[11px] font-mono">
               Doanh thu thực tế
             </Badge>
           </div>
-          <p className="text-xs text-[#737373] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Tổng hợp dữ liệu bán hàng tại các quầy sự kiện, đối soát gian hàng Collab và xuất báo cáo kế toán.
           </p>
         </div>
@@ -209,7 +209,7 @@ export default function AnalyticsPage() {
             variant="outline"
             size="sm"
             onClick={handleExportCsv}
-            className="flex-1 sm:flex-none justify-center gap-1.5 text-xs text-[#555555] dark:text-neutral-300 hover:text-[#202124] h-8"
+            className="flex-1 sm:flex-none justify-center gap-1.5 text-xs text-muted dark:text-muted hover:text-foreground h-8"
             title="Xuất file CSV phẳng cơ bản"
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
@@ -220,7 +220,7 @@ export default function AnalyticsPage() {
             variant="primary"
             size="sm"
             onClick={handleExportExcel}
-            className="flex-1 sm:flex-none justify-center gap-1.5 text-xs bg-[#2F7D55] hover:bg-[#286646] text-white shadow-xs font-semibold h-8"
+            className="flex-1 sm:flex-none justify-center gap-1.5 text-xs bg-primary hover:bg-[#286646] text-primary-foreground shadow-xs font-semibold h-8"
             title="Xuất trọn gói dữ liệu Sự kiện, Doanh thu, Quầy Collab & Tồn kho ra file Excel (.xlsx)"
           >
             <Download className="w-3.5 h-3.5" />
@@ -230,17 +230,17 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Event Filter Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 bg-white dark:bg-neutral-900 rounded-[8px] border border-[#E8E8E5] dark:border-neutral-800 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 bg-surface dark:bg-surface rounded-lg border border-border dark:border-border shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2.5 flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#555555] dark:text-neutral-400 shrink-0">
-            <Filter className="w-3.5 h-3.5 text-[#737373] dark:text-neutral-400" />
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted dark:text-muted shrink-0">
+            <Filter className="w-3.5 h-3.5 text-muted dark:text-muted" />
             <span>Phạm vi sự kiện:</span>
           </div>
 
           <select
             value={selectedEventId}
             onChange={(e) => setSelectedEventId(e.target.value)}
-            className="w-full sm:w-auto sm:max-w-xs h-8 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-700 bg-[#F7F7F5] dark:bg-neutral-800 px-2.5 text-xs font-medium text-[#202124] dark:text-neutral-100 focus:outline-none focus:border-[#315C4C] truncate max-w-full"
+            className="w-full sm:w-auto sm:max-w-xs h-8 rounded-lg border border-border dark:border-border bg-background dark:bg-surface-hover px-2.5 text-xs font-medium text-foreground dark:text-foreground focus:outline-none focus:border-primary truncate max-w-full"
           >
             <option value="all">Tất cả sự kiện (Dữ liệu thực tế)</option>
             <optgroup label="Dữ liệu thực tế">
@@ -262,17 +262,17 @@ export default function AnalyticsPage() {
           </select>
         </div>
 
-        <div className="text-xs text-[#737373] dark:text-neutral-400 shrink-0">
+        <div className="text-xs text-muted dark:text-muted shrink-0">
           {isTestEvent(selectedEventId) ? (
-            <Badge variant="outline" className="text-xs border-[#B7791F] text-[#B7791F] bg-[#B7791F]/10">
+            <Badge variant="outline" className="text-xs border-warning text-warning bg-warning/10">
               Chế độ Sandbox (Test)
             </Badge>
           ) : selectedEventId !== 'all' ? (
-            <Badge variant="outline" className="text-xs border-[#315C4C] text-[#315C4C] bg-[#315C4C]/5">
+            <Badge variant="outline" className="text-xs border-primary text-primary bg-primary/5">
               {selectedEvent?.name}
             </Badge>
           ) : (
-            <span className="text-[11px] text-[#737373] dark:text-neutral-400">
+            <span className="text-[11px] text-muted dark:text-muted">
               Doanh thu thực tế ({realEvents.length} sự kiện)
             </span>
           )}
@@ -281,9 +281,9 @@ export default function AnalyticsPage() {
 
       {/* Sandbox Test Mode Notice Banner */}
       {isTestEvent(selectedEventId) && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 rounded-[8px] bg-[#FEF7EC] border border-[#B7791F]/30 text-xs text-[#B7791F] shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 rounded-lg bg-warning-bg border border-warning/30 text-xs text-warning shadow-xs">
           <div className="flex items-start sm:items-center gap-2.5">
-            <FlaskConical className="w-4 h-4 shrink-0 text-[#B7791F] mt-0.5 sm:mt-0" />
+            <FlaskConical className="w-4 h-4 shrink-0 text-warning mt-0.5 sm:mt-0" />
             <span>
               <strong>Dữ liệu thử nghiệm (Sandbox):</strong> Doanh thu ({formatCurrency(totalRevenue, activeWorkspace?.currency || 'VND')}) và {totalOrdersCount} đơn hợp lệ tại đây là số liệu TEST phát sinh khi chạy thử máy POS, <strong>hoàn toàn không được cộng vào tổng doanh thu thực tế</strong> của hệ thống.
             </span>
@@ -303,44 +303,44 @@ export default function AnalyticsPage() {
 
       {/* KPI Overview */}
       <div className="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        <Card className="p-3 sm:p-4 bg-white dark:bg-neutral-900 border-[#E8E8E5] dark:border-neutral-800 shadow-xs flex flex-col justify-between">
-          <span className="text-xs text-[#737373] dark:text-neutral-400 font-medium">Tổng doanh thu</span>
-          <div className="text-lg min-[360px]:text-xl sm:text-2xl font-extrabold text-[#315C4C] dark:text-emerald-400 mt-1 truncate">
+        <Card className="p-3 sm:p-4 bg-surface dark:bg-surface border-border dark:border-border shadow-xs flex flex-col justify-between">
+          <span className="text-xs text-muted dark:text-muted font-medium">Tổng doanh thu</span>
+          <div className="text-lg min-[360px]:text-xl sm:text-2xl font-extrabold text-primary dark:text-success mt-1 truncate">
             {formatCurrency(totalRevenue, activeWorkspace?.currency || 'VND')}
           </div>
-          <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-1">Đã thu qua các quầy</p>
+          <p className="text-[11px] text-muted dark:text-muted mt-1">Đã thu qua các quầy</p>
         </Card>
 
-        <Card className="p-3 sm:p-4 bg-white dark:bg-neutral-900 border-[#E8E8E5] dark:border-neutral-800 shadow-xs flex flex-col justify-between">
-          <span className="text-xs text-[#737373] dark:text-neutral-400 font-medium">Tổng đơn hàng</span>
-          <div className="text-lg min-[360px]:text-xl sm:text-2xl font-extrabold text-[#202124] dark:text-neutral-100 mt-1 truncate">
+        <Card className="p-3 sm:p-4 bg-surface dark:bg-surface border-border dark:border-border shadow-xs flex flex-col justify-between">
+          <span className="text-xs text-muted dark:text-muted font-medium">Tổng đơn hàng</span>
+          <div className="text-lg min-[360px]:text-xl sm:text-2xl font-extrabold text-foreground dark:text-foreground mt-1 truncate">
             {totalOrdersCount} đơn
           </div>
-          <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-1">Giao dịch thành công</p>
+          <p className="text-[11px] text-muted dark:text-muted mt-1">Giao dịch thành công</p>
         </Card>
 
-        <Card className="p-3 sm:p-4 bg-white dark:bg-neutral-900 border-[#E8E8E5] dark:border-neutral-800 shadow-xs flex flex-col justify-between">
-          <span className="text-xs text-[#737373] dark:text-neutral-400 font-medium">Số lượng món đã bán</span>
-          <div className="text-lg min-[360px]:text-xl sm:text-2xl font-extrabold text-[#202124] dark:text-neutral-100 mt-1 truncate">
+        <Card className="p-3 sm:p-4 bg-surface dark:bg-surface border-border dark:border-border shadow-xs flex flex-col justify-between">
+          <span className="text-xs text-muted dark:text-muted font-medium">Số lượng món đã bán</span>
+          <div className="text-lg min-[360px]:text-xl sm:text-2xl font-extrabold text-foreground dark:text-foreground mt-1 truncate">
             {totalUnitsSold} món
           </div>
-          <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-1">Merchandise xuất kho</p>
+          <p className="text-[11px] text-muted dark:text-muted mt-1">Merchandise xuất kho</p>
         </Card>
 
-        <Card className="p-3 sm:p-4 bg-white dark:bg-neutral-900 border-[#E8E8E5] dark:border-neutral-800 shadow-xs flex flex-col justify-between">
-          <span className="text-xs text-[#737373] dark:text-neutral-400 font-medium">Giá trị TB / đơn</span>
-          <div className="text-lg min-[360px]:text-xl sm:text-2xl font-extrabold text-[#B7791F] dark:text-amber-400 mt-1 truncate">
+        <Card className="p-3 sm:p-4 bg-surface dark:bg-surface border-border dark:border-border shadow-xs flex flex-col justify-between">
+          <span className="text-xs text-muted dark:text-muted font-medium">Giá trị TB / đơn</span>
+          <div className="text-lg min-[360px]:text-xl sm:text-2xl font-extrabold text-warning dark:text-gold-text mt-1 truncate">
             {formatCurrency(avgOrderValue, activeWorkspace?.currency || 'VND')}
           </div>
-          <p className="text-[11px] text-[#737373] dark:text-neutral-400 mt-1">AOV theo phiên tour</p>
+          <p className="text-[11px] text-muted dark:text-muted mt-1">AOV theo phiên tour</p>
         </Card>
       </div>
 
       {/* Booth Performance Table */}
-      <Card className="border-[#E8E8E5] bg-white shadow-xs overflow-hidden">
-        <CardHeader className="py-3.5 px-5 bg-[#FAFAF8] border-b border-[#E8E8E5]">
-          <CardTitle className="text-sm font-semibold text-[#202124] flex items-center gap-2">
-            <Store className="w-4 h-4 text-[#315C4C]" />
+      <Card className="border-border bg-surface shadow-xs overflow-hidden">
+        <CardHeader className="py-3.5 px-5 bg-background border-b border-border">
+          <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Store className="w-4 h-4 text-primary" />
             Hiệu suất Bán hàng theo từng Gian hàng & Quầy bán
           </CardTitle>
           <CardDescription className="text-xs">
@@ -351,35 +351,35 @@ export default function AnalyticsPage() {
         {/* Desktop Table View */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-xs text-left">
-            <thead className="bg-[#F7F7F5] border-b border-[#E8E8E5] text-[#737373] uppercase text-[10px] tracking-wider">
+            <thead className="bg-background border-b border-border text-muted uppercase text-[10px] tracking-wider">
               <tr>
                 <th className="py-3 px-4 font-semibold">Gian hàng & Mã</th>
                 <th className="py-3 px-4 font-semibold">Sự kiện</th>
                 <th className="py-3 px-4 font-semibold">Mô hình</th>
                 <th className="py-3 px-4 font-semibold text-right">Số đơn</th>
                 <th className="py-3 px-4 font-semibold text-right">Món đã bán</th>
-                <th className="py-3 px-4 font-semibold text-right text-[#315C4C]">
+                <th className="py-3 px-4 font-semibold text-right text-primary">
                   Tổng doanh thu
                 </th>
-                <th className="py-3 px-4 font-semibold text-right text-[#B7791F]">
+                <th className="py-3 px-4 font-semibold text-right text-warning">
                   Phần Đối tác Collab
                 </th>
-                <th className="py-3 px-4 font-semibold text-right text-[#2F7D55]">
+                <th className="py-3 px-4 font-semibold text-right text-primary">
                   Thực nhận Nghệ sĩ
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#F0F0ED]">
+            <tbody className="divide-y divide-border">
               {boothSalesMap.map((row) => (
-                <tr key={row.booth.id} className="hover:bg-[#FBFBFA] transition-colors">
+                <tr key={row.booth.id} className="hover:bg-background transition-colors">
                   <td className="py-3 px-4">
-                    <p className="font-bold text-[#202124]">{row.booth.name}</p>
-                    <span className="font-mono text-[10px] text-[#737373] bg-[#F0F0ED] px-1.5 py-0.2 rounded">
+                    <p className="font-bold text-foreground">{row.booth.name}</p>
+                    <span className="font-mono text-[10px] text-muted bg-surface-hover px-1.5 py-0.2 rounded">
                       {row.booth.code}
                     </span>
                   </td>
 
-                  <td className="py-3 px-4 text-[#737373]">{row.event?.name}</td>
+                  <td className="py-3 px-4 text-muted">{row.event?.name}</td>
 
                   <td className="py-3 px-4">
                     {row.isCollab ? (
@@ -387,7 +387,7 @@ export default function AnalyticsPage() {
                         <Badge variant="warning" className="text-[10px]">
                           Collab: {row.booth.collab_partner || 'Đối tác'}
                         </Badge>
-                        <span className="text-[10px] text-[#737373] block mt-0.5">
+                        <span className="text-[10px] text-muted block mt-0.5">
                           Chia: {row.partnerSharePercent}%
                         </span>
                       </div>
@@ -398,25 +398,25 @@ export default function AnalyticsPage() {
                     )}
                   </td>
 
-                  <td className="py-3 px-4 text-right font-medium text-[#202124]">
+                  <td className="py-3 px-4 text-right font-medium text-foreground">
                     {row.orderCount}
                   </td>
 
-                  <td className="py-3 px-4 text-right font-medium text-[#202124]">
+                  <td className="py-3 px-4 text-right font-medium text-foreground">
                     {row.units}
                   </td>
 
-                  <td className="py-3 px-4 text-right font-bold text-[#315C4C]">
+                  <td className="py-3 px-4 text-right font-bold text-primary">
                     {formatCurrency(row.revenue, activeWorkspace?.currency || 'VND')}
                   </td>
 
-                  <td className="py-3 px-4 text-right font-semibold text-[#B7791F]">
+                  <td className="py-3 px-4 text-right font-semibold text-warning">
                     {row.isCollab
                       ? formatCurrency(row.partnerAmount, activeWorkspace?.currency || 'VND')
                       : '—'}
                   </td>
 
-                  <td className="py-3 px-4 text-right font-bold text-[#2F7D55]">
+                  <td className="py-3 px-4 text-right font-bold text-primary">
                     {formatCurrency(row.netRetained, activeWorkspace?.currency || 'VND')}
                   </td>
                 </tr>
@@ -426,17 +426,17 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Mobile Cards View */}
-        <div className="md:hidden divide-y divide-[#F0F0ED]">
+        <div className="md:hidden divide-y divide-border">
           {boothSalesMap.map((row) => (
             <div key={row.booth.id} className="p-3.5 space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h4 className="font-bold text-sm text-[#202124]">{row.booth.name}</h4>
+                  <h4 className="font-bold text-sm text-foreground">{row.booth.name}</h4>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="font-mono text-[10px] text-[#737373] bg-[#F0F0ED] px-1.5 py-0.2 rounded">
+                    <span className="font-mono text-[10px] text-muted bg-surface-hover px-1.5 py-0.2 rounded">
                       {row.booth.code}
                     </span>
-                    <span className="text-xs text-[#737373]">{row.event?.name}</span>
+                    <span className="text-xs text-muted">{row.event?.name}</span>
                   </div>
                 </div>
 
@@ -451,28 +451,28 @@ export default function AnalyticsPage() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-2 bg-[#F7F7F5] p-2.5 rounded-[6px] text-xs">
+              <div className="grid grid-cols-2 gap-2 bg-background p-2.5 rounded-lg text-xs">
                 <div>
-                  <span className="text-[#737373] text-[10px] block">Tổng doanh thu:</span>
-                  <span className="font-bold text-sm text-[#315C4C]">
+                  <span className="text-muted text-[10px] block">Tổng doanh thu:</span>
+                  <span className="font-bold text-sm text-primary">
                     {formatCurrency(row.revenue, activeWorkspace?.currency || 'VND')}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[#737373] text-[10px] block">Đã bán:</span>
-                  <span className="font-semibold text-xs text-[#202124]">
+                  <span className="text-muted text-[10px] block">Đã bán:</span>
+                  <span className="font-semibold text-xs text-foreground">
                     {row.orderCount} đơn • {row.units} món
                   </span>
                 </div>
                 <div>
-                  <span className="text-[#737373] text-[10px] block">Trả đối tác:</span>
-                  <span className="font-bold text-xs text-[#B7791F]">
+                  <span className="text-muted text-[10px] block">Trả đối tác:</span>
+                  <span className="font-bold text-xs text-warning">
                     {row.isCollab ? formatCurrency(row.partnerAmount, activeWorkspace?.currency || 'VND') : '0 ₫'}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[#737373] text-[10px] block">Thực nhận Artist:</span>
-                  <span className="font-bold text-xs text-[#2F7D55]">
+                  <span className="text-muted text-[10px] block">Thực nhận Artist:</span>
+                  <span className="font-bold text-xs text-primary">
                     {formatCurrency(row.netRetained, activeWorkspace?.currency || 'VND')}
                   </span>
                 </div>

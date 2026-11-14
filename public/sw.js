@@ -1,5 +1,5 @@
 // HikaruStore Offline PWA Service Worker
-const CACHE_NAME = 'hikarustore-cache-v5';
+const CACHE_NAME = 'hikarustore-cache-v6-hikaru-ui';
 
 const STATIC_PRECACHE = [
   '/',

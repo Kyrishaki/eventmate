@@ -199,81 +199,81 @@ export function ShiftModal({
       {/* View 1: Z-Report Printed Summary after closing */}
       {showZReport && lastClosedShift ? (
         <div className="space-y-4">
-          <div className="p-3 bg-[#EAF4EE] text-[#2F7D55] rounded-[6px] text-xs flex items-center gap-2 border border-[#CEE6D7]">
+          <div className="p-3 bg-success-bg text-primary rounded-lg text-xs flex items-center gap-2 border border-[#CEE6D7]">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span>Ca bán hàng đã được chốt và lưu vào nhật ký đối soát an toàn!</span>
           </div>
 
           <div
             id="thermal-receipt"
-            className="p-4 bg-[#FAFAF8] dark:bg-neutral-900 border border-[#E8E8E5] dark:border-neutral-800 rounded font-mono text-xs space-y-2 text-[#202124] dark:text-neutral-100"
+            className="p-4 bg-background dark:bg-surface border border-border dark:border-border rounded font-mono text-xs space-y-2 text-foreground dark:text-foreground"
           >
-            <div className="text-center pb-2 border-b border-dashed border-[#D6D6D2] dark:border-neutral-700">
+            <div className="text-center pb-2 border-b border-dashed border-border-strong dark:border-border">
               <div className="h-9 w-auto mx-auto mb-1 flex items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/logo.png" alt="HikaruStore Logo" className="h-9 w-auto max-w-[80px] object-contain mx-auto" />
               </div>
               <p className="font-bold text-sm uppercase">BÁO CÁO CHỐT CA (Z-REPORT)</p>
-              <p className="text-[10px] text-[#737373] dark:text-neutral-400">{lastClosedShift.eventName}</p>
-              <p className="text-[11px] font-semibold text-[#315C4C]">{lastClosedShift.boothName}</p>
+              <p className="text-[10px] text-muted dark:text-muted">{lastClosedShift.eventName}</p>
+              <p className="text-[11px] font-semibold text-primary">{lastClosedShift.boothName}</p>
             </div>
 
-            <div className="text-[11px] space-y-1 pb-2 border-b border-dashed border-[#D6D6D2] dark:border-neutral-700">
+            <div className="text-[11px] space-y-1 pb-2 border-b border-dashed border-border-strong dark:border-border">
               <div className="flex justify-between">
-                <span className="text-[#737373] dark:text-neutral-400">Thu ngân:</span>
+                <span className="text-muted dark:text-muted">Thu ngân:</span>
                 <span className="font-bold">{lastClosedShift.cashierName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#737373] dark:text-neutral-400">Thời gian ca:</span>
+                <span className="text-muted dark:text-muted">Thời gian ca:</span>
                 <span>{formatDate(lastClosedShift.startTime)} → {formatDate(lastClosedShift.endTime || '')}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#737373] dark:text-neutral-400">Số đơn hoàn thành:</span>
+                <span className="text-muted dark:text-muted">Số đơn hoàn thành:</span>
                 <span className="font-bold">{lastClosedShift.ordersCount} đơn</span>
               </div>
             </div>
 
             <div className="space-y-1.5 py-1 text-[11px]">
               <div className="flex justify-between">
-                <span className="text-[#737373] dark:text-neutral-400">Tiền thối đầu ca (Float):</span>
+                <span className="text-muted dark:text-muted">Tiền thối đầu ca (Float):</span>
                 <span>{formatCurrency(lastClosedShift.startingCashFloat, 'VND')}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#737373] dark:text-neutral-400">Doanh thu Tiền mặt:</span>
+                <span className="text-muted dark:text-muted">Doanh thu Tiền mặt:</span>
                 <span className="font-semibold">+{formatCurrency(lastClosedShift.totalCashSales, 'VND')}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#737373] dark:text-neutral-400">Doanh thu VietQR:</span>
+                <span className="text-muted dark:text-muted">Doanh thu VietQR:</span>
                 <span className="font-semibold">+{formatCurrency(lastClosedShift.totalQrSales, 'VND')}</span>
               </div>
-              <div className="flex justify-between font-bold text-xs pt-1 border-t border-[#E8E8E5] text-[#315C4C]">
+              <div className="flex justify-between font-bold text-xs pt-1 border-t border-border text-primary">
                 <span>TỔNG DOANH THU CA:</span>
                 <span>{formatCurrency(lastClosedShift.totalSales, 'VND')}</span>
               </div>
             </div>
 
-            <div className="p-2.5 rounded bg-white dark:bg-neutral-950 border border-[#E8E8E5] dark:border-neutral-800 space-y-1 text-xs">
-              <div className="flex justify-between text-[#737373] dark:text-neutral-400">
+            <div className="p-2.5 rounded bg-surface dark:bg-background border border-border dark:border-border space-y-1 text-xs">
+              <div className="flex justify-between text-muted dark:text-muted">
                 <span>Tiền mặt kỳ vọng trong két:</span>
-                <span className="font-semibold text-[#202124] dark:text-neutral-100">
+                <span className="font-semibold text-foreground dark:text-foreground">
                   {formatCurrency(lastClosedShift.expectedCashTotal || 0, 'VND')}
                 </span>
               </div>
               <div className="flex justify-between font-bold">
                 <span>Tiền mặt thực đếm bàn giao:</span>
-                <span className="text-[#202124] dark:text-neutral-100">
+                <span className="text-foreground dark:text-foreground">
                   {formatCurrency(lastClosedShift.closingCashCount || 0, 'VND')}
                 </span>
               </div>
-              <div className="flex justify-between font-bold pt-1 border-t border-dashed border-[#E8E8E5] text-[11px]">
+              <div className="flex justify-between font-bold pt-1 border-t border-dashed border-border text-[11px]">
                 <span>Chênh lệch két:</span>
                 <span
                   className={
                     lastClosedShift.cashDifference === 0
-                      ? 'text-[#2F7D55]'
+                      ? 'text-primary'
                       : lastClosedShift.cashDifference! > 0
-                      ? 'text-[#B7791F]'
-                      : 'text-[#C44536]'
+                      ? 'text-warning'
+                      : 'text-error'
                   }
                 >
                   {lastClosedShift.cashDifference === 0
@@ -286,7 +286,7 @@ export function ShiftModal({
             </div>
 
             {lastClosedShift.notes && (
-              <p className="text-[10px] text-[#737373] italic">
+              <p className="text-[10px] text-muted italic">
                 Ghi chú: {lastClosedShift.notes}
               </p>
             )}
@@ -295,10 +295,10 @@ export function ShiftModal({
           {/* Telegram Status Banner */}
           {telegramStatus && (
             <div
-              className={`p-2.5 rounded-[6px] text-xs flex items-center gap-2 animate-in fade-in ${
+              className={`p-2.5 rounded-lg text-xs flex items-center gap-2 animate-in fade-in ${
                 telegramStatus.success
-                  ? 'bg-[#EAF4EE] text-[#2F7D55] border border-[#CEE6D7]'
-                  : 'bg-[#FDF1F0] text-[#C44536] border border-[#FADBD8]'
+                  ? 'bg-success-bg text-primary border border-[#CEE6D7]'
+                  : 'bg-error-bg text-error border border-error-bg'
               }`}
             >
               {telegramStatus.success ? (
@@ -312,7 +312,7 @@ export function ShiftModal({
 
           {/* Quick Telegram Bot Setup Drawer */}
           {showTelegramConfig && (
-            <div className="p-3 bg-[#F0F8FF] dark:bg-blue-950/40 border border-[#2AABEE]/40 rounded-[8px] space-y-2 text-xs">
+            <div className="p-3 bg-[#F0F8FF] dark:bg-blue-950/40 border border-[#2AABEE]/40 rounded-lg space-y-2 text-xs">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-[#0088cc] flex items-center gap-1.5">
                   <Send className="w-3.5 h-3.5" />
@@ -321,7 +321,7 @@ export function ShiftModal({
                 <button
                   type="button"
                   onClick={() => setShowTelegramConfig(false)}
-                  className="text-[#737373] hover:text-[#202124]"
+                  className="text-muted hover:text-foreground"
                 >
                   ✕
                 </button>
@@ -337,7 +337,7 @@ export function ShiftModal({
                     value={telegramBotToken}
                     onChange={(e) => setTelegramBotToken(e.target.value)}
                     placeholder="VD: 123456789:ABCdefGHIjklMNO..."
-                    className="h-8 text-xs bg-white font-mono"
+                    className="h-8 text-xs bg-surface font-mono"
                   />
                 </div>
                 <div>
@@ -349,7 +349,7 @@ export function ShiftModal({
                     value={telegramChatId}
                     onChange={(e) => setTelegramChatId(e.target.value)}
                     placeholder="VD: -100123456789 hoặc 987654321"
-                    className="h-8 text-xs bg-white font-mono"
+                    className="h-8 text-xs bg-surface font-mono"
                   />
                 </div>
               </div>
@@ -377,7 +377,7 @@ export function ShiftModal({
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-[#F0F0ED]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-border">
             <Button
               type="button"
               variant="outline"
@@ -385,7 +385,7 @@ export function ShiftModal({
               onClick={handleCopyZReport}
               className="gap-1.5 text-xs h-8"
             >
-              {copiedZReport ? <CheckCircle2 className="w-3.5 h-3.5 text-[#2F7D55]" /> : <Copy className="w-3.5 h-3.5" />}
+              {copiedZReport ? <CheckCircle2 className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copiedZReport ? 'Đã sao chép' : 'Sao chép'}</span>
             </Button>
 
@@ -423,7 +423,7 @@ export function ShiftModal({
                   setShowZReport(false);
                   onClose();
                 }}
-                className="text-xs h-8 bg-[#315C4C] text-white"
+                className="text-xs h-8 bg-primary text-primary-foreground"
               >
                 Hoàn tất
               </Button>
@@ -433,39 +433,39 @@ export function ShiftModal({
       ) : isShiftOpen ? (
         /* View 2: Form Chốt Ca Bán Hàng */
         <form onSubmit={handleCloseShift} className="space-y-4">
-          <div className="p-3 bg-[#F7F7F5] dark:bg-neutral-900 rounded-[6px] border border-[#E8E8E5] dark:border-neutral-800 text-xs space-y-1.5">
+          <div className="p-3 bg-background dark:bg-surface rounded-lg border border-border dark:border-border text-xs space-y-1.5">
             <div className="flex justify-between">
-              <span className="text-[#737373]">Thu ngân hiện tại:</span>
-              <span className="font-bold text-[#202124]">{activeShift.cashierName}</span>
+              <span className="text-muted">Thu ngân hiện tại:</span>
+              <span className="font-bold text-foreground">{activeShift.cashierName}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#737373]">Giờ mở ca:</span>
-              <span className="font-semibold text-[#202124]">{formatDate(activeShift.startTime)}</span>
+              <span className="text-muted">Giờ mở ca:</span>
+              <span className="font-semibold text-foreground">{formatDate(activeShift.startTime)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#737373]">Tiền thối đầu ca:</span>
-              <span className="font-semibold text-[#202124]">
+              <span className="text-muted">Tiền thối đầu ca:</span>
+              <span className="font-semibold text-foreground">
                 {formatCurrency(activeShift.startingCashFloat, 'VND')}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#737373]">Doanh thu tiền mặt thu được:</span>
-              <span className="font-bold text-[#2F7D55]">
+              <span className="text-muted">Doanh thu tiền mặt thu được:</span>
+              <span className="font-bold text-primary">
                 +{formatCurrency(activeShift.totalCashSales, 'VND')} ({activeShift.ordersCount} đơn)
               </span>
             </div>
-            <div className="flex justify-between pt-1 border-t border-[#E8E8E5] text-xs">
-              <span className="font-bold text-[#202124]">Tiền mặt kỳ vọng trong két:</span>
-              <span className="font-extrabold text-[#315C4C] text-sm">
+            <div className="flex justify-between pt-1 border-t border-border text-xs">
+              <span className="font-bold text-foreground">Tiền mặt kỳ vọng trong két:</span>
+              <span className="font-extrabold text-primary text-sm">
                 {formatCurrency(expectedNum, 'VND')}
               </span>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-[#202124] flex items-center justify-between">
+            <Label className="text-xs font-semibold text-foreground flex items-center justify-between">
               <span>Tiền mặt thực tế đếm được trong két:</span>
-              <span className="text-[11px] font-normal text-[#737373]">Đếm toàn bộ tiền giấy</span>
+              <span className="text-[11px] font-normal text-muted">Đếm toàn bộ tiền giấy</span>
             </Label>
             <div className="relative">
               <Input
@@ -476,18 +476,18 @@ export function ShiftModal({
                 className="pl-8 text-sm font-bold h-10"
                 required
               />
-              <Banknote className="w-4 h-4 text-[#315C4C] absolute left-2.5 top-3" />
+              <Banknote className="w-4 h-4 text-primary absolute left-2.5 top-3" />
             </div>
           </div>
 
           {closingCashStr && (
             <div
-              className={`p-3 rounded-[6px] text-xs font-medium border flex items-center justify-between ${
+              className={`p-3 rounded-lg text-xs font-medium border flex items-center justify-between ${
                 diffNum === 0
-                  ? 'bg-[#EAF4EE] text-[#2F7D55] border-[#CEE6D7]'
+                  ? 'bg-success-bg text-primary border-[#CEE6D7]'
                   : diffNum > 0
-                  ? 'bg-[#FEF7EC] text-[#B7791F] border-[#FBD38D]'
-                  : 'bg-[#FDF1F0] text-[#C44536] border-[#FEB2B2]'
+                  ? 'bg-warning-bg text-warning border-[#FBD38D]'
+                  : 'bg-error-bg text-error border-[#FEB2B2]'
               }`}
             >
               <span>Đối soát chênh lệch:</span>
@@ -502,7 +502,7 @@ export function ShiftModal({
           )}
 
           <div className="space-y-1.5">
-            <Label className="text-xs text-[#737373]">Ghi chú bàn giao / Giải trình chênh lệch:</Label>
+            <Label className="text-xs text-muted">Ghi chú bàn giao / Giải trình chênh lệch:</Label>
             <Input
               placeholder="Ghi chú người nhận bàn giao ca kế tiếp hoặc lý do lệch tiền..."
               value={notes}
@@ -511,7 +511,7 @@ export function ShiftModal({
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#E8E8E5]">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
             <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs">
               Hủy
             </Button>
@@ -520,7 +520,7 @@ export function ShiftModal({
               variant="primary"
               size="sm"
               disabled={!closingCashStr}
-              className="text-xs bg-[#C44536] hover:bg-[#A83224] text-white gap-1.5 font-bold"
+              className="text-xs bg-error hover:bg-[#A83224] text-white gap-1.5 font-bold"
             >
               <Lock className="w-3.5 h-3.5" />
               <span>Xác Nhận Chốt Ca & Xuất Z-Report</span>
@@ -530,7 +530,7 @@ export function ShiftModal({
       ) : (
         /* View 3: Form Mở Ca Mới */
         <form onSubmit={handleOpenShift} className="space-y-4">
-          <div className="p-3 bg-[#EBF1EE] text-[#315C4C] rounded-[6px] text-xs flex items-center gap-2 border border-[#315C4C]/20">
+          <div className="p-3 bg-warning-bg text-primary rounded-lg text-xs flex items-center gap-2 border border-primary/20">
             <Sparkles className="w-4 h-4 shrink-0" />
             <span>
               Chào <strong>{user?.fullName || 'Thu ngân'}</strong>! Hãy nhập số tiền thối ban đầu (tiền lót két) để bắt đầu ca bán hàng tại quầy.
@@ -538,7 +538,7 @@ export function ShiftModal({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-[#202124]">
+            <Label className="text-xs font-semibold text-foreground">
               Tiền mặt nhận bàn giao đầu ca (Tiền thối / Float):
             </Label>
             <div className="relative">
@@ -550,7 +550,7 @@ export function ShiftModal({
                 className="pl-8 text-sm font-bold h-10"
                 required
               />
-              <Coins className="w-4 h-4 text-[#315C4C] absolute left-2.5 top-3" />
+              <Coins className="w-4 h-4 text-primary absolute left-2.5 top-3" />
             </div>
             <div className="flex items-center gap-1.5 pt-1">
               {[500000, 1000000, 2000000].map((amt) => (
@@ -558,7 +558,7 @@ export function ShiftModal({
                   key={amt}
                   type="button"
                   onClick={() => setStartingFloatStr(String(amt))}
-                  className="px-2 py-0.5 rounded text-[11px] bg-[#F0F0ED] hover:bg-[#E8E8E5] text-[#202124] font-mono cursor-pointer transition-colors"
+                  className="px-2 py-0.5 rounded text-[11px] bg-surface-hover hover:bg-surface-hover text-foreground font-mono cursor-pointer transition-colors"
                 >
                   {formatCurrency(amt, 'VND')}
                 </button>
@@ -567,7 +567,7 @@ export function ShiftModal({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs text-[#737373]">Ghi chú ca mở:</Label>
+            <Label className="text-xs text-muted">Ghi chú ca mở:</Label>
             <Input
               placeholder="Ca sáng / Nhận ca từ bạn An..."
               value={notes}
@@ -576,7 +576,7 @@ export function ShiftModal({
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#E8E8E5]">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
             <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs">
               Để sau
             </Button>
@@ -584,7 +584,7 @@ export function ShiftModal({
               type="submit"
               variant="primary"
               size="sm"
-              className="text-xs bg-[#315C4C] hover:bg-[#254639] text-white gap-1.5 font-bold"
+              className="text-xs bg-primary hover:bg-gold-text text-primary-foreground gap-1.5 font-bold"
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>Bắt Đầu Mở Ca Bán Hàng</span>

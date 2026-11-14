@@ -118,12 +118,12 @@ export default function RegisterPage() {
   );
 
   return (
-    <Card className="border-[#E8E8E5] shadow-xs">
+    <Card className="border-border shadow-xs">
       <CardHeader className="space-y-1 pb-4">
-        <CardTitle className="text-xl font-bold tracking-tight text-[#202124]">
+        <CardTitle className="text-xl font-bold tracking-tight text-foreground">
           {t('registerTitle')}
         </CardTitle>
-        <CardDescription className="text-xs text-[#737373]">
+        <CardDescription className="text-xs text-muted">
           {t('registerSubtitle')}
         </CardDescription>
       </CardHeader>
@@ -131,7 +131,7 @@ export default function RegisterPage() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">
           {errorMessage && (
-            <div className="flex items-start gap-2 p-3 text-xs text-[#C44536] bg-[#FDF1F0] border border-[#FADBD8] rounded-[6px]">
+            <div className="flex items-start gap-2 p-3 text-xs text-error bg-error-bg border border-error-bg rounded-lg">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{errorMessage}</span>
             </div>
@@ -142,7 +142,7 @@ export default function RegisterPage() {
               {t('fullNameLabel')}
             </Label>
             <div className="relative">
-              <User className="absolute left-3 top-2.5 w-4 h-4 text-[#9E9E9C]" />
+              <User className="absolute left-3 top-2.5 w-4 h-4 text-muted" />
               <Input
                 id="fullName"
                 type="text"
@@ -153,7 +153,7 @@ export default function RegisterPage() {
               />
             </div>
             {errors.fullName && (
-              <p className="text-xs text-[#C44536]">{errors.fullName.message}</p>
+              <p className="text-xs text-error">{errors.fullName.message}</p>
             )}
           </div>
 
@@ -162,7 +162,7 @@ export default function RegisterPage() {
               {t('workspaceNameLabel')}
             </Label>
             <div className="relative">
-              <Building2 className="absolute left-3 top-2.5 w-4 h-4 text-[#9E9E9C]" />
+              <Building2 className="absolute left-3 top-2.5 w-4 h-4 text-muted" />
               <Input
                 id="workspaceName"
                 type="text"
@@ -173,7 +173,7 @@ export default function RegisterPage() {
               />
             </div>
             {errors.workspaceName && (
-              <p className="text-xs text-[#C44536]">{errors.workspaceName.message}</p>
+              <p className="text-xs text-error">{errors.workspaceName.message}</p>
             )}
           </div>
 
@@ -182,7 +182,7 @@ export default function RegisterPage() {
               {t('emailLabel')}
             </Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-2.5 w-4 h-4 text-[#9E9E9C]" />
+              <Mail className="absolute left-3 top-2.5 w-4 h-4 text-muted" />
               <Input
                 id="email"
                 type="email"
@@ -193,7 +193,7 @@ export default function RegisterPage() {
               />
             </div>
             {errors.email && (
-              <p className="text-xs text-[#C44536]">{errors.email.message}</p>
+              <p className="text-xs text-error">{errors.email.message}</p>
             )}
           </div>
 
@@ -202,7 +202,7 @@ export default function RegisterPage() {
               {t('passwordLabel')}
             </Label>
             <div className="relative">
-              <Lock className="absolute left-3 top-2.5 w-4 h-4 text-[#9E9E9C]" />
+              <Lock className="absolute left-3 top-2.5 w-4 h-4 text-muted" />
               <Input
                 id="password"
                 type="password"
@@ -213,7 +213,7 @@ export default function RegisterPage() {
               />
             </div>
             {errors.password && (
-              <p className="text-xs text-[#C44536]">{errors.password.message}</p>
+              <p className="text-xs text-error">{errors.password.message}</p>
             )}
           </div>
 
@@ -222,11 +222,11 @@ export default function RegisterPage() {
           </Button>
         </CardContent>
 
-        <CardFooter className="justify-center border-t border-[#F0F0ED] pt-4 text-xs text-[#737373]">
+        <CardFooter className="justify-center border-t border-border pt-4 text-xs text-muted">
           <span>{t('signInPrompt')}</span>
           <Link
             href="/login"
-            className="ml-1 text-[#315C4C] font-semibold hover:underline"
+            className="ml-1 text-primary font-semibold hover:underline"
           >
             {t('signInLink')}
           </Link>

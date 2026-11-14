@@ -29,6 +29,7 @@ export interface DataStoreState {
   createEvent: (event: Omit<EventItem, 'id' | 'created_at' | 'updated_at'> & { id?: string }) => EventItem;
   updateEvent: (id: string, updates: Partial<EventItem>) => void;
   deleteEvent: (id: string) => void;
+  refreshEventStatuses: () => void;
 
   // Booth Actions
   createBooth: (booth: Omit<Booth, 'id' | 'created_at' | 'updated_at'> & { id?: string }) => Booth;
@@ -844,6 +845,22 @@ export const useDataStore = create<DataStoreState>()(
           booths: get().booths.filter((b) => b.event_id !== id),
           allocations: get().allocations.filter((a) => a.event_id !== id),
         });
+      },
+      refreshEventStatuses: () => {
+        const now = Date.now();
+        const updatedAt = new Date(now).toISOString();
+        let changed = false;
+        const events = get().events.map((event) => {
+          if (event.status === 'draft' || event.status === 'cancelled') return event;
+          const start = new Date(event.start_date).getTime();
+          const end = new Date(event.end_date).getTime();
+          if (!Number.isFinite(start) || !Number.isFinite(end)) return event;
+          const status: EventStatus = now < start ? 'upcoming' : now < end ? 'active' : 'completed';
+          if (status === event.status) return event;
+          changed = true;
+          return { ...event, status, updated_at: updatedAt };
+        });
+        if (changed) set({ events });
       },
 
       // Booths

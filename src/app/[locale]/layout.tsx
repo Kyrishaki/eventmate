@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { PwaRegister } from '@/components/pwa/pwa-register';
 import { AstryxProvider } from '@/components/providers/astryx-provider';
+import { EventStatusSync } from '@/components/events/event-status-sync';
 
 const beVietnamPro = Be_Vietnam_Pro({
   weight: ['400', '500', '600', '700'],
@@ -96,6 +97,7 @@ export default async function LocaleLayout({
       <body className="bg-background text-foreground min-h-screen antialiased selection:bg-primary/15 selection:text-primary">
         <AstryxProvider>
           <PwaRegister />
+          <EventStatusSync />
           <NextIntlClientProvider locale={locale} messages={messages}>
             {children}
           </NextIntlClientProvider>

@@ -26,10 +26,13 @@ import {
   Users2,
   Download,
   Sparkles,
+  ImagePlus,
+  Loader2,
 } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { useOrdersStore } from '@/stores/orders-store';
 import { exportEventToExcel } from '@/lib/export-excel';
+import { compressImage } from '@/lib/utils';
 
 const EVENT_TIME_ZONE = 'Asia/Ho_Chi_Minh';
 
@@ -53,6 +56,19 @@ function fromVietnamDateTimeInput(value: string): string {
   return new Date(`${value}:00+07:00`).toISOString();
 }
 
+function getVietnamToday(): string {
+  return toVietnamDateTimeInput(new Date()).slice(0, 10);
+}
+
+function getScheduledEventStatus(startDate: string, endDate: string, now = Date.now()): EventStatus {
+  const start = new Date(startDate).getTime();
+  const end = new Date(endDate).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return 'upcoming';
+  if (now < start) return 'upcoming';
+  if (now < end) return 'active';
+  return 'completed';
+}
+
 export default function EventsPage() {
   const t = useTranslations('events');
   const tCommon = useTranslations('common');
@@ -73,6 +89,9 @@ export default function EventsPage() {
   const [timeError, setTimeError] = React.useState('');
   const [status, setStatus] = React.useState<EventStatus>('upcoming');
   const [bannerUrl, setBannerUrl] = React.useState<string | null>(null);
+  const [bannerError, setBannerError] = React.useState('');
+  const [isBannerProcessing, setIsBannerProcessing] = React.useState(false);
+  const bannerInputRef = React.useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
 
   const workspaceEvents = events.filter(
@@ -96,6 +115,7 @@ export default function EventsPage() {
     setTimeError('');
     setStatus('upcoming');
     setBannerUrl(null);
+    setBannerError('');
     setIsModalOpen(true);
   }
 
@@ -109,6 +129,7 @@ export default function EventsPage() {
     setTimeError('');
     setStatus(event.status);
     setBannerUrl(event.banner_url || null);
+    setBannerError('');
     setIsModalOpen(true);
   }
 
@@ -130,16 +151,27 @@ export default function EventsPage() {
       setTimeError('Thời gian kết thúc phải sau thời gian bắt đầu.');
       return;
     }
+    const todayStart = new Date(`${getVietnamToday()}T00:00:00+07:00`);
+    if (!editingEvent && startInstant < todayStart) {
+      setTimeError('Không thể tạo sự kiện đã qua. Vui lòng chọn ngày hôm nay hoặc ngày sắp tới.');
+      return;
+    }
     setTimeError('');
+
+    const startIso = fromVietnamDateTimeInput(startDate);
+    const endIso = fromVietnamDateTimeInput(endDate);
+    const savedStatus: EventStatus = status === 'draft' || status === 'cancelled'
+      ? status
+      : getScheduledEventStatus(startIso, endIso);
 
     if (editingEvent) {
       updateEvent(editingEvent.id, {
         name,
         location: location.trim() || null,
         description: description.trim() || null,
-        start_date: fromVietnamDateTimeInput(startDate),
-        end_date: fromVietnamDateTimeInput(endDate),
-        status,
+        start_date: startIso,
+        end_date: endIso,
+        status: savedStatus,
         banner_url: bannerUrl,
       });
     } else {
@@ -148,13 +180,39 @@ export default function EventsPage() {
         name,
         location: location.trim() || null,
         description: description.trim() || null,
-        start_date: fromVietnamDateTimeInput(startDate),
-        end_date: fromVietnamDateTimeInput(endDate),
-        status,
+        start_date: startIso,
+        end_date: endIso,
+        status: savedStatus,
         banner_url: bannerUrl,
       });
     }
     setIsModalOpen(false);
+  }
+
+  async function handleBannerFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setBannerError('Vui lòng chọn tệp ảnh JPG, PNG hoặc WebP.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setBannerError('Ảnh banner phải nhỏ hơn 10 MB.');
+      return;
+    }
+
+    setIsBannerProcessing(true);
+    setBannerError('');
+    try {
+      const compressed = await compressImage(file, 1400, 0.72);
+      if (!compressed) throw new Error('Không thể đọc ảnh banner này.');
+      setBannerUrl(compressed);
+    } catch (error) {
+      setBannerError(error instanceof Error ? error.message : 'Không thể xử lý ảnh banner.');
+    } finally {
+      setIsBannerProcessing(false);
+    }
   }
 
   const statusBadgeVariant = (st: EventStatus) => {
@@ -188,6 +246,8 @@ export default function EventsPage() {
       currency: activeWorkspace?.currency || 'VND',
     });
   };
+
+  const minimumEventDateTime = `${getVietnamToday()}T00:00`;
 
   return (
     <div className="space-y-6">
@@ -372,6 +432,28 @@ export default function EventsPage() {
         description="Thông tin sự kiện được đồng bộ trực tiếp với các quầy POS và quản lý kho."
       >
         <form onSubmit={handleSave} className="space-y-4">
+          <section className="space-y-2">
+            <Label>Ảnh banner (không bắt buộc)</Label>
+            <input
+              ref={bannerInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="sr-only"
+              onChange={handleBannerFileChange}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isBannerProcessing}
+              onClick={() => bannerInputRef.current?.click()}
+            >
+              {isBannerProcessing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImagePlus className="w-3.5 h-3.5" />}
+              {isBannerProcessing ? 'Đang xử lý ảnh…' : bannerUrl ? 'Đổi ảnh banner' : 'Chọn ảnh banner'}
+            </Button>
+            {bannerError && <p className="text-xs text-error" role="alert">{bannerError}</p>}
+          </section>
+
           {/* Banner Preview if available */}
           {bannerUrl && (
             <div className="relative rounded-lg overflow-hidden border border-border max-h-36 bg-[#121212]">
@@ -420,7 +502,11 @@ export default function EventsPage() {
                 id="evt-start"
                 type="datetime-local"
                 required
+                min={!editingEvent ? minimumEventDateTime : undefined}
                 value={startDate}
+                onClick={(event) => {
+                  try { event.currentTarget.showPicker(); } catch { /* Browser picker may already be open. */ }
+                }}
                 onChange={(e) => {
                   setStartDate(e.target.value);
                   setTimeError('');
@@ -428,12 +514,16 @@ export default function EventsPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="evt-end">{t('endDate')}</Label>
+              <Label htmlFor="evt-end">{t('endDate')} · Giờ Việt Nam (UTC+7)</Label>
               <Input
                 id="evt-end"
                 type="datetime-local"
                 required
+                min={startDate || (!editingEvent ? minimumEventDateTime : undefined)}
                 value={endDate}
+                onClick={(event) => {
+                  try { event.currentTarget.showPicker(); } catch { /* Browser picker may already be open. */ }
+                }}
                 onChange={(e) => {
                   setEndDate(e.target.value);
                   setTimeError('');
@@ -453,11 +543,12 @@ export default function EventsPage() {
               onChange={(e) => setStatus(e.target.value as EventStatus)}
             >
               <option value="draft">{t('statusList.draft')}</option>
-              <option value="upcoming">{t('statusList.upcoming')}</option>
-              <option value="active">{t('statusList.active')}</option>
-              <option value="completed">{t('statusList.completed')}</option>
+              <option value="upcoming" disabled>{t('statusList.upcoming')} · Tự động</option>
+              <option value="active" disabled>{t('statusList.active')} · Tự động</option>
+              <option value="completed" disabled>{t('statusList.completed')} · Tự động</option>
               <option value="cancelled">{t('statusList.cancelled')}</option>
             </select>
+            <p className="text-[11px] text-muted">Sắp diễn ra, đang diễn ra và đã kết thúc sẽ tự cập nhật theo ngày giờ sự kiện. Bản nháp và Đã hủy là trạng thái thủ công.</p>
           </div>
 
           <div className="space-y-1.5">
@@ -481,7 +572,7 @@ export default function EventsPage() {
             >
               {tCommon('cancel')}
             </Button>
-            <Button type="submit" variant="primary" size="sm">
+            <Button type="submit" variant="primary" size="sm" disabled={isBannerProcessing}>
               {tCommon('save')}
             </Button>
           </div>

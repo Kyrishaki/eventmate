@@ -99,6 +99,7 @@ export interface EventItem {
 }
 
 export interface Booth {
+  manually_closed?: boolean;
   id: string;
   workspace_id: string;
   event_id: string;

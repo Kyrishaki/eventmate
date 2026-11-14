@@ -186,12 +186,12 @@ export function Sidebar({
                       onClick={onClose}
                       title={item.defaultLabel}
                       className={cn(
-                        'h-11 px-3 rounded-lg text-sm flex items-center transition-colors select-none',
+                        'h-11 w-full shrink-0 px-3 rounded-lg text-sm flex items-center transition-colors select-none',
                         isActive
                           ? 'bg-surface-hover text-foreground font-semibold'
                           : 'text-muted hover:text-foreground hover:bg-surface-hover/60 font-normal',
-                        isOpen ? 'md:justify-between' : 'md:justify-center md:px-0',
-                        isCollapsed ? 'lg:justify-center lg:px-0' : 'lg:justify-between'
+                        isOpen ? 'md:justify-between' : 'md:justify-center',
+                        isCollapsed ? 'lg:justify-center' : 'lg:justify-between'
                       )}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">

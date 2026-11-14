@@ -60,7 +60,7 @@ export default function TeamManagement() {
     deleteStaffAccount,
   } = useAuthStore();
 
-  const isAdmin = canManageTeam(user?.role) || !user;
+  const isAdmin = canManageTeam(user?.role);
   const isReadOnly = isViewerOnly(user?.role);
 
   // Create Staff Account Modal State
@@ -764,13 +764,13 @@ export default function TeamManagement() {
                 value={recycleNewRole}
                 onChange={(e) => setRecycleNewRole(e.target.value as WorkspaceRole)}
               >
-                <option value="cashier">Thu ngân (Cashier) — Chỉ bán hàng tại màn hình POS</option>
-                <option value="manager">Quản lý (Manager) — Quản lý sự kiện, quầy và theo dõi kho</option>
-                <option value="inventory_staff">Nhân viên kho (Inventory) — Quản lý và điều chuyển tồn kho</option>
-                <option value="collab_partner">Đối tác Collab (Collab Partner) — Quản trị sản phẩm & kho riêng</option>
-                <option value="viewer">Khách xem (Viewer) — Chỉ xem báo cáo</option>
-                <option value="admin">Quản trị viên (Admin) — Toàn quyền quản trị</option>
-                <option value="owner">Chủ sở hữu (Owner) — Toàn quyền tối cao</option>
+                <option value="cashier">Thu ngân (Cashier)</option>
+                <option value="manager">Quản lý (Manager)</option>
+                <option value="inventory_staff">Nhân viên kho (Inventory)</option>
+                <option value="collab_partner">Đối tác Collab (Collab Partner)</option>
+                <option value="viewer">Khách xem (Viewer)</option>
+                <option value="admin">Quản trị viên (Admin)</option>
+                <option value="owner">Chủ sở hữu (Owner)</option>
               </select>
             </div>
 
@@ -912,13 +912,13 @@ export default function TeamManagement() {
                 value={editRole}
                 onChange={(e) => setEditRole(e.target.value as WorkspaceRole)}
               >
-                <option value="owner">Chủ sở hữu (Owner) — Toàn quyền tối cao</option>
-                <option value="admin">Quản trị viên (Admin) — Toàn quyền quản trị</option>
-                <option value="manager">Quản lý (Manager) — Quản lý sự kiện, quầy và theo dõi kho</option>
-                <option value="cashier">Thu ngân (Cashier) — Chỉ bán hàng tại màn hình POS</option>
-                <option value="inventory_staff">Nhân viên kho (Inventory) — Quản lý và điều chuyển tồn kho</option>
-                <option value="collab_partner">Đối tác Collab (Collab Partner) — Quản trị sản phẩm & kho riêng</option>
-                <option value="viewer">Khách xem (Viewer) — Chỉ xem báo cáo</option>
+                <option value="owner">Chủ sở hữu (Owner)</option>
+                <option value="admin">Quản trị viên (Admin)</option>
+                <option value="manager">Quản lý (Manager)</option>
+                <option value="cashier">Thu ngân (Cashier)</option>
+                <option value="inventory_staff">Nhân viên kho (Inventory)</option>
+                <option value="collab_partner">Đối tác Collab (Collab Partner)</option>
+                <option value="viewer">Khách xem (Viewer)</option>
               </select>
             </div>
 
@@ -1041,12 +1041,12 @@ export default function TeamManagement() {
               value={role}
               onChange={(e) => setRole(e.target.value as WorkspaceRole)}
             >
-              <option value="cashier">Thu ngân (Cashier) — Chỉ bán hàng tại màn hình POS</option>
-              <option value="manager">Quản lý (Manager) — Quản lý sự kiện, quầy và theo dõi kho</option>
-              <option value="inventory_staff">Nhân viên kho (Inventory) — Chỉ quản lý và điều chuyển tồn kho</option>
-              <option value="collab_partner">Đối tác Collab (Collab Partner) — Quản trị sản phẩm & kho hàng riêng, không can thiệp kho Admin</option>
-              <option value="viewer">Khách xem (Viewer) — Chỉ xem báo cáo, không được chỉnh sửa</option>
-              <option value="admin">Quản trị viên (Admin) — Toàn quyền như Owner</option>
+              <option value="cashier">Thu ngân (Cashier)</option>
+              <option value="manager">Quản lý (Manager)</option>
+              <option value="inventory_staff">Nhân viên kho (Inventory)</option>
+              <option value="collab_partner">Đối tác Collab (Collab Partner)</option>
+              <option value="viewer">Khách xem (Viewer)</option>
+              <option value="admin">Quản trị viên (Admin)</option>
             </select>
           </div>
 

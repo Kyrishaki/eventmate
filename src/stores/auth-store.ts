@@ -390,7 +390,7 @@ export const useAuthStore = create<AuthState>()(
       updateAccountCredentials: (data) => {
         const { accounts, user } = get();
         // Permission check
-        if (user && user.role !== 'owner' && user.role !== 'admin') {
+        if (!user || (user.role !== 'owner' && user.role !== 'admin')) {
           return {
             success: false,
             message: 'Phân quyền từ chối: Chỉ Quản trị viên (Admin) mới có quyền chỉnh sửa tài khoản và mật khẩu.',
@@ -475,7 +475,7 @@ export const useAuthStore = create<AuthState>()(
           }
         }
 
-        let updatedUser = user;
+        let updatedUser: AuthUser | null = user;
         if (isCurrentSession) {
           updatedUser = {
             ...user,
@@ -516,7 +516,7 @@ export const useAuthStore = create<AuthState>()(
           };
         }
         const { accounts, user } = get();
-        if (user && user.role !== 'owner' && user.role !== 'admin') {
+        if (!user || (user.role !== 'owner' && user.role !== 'admin')) {
           return {
             success: false,
             message: 'Phân quyền từ chối: Chỉ Quản trị viên (Admin) mới có quyền đảo mật khẩu tài khoản.',
@@ -561,7 +561,7 @@ export const useAuthStore = create<AuthState>()(
         }
 
         // If currently logged in as this account on this machine, log out immediately
-        let updatedUser = user;
+        let updatedUser: AuthUser | null = user;
         let shouldLogoutCurrent = false;
         if (user && user.id === data.accountId) {
           shouldLogoutCurrent = true;

@@ -214,7 +214,19 @@ export const useDataStore = create<DataStoreState>()(
           changed = true;
           return { ...event, status, updated_at: updatedAt };
         });
-        if (changed) set({ events });
+        const booths = get().booths.map((booth) => {
+          const manuallyClosed = booth.manually_closed ?? booth.status === 'closed';
+          if (manuallyClosed) return booth;
+          const event = events.find((item) => item.id === booth.event_id);
+          const start = Date.parse(event?.start_date || '');
+          const end = Date.parse(event?.end_date || '');
+          const status: BoothStatus = !event || !Number.isFinite(start) || !Number.isFinite(end) || event.status === 'draft'
+            ? 'paused' : event.status === 'cancelled' || now >= end ? 'closed' : now >= start ? 'active' : 'paused';
+          if (booth.status === status && booth.manually_closed === false) return booth;
+          changed = true;
+          return { ...booth, status, manually_closed: false, updated_at: updatedAt };
+        });
+        if (changed) set({ events, booths });
       },
 
       // Booths

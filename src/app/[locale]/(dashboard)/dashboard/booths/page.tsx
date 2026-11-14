@@ -211,7 +211,7 @@ ${url}`;
     setName(booth.name);
     setCode(booth.code);
     setEventId(booth.event_id);
-    setStatus(booth.status);
+    setStatus((booth.manually_closed ?? booth.status === 'closed') ? 'closed' : 'active');
     setBoothType(booth.booth_type || (booth.collab_partner ? 'collab' : 'solo'));
     setCollabPartner(booth.collab_partner || '');
     setRevenueShareRatio(booth.revenue_share_ratio || 50);
@@ -232,6 +232,7 @@ ${url}`;
         code: code.toUpperCase(),
         event_id: eventId,
         status,
+        manually_closed: status === 'closed',
         booth_type: boothType,
         collab_partner: boothType === 'collab' ? collabPartner.trim() || null : null,
         revenue_share_ratio: boothType === 'collab' ? Number(revenueShareRatio) || 50 : undefined,
@@ -243,11 +244,13 @@ ${url}`;
         name,
         code: code.toUpperCase(),
         status,
+        manually_closed: status === 'closed',
         booth_type: boothType,
         collab_partner: boothType === 'collab' ? collabPartner.trim() || null : null,
         revenue_share_ratio: boothType === 'collab' ? Number(revenueShareRatio) || 50 : undefined,
       });
     }
+    useDataStore.getState().refreshEventStatuses();
     setIsModalOpen(false);
   }
 
@@ -586,17 +589,10 @@ ${url}`;
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="booth-status">{t('status')}</Label>
-              <select
-                id="booth-status"
-                className="flex h-9 w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-foreground focus:outline-none focus:border-primary"
-                value={status}
-                onChange={(e) => setStatus(e.target.value as BoothStatus)}
-              >
-                <option value="active">{t('statusList.active')}</option>
-                <option value="paused">{t('statusList.paused')}</option>
-                <option value="closed">{t('statusList.closed')}</option>
-              </select>
+              <Label>Trạng thái theo sự kiện</Label>
+              <Button type="button" variant={status === 'closed' ? 'primary' : 'outline'} onClick={() => setStatus(status === 'closed' ? 'active' : 'closed')}>
+                {status === 'closed' ? 'Bật lại tự động' : 'Đóng gian'}
+              </Button>
             </div>
           </div>
 
@@ -605,9 +601,6 @@ ${url}`;
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold text-foreground">Mô hình quầy bán</p>
-                <p className="text-[11px] text-muted">
-                  Chọn nếu đây là gian hàng hợp tác / liên danh với nghệ sĩ hoặc đối tác khác
-                </p>
               </div>
               <div className="flex items-center gap-2">
                 <button

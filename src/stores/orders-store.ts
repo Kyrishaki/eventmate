@@ -15,6 +15,9 @@ import { logActivity } from './audit-store';
 import { useShiftStore } from './shift-store';
 import { isTestEvent, isTestOrder, getEffectiveOrderStatus } from '@/lib/test-data-filter';
 
+let checkoutInProgress = false;
+let syncingOrders: Promise<{ successCount: number; failCount: number }> | null = null;
+
 export interface CartItem {
   variantId: string;
   productId: string;
@@ -133,8 +136,8 @@ function validateAdminOrderLifecycle(
   reason: string,
   actorRole?: WorkspaceRole | null
 ): { ok: true; target: Order; cleanReason: string } | { ok: false; error: string } {
-  const allowedRoles: (WorkspaceRole | undefined | null)[] = ['owner', 'admin', 'manager', 'cashier', 'inventory_staff'];
-  if (actorRole && !allowedRoles.includes(actorRole)) {
+  const allowedRoles: (WorkspaceRole | undefined | null)[] = ['owner', 'admin', 'manager', 'cashier'];
+  if (!actorRole || !allowedRoles.includes(actorRole)) {
     return {
       ok: false,
       error: 'Phân quyền từ chối: Chỉ Quản trị viên, Quản lý hoặc Thu ngân tại quầy mới được hủy đơn hoặc hoàn tiền.',
@@ -314,13 +317,16 @@ export const useOrdersStore = create<OrdersStoreState>()(
         proofImageUrl,
         orderNumber: customOrderNumber,
       }) => {
-        const { cart, discountAmount, orders } = get();
+        if (checkoutInProgress) throw new Error('Đơn hàng đang được xử lý.');
+        checkoutInProgress = true;
+        try {
+        const { cart, discountAmount } = get();
         if (cart.length === 0) throw new Error('Giỏ hàng trống');
 
         const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
         const finalAmount = Math.max(0, subtotal - discountAmount);
 
-        const orderId = `ord-${Date.now()}`;
+        const orderId = `ord-${crypto.randomUUID()}`;
         const orderNumber = customOrderNumber || `HKTS-${Date.now().toString().slice(-4)}`;
         const idempotencyKey = `idem-${orderId}-${Math.random().toString(36).substring(2, 8)}`;
         const nowIso = new Date().toISOString();
@@ -328,7 +334,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
         const syncStatus: SyncStatus = 'pending_sync';
 
         const orderItems: OrderItem[] = cart.map((c, idx) => ({
-          id: `item-${Date.now()}-${idx}`,
+          id: `${orderId}-item-${idx}`,
           order_id: orderId,
           workspace_id: workspaceId,
           variant_id: c.variantId,
@@ -364,34 +370,28 @@ export const useOrdersStore = create<OrdersStoreState>()(
           items: orderItems,
         };
 
-        // 1. Atomically update stock sold_quantity in data-store
-        const dataStore = useDataStore.getState();
-        const updatedAllocations = dataStore.allocations.map((alloc) => {
-          if (alloc.booth_id === boothId) {
-            const purchasedItem = cart.find((c) => c.variantId === alloc.variant_id);
-            if (purchasedItem) {
-              return {
-                ...alloc,
-                sold_quantity: alloc.sold_quantity + purchasedItem.quantity,
-                updated_at: nowIso,
-              };
-            }
+        // Validate before any durable write or stock mutation.
+        const requested = new Map<string, number>();
+        for (const item of cart) {
+          if (!Number.isSafeInteger(item.quantity) || item.quantity <= 0 || !Number.isFinite(item.price) || item.price < 0) {
+            throw new Error('Số lượng hoặc giá sản phẩm không hợp lệ.');
           }
-          return alloc;
-        });
-        useDataStore.setState({ allocations: updatedAllocations });
-
-        // Broadcast order completion and updated stock to other cashiers in real time
-        if (typeof window !== 'undefined') {
-          try {
-            const { useRealtimeCartSync } = await import('./realtime-cart-sync');
-            useRealtimeCartSync.getState().broadcastOrderCompleted(boothId, orderId, updatedAllocations);
-          } catch (e) {}
+          requested.set(item.variantId, (requested.get(item.variantId) || 0) + item.quantity);
+        }
+        if (!Number.isFinite(discountAmount) || discountAmount < 0 || discountAmount > subtotal) {
+          throw new Error('Số tiền giảm giá không hợp lệ.');
+        }
+        for (const [variantId, quantity] of requested) {
+          const allocation = useDataStore.getState().allocations.find((a) => a.workspace_id === workspaceId && a.booth_id === boothId && a.variant_id === variantId);
+          if (!allocation || allocation.allocated_quantity - allocation.sold_quantity < quantity) {
+            throw new Error('Tồn kho đã thay đổi hoặc không đủ. Vui lòng kiểm tra lại giỏ hàng.');
+          }
         }
 
         // 2. Persist locally to Dexie IndexedDB
         try {
           if (typeof window !== 'undefined' && localDb) {
+            await localDb.transaction('rw', localDb.localOrders, localDb.orderItems, localDb.syncQueue, async () => {
             await localDb.localOrders.put({
               ...newOrder,
               is_offline_only: !isOnline,
@@ -414,15 +414,24 @@ export const useOrdersStore = create<OrdersStoreState>()(
                 created_at: nowIso,
               });
             }
+            });
           }
         } catch (dexieErr) {
           console.warn('Dexie storage error:', dexieErr);
           throw new Error('Không lưu được đơn trên thiết bị. Giỏ hàng vẫn được giữ lại.');
         }
 
+        // Only publish stock/order changes after the durable local transaction succeeds.
+        useDataStore.setState((state) => ({ allocations: state.allocations.map((allocation) => {
+          const quantity = requested.get(allocation.variant_id);
+          return allocation.workspace_id === workspaceId && allocation.booth_id === boothId && quantity
+            ? { ...allocation, sold_quantity: allocation.sold_quantity + quantity, updated_at: nowIso }
+            : allocation;
+        }) }));
+
         // 3. Update orders in zustand store and clear cart
         set({
-          orders: [newOrder, ...orders],
+          orders: [newOrder, ...get().orders],
           cart: [],
           discountAmount: 0,
         });
@@ -442,6 +451,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
         });
 
         return newOrder;
+        } finally { checkoutInProgress = false; }
       },
 
       setOrderProofVerified: (orderId: string, verified: boolean, verifiedBy?: string) => {
@@ -451,6 +461,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
           o.id === orderId
             ? {
                 ...o,
+                sync_status: 'pending_sync' as const,
                 proof_verified: verified,
                 proof_verified_at: verified ? nowIso : null,
                 proof_verified_by: verified ? verifiedBy || 'Admin' : null,
@@ -462,25 +473,33 @@ export const useOrdersStore = create<OrdersStoreState>()(
       },
 
       syncPendingOrders: async () => {
-        const { orders } = get();
-        const pending = orders.filter((o) => o.sync_status === 'pending_sync');
-        if (pending.length === 0) return { successCount: 0, failCount: 0 };
-
-        const { saveOrderToCloud } = await import('@/lib/order-cloud-sync');
-        let successCount = 0;
-        for (const order of pending) {
-          try {
-            if (!await saveOrderToCloud(order)) continue;
-            if (get().orders.find((item) => item.id === order.id)?.updated_at !== order.updated_at) continue;
-            await localDb.transaction('rw', localDb.localOrders, localDb.syncQueue, async () => {
-              await localDb.localOrders.update(order.id, { sync_status: 'synced', is_offline_only: false });
-              await localDb.syncQueue.where('order_id').equals(order.id).delete();
-            });
-            set((state) => ({ orders: state.orders.map((item) => item.id === order.id && item.updated_at === order.updated_at ? { ...item, sync_status: 'synced' as SyncStatus } : item) }));
-            successCount++;
-          } catch (error) { console.warn('Order remains pending:', error); }
-        }
-        return { successCount, failCount: pending.length - successCount };
+        if (syncingOrders) return syncingOrders;
+        syncingOrders = (async () => {
+          const { saveOrderToCloud } = await import('@/lib/order-cloud-sync');
+          let successCount = 0;
+          const attempted = new Set<string>();
+          // Drain new revisions added while an earlier network request was running.
+          while (true) {
+            const order = get().orders.find((o) => o.sync_status === 'pending_sync' && !attempted.has(`${o.id}:${o.updated_at}`));
+            if (!order) break;
+            attempted.add(`${order.id}:${order.updated_at}`);
+            try {
+              await localDb.localOrders.put({ ...order, is_offline_only: true, sync_attempts: 0 });
+              if (!await saveOrderToCloud(order)) continue;
+              if (get().orders.find((item) => item.id === order.id)?.updated_at !== order.updated_at) continue;
+              await localDb.transaction('rw', localDb.localOrders, localDb.syncQueue, async () => {
+                const local = await localDb.localOrders.get(order.id);
+                if (local?.updated_at !== order.updated_at) return;
+                await localDb.localOrders.update(order.id, { sync_status: 'synced', is_offline_only: false });
+                await localDb.syncQueue.where('order_id').equals(order.id).delete();
+              });
+              set((state) => ({ orders: state.orders.map((item) => item.id === order.id && item.updated_at === order.updated_at ? { ...item, sync_status: 'synced' as SyncStatus } : item) }));
+              successCount++;
+            } catch (error) { console.warn('Order remains pending:', error); }
+          }
+          return { successCount, failCount: get().orders.filter((o) => o.sync_status === 'pending_sync').length };
+        })();
+        try { return await syncingOrders; } finally { syncingOrders = null; }
       },
 
       hydrateOfflineDb: async () => {
@@ -489,11 +508,12 @@ export const useOrdersStore = create<OrdersStoreState>()(
             const dbOrders = await localDb.localOrders.toArray();
             if (dbOrders && dbOrders.length > 0) {
               const { orders } = get();
-              const existingIds = new Set(orders.map((o) => o.id));
-              const missing = dbOrders.filter((o) => !existingIds.has(o.id));
-              if (missing.length > 0) {
-                set({ orders: [...missing, ...orders] });
+              const merged = new Map(orders.map((o) => [o.id, o]));
+              for (const order of dbOrders) {
+                const existing = merged.get(order.id);
+                if (!existing || Date.parse(order.updated_at) > Date.parse(existing.updated_at)) merged.set(order.id, order);
               }
+              set({ orders: [...merged.values()] });
             }
           }
         } catch (e) {
@@ -575,6 +595,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
 
         const updatedOrder: Order = {
           ...target,
+          sync_status: 'pending_sync',
           order_status: 'cancelled',
           cancelled_at: nowIso,
           cancelled_by: actorName,
@@ -661,6 +682,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
 
         const updatedOrder: Order = {
           ...target,
+          sync_status: 'pending_sync',
           payment_status: 'refunded',
           order_status: 'refunded',
           refunded_at: nowIso,
@@ -732,31 +754,6 @@ export const useOrdersStore = create<OrdersStoreState>()(
     {
       name: 'eventmate_orders_state_v6',
       onRehydrateStorage: () => (state) => {
-        if (typeof window !== 'undefined') {
-          try {
-            localStorage.removeItem('eventmate_orders_state_v3');
-            localStorage.removeItem('eventmate_orders_state_v4');
-            localStorage.removeItem('eventmate_orders_state_v5');
-            if (!localStorage.getItem('hikaru_uat_orders_v6_cleaned')) {
-              localStorage.setItem('hikaru_uat_orders_v6_cleaned', '1');
-              if (localDb) {
-                Promise.all([
-                  localDb.localOrders.clear(),
-                  localDb.orderItems.clear(),
-                  localDb.syncQueue.clear(),
-                  localDb.events.clear(),
-                  localDb.booths.clear(),
-                  localDb.products.clear(),
-                  localDb.variants.clear(),
-                  localDb.allocations.clear(),
-                  localDb.workspaces.clear(),
-                ]).catch(() => {});
-              }
-            }
-          } catch {
-            // ignore
-          }
-        }
         if (!state) return;
         if (!Array.isArray(state.orders)) {
           state.orders = [];

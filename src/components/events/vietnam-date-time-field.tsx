@@ -14,7 +14,7 @@ interface VietnamDateTimeFieldProps {
 }
 
 function parseVietnamDate(value: string): string | null {
-  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value.trim());
+  const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(value.trim());
   if (!match) return null;
   const [, dayText, monthText, yearText] = match;
   const day = Number(dayText);
@@ -22,7 +22,7 @@ function parseVietnamDate(value: string): string | null {
   const year = Number(yearText);
   const date = new Date(Date.UTC(year, month - 1, day));
   if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return null;
-  return `${yearText}-${monthText}-${dayText}`;
+  return `${yearText}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
 function formatVietnamDate(value: string): string {
@@ -80,7 +80,8 @@ export function VietnamDateTimeField({ id, label, value, minDate, required, onCh
   function setDate(date: string) {
     const nextText = formatVietnamDate(date);
     setDateText(nextText);
-    if (timeValue) onChange(`${date}T${timeValue}`);
+    dateInputRef.current?.setCustomValidity('');
+    onChange(`${date}T${timeValue || '00:00'}`);
     setCalendarOpen(false);
   }
 
@@ -108,7 +109,7 @@ export function VietnamDateTimeField({ id, label, value, minDate, required, onCh
             autoComplete="off"
             required={required}
             value={dateText}
-            pattern="\\d{2}/\\d{2}/\\d{4}"
+            pattern="[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}"
             title="Nhập ngày theo định dạng DD/MM/YYYY"
             aria-label={`${label}, ngày tháng năm`}
             className="pr-9 font-medium text-xs sm:text-sm tracking-wide"
@@ -117,10 +118,13 @@ export function VietnamDateTimeField({ id, label, value, minDate, required, onCh
               setDateText(next);
               const parsed = parseVietnamDate(next);
               event.target.setCustomValidity(next && !parsed ? 'Ngày không hợp lệ. Hãy nhập theo định dạng DD/MM/YYYY.' : '');
-              if (parsed && timeValue) onChange(`${parsed}T${timeValue}`);
+              if (parsed) onChange(`${parsed}T${timeValue || '00:00'}`);
             }}
             onBlur={() => {
-              if (validDate && timeValue) onChange(`${validDate}T${timeValue}`);
+              if (validDate) {
+                setDateText(formatVietnamDate(validDate));
+                onChange(`${validDate}T${timeValue || '00:00'}`);
+              }
             }}
           />
           <button

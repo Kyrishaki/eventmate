@@ -6,6 +6,7 @@ import { useOrdersStore } from '@/stores/orders-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { Order } from '@/types/database';
+import { orderContent } from '@/lib/order-cloud-sync';
 import { getEffectiveOrderStatus } from '@/lib/test-data-filter';
 
 export interface CloudCatalogPayload {
@@ -43,6 +44,8 @@ let isInitialized = false;
 let syncChannel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null;
 let saveDebounceTimer: NodeJS.Timeout | null = null;
 let isApplyingRemoteUpdate = false;
+const catalogBaselines = new Map<string, string>();
+const dirtyCatalogs = new Set<string>();
 
 function shouldKeepLocalOrder(localOrder: Order, incomingOrder: Order): boolean {
   const localStatus = getEffectiveOrderStatus(localOrder);
@@ -100,7 +103,7 @@ export function initCloudSync(workspaceId = DEFAULT_WORKSPACE_ID) {
       { event: 'CATALOG_UPDATE' },
       ({ payload }: { payload: { clientId: string; catalog: CloudCatalogPayload } }) => {
         if (payload && payload.clientId !== clientId) {
-          applyCatalogDelta(payload.catalog);
+          void fetchCloudSnapshot(workspaceId);
         }
       }
     );
@@ -110,7 +113,7 @@ export function initCloudSync(workspaceId = DEFAULT_WORKSPACE_ID) {
       { event: 'ORDER_UPSERT' },
       ({ payload }: { payload: { clientId: string; order: Order } }) => {
         if (payload && payload.clientId !== clientId) {
-          applyOrderUpsert(payload.order);
+          void fetchCloudSnapshot(workspaceId);
         }
       }
     );
@@ -133,7 +136,7 @@ export function initCloudSync(workspaceId = DEFAULT_WORKSPACE_ID) {
       { event: 'FULL_STATE_ANNOUNCE' },
       ({ payload }: { payload: { clientId: string; snapshot: CloudSyncSnapshot } }) => {
         if (payload && payload.clientId !== clientId) {
-          applyCloudSnapshot(payload.snapshot);
+          void fetchCloudSnapshot(workspaceId);
         }
       }
     );
@@ -167,7 +170,7 @@ export function initCloudSync(workspaceId = DEFAULT_WORKSPACE_ID) {
 
     syncChannel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
-        workspaceStore.setSyncState('synced');
+        void fetchCloudSnapshot(workspaceId);
         // Announce our presence to request current catalog from any existing active peer
         syncChannel?.send({
           type: 'broadcast',
@@ -232,14 +235,12 @@ function setupStoreSubscribers(workspaceId: string) {
 
     if (state.orders !== prevState.orders && state.orders.length > 0) {
       const previousOrdersById = new Map(prevState.orders.map((order) => [order.id, order]));
-      const changedOrder = state.orders.find((order) => {
+      const changedOrders = state.orders.filter((order) => {
         const previous = previousOrdersById.get(order.id);
         return !previous || previous.updated_at !== order.updated_at || previous.order_status !== order.order_status;
       });
 
-      if (changedOrder) {
-        syncOrderCreated(changedOrder, workspaceId);
-      }
+      changedOrders.forEach((order) => syncOrderCreated(order, workspaceId));
     }
   });
 }
@@ -266,22 +267,14 @@ export async function fetchCloudSnapshot(workspaceId = DEFAULT_WORKSPACE_ID): Pr
     }
 
     if (data) {
-      const uatResetCutoffIso = '2026-11-12T16:41:00.000Z';
-      const remoteUpdatedAt = typeof data.updated_at === 'string' ? data.updated_at : '';
-      if (!remoteUpdatedAt || remoteUpdatedAt < uatResetCutoffIso) {
-        // Pre-UAT stale snapshot in cloud: overwrite with clean local slate instead of restoring demo data
-        await pushFullStateToCloud(workspaceId);
-        workspaceStore.setSyncState('synced');
-        return true;
-      }
       applyCloudSnapshot(data as CloudSyncSnapshot);
-      workspaceStore.setSyncState('synced');
+      workspaceStore.setSyncState(dirtyCatalogs.has(workspaceId) || useOrdersStore.getState().orders.some((o) => o.sync_status === 'pending_sync') ? 'pending' : 'synced');
       return true;
     } else {
       // First time initialization: Push local catalog to cloud table
-      await pushFullStateToCloud(workspaceId);
-      workspaceStore.setSyncState('synced');
-      return true;
+      const saved = await pushFullStateToCloud(workspaceId);
+      workspaceStore.setSyncState(saved ? 'synced' : 'pending');
+      return saved;
     }
   } catch (err) {
     console.warn('[CloudSync] Error fetching snapshot:', err);
@@ -295,11 +288,13 @@ export async function fetchCloudSnapshot(workspaceId = DEFAULT_WORKSPACE_ID): Pr
  */
 export function applyCloudSnapshot(snapshot: CloudSyncSnapshot) {
   if (!snapshot) return;
+  const wasApplyingRemoteUpdate = isApplyingRemoteUpdate;
   isApplyingRemoteUpdate = true;
 
   try {
     const { catalog_data, orders_data } = snapshot;
-    if (catalog_data) {
+    if (catalog_data && !dirtyCatalogs.has(snapshot.workspace_id)) {
+      catalogBaselines.set(snapshot.workspace_id, orderContent(catalog_data));
       applyCatalogDelta(catalog_data, snapshot.workspace_id);
     }
 
@@ -331,9 +326,7 @@ export function applyCloudSnapshot(snapshot: CloudSyncSnapshot) {
       terminalOrdersToRepair.forEach((order) => syncOrderCreated(order, snapshot.workspace_id));
     }
   } finally {
-    setTimeout(() => {
-      isApplyingRemoteUpdate = false;
-    }, 100);
+    isApplyingRemoteUpdate = wasApplyingRemoteUpdate;
   }
 }
 
@@ -341,6 +334,7 @@ export function applyCloudSnapshot(snapshot: CloudSyncSnapshot) {
  * Apply authoritative catalog updates into useDataStore (Overwrites cleanly so deletions propagate)
  */
 export function applyCatalogDelta(delta: CloudCatalogPayload, workspaceId = DEFAULT_WORKSPACE_ID) {
+  const wasApplyingRemoteUpdate = isApplyingRemoteUpdate;
   isApplyingRemoteUpdate = true;
   let repairCompletedEvents = false;
   try {
@@ -390,10 +384,8 @@ export function applyCatalogDelta(delta: CloudCatalogPayload, workspaceId = DEFA
       useDataStore.setState(updates);
     }
   } finally {
-    setTimeout(() => {
-      isApplyingRemoteUpdate = false;
-      if (repairCompletedEvents) syncCatalogChange(undefined, workspaceId);
-    }, 150);
+    isApplyingRemoteUpdate = wasApplyingRemoteUpdate;
+    if (repairCompletedEvents) syncCatalogChange(undefined, workspaceId);
   }
 }
 
@@ -402,6 +394,7 @@ export function applyCatalogDelta(delta: CloudCatalogPayload, workspaceId = DEFA
  */
 export function applyOrderUpsert(order: Order) {
   if (!order || !order.id) return;
+  const wasApplyingRemoteUpdate = isApplyingRemoteUpdate;
   isApplyingRemoteUpdate = true;
   try {
     const ordersStore = useOrdersStore.getState();
@@ -418,9 +411,7 @@ export function applyOrderUpsert(order: Order) {
       useOrdersStore.setState({ orders: [order, ...currentOrders] });
     }
   } finally {
-    setTimeout(() => {
-      isApplyingRemoteUpdate = false;
-    }, 100);
+    isApplyingRemoteUpdate = wasApplyingRemoteUpdate;
   }
 }
 
@@ -459,6 +450,8 @@ export function broadcastFullState(workspaceId = DEFAULT_WORKSPACE_ID) {
  * Triggers a catalog sync to Supabase & peer devices (Debounced to prevent network flood)
  */
 export function syncCatalogChange(delta?: CloudCatalogPayload, workspaceId = DEFAULT_WORKSPACE_ID) {
+  dirtyCatalogs.add(workspaceId);
+  useWorkspaceStore.getState().setSyncState('pending');
   const clientId = getOrCreateClientId();
 
   // 1. Instant Realtime broadcast to connected peers (< 100ms)
@@ -482,16 +475,12 @@ export function syncCatalogChange(delta?: CloudCatalogPayload, workspaceId = DEF
  */
 export function syncOrderCreated(order: Order, _workspaceId = DEFAULT_WORKSPACE_ID) {
 
-  // Persist the order independently from catalog snapshots, for cashiers too.
-  void import('@/lib/order-cloud-sync').then(async ({ saveOrderToCloud }) => {
-    const saved = await saveOrderToCloud(order);
-    const current = useOrdersStore.getState().orders.find((item) => item.id === order.id);
-    if (!current || current.updated_at !== order.updated_at) return;
-    useOrdersStore.setState((state) => ({ orders: state.orders.map((item) =>
-      item.id === order.id && item.updated_at === order.updated_at
-        ? { ...item, sync_status: saved ? 'synced' : 'pending_sync' } : item) }));
-    if (!saved) useWorkspaceStore.getState().setSyncState('pending');
-  }).catch(() => useWorkspaceStore.getState().setSyncState('pending'));
+  // One persistence path for automatic sync and manual retries.
+  useOrdersStore.setState((state) => ({ orders: state.orders.map((item) =>
+    item.id === order.id && item.updated_at === order.updated_at
+      ? { ...item, sync_status: 'pending_sync' } : item) }));
+  void useOrdersStore.getState().syncPendingOrders().catch(() =>
+    useWorkspaceStore.getState().setSyncState('pending'));
 
 }
 
@@ -527,21 +516,30 @@ export async function pushFullStateToCloud(workspaceId = DEFAULT_WORKSPACE_ID): 
 
   try {
     const supabase = createClient();
-    const { error: updateError, data: updateData } = await supabase
-      .from('app_sync_state')
-      .update({ catalog_data: snapshot.catalog_data, updated_at: snapshot.updated_at, updated_by: snapshot.updated_by })
-      .eq('workspace_id', workspaceId)
-      .select('workspace_id');
-
-    if (updateError || !updateData || updateData.length === 0) {
-      const { error: upsertError } = await supabase.from('app_sync_state').insert({ ...snapshot, orders_data: [] });
-      if (upsertError) {
-        console.warn('[CloudSync] Save to app_sync_state skipped:', upsertError.message);
+    const { data: remote, error: readError } = await supabase.from('app_sync_state')
+      .select('catalog_data,updated_at').eq('workspace_id', workspaceId).maybeSingle();
+    if (readError) { workspaceStore.setSyncState('pending'); return false; }
+    if (remote) {
+      // Refuse a stale whole-catalog overwrite, including a device that has never hydrated.
+      if (catalogBaselines.get(workspaceId) !== orderContent(remote.catalog_data)) {
+        workspaceStore.setSyncState('pending');
+        console.warn('[CloudSync] Catalog conflict: local edits retained; cloud was not overwritten.');
         return false;
       }
+      const { error, data } = await supabase.from('app_sync_state')
+        .update({ catalog_data: snapshot.catalog_data,
+          updated_at: new Date(Math.max(Date.now(), Date.parse(remote.updated_at) + 1)).toISOString(), updated_by: clientId })
+        .eq('workspace_id', workspaceId).eq('updated_at', remote.updated_at).select('workspace_id');
+      if (error || !data?.length) { workspaceStore.setSyncState('pending'); return false; }
+    } else {
+      const { error } = await supabase.from('app_sync_state').insert({ ...snapshot, orders_data: [] });
+      if (error) { workspaceStore.setSyncState('pending'); return false; }
     }
-
-    workspaceStore.setSyncState('synced');
+    catalogBaselines.set(workspaceId, orderContent(snapshot.catalog_data));
+    const current = useDataStore.getState();
+    const unchanged = Object.entries(snapshot.catalog_data).every(([key, value]) => current[key as keyof CloudCatalogPayload] === value);
+    if (unchanged) dirtyCatalogs.delete(workspaceId);
+    workspaceStore.setSyncState(dirtyCatalogs.has(workspaceId) || useOrdersStore.getState().orders.some((o) => o.sync_status === 'pending_sync') ? 'pending' : 'synced');
     return true;
   } catch (err) {
     console.warn('[CloudSync] Error saving to cloud:', err);

@@ -123,6 +123,12 @@ export function GuestShowcase() {
     return '';
   });
   const [selectedPickupBoothId, setSelectedPickupBoothId] = React.useState('');
+  const [selectedPickupEventId, setSelectedPickupEventId] = React.useState('');
+  const [keepTargetItem, setKeepTargetItem] = React.useState<{
+    product: Product;
+    variant: ProductVariant;
+    quantity: number;
+  } | null>(null);
   const [pickupTime, setPickupTime] = React.useState('Trước giờ khai mạc (10:00 - 14:00)');
   const [keepNotes, setKeepNotes] = React.useState('');
   const [isSubmittingKeep, setIsSubmittingKeep] = React.useState(false);
@@ -184,11 +190,37 @@ export function GuestShowcase() {
   const realEvents = React.useMemo(() => filterRealEvents(events), [events]);
   const realBooths = React.useMemo(() => filterRealBooths(booths), [booths]);
 
+  // Upcoming / next events available for pickup keep
+  const upcomingEvents = React.useMemo(() => {
+    const list = realEvents.filter((e) => e.status !== 'cancelled');
+    return list.sort((a, b) => {
+      const score = (st?: string) => (st === 'upcoming' ? 1 : st === 'active' ? 2 : 3);
+      const diff = score(a.status) - score(b.status);
+      if (diff !== 0) return diff;
+      return (a.start_date || '').localeCompare(b.start_date || '');
+    });
+  }, [realEvents]);
+
   React.useEffect(() => {
-    if (realBooths.length > 0 && !selectedPickupBoothId) {
+    if (upcomingEvents.length > 0 && !selectedPickupEventId) {
+      const firstEv = upcomingEvents[0];
+      setSelectedPickupEventId(firstEv.id);
+      const matchingBooth = realBooths.find((b) => b.event_id === firstEv.id);
+      if (matchingBooth) {
+        setSelectedPickupBoothId(matchingBooth.id);
+      }
+    } else if (realBooths.length > 0 && !selectedPickupBoothId) {
       setSelectedPickupBoothId(realBooths[0].id);
     }
-  }, [realBooths, selectedPickupBoothId]);
+  }, [upcomingEvents, selectedPickupEventId, realBooths, selectedPickupBoothId]);
+
+  const handleSelectPickupEvent = (eventId: string) => {
+    setSelectedPickupEventId(eventId);
+    const evBooths = realBooths.filter((b) => b.event_id === eventId);
+    if (evBooths.length > 0) {
+      setSelectedPickupBoothId(evBooths[0].id);
+    }
+  };
 
   // Customer reservations matched by phone number or code
   const cleanLookup = (lookupInput || guestPhone).trim();
@@ -317,6 +349,33 @@ export function GuestShowcase() {
     }
   };
 
+  const handleInitiateKeep = (
+    product: Product,
+    variant: ProductVariant,
+    qtyToAdd = 1
+  ) => {
+    const stock = getVariantAvailableStock(variant, allocations);
+    const maxAvail = Math.max(0, stock?.offlineAvailable || 0);
+    if (maxAvail <= 0) {
+      showToast(`"${variant.name}" hiện tạm hết suất giữ tại quầy.`);
+      return;
+    }
+
+    if (upcomingEvents.length > 0) {
+      setKeepTargetItem({ product, variant, quantity: qtyToAdd });
+    } else {
+      addToBag(product, variant, qtyToAdd, true);
+    }
+  };
+
+  const handleConfirmKeepEvent = (eventId: string) => {
+    handleSelectPickupEvent(eventId);
+    if (keepTargetItem) {
+      addToBag(keepTargetItem.product, keepTargetItem.variant, keepTargetItem.quantity, true);
+      setKeepTargetItem(null);
+    }
+  };
+
   const updateBagQty = (variantId: string, delta: number) => {
     setBag((prev) =>
       prev
@@ -359,9 +418,17 @@ export function GuestShowcase() {
       return;
     }
 
-    const effectiveBooth = realBooths.find((b) => b.id === selectedPickupBoothId) || realBooths[0];
     const effectiveEvent =
-      realEvents.find((ev) => ev.id === effectiveBooth?.event_id) || realEvents[0];
+      realEvents.find((ev) => ev.id === selectedPickupEventId) ||
+      realEvents.find((ev) => ev.id === selectedPickupBoothId) ||
+      realEvents[0];
+    const effectiveBooth =
+      realBooths.find(
+        (b) => b.id === selectedPickupBoothId && (!selectedPickupEventId || b.event_id === selectedPickupEventId)
+      ) ||
+      realBooths.find((b) => b.event_id === effectiveEvent?.id) ||
+      realBooths.find((b) => b.id === selectedPickupBoothId) ||
+      realBooths[0];
 
     setIsSubmittingKeep(true);
     try {
@@ -599,32 +666,6 @@ export function GuestShowcase() {
             <li><strong className="block font-semibold text-foreground">3. Nhận tại quầy</strong>Đọc số điện thoại</li>
           </ol>
         </section>
-        {/* Upcoming/Active Events & Pickup Locations Strip */}
-        {realEvents.length > 0 && (
-          <div className="bg-surface dark:bg-surface rounded-lg border border-border dark:border-border px-3.5 py-2.5 shadow-2xs flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-muted dark:text-muted flex items-center gap-1.5 mr-1">
-              <Calendar className="w-3.5 h-3.5 text-primary dark:text-success" />
-              <span>Sự kiện có quầy nhận hàng:</span>
-            </span>
-            {realEvents.map((ev) => (
-              <button
-                key={ev.id}
-                type="button"
-                onClick={() =>
-                  setSelectedEventId((prev) => (prev === ev.id ? 'all' : ev.id))
-                }
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-colors cursor-pointer ${
-                  selectedEventId === ev.id
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-background dark:bg-surface-hover text-foreground dark:text-foreground border-border dark:border-border hover:border-primary'
-                }`}
-              >
-                <MapPin className="w-3 h-3 opacity-80" />
-                <span>{ev.name}</span>
-              </button>
-            ))}
-          </div>
-        )}
         {/* Filter & Search Toolbar */}
         {allActiveProducts.length > 0 && (
           <div className="bg-surface dark:bg-surface rounded-lg border border-border dark:border-border p-3.5 sm:p-4 shadow-2xs space-y-3">
@@ -943,7 +984,7 @@ export function GuestShowcase() {
                       size="sm"
                       disabled={!activeVariant || !isAvailable}
                       onClick={() =>
-                        activeVariant && addToBag(prod, activeVariant, 1, false)
+                        activeVariant && handleInitiateKeep(prod, activeVariant, 1)
                       }
                       className="h-8 sm:h-9 text-[11px] sm:text-xs font-bold gap-1 bg-primary hover:bg-primary-hover text-primary-foreground disabled:opacity-50 border border-primary/20"
                     >
@@ -1119,8 +1160,11 @@ export function GuestShowcase() {
                       disabled={!activeVariant || availCount <= 0}
                       onClick={() => {
                         if (!activeVariant) return;
-                        addToBag(detailProduct, activeVariant, detailQty, true);
+                        const prod = detailProduct;
+                        const vr = activeVariant;
+                        const qty = detailQty;
                         setDetailProduct(null);
+                        handleInitiateKeep(prod, vr, qty);
                       }}
                       className="h-10 text-xs font-bold gap-1.5 bg-primary hover:bg-gold-text text-primary-foreground"
                     >
@@ -1134,6 +1178,119 @@ export function GuestShowcase() {
               </div>
             );
           })()}
+        </Modal>
+      )}
+
+      {/* Modal Chọn Sự Kiện Giữ Đồ Tiếp Theo */}
+      {keepTargetItem && (
+        <Modal
+          isOpen={!!keepTargetItem}
+          onClose={() => setKeepTargetItem(null)}
+          title="Chọn sự kiện tiếp theo để giữ đồ"
+          maxWidth="lg"
+        >
+          <div className="space-y-4">
+            <div className="p-3 rounded-xl bg-surface-hover/70 border border-border dark:border-border flex items-center gap-3">
+              <div className="w-13 h-13 rounded-lg bg-surface border border-border overflow-hidden shrink-0 flex items-center justify-center">
+                {keepTargetItem.product.image_url ? (
+                  <img
+                    src={keepTargetItem.product.image_url}
+                    alt={keepTargetItem.product.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <ShoppingBag className="w-6 h-6 text-muted" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <span className="text-[10px] font-bold text-primary uppercase tracking-wider block">
+                  Món đăng ký giữ đồ:
+                </span>
+                <h4 className="text-sm font-bold text-foreground truncate">
+                  {keepTargetItem.product.name}
+                </h4>
+                <div className="flex items-center gap-2 mt-1 text-xs text-muted flex-wrap">
+                  <span className="px-1.5 py-0.5 rounded bg-surface border border-border text-[11px] font-semibold text-foreground">
+                    {keepTargetItem.variant.name}
+                  </span>
+                  <span className="font-bold text-primary">
+                    {formatCurrency(keepTargetItem.variant.price, currency)}
+                  </span>
+                  <span>× {keepTargetItem.quantity}</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-xs text-muted font-medium mb-3">
+                Vui lòng chọn sự kiện bạn sẽ đến nhận món đồ này:
+              </p>
+              <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-0.5">
+                {upcomingEvents.map((ev) => {
+                  const evBooths = realBooths.filter((b) => b.event_id === ev.id);
+                  const isUpcoming = ev.status === 'upcoming';
+                  const isActive = ev.status === 'active';
+                  const isSelected = selectedPickupEventId === ev.id;
+
+                  return (
+                    <button
+                      key={ev.id}
+                      type="button"
+                      onClick={() => handleConfirmKeepEvent(ev.id)}
+                      className={`w-full text-left p-3.5 rounded-xl border transition-all flex items-center justify-between gap-3 cursor-pointer group ${
+                        isSelected
+                          ? 'bg-primary/10 border-primary ring-1 ring-primary'
+                          : 'bg-surface dark:bg-surface-hover/50 border-border dark:border-border hover:border-primary/60 hover:bg-surface-hover'
+                      }`}
+                    >
+                      <div className="space-y-1.5 min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                            {ev.name}
+                          </span>
+                          {isUpcoming && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 dark:text-blue-400 font-bold border border-blue-500/20">
+                              Sắp diễn ra
+                            </span>
+                          )}
+                          {isActive && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">
+                              Đang diễn ra
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted flex-wrap">
+                          {ev.location && (
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-3.5 h-3.5 text-muted shrink-0" />
+                              <span className="truncate max-w-[200px]">{ev.location}</span>
+                            </span>
+                          )}
+                          {ev.start_date && (
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3.5 h-3.5 text-muted shrink-0" />
+                              <span>{new Date(ev.start_date).toLocaleDateString('vi-VN')}</span>
+                            </span>
+                          )}
+                          {evBooths.length > 0 && (
+                            <span className="flex items-center gap-1">
+                              <Store className="w-3.5 h-3.5 text-muted shrink-0" />
+                              <span>Quầy: {evBooths.map((b) => b.name).join(', ')}</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="shrink-0">
+                        <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-primary-foreground text-xs font-bold shadow-2xs group-hover:scale-105 transition-transform">
+                          Chọn nhận tại đây →
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </Modal>
       )}
 
@@ -1279,26 +1436,69 @@ export function GuestShowcase() {
                   </div>
                 </div>
 
-                {realBooths.length > 0 && (
-                  <div className="space-y-1">
-                    <Label htmlFor="bag-pickup-booth" className="text-xs">
-                      Quầy & Sự kiện nhận hàng:
-                    </Label>
+                {/* Sự kiện & Quầy nhận hàng tiếp theo */}
+                {upcomingEvents.length > 0 && (
+                  <div className="space-y-2 p-3 rounded-xl bg-surface-hover/60 border border-border dark:border-border">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="bag-pickup-event" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-primary" />
+                        <span>Sự kiện nhận hàng tiếp theo:</span>
+                      </Label>
+                      {upcomingEvents.length > 1 && (
+                        <span className="text-[10px] text-primary font-semibold">
+                          (Có thể đổi sự kiện)
+                        </span>
+                      )}
+                    </div>
                     <select
-                      id="bag-pickup-booth"
-                      value={selectedPickupBoothId}
-                      onChange={(e) => setSelectedPickupBoothId(e.target.value)}
-                      className="flex h-9 w-full rounded-lg border border-border dark:border-border bg-surface dark:bg-surface-hover px-3 py-1.5 text-xs text-foreground dark:text-foreground focus:outline-none focus:border-primary"
+                      id="bag-pickup-event"
+                      value={selectedPickupEventId}
+                      onChange={(e) => handleSelectPickupEvent(e.target.value)}
+                      className="flex h-9 w-full rounded-lg border border-border dark:border-border bg-surface dark:bg-surface-hover px-3 py-1.5 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary"
                     >
-                      {realBooths.map((bth) => {
-                        const ev = realEvents.find((e) => e.id === bth.event_id);
+                      {upcomingEvents.map((ev) => {
+                        const isUpcoming = ev.status === 'upcoming';
+                        const isActive = ev.status === 'active';
+                        const statusLabel = isUpcoming ? ' • Sắp diễn ra' : isActive ? ' • Đang diễn ra' : '';
                         return (
-                          <option key={bth.id} value={bth.id}>
-                            {bth.name} — {ev?.name || 'Sự kiện'}
+                          <option key={ev.id} value={ev.id}>
+                            {ev.name}{statusLabel} {ev.location ? `(${ev.location})` : ''}
                           </option>
                         );
                       })}
                     </select>
+
+                    {/* Nếu sự kiện có quầy, hiển thị thông tin quầy */}
+                    {(() => {
+                      const eventBooths = realBooths.filter((b) => b.event_id === selectedPickupEventId);
+                      if (eventBooths.length <= 1) {
+                        return eventBooths.length === 1 ? (
+                          <div className="text-[11px] text-muted flex items-center gap-1 pt-0.5">
+                            <Store className="w-3.5 h-3.5 text-muted shrink-0" />
+                            <span>Quầy nhận hàng: <strong className="text-foreground">{eventBooths[0].name}</strong></span>
+                          </div>
+                        ) : null;
+                      }
+                      return (
+                        <div className="pt-2 border-t border-border/60 space-y-1">
+                          <Label htmlFor="bag-pickup-booth" className="text-[11px] text-muted block">
+                            Chọn quầy nhận hàng tại sự kiện:
+                          </Label>
+                          <select
+                            id="bag-pickup-booth"
+                            value={selectedPickupBoothId}
+                            onChange={(e) => setSelectedPickupBoothId(e.target.value)}
+                            className="flex h-8 w-full rounded-lg border border-border bg-surface px-2.5 text-xs font-medium text-foreground focus:outline-none focus:border-primary"
+                          >
+                            {eventBooths.map((bth) => (
+                              <option key={bth.id} value={bth.id}>
+                                {bth.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
 

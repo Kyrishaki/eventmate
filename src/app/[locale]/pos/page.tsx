@@ -65,7 +65,6 @@ import {
   Barcode,
   ChevronDown,
   Tag,
-  ArrowUpDown,
   Filter,
   RotateCcw,
   Maximize2,
@@ -330,16 +329,12 @@ export default function PosTerminalPage() {
   const [selectedCategory, setSelectedCategory] = React.useState('all');
   const [posSourceFilter, setPosSourceFilter] = React.useState<'all' | 'store' | 'collab'>('all');
 
-  // Extended POS Sorting & Filtering States
-  const [posSortBy, setPosSortBy] = React.useState<
-    'default' | 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc' | 'stock_desc' | 'stock_asc' | 'reserved_desc' | 'newest'
-  >('default');
+  // Extended POS Filtering States
   const [posTagFilter, setPosTagFilter] = React.useState('');
   const [hideSoldOut, setHideSoldOut] = React.useState(false);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = React.useState(false);
 
   const isPosFilterActive =
-    posSortBy !== 'default' ||
     posTagFilter !== '' ||
     posSourceFilter !== 'all' ||
     selectedCategory !== 'all' ||
@@ -347,7 +342,6 @@ export default function PosTerminalPage() {
     hideSoldOut;
 
   const resetPosFilters = React.useCallback(() => {
-    setPosSortBy('default');
     setPosTagFilter('');
     setPosSourceFilter('all');
     setSelectedCategory('all');
@@ -569,42 +563,6 @@ export default function PosTerminalPage() {
       const bInStock = bVariants.some((v) => getVariantAvailableStock(v.id) > 0);
       if (aInStock !== bInStock) return aInStock ? -1 : 1;
 
-      if (posSortBy === 'name_asc') {
-        return a.name.localeCompare(b.name, 'vi');
-      }
-      if (posSortBy === 'name_desc') {
-        return b.name.localeCompare(a.name, 'vi');
-      }
-      if (posSortBy === 'price_asc') {
-        const aMin = aVariants.length > 0 ? Math.min(...aVariants.map((v) => v.price)) : 0;
-        const bMin = bVariants.length > 0 ? Math.min(...bVariants.map((v) => v.price)) : 0;
-        return aMin - bMin;
-      }
-      if (posSortBy === 'price_desc') {
-        const aMax = aVariants.length > 0 ? Math.max(...aVariants.map((v) => v.price)) : 0;
-        const bMax = bVariants.length > 0 ? Math.max(...bVariants.map((v) => v.price)) : 0;
-        return bMax - aMax;
-      }
-      if (posSortBy === 'stock_desc') {
-        const aStock = aVariants.reduce((sum, v) => sum + getVariantAvailableStock(v.id), 0);
-        const bStock = bVariants.reduce((sum, v) => sum + getVariantAvailableStock(v.id), 0);
-        return bStock - aStock;
-      }
-      if (posSortBy === 'stock_asc') {
-        const aStock = aVariants.reduce((sum, v) => sum + getVariantAvailableStock(v.id), 0);
-        const bStock = bVariants.reduce((sum, v) => sum + getVariantAvailableStock(v.id), 0);
-        return aStock - bStock;
-      }
-      if (posSortBy === 'reserved_desc') {
-        const aRes = aVariants.reduce((sum, v) => sum + (v.reserved_quantity || 0), 0);
-        const bRes = bVariants.reduce((sum, v) => sum + (v.reserved_quantity || 0), 0);
-        return bRes - aRes;
-      }
-      if (posSortBy === 'newest') {
-        const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
-        const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
-        return bTime - aTime;
-      }
       return 0;
     });
   }, [
@@ -615,7 +573,6 @@ export default function PosTerminalPage() {
     hideSoldOut,
     posTagFilter,
     searchQuery,
-    posSortBy,
     allocations,
     cart,
     getRemoteHeldQty,
@@ -1141,28 +1098,7 @@ export default function PosTerminalPage() {
                   </select>
                 </label>
 
-                {/* 2. Sắp xếp (Sorting Dropdown) */}
-                <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-1 min-w-0 w-full lg:w-auto lg:flex-none">
-                  <ArrowUpDown className="w-3.5 h-3.5 text-primary dark:text-success shrink-0" />
-                  <span className="text-[11px] font-bold text-muted dark:text-muted shrink-0">Sắp xếp:</span>
-                  <select
-                    value={posSortBy}
-                    onChange={(e) => setPosSortBy(e.target.value as any)}
-                    className="h-9 lg:h-8 rounded-lg border border-border dark:border-border bg-background dark:bg-surface-hover px-2 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary w-full min-w-0 lg:w-auto"
-                  >
-                    <option value="default">Mặc định</option>
-                    <option value="name_asc">Tên: A → Z</option>
-                    <option value="name_desc">Tên: Z → A</option>
-                    <option value="price_asc">Giá: Thấp → Cao</option>
-                    <option value="price_desc">Giá: Cao → Thấp</option>
-                    <option value="stock_desc">Tồn khả dụng: Nhiều nhất</option>
-                    <option value="stock_asc">Tồn khả dụng: Sắp hết (Ít nhất)</option>
-                    <option value="reserved_desc">Hàng Keep / Preorder: Nhiều nhất</option>
-                    <option value="newest">Mới cập nhật nhất</option>
-                  </select>
-                </div>
-
-                {/* 3. Nguồn hàng (Source Dropdown) */}
+                {/* 2. Nguồn hàng (Source Dropdown) */}
                 <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-1 min-w-0 w-full lg:w-auto lg:flex-none">
                   <Store className="w-3.5 h-3.5 text-muted dark:text-muted shrink-0" />
                   <span className="text-[11px] font-bold text-muted dark:text-muted shrink-0">Nguồn:</span>

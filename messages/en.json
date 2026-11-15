@@ -60,6 +60,8 @@
     }
   },
   "nav": {
+    "groupFinance": "Orders and money",
+    "recon": "Transfer reconciliation",
     "shifts": "Shifts and cash",
     "dashboard": "Overview",
     "events": "Events & Tours",

@@ -96,8 +96,8 @@ export function MobileBottomNav({
                   className={cn(
                     'flex items-center justify-center px-3.5 py-1 rounded-full transition-colors',
                     active
-                      ? 'bg-primary/15 text-primary dark:bg-primary/25 dark:text-success'
-                      : 'text-muted hover:text-foreground dark:text-muted dark:hover:text-white'
+                      ? 'bg-primary/15 text-primary dark:bg-primary/25 dark:text-primary'
+                      : 'text-muted hover:text-primary dark:text-muted dark:hover:text-primary'
                   )}
                 >
                   <Icon className="w-[19px] h-[19px]" strokeWidth={active ? 2.4 : 2} />
@@ -105,7 +105,7 @@ export function MobileBottomNav({
                 <span
                   className={cn(
                     'text-[10.5px] leading-tight truncate max-w-[68px]',
-                    active ? 'font-bold text-primary dark:text-success' : 'font-medium text-muted dark:text-muted'
+                    active ? 'font-bold text-primary dark:text-primary' : 'font-medium text-muted dark:text-muted'
                   )}
                 >
                   {tab.label}
@@ -120,10 +120,10 @@ export function MobileBottomNav({
             onClick={onCloseMenu}
             className="flex flex-col items-center justify-center pb-1 min-h-[56px] gap-0.5 select-none active:scale-95 transition-transform"
           >
-            <span className="flex items-center justify-center w-12 h-9 -mt-3 rounded-2xl bg-primary dark:bg-primary text-gold-text shadow-md ring-4 ring-white dark:ring-background border border-primary/30">
-              <TabletSmartphone className="w-5 h-5 text-gold-text" />
+            <span className="flex items-center justify-center w-12 h-9 rounded-2xl bg-primary dark:bg-primary text-primary-foreground shadow-md ring-2 ring-background border border-primary/30">
+              <TabletSmartphone className="w-5 h-5 text-primary-foreground" />
             </span>
-            <span className="text-[10.5px] font-black text-primary dark:text-success leading-tight">
+            <span className="text-[10.5px] font-black text-primary dark:text-primary leading-tight">
               {t('posShort')}
             </span>
           </Link>
@@ -142,8 +142,8 @@ export function MobileBottomNav({
                   className={cn(
                     'flex items-center justify-center px-3.5 py-1 rounded-full transition-colors',
                     active
-                      ? 'bg-primary/15 text-primary dark:bg-primary/25 dark:text-success'
-                      : 'text-muted hover:text-foreground dark:text-muted dark:hover:text-white'
+                      ? 'bg-primary/15 text-primary dark:bg-primary/25 dark:text-primary'
+                      : 'text-muted hover:text-primary dark:text-muted dark:hover:text-primary'
                   )}
                 >
                   <Icon className="w-[19px] h-[19px]" strokeWidth={active ? 2.4 : 2} />
@@ -151,7 +151,7 @@ export function MobileBottomNav({
                 <span
                   className={cn(
                     'text-[10.5px] leading-tight truncate max-w-[68px]',
-                    active ? 'font-bold text-primary dark:text-success' : 'font-medium text-muted dark:text-muted'
+                    active ? 'font-bold text-primary dark:text-primary' : 'font-medium text-muted dark:text-muted'
                   )}
                 >
                   {trailingTab.label}
@@ -263,7 +263,7 @@ export function MobileBottomNav({
               {sections.map((section) => (
                 <div key={section.id} className="space-y-2">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-muted px-0.5 block">
-                    {t(section.labelKey)}
+                    {t.has(section.labelKey) ? t(section.labelKey) : section.defaultLabel}
                   </span>
                   <div className="grid grid-cols-3 gap-2">
                     {section.items.map((item) => {

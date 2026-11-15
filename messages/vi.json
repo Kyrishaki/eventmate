@@ -60,6 +60,8 @@
     }
   },
   "nav": {
+    "groupFinance": "Đơn và tiền",
+    "recon": "Đối soát chuyển khoản",
     "shifts": "Ca và két",
     "dashboard": "Tổng quan",
     "events": "Sự kiện",

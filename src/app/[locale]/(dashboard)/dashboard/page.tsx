@@ -118,25 +118,12 @@ export default function DashboardOverviewPage() {
   const totalRevenue = netOrders.reduce((sum, o) => sum + o.final_amount, 0);
   const activeBoothsCount = filteredBooths.filter((b) => b.status === 'active').length;
 
-  // Pending items for "Cần xử lý"
+  // Pending items for "Thông báo xử lý gấp"
   const pendingPreordersCount = preorders.filter(
     (p) => p.status === 'pending_pickup' &&
       (!activeWorkspace || p.workspace_id === activeWorkspace.id) &&
       (selectedEventId === 'all' ? !isTestEvent(p.event_id) : p.event_id === selectedEventId)
   ).length;
-
-  // Warehouse availability is global to the workspace, summed per variant.
-  const workspaceProductIds = new Set(products
-    .filter((product) => !product.is_deleted && (!activeWorkspace || product.workspace_id === activeWorkspace.id))
-    .map((product) => product.id));
-  const unallocatedInventoryCount = variants
-    .filter((variant) => workspaceProductIds.has(variant.product_id))
-    .reduce((sum, variant) => {
-      const allocated = allRealAllocations
-        .filter((allocation) => allocation.variant_id === variant.id)
-        .reduce((quantity, allocation) => quantity + allocation.allocated_quantity, 0);
-      return sum + Math.max(0, variant.total_inventory - allocated);
-    }, 0);
 
   // Stock sent to the selected event's booths, after completed sales.
   const productsAddedToBooths = filteredAllocations.reduce(
@@ -372,54 +359,34 @@ export default function DashboardOverviewPage() {
         </div>
       )}
 
-      {/* SECTION 1: Cần xử lý (Matching C01-Today.dc.html) */}
-      <section className="bg-surface border border-border rounded-2xl px-4 sm:px-5 py-2">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-2.5">
-          <h2 className="text-[13px] text-muted font-semibold uppercase tracking-wider m-0">
-            Cần xử lý
-          </h2>
-          <Link
-            href="/pos"
-            className="h-9 w-full sm:w-auto justify-center px-3.5 rounded-lg border border-border-strong hover:border-primary bg-transparent text-foreground text-[13px] font-semibold flex items-center gap-1.5 transition-colors"
-          >
-            <span>Mở màn bán hàng</span>
-          </Link>
-        </div>
-
-        {/* Row 1: Đơn giữ chờ đối soát */}
-        <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 py-3 border-t border-border">
-          <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0" />
-          <span className="flex-1 min-w-0 text-[13px] sm:text-[14.5px] leading-5">
-            <strong className="font-semibold text-foreground">
-              {pendingPreordersCount} đơn giữ
-            </strong>{' '}
-            chờ đối soát tiền chuyển khoản
-          </span>
+      {/* SECTION 1: Thông báo xử lý gấp (Chỉ hiển thị khi có việc cần xử lý thật sự) */}
+      {pendingPreordersCount > 0 && (
+        <section className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 sm:p-4.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
+              <AlertCircle className="w-5 h-5 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-500 bg-amber-500/15 px-2 py-0.5 rounded-md">
+                  Thông báo xử lý gấp
+                </span>
+                <span className="text-[12px] text-muted">Cần xác nhận</span>
+              </div>
+              <p className="text-[13.5px] sm:text-[14.5px] text-foreground font-medium mt-1">
+                Có <strong className="font-bold text-amber-500">{pendingPreordersCount} đơn giữ</strong> đang chờ đối soát tiền chuyển khoản
+              </p>
+            </div>
+          </div>
           <Link
             href="/dashboard/payments"
-            className="h-9 shrink-0 self-center px-3 sm:px-4 rounded-lg bg-foreground text-background hover:bg-surface text-[12px] sm:text-[13px] font-semibold flex items-center transition-all"
+            className="h-9 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-black font-semibold text-[13px] flex items-center justify-center gap-1.5 transition-all shrink-0 shadow-sm"
           >
-            Đối soát
+            <span>Đối soát ngay</span>
+            <ChevronRight className="w-4 h-4" />
           </Link>
-        </div>
-
-        {/* Row 2: Kho tổng chưa cấp */}
-        <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 py-3 border-t border-border">
-          <span className="w-2.5 h-2.5 rounded-full bg-muted shrink-0" />
-          <span className="flex-1 min-w-0 text-[13px] sm:text-[14.5px] leading-5">
-            <strong className="font-semibold text-foreground">
-              {unallocatedInventoryCount} món
-            </strong>{' '}
-            trong kho tổng chưa cấp cho quầy nào
-          </span>
-          <Link
-            href="/dashboard/inventory"
-            className="h-9 shrink-0 self-center px-3 sm:px-4 rounded-lg border border-border-strong hover:border-primary bg-transparent text-foreground text-[12px] sm:text-[13px] font-semibold flex items-center transition-all"
-          >
-            Xem kho
-          </Link>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* SECTION 2: 4 Thẻ chỉ số chính (.g4 - Matching C01-Today.dc.html) */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">

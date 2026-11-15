@@ -236,22 +236,27 @@ export function Sidebar({
           )}
         >
           {/* User Profile Chip (Initial Avatar + Name + Role) */}
-          <div className="flex items-center gap-2.5 min-w-0">
+          <Link
+            href="/dashboard/team"
+            onClick={onClose}
+            className="flex items-center gap-2.5 min-w-0 p-1.5 -m-1.5 rounded-xl hover:bg-surface-hover/80 transition-colors group cursor-pointer"
+            title="Quản lý Tài khoản & Phân quyền"
+          >
             <span
               aria-hidden="true"
-              className="w-9 h-9 rounded-full bg-surface-hover text-foreground flex items-center justify-center text-[14px] font-bold shrink-0 border border-border"
+              className="w-9 h-9 rounded-full bg-surface-hover text-foreground flex items-center justify-center text-[14px] font-bold shrink-0 border border-border group-hover:border-primary/50 transition-colors"
             >
               {userInitial}
             </span>
             <div className="flex flex-col min-w-0">
-              <span className="text-[13.5px] font-semibold text-foreground truncate">
+              <span className="text-[13.5px] font-semibold text-foreground truncate group-hover:text-primary transition-colors">
                 {userDisplayName}
               </span>
               <span className="text-[12px] text-muted truncate">
                 {userRoleDisplay}
               </span>
             </div>
-          </div>
+          </Link>
         </div>
       </aside>
     </>

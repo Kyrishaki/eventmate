@@ -119,31 +119,43 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
 
         {/* User Account & Logout */}
         <div className="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-2 border-l border-border">
+          {/* Mobile open menu avatar */}
           <button
             type="button"
             onClick={onOpenMobileMenu}
-            className="md:pointer-events-none w-7 h-7 rounded-full bg-surface-hover text-foreground flex items-center justify-center text-xs font-semibold shrink-0 cursor-pointer md:cursor-default"
+            className="md:hidden w-7 h-7 rounded-full bg-surface-hover text-foreground flex items-center justify-center text-xs font-semibold shrink-0 cursor-pointer"
             aria-label="Tài khoản"
           >
             {user?.fullName?.charAt(0) || <UserIcon className="w-3.5 h-3.5 text-muted" />}
           </button>
 
-          <div className="hidden sm:block text-left">
-            <p className="text-xs font-medium text-foreground leading-tight truncate max-w-[120px]">
-              {user?.fullName || 'Thành viên ban tổ chức'}
-            </p>
-            <div className="flex items-center gap-1">
-              {user?.role === 'collab_partner' ? (
-                <Badge variant="warning" className="text-[9px] px-1 py-0 bg-[#FAF5FF] text-[#6B21A8] border-[#A855F7]/30 font-semibold">
-                  {user?.collabPartnerName ? `Đối tác: ${user.collabPartnerName}` : 'Đối tác gian hàng'}
-                </Badge>
-              ) : (
-                <Badge variant="neutral" className="text-[9px] px-1 py-0">
-                  {getVietnameseRoleLabel(user?.role)}
-                </Badge>
-              )}
+          {/* Desktop link to Account page */}
+          <Link
+            href="/dashboard/team"
+            className="hidden md:flex items-center gap-2 hover:opacity-85 transition-opacity"
+            title="Quản lý Tài khoản & Phân quyền"
+          >
+            <div className="w-7 h-7 rounded-full bg-surface-hover text-foreground flex items-center justify-center text-xs font-semibold shrink-0 border border-border">
+              {user?.fullName?.charAt(0) || <UserIcon className="w-3.5 h-3.5 text-muted" />}
             </div>
-          </div>
+
+            <div className="hidden sm:block text-left">
+              <p className="text-xs font-medium text-foreground leading-tight truncate max-w-[120px]">
+                {user?.fullName || 'Thành viên ban tổ chức'}
+              </p>
+              <div className="flex items-center gap-1">
+                {user?.role === 'collab_partner' ? (
+                  <Badge variant="warning" className="text-[9px] px-1 py-0 bg-[#FAF5FF] text-[#6B21A8] border-[#A855F7]/30 font-semibold">
+                    {user?.collabPartnerName ? `Đối tác: ${user.collabPartnerName}` : 'Đối tác gian hàng'}
+                  </Badge>
+                ) : (
+                  <Badge variant="neutral" className="text-[9px] px-1 py-0">
+                    {getVietnameseRoleLabel(user?.role)}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </Link>
 
           <button
             type="button"

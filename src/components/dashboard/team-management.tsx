@@ -346,14 +346,14 @@ export default function TeamManagement() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-foreground">
-              Đội ngũ & Cấp tài khoản Nhân sự
+              Tài khoản & Đội ngũ Nhân sự
             </h1>
             <Badge variant="outline" className="text-[11px] font-mono">
               {accounts.length} tài khoản
             </Badge>
           </div>
           <p className="text-xs text-muted mt-0.5">
-            Quản trị viên trực tiếp quản lý, đổi mật khẩu và đảo ngẫu nhiên mật khẩu để tái sử dụng tài khoản cho nhân sự mới.
+            Quản lý tài khoản đăng nhập, đổi mật khẩu và phân quyền thu ngân, nhân viên kho, đối tác collab.
           </p>
         </div>
 

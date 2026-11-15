@@ -7,6 +7,7 @@ import {
   ShoppingBag,
   Store,
   Settings,
+  UserCheck,
   LucideIcon,
 } from 'lucide-react';
 
@@ -103,6 +104,14 @@ export const NAV_ITEMS: NavItemConfig[] = [
     labelKey: 'settings',
     defaultLabel: 'Thiết lập',
     icon: Settings,
+    group: 'admin',
+    hideForCollab: true,
+  },
+  {
+    href: '/dashboard/team',
+    labelKey: 'team',
+    defaultLabel: 'Tài khoản',
+    icon: UserCheck,
     group: 'admin',
     hideForCollab: true,
   },

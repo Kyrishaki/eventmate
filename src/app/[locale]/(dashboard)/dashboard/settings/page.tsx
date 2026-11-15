@@ -7,6 +7,7 @@ import { useDataStore } from '@/stores/data-store';
 import { useOrdersStore, normalizeVietQrBankId, getBankDisplayName } from '@/stores/orders-store';
 import { usePreorderStore } from '@/stores/preorder-store';
 import { useAuditStore } from '@/stores/audit-store';
+import { Link } from '@/i18n/routing';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,9 +32,10 @@ import {
   Info,
   ExternalLink,
   RefreshCw,
+  UserCheck,
+  ChevronRight,
 } from 'lucide-react';
 import { EventItem, Workspace } from '@/types/database';
-import TeamManagement from '@/components/dashboard/team-management';
 import { ThemeSelector } from '@/components/ui/theme-toggle';
 
 const POPULAR_BANKS = [
@@ -231,12 +233,21 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <Button
-        variant="outline"
-        onClick={() => document.getElementById('team-management')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-      >
-        Đội ngũ &amp; tài khoản
-      </Button>
+      <div className="flex items-center justify-between gap-3 p-3 bg-surface border border-border rounded-xl">
+        <div className="flex items-center gap-2.5">
+          <UserCheck className="w-4 h-4 text-primary shrink-0" />
+          <span className="text-xs text-muted">
+            Quản lý tài khoản đăng nhập, đổi mật khẩu và phân quyền thu ngân/nhân sự:
+          </span>
+        </div>
+        <Link
+          href="/dashboard/team"
+          className="h-8 px-3 rounded-lg border border-border-strong hover:border-primary text-xs font-semibold flex items-center gap-1.5 transition-colors text-foreground shrink-0"
+        >
+          <span>Mục Tài khoản</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
 
       {/* Auto-Sync Explanation Banner */}
       <div className="flex items-start gap-3 p-3.5 bg-warning-bg dark:bg-success-bg/30 border border-primary/30 rounded-lg text-xs text-foreground dark:text-foreground">
@@ -633,9 +644,27 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
-      <section id="team-management" aria-label="Đội ngũ và tài khoản" className="scroll-mt-20">
-        <TeamManagement />
-      </section>
+      {/* Quick Access to Dedicated Account Management Page */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-surface border border-border rounded-xl">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <UserCheck className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-foreground">Đội ngũ &amp; Cấp tài khoản Nhân sự</p>
+            <p className="text-[11px] text-muted">
+              Quản lý tài khoản đăng nhập, đổi mật khẩu và phân quyền thu ngân, quản trị viên đã được chuyển sang mục Tài khoản trên thanh điều hướng.
+            </p>
+          </div>
+        </div>
+        <Link
+          href="/dashboard/team"
+          className="h-8.5 px-3.5 rounded-lg border border-border-strong hover:border-primary text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors text-foreground shrink-0"
+        >
+          <span>Mở mục Tài khoản</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
     </div>
   );
 }

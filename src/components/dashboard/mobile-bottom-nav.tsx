@@ -214,7 +214,12 @@ export function MobileBottomNav({
 
             {/* Sheet Header: User Info + Quick Close / Logout */}
             <div className="px-4 py-2.5 border-b border-border flex items-center justify-between gap-2 shrink-0">
-              <div className="flex items-center gap-2.5 min-w-0">
+              <Link
+                href="/dashboard/team"
+                onClick={onCloseMenu}
+                className="flex items-center gap-2.5 min-w-0 hover:opacity-85 transition-opacity"
+                title="Quản lý Tài khoản"
+              >
                 <div className="w-9 h-9 rounded-full bg-warning-bg text-primary flex items-center justify-center text-sm font-bold shrink-0">
                   {user?.fullName?.charAt(0) || <UserIcon className="w-4 h-4" />}
                 </div>
@@ -228,7 +233,7 @@ export function MobileBottomNav({
                       : user?.role || 'owner'}
                   </p>
                 </div>
-              </div>
+              </Link>
 
               <div className="flex items-center gap-1.5 shrink-0">
                 <button

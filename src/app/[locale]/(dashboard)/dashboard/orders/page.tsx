@@ -397,10 +397,7 @@ export default function DashboardOrdersPage() {
           }`}
         >
           <CreditCard className="w-3.5 h-3.5" />
-          <span>Cấu hình VietQR &amp; Tự động nhận tiền</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded bg-success-bg text-primary font-mono">
-            Auto-Bank
-          </span>
+          <span>Cấu hình VietQR</span>
         </button>
       </div>
 

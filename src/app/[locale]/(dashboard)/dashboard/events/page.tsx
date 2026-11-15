@@ -356,7 +356,7 @@ export default function EventsPage() {
                 </div>
 
                 {/* Card Action Footer */}
-                <div className="px-5 py-3 border-t border-border bg-background rounded-b-[8px] flex items-center justify-between">
+                <div className="px-5 py-3 border-t border-border bg-background rounded-b-lg flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-1.5">
                     {editable ? (
                       <>

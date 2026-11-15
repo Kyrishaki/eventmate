@@ -27,7 +27,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
 
   const activeNav = React.useMemo(() => getActiveNavItem(pathname), [pathname]);
   const PageIcon = activeNav.icon;
-  const pageTitle = title || tNav(activeNav.labelKey);
+  const pageTitle = title || (pathname.includes('/dashboard/orders') ? 'Đơn hàng & Thanh toán' : tNav.has(activeNav.labelKey) ? tNav(activeNav.labelKey) : activeNav.defaultLabel);
 
   function handleLogout() {
     logout();

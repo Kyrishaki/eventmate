@@ -60,6 +60,7 @@
     }
   },
   "nav": {
+    "shifts": "Shifts and cash",
     "dashboard": "Overview",
     "events": "Events & Tours",
     "booths": "Booths",

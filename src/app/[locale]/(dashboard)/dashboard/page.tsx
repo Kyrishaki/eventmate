@@ -428,9 +428,9 @@ export default function DashboardOverviewPage() {
       </section>
 
       {/* SECTION 3: Top Sản phẩm bán chạy & Biểu đồ phân tích trực quan */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
         {/* Top 5 Sản phẩm bán chạy nhất */}
-        <div className="lg:col-span-7 bg-surface border border-border rounded-2xl p-4.5 sm:p-5 flex flex-col justify-between">
+        <div className="lg:col-span-7 bg-surface border border-border rounded-2xl p-4.5 sm:p-5 flex flex-col justify-between h-full">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <div className="flex items-center gap-2">
@@ -528,9 +528,9 @@ export default function DashboardOverviewPage() {
         </div>
 
         {/* Cột Phải: Biểu đồ Thanh toán & Khung giờ bán hàng */}
-        <div className="lg:col-span-5 flex flex-col gap-4">
+        <div className="lg:col-span-5 flex flex-col gap-4 h-full">
           {/* Biểu đồ Phương thức thanh toán */}
-          <div className="bg-surface border border-border rounded-2xl p-4.5 sm:p-5 flex flex-col justify-between">
+          <div className="bg-surface border border-border rounded-2xl p-4.5 sm:p-5 flex flex-col justify-between shrink-0">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
@@ -607,8 +607,8 @@ export default function DashboardOverviewPage() {
             </div>
           </div>
 
-          {/* Biểu đồ Khung giờ bán hàng */}
-          <div className="bg-surface border border-border rounded-2xl p-4.5 sm:p-5 flex flex-col justify-between">
+          {/* Biểu đồ Khung giờ bán hàng (Kéo dài flex-1 cân bằng với cột Sản phẩm bán chạy) */}
+          <div className="bg-surface border border-border rounded-2xl p-4.5 sm:p-5 flex flex-col justify-between flex-1 min-h-[220px]">
             <div className="flex items-center justify-between pb-2 border-b border-border">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-surface-hover text-muted flex items-center justify-center shrink-0">
@@ -619,30 +619,47 @@ export default function DashboardOverviewPage() {
                   <p className="text-[11px] text-muted">Xác định các khung giờ cao điểm</p>
                 </div>
               </div>
+              {maxSlotRevenue > 1 && (
+                <span className="text-[10.5px] px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold hidden sm:inline-block">
+                  Đỉnh: {salesByTimeSlot.reduce((p, c) => (c.revenue > p.revenue ? c : p)).label.split(' ')[0]}
+                </span>
+              )}
             </div>
 
-            {/* Visual Bar chart by Time Slots */}
-            <div className="pt-3 grid grid-cols-4 gap-2 items-end min-h-[95px]">
-              {salesByTimeSlot.map((slot) => {
-                const heightPercent = maxSlotRevenue > 0 ? Math.round((slot.revenue / maxSlotRevenue) * 100) : 0;
-                return (
-                  <div key={slot.key} className="flex flex-col items-center gap-1.5 h-full justify-end group">
-                    <span className="text-[10px] font-mono text-muted text-center font-semibold truncate w-full">
-                      {slot.revenue > 0 ? formatCurrency(slot.revenue, 'VND') : '0 đ'}
-                    </span>
-                    <div className="w-full bg-background rounded-lg h-14 flex items-end p-1 border border-border">
-                      <div
-                        className={`w-full rounded-md ${slot.barColor} transition-all duration-500`}
-                        style={{ height: `${Math.max(12, heightPercent)}%` }}
-                        title={`${slot.label}: ${formatCurrency(slot.revenue, 'VND')} (${slot.count} đơn)`}
-                      />
+            {/* Visual Bar chart by Time Slots (Expanded evenly) */}
+            <div className="pt-3 flex-1 flex flex-col justify-end">
+              <div className="grid grid-cols-4 gap-2 sm:gap-3 items-end flex-1 min-h-[120px] sm:min-h-[140px] pt-1">
+                {salesByTimeSlot.map((slot) => {
+                  const heightPercent = maxSlotRevenue > 0 ? Math.round((slot.revenue / maxSlotRevenue) * 100) : 0;
+                  return (
+                    <div key={slot.key} className="flex flex-col items-center gap-1.5 h-full justify-end group">
+                      <div className="text-center w-full min-w-0">
+                        <span className="text-[10.5px] sm:text-[11px] font-mono text-foreground font-bold block truncate">
+                          {slot.revenue > 0 ? formatCurrency(slot.revenue, 'VND') : '0 đ'}
+                        </span>
+                        <span className="text-[9px] sm:text-[9.5px] text-muted block truncate font-mono">
+                          {slot.count > 0 ? `${slot.count} đơn` : '0 đơn'}
+                        </span>
+                      </div>
+                      <div className="w-full bg-background rounded-xl flex-1 max-h-[120px] min-h-[60px] flex items-end p-1.5 border border-border group-hover:border-primary/40 transition-colors">
+                        <div
+                          className={`w-full rounded-lg ${slot.barColor} transition-all duration-500 shadow-sm`}
+                          style={{ height: `${Math.max(12, heightPercent)}%` }}
+                          title={`${slot.label}: ${formatCurrency(slot.revenue, 'VND')} (${slot.count} đơn)`}
+                        />
+                      </div>
+                      <div className="text-center w-full min-w-0">
+                        <span className="text-[10.5px] sm:text-[11.5px] font-semibold text-foreground block truncate">
+                          {slot.key === 'morning' ? 'Sáng' : slot.key === 'noon' ? 'Trưa' : slot.key === 'afternoon' ? 'Chiều' : 'Tối'}
+                        </span>
+                        <span className="text-[9px] text-muted block truncate font-mono">
+                          {slot.key === 'morning' ? '06-11h' : slot.key === 'noon' ? '11-14h' : slot.key === 'afternoon' ? '14-18h' : '18-23h'}
+                        </span>
+                      </div>
                     </div>
-                    <span className="text-[10px] font-medium text-muted text-center leading-tight truncate w-full">
-                      {slot.key === 'morning' ? 'Sáng' : slot.key === 'noon' ? 'Trưa' : slot.key === 'afternoon' ? 'Chiều' : 'Tối'}
-                    </span>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>

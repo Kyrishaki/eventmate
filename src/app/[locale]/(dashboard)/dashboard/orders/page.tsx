@@ -214,32 +214,6 @@ export default function DashboardOrdersPage() {
     return matchesSearch && matchesEvent && matchesPayment && matchesStatus;
   });
 
-  // Aggregated products sold in filtered orders
-  const filteredProductsSold = React.useMemo(() => {
-    const map = new Map<string, { productId: string; name: string; variantName: string; totalQty: number; totalRevenue: number }>();
-    for (const ord of filteredOrders) {
-      if (ord.order_status === 'cancelled' || ord.order_status === 'refunded') continue;
-      for (const it of ord.items || []) {
-        const v = variants.find((item) => item.id === it.variant_id);
-        const p = products.find((item) => item.id === v?.product_id);
-        const key = it.variant_id;
-        const existing = map.get(key) || {
-          productId: p?.id || '',
-          name: p?.name || it.variant_id,
-          variantName: v?.name || '',
-          totalQty: 0,
-          totalRevenue: 0,
-        };
-        existing.totalQty += it.quantity;
-        existing.totalRevenue += it.total_price;
-        map.set(key, existing);
-      }
-    }
-    return Array.from(map.values()).sort((a, b) => b.totalQty - a.totalQty);
-  }, [filteredOrders, variants, products]);
-
-  const totalFilteredUnitsSold = filteredProductsSold.reduce((s, it) => s + it.totalQty, 0);
-
   const openCancelModal = (ord: Order) => {
     setCancelTargetOrder(ord);
     setCancelReason('');
@@ -574,47 +548,6 @@ export default function DashboardOrdersPage() {
           <option value="refunded">Đã hoàn tiền (Refund)</option>
         </select>
       </div>
-
-      {/* Quick Summary of Products Sold in filtered orders */}
-      {filteredProductsSold.length > 0 && (
-        <div className="p-3.5 rounded-xl bg-surface border border-border shadow-2xs space-y-2.5">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-              <Package className="w-4 h-4 text-primary" />
-              <span>Sản phẩm đã bán ({totalFilteredUnitsSold} món đã xuất • {filteredProductsSold.length} loại sản phẩm)</span>
-            </span>
-            <span className="text-[11px] text-muted">
-              Tổng hợp từ {filteredOrders.filter((o) => o.order_status !== 'cancelled' && o.order_status !== 'refunded').length} đơn thành công
-            </span>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {filteredProductsSold.map((it) => (
-              <div
-                key={it.productId + it.variantName}
-                className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-background border border-border text-xs shadow-2xs"
-              >
-                <div className="flex flex-col min-w-0">
-                  <span className="font-semibold text-foreground truncate max-w-[150px] sm:max-w-[200px]">
-                    {it.name}
-                  </span>
-                  {it.variantName && (
-                    <span className="text-[10px] text-muted truncate">
-                      {it.variantName}
-                    </span>
-                  )}
-                </div>
-                <Badge variant="success" className="text-xs font-mono font-bold px-1.5 py-0.5 shrink-0">
-                  x{it.totalQty}
-                </Badge>
-                <span className="text-[11px] font-mono text-muted shrink-0 font-medium">
-                  {formatCurrency(it.totalRevenue, activeWorkspace?.currency || 'VND')}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Orders Table */}
       {filteredOrders.length === 0 ? (

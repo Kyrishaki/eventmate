@@ -480,23 +480,19 @@ export function syncCatalogChange(delta?: CloudCatalogPayload, workspaceId = DEF
 /**
  * Triggers an order sync to Supabase & peer devices
  */
-export function syncOrderCreated(order: Order, workspaceId = DEFAULT_WORKSPACE_ID) {
-  const clientId = getOrCreateClientId();
+export function syncOrderCreated(order: Order, _workspaceId = DEFAULT_WORKSPACE_ID) {
 
-  // 1. Instant broadcast to peers
-  if (syncChannel && order) {
-    syncChannel.send({
-      type: 'broadcast',
-      event: 'ORDER_UPSERT',
-      payload: { clientId, order },
-    });
-  }
+  // Persist the order independently from catalog snapshots, for cashiers too.
+  void import('@/lib/order-cloud-sync').then(async ({ saveOrderToCloud }) => {
+    const saved = await saveOrderToCloud(order);
+    const current = useOrdersStore.getState().orders.find((item) => item.id === order.id);
+    if (!current || current.updated_at !== order.updated_at) return;
+    useOrdersStore.setState((state) => ({ orders: state.orders.map((item) =>
+      item.id === order.id && item.updated_at === order.updated_at
+        ? { ...item, sync_status: saved ? 'synced' : 'pending_sync' } : item) }));
+    if (!saved) useWorkspaceStore.getState().setSyncState('pending');
+  }).catch(() => useWorkspaceStore.getState().setSyncState('pending'));
 
-  // 2. Debounced persistence to Supabase
-  if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
-  saveDebounceTimer = setTimeout(() => {
-    pushFullStateToCloud(workspaceId);
-  }, 300);
 }
 
 /**
@@ -533,14 +529,12 @@ export async function pushFullStateToCloud(workspaceId = DEFAULT_WORKSPACE_ID): 
     const supabase = createClient();
     const { error: updateError, data: updateData } = await supabase
       .from('app_sync_state')
-      .update(snapshot)
+      .update({ catalog_data: snapshot.catalog_data, updated_at: snapshot.updated_at, updated_by: snapshot.updated_by })
       .eq('workspace_id', workspaceId)
       .select('workspace_id');
 
     if (updateError || !updateData || updateData.length === 0) {
-      const { error: upsertError } = await supabase.from('app_sync_state').upsert(snapshot, {
-        onConflict: 'workspace_id',
-      });
+      const { error: upsertError } = await supabase.from('app_sync_state').insert({ ...snapshot, orders_data: [] });
       if (upsertError) {
         console.warn('[CloudSync] Save to app_sync_state skipped:', upsertError.message);
         return false;

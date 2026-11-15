@@ -325,7 +325,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
         const idempotencyKey = `idem-${orderId}-${Math.random().toString(36).substring(2, 8)}`;
         const nowIso = new Date().toISOString();
 
-        const syncStatus: SyncStatus = isOnline ? 'synced' : 'pending_sync';
+        const syncStatus: SyncStatus = 'pending_sync';
 
         const orderItems: OrderItem[] = cart.map((c, idx) => ({
           id: `item-${Date.now()}-${idx}`,
@@ -402,7 +402,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
               await localDb.orderItems.put(item);
             }
 
-            if (!isOnline) {
+            {
               await localDb.syncQueue.put({
                 id: `queue-${orderId}`,
                 order_id: orderId,
@@ -417,6 +417,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
           }
         } catch (dexieErr) {
           console.warn('Dexie storage error:', dexieErr);
+          throw new Error('Không lưu được đơn trên thiết bị. Giỏ hàng vẫn được giữ lại.');
         }
 
         // 3. Update orders in zustand store and clear cart
@@ -465,25 +466,21 @@ export const useOrdersStore = create<OrdersStoreState>()(
         const pending = orders.filter((o) => o.sync_status === 'pending_sync');
         if (pending.length === 0) return { successCount: 0, failCount: 0 };
 
-        // Mark all pending as synced
-        const synced = orders.map((o) =>
-          o.sync_status === 'pending_sync' ? { ...o, sync_status: 'synced' as SyncStatus } : o
-        );
-
-        set({ orders: synced });
-
-        try {
-          if (typeof window !== 'undefined' && localDb) {
-            for (const p of pending) {
-              await localDb.localOrders.update(p.id, { sync_status: 'synced', is_offline_only: false });
-            }
-            await localDb.syncQueue.clear();
-          }
-        } catch (e) {
-          console.warn('Error clearing sync queue in localDb:', e);
+        const { saveOrderToCloud } = await import('@/lib/order-cloud-sync');
+        let successCount = 0;
+        for (const order of pending) {
+          try {
+            if (!await saveOrderToCloud(order)) continue;
+            if (get().orders.find((item) => item.id === order.id)?.updated_at !== order.updated_at) continue;
+            await localDb.transaction('rw', localDb.localOrders, localDb.syncQueue, async () => {
+              await localDb.localOrders.update(order.id, { sync_status: 'synced', is_offline_only: false });
+              await localDb.syncQueue.where('order_id').equals(order.id).delete();
+            });
+            set((state) => ({ orders: state.orders.map((item) => item.id === order.id && item.updated_at === order.updated_at ? { ...item, sync_status: 'synced' as SyncStatus } : item) }));
+            successCount++;
+          } catch (error) { console.warn('Order remains pending:', error); }
         }
-
-        return { successCount: pending.length, failCount: 0 };
+        return { successCount, failCount: pending.length - successCount };
       },
 
       hydrateOfflineDb: async () => {
@@ -505,13 +502,8 @@ export const useOrdersStore = create<OrdersStoreState>()(
       },
 
       retryOrderSync: async (orderId: string) => {
-        const { orders } = get();
-        set({
-          orders: orders.map((o) =>
-            o.id === orderId ? { ...o, sync_status: 'synced' as SyncStatus } : o
-          ),
-        });
-        return true;
+        await get().syncPendingOrders();
+        return get().orders.find((order) => order.id === orderId)?.sync_status === 'synced';
       },
 
       mergeCollabOrders: (incomingOrders: Order[]) => {

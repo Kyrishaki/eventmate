@@ -34,7 +34,7 @@ export default function PosSyncPage() {
     setSyncResult(null);
     try {
       const res = await syncPendingOrders();
-      setSyncResult(`Đã đồng bộ thành công ${res.successCount} đơn hàng lên máy chủ!`);
+      setSyncResult(`Đã lưu ${res.successCount} đơn lên máy chủ. Còn ${res.failCount} đơn chưa đồng bộ.`);
     } catch {
       setSyncResult('Đồng bộ thất bại. Vui lòng kiểm tra kết nối mạng.');
     } finally {

@@ -16,6 +16,9 @@ import { ProductImageUploader } from '@/components/ui/product-image-uploader';
 import { Order, OrderStatus } from '@/types/database';
 import {
   ShoppingCart,
+  ShoppingBag,
+  Package,
+  Layers,
   Search,
   Eye,
   Camera,
@@ -207,6 +210,32 @@ export default function DashboardOrdersPage() {
 
     return matchesSearch && matchesEvent && matchesPayment && matchesStatus;
   });
+
+  // Aggregated products sold in filtered orders
+  const filteredProductsSold = React.useMemo(() => {
+    const map = new Map<string, { productId: string; name: string; variantName: string; totalQty: number; totalRevenue: number }>();
+    for (const ord of filteredOrders) {
+      if (ord.order_status === 'cancelled' || ord.order_status === 'refunded') continue;
+      for (const it of ord.items || []) {
+        const v = variants.find((item) => item.id === it.variant_id);
+        const p = products.find((item) => item.id === v?.product_id);
+        const key = it.variant_id;
+        const existing = map.get(key) || {
+          productId: p?.id || '',
+          name: p?.name || it.variant_id,
+          variantName: v?.name || '',
+          totalQty: 0,
+          totalRevenue: 0,
+        };
+        existing.totalQty += it.quantity;
+        existing.totalRevenue += it.total_price;
+        map.set(key, existing);
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => b.totalQty - a.totalQty);
+  }, [filteredOrders, variants, products]);
+
+  const totalFilteredUnitsSold = filteredProductsSold.reduce((s, it) => s + it.totalQty, 0);
 
   const openCancelModal = (ord: Order) => {
     setCancelTargetOrder(ord);
@@ -532,6 +561,47 @@ export default function DashboardOrdersPage() {
         </select>
       </div>
 
+      {/* Quick Summary of Products Sold in filtered orders */}
+      {filteredProductsSold.length > 0 && (
+        <div className="p-3.5 rounded-xl bg-surface border border-border shadow-2xs space-y-2.5">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <Package className="w-4 h-4 text-primary" />
+              <span>Sản phẩm đã bán ({totalFilteredUnitsSold} món đã xuất • {filteredProductsSold.length} loại sản phẩm)</span>
+            </span>
+            <span className="text-[11px] text-muted">
+              Tổng hợp từ {filteredOrders.filter((o) => o.order_status !== 'cancelled' && o.order_status !== 'refunded').length} đơn thành công
+            </span>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {filteredProductsSold.map((it) => (
+              <div
+                key={it.productId + it.variantName}
+                className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-background border border-border text-xs shadow-2xs"
+              >
+                <div className="flex flex-col min-w-0">
+                  <span className="font-semibold text-foreground truncate max-w-[150px] sm:max-w-[200px]">
+                    {it.name}
+                  </span>
+                  {it.variantName && (
+                    <span className="text-[10px] text-muted truncate">
+                      {it.variantName}
+                    </span>
+                  )}
+                </div>
+                <Badge variant="success" className="text-xs font-mono font-bold px-1.5 py-0.5 shrink-0">
+                  x{it.totalQty}
+                </Badge>
+                <span className="text-[11px] font-mono text-muted shrink-0 font-medium">
+                  {formatCurrency(it.totalRevenue, activeWorkspace?.currency || 'VND')}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Orders Table */}
       {filteredOrders.length === 0 ? (
         <Card className="border-border shadow-xs">
@@ -553,6 +623,7 @@ export default function DashboardOrdersPage() {
                   <th className="py-3 px-4 font-semibold font-mono">Mã đơn</th>
                   <th className="py-3 px-4 font-semibold">Thời gian</th>
                   <th className="py-3 px-4 font-semibold">Sự kiện & Quầy</th>
+                  <th className="py-3 px-4 font-semibold">Sản phẩm trong đơn</th>
                   <th className="py-3 px-4 font-semibold">Hình thức</th>
                   <th className="py-3 px-4 font-semibold">Trạng thái</th>
                   <th className="py-3 px-4 font-semibold text-right">Tổng tiền</th>
@@ -620,6 +691,48 @@ export default function DashboardOrdersPage() {
                         <p className="text-[11px] text-muted">
                           {booth?.name} ({booth?.code})
                         </p>
+                      </td>
+
+                      {/* Cột sản phẩm trong đơn */}
+                      <td className="py-3 px-4">
+                        <div className="flex flex-col gap-1 max-w-[260px]">
+                          {ord.items && ord.items.length > 0 ? (
+                            <>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                                  {ord.items.reduce((s, it) => s + it.quantity, 0)} món
+                                </span>
+                                <span className="text-[11px] text-muted">
+                                  ({ord.items.length} mặt hàng)
+                                </span>
+                              </div>
+                              <div className="flex flex-col gap-0.5">
+                                {ord.items.slice(0, 3).map((it) => {
+                                  const v = variants.find((item) => item.id === it.variant_id);
+                                  const p = products.find((item) => item.id === v?.product_id);
+                                  return (
+                                    <div
+                                      key={it.id}
+                                      className="text-[11.5px] leading-tight text-foreground truncate"
+                                      title={`${p?.name || it.variant_id} (${v?.name || ''}) x${it.quantity}`}
+                                    >
+                                      <span className="font-medium text-foreground">{p?.name || it.variant_id}</span>
+                                      {v?.name && <span className="text-muted text-[10.5px]"> ({v.name})</span>}
+                                      <strong className="text-primary font-mono ml-1">x{it.quantity}</strong>
+                                    </div>
+                                  );
+                                })}
+                                {ord.items.length > 3 && (
+                                  <span className="text-[10px] text-muted font-medium">
+                                    +{ord.items.length - 3} món khác...
+                                  </span>
+                                )}
+                              </div>
+                            </>
+                          ) : (
+                            <span className="text-muted italic text-[11px]">Chưa có chi tiết</span>
+                          )}
+                        </div>
                       </td>
 
                       <td className="py-3 px-4">
@@ -787,6 +900,39 @@ export default function DashboardOrdersPage() {
                     </div>
                     <span className="shrink-0 text-[11px]">{formatDate(ord.created_at)}</span>
                   </div>
+
+                  {/* Danh sách sản phẩm trong đơn trên mobile */}
+                  {ord.items && ord.items.length > 0 && (
+                    <div className="p-2.5 rounded-lg bg-background border border-border/70 space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] font-semibold text-muted">
+                        <span className="flex items-center gap-1 text-primary">
+                          <Package className="w-3.5 h-3.5" />
+                          <span>Món đã bán ({ord.items.reduce((s, it) => s + it.quantity, 0)} món):</span>
+                        </span>
+                        <span className="text-[10.5px] text-muted font-mono">{ord.items.length} mặt hàng</span>
+                      </div>
+                      <div className="space-y-1 divide-y divide-border/50">
+                        {ord.items.map((it) => {
+                          const v = variants.find((item) => item.id === it.variant_id);
+                          const p = products.find((item) => item.id === v?.product_id);
+                          return (
+                            <div key={it.id} className="pt-1 first:pt-0 flex items-center justify-between text-xs">
+                              <div className="truncate pr-2">
+                                <span className="text-foreground font-medium">{p?.name || it.variant_id}</span>
+                                {v?.name && <span className="text-muted text-[11px]"> ({v.name})</span>}
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0 font-mono">
+                                <span className="text-primary font-bold">x{it.quantity}</span>
+                                <span className="text-[11px] text-muted">
+                                  ({formatCurrency(it.total_price, activeWorkspace?.currency || 'VND')})
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between gap-2 pt-2 border-t border-border">
                     <div className="flex items-center gap-1.5">

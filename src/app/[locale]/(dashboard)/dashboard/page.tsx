@@ -9,6 +9,7 @@ import { usePreorderStore } from '@/stores/preorder-store';
 import { useAuthStore, canManageSandboxData } from '@/stores/auth-store';
 import { Link } from '@/i18n/routing';
 import { formatCurrency } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 import {
   Store,
   Filter,
@@ -21,6 +22,19 @@ import {
   CheckCircle2,
   AlertCircle,
   ExternalLink,
+  TrendingUp,
+  BarChart3,
+  Trophy,
+  Clock,
+  ArrowUpRight,
+  CreditCard,
+  Banknote,
+  QrCode,
+  Package,
+  Sparkles,
+  Layers,
+  ChevronRight,
+  Award,
 } from 'lucide-react';
 import {
   isTestEvent,
@@ -133,6 +147,138 @@ export default function DashboardOverviewPage() {
     (sum, allocation) => sum + Math.max(0, allocation.allocated_quantity - allocation.sold_quantity),
     0
   );
+
+  // 1. Top Best-Selling Products Calculation
+  const topSellingProducts = React.useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        id: string;
+        name: string;
+        imageUrl?: string | null;
+        partnerName?: string | null;
+        unitsSold: number;
+        revenue: number;
+        variantsSold: Map<string, number>;
+      }
+    >();
+
+    for (const ord of netOrders) {
+      for (const it of ord.items || []) {
+        const v = variants.find((item) => item.id === it.variant_id);
+        const prod = products.find((p) => p.id === v?.product_id);
+        const prodId = prod?.id || v?.product_id || it.variant_id;
+        const prodName = prod?.name || it.variant_id;
+
+        const current = map.get(prodId) || {
+          id: prodId,
+          name: prodName,
+          imageUrl: prod?.image_url,
+          partnerName: prod?.collab_partner,
+          unitsSold: 0,
+          revenue: 0,
+          variantsSold: new Map<string, number>(),
+        };
+
+        current.unitsSold += it.quantity;
+        current.revenue += it.total_price;
+        if (v?.name) {
+          current.variantsSold.set(v.name, (current.variantsSold.get(v.name) || 0) + it.quantity);
+        }
+        map.set(prodId, current);
+      }
+    }
+
+    return Array.from(map.values())
+      .sort((a, b) => b.unitsSold - a.unitsSold || b.revenue - a.revenue)
+      .slice(0, 5);
+  }, [netOrders, variants, products]);
+
+  const maxProductSoldUnits = topSellingProducts.length > 0 ? topSellingProducts[0].unitsSold : 1;
+  const totalUnitsSold = netOrders.reduce(
+    (sum, o) => sum + (o.items || []).reduce((s, it) => s + it.quantity, 0),
+    0
+  );
+
+  // 2. Payment Method Split
+  const cashNetRevenue = netOrders
+    .filter((o) => o.payment_method === 'cash')
+    .reduce((sum, o) => sum + o.final_amount, 0);
+  const qrNetRevenue = netOrders
+    .filter((o) => o.payment_method !== 'cash')
+    .reduce((sum, o) => sum + o.final_amount, 0);
+  const cashNetOrders = netOrders.filter((o) => o.payment_method === 'cash').length;
+  const qrNetOrders = netOrders.filter((o) => o.payment_method !== 'cash').length;
+  const cashPercent = totalRevenue > 0 ? Math.round((cashNetRevenue / totalRevenue) * 100) : 0;
+  const qrPercent = totalRevenue > 0 ? 100 - cashPercent : 0;
+
+  // 3. Hourly Sales Distribution
+  const salesByTimeSlot = React.useMemo(() => {
+    const slots = [
+      { key: 'morning', label: 'Sáng (06h - 11h)', count: 0, revenue: 0, barColor: 'bg-amber-500' },
+      { key: 'noon', label: 'Trưa (11h - 14h)', count: 0, revenue: 0, barColor: 'bg-primary' },
+      { key: 'afternoon', label: 'Chiều (14h - 18h)', count: 0, revenue: 0, barColor: 'bg-emerald-500' },
+      { key: 'evening', label: 'Tối (18h - 23h)', count: 0, revenue: 0, barColor: 'bg-purple-500' },
+    ];
+    for (const ord of netOrders) {
+      const h = new Date(ord.created_at).getHours();
+      let slotIdx = 0;
+      if (h >= 6 && h < 11) slotIdx = 0;
+      else if (h >= 11 && h < 14) slotIdx = 1;
+      else if (h >= 14 && h < 18) slotIdx = 2;
+      else slotIdx = 3;
+      slots[slotIdx].count += 1;
+      slots[slotIdx].revenue += ord.final_amount;
+    }
+    return slots;
+  }, [netOrders]);
+
+  const maxSlotRevenue = Math.max(...salesByTimeSlot.map((s) => s.revenue), 1);
+
+  // 4. Events Comparative Performance Matrix
+  const eventComparison = React.useMemo(() => {
+    return effectiveEvents.map((evt) => {
+      const evtBooths = booths.filter((b) => b.event_id === evt.id);
+      const evtOrders = workspaceOrders.filter(
+        (o) => o.event_id === evt.id && isNetRevenueOrder(o) && (isTestEvent(evt) || !isTestOrder(o))
+      );
+      const revenue = evtOrders.reduce((sum, o) => sum + o.final_amount, 0);
+      const ordersCount = evtOrders.length;
+      const aov = ordersCount > 0 ? Math.round(revenue / ordersCount) : 0;
+
+      let unitsSold = 0;
+      for (const o of evtOrders) {
+        for (const it of o.items || []) {
+          unitsSold += it.quantity;
+        }
+      }
+
+      const evtAllocations = allocations.filter((a) => a.event_id === evt.id && !a.is_test);
+      const totalAllocated = evtAllocations.reduce((sum, a) => sum + a.allocated_quantity, 0);
+
+      const cashRevenue = evtOrders
+        .filter((o) => o.payment_method === 'cash')
+        .reduce((sum, o) => sum + o.final_amount, 0);
+      const qrRevenue = evtOrders
+        .filter((o) => o.payment_method !== 'cash')
+        .reduce((sum, o) => sum + o.final_amount, 0);
+
+      return {
+        event: evt,
+        boothsCount: evtBooths.length,
+        revenue,
+        ordersCount,
+        unitsSold,
+        totalAllocated,
+        aov,
+        cashRevenue,
+        qrRevenue,
+        status: evt.status,
+      };
+    });
+  }, [effectiveEvents, booths, workspaceOrders, allocations]);
+
+  const maxEventRevenue = Math.max(...eventComparison.map((e) => e.revenue), 1);
 
   const handleExportExcel = () => {
     exportEventToExcel({
@@ -314,7 +460,363 @@ export default function DashboardOverviewPage() {
         </div>
       </section>
 
-      {/* SECTION 3: 2 Cột Sự kiện & Đơn gần đây (.g2 - Matching C01-Today.dc.html) */}
+      {/* SECTION 3: Top Sản phẩm bán chạy & Biểu đồ phân tích trực quan */}
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* Top 5 Sản phẩm bán chạy nhất */}
+        <div className="lg:col-span-7 bg-surface border border-border rounded-2xl p-4.5 sm:p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between pb-3 border-b border-border">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-warning-bg text-primary flex items-center justify-center shrink-0">
+                  <Trophy className="w-4 h-4 text-warning" />
+                </div>
+                <div>
+                  <h2 className="text-[15px] font-bold text-foreground m-0">Sản phẩm bán chạy nhất</h2>
+                  <p className="text-[11.5px] text-muted">
+                    {totalUnitsSold > 0 ? `Đã xuất bán tổng cộng ${totalUnitsSold} món qua quầy POS` : 'Chưa có sản phẩm nào phát sinh đơn hàng'}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/dashboard/inventory"
+                className="text-[12px] text-muted hover:text-primary transition-colors flex items-center gap-1 font-semibold"
+              >
+                <span>Kho hàng</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            {topSellingProducts.length === 0 ? (
+              <div className="py-12 text-center text-xs text-muted">
+                <Package className="w-8 h-8 text-muted mx-auto mb-2 opacity-60" />
+                <p className="font-semibold text-foreground">Chưa có dữ liệu bán chạy</p>
+                <p className="text-[11px] text-muted mt-1">Khi thu ngân tạo đơn bán hàng từ POS, danh sách sản phẩm chạy nhất sẽ tự động tổng hợp tại đây.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border pt-1">
+                {topSellingProducts.map((prod, index) => {
+                  const percentOfMax = Math.round((prod.unitsSold / maxProductSoldUnits) * 100);
+                  const rankBadge =
+                    index === 0
+                      ? 'bg-amber-500/15 text-amber-500 border-amber-500/30 font-extrabold'
+                      : index === 1
+                      ? 'bg-slate-400/15 text-slate-400 border-slate-400/30 font-bold'
+                      : index === 2
+                      ? 'bg-amber-700/15 text-amber-700 border-amber-700/30 font-bold'
+                      : 'bg-surface-hover text-muted border-border font-semibold';
+
+                  return (
+                    <div key={prod.id} className="py-3 flex flex-col gap-1.5 group">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <span className={`w-6 h-6 rounded-md border text-[11px] flex items-center justify-center shrink-0 ${rankBadge}`}>
+                            #{index + 1}
+                          </span>
+                          <div className="flex flex-col min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-semibold text-[13.5px] text-foreground truncate">
+                                {prod.name}
+                              </span>
+                              {prod.partnerName && (
+                                <Badge variant="warning" className="text-[9px] px-1.5 py-0">
+                                  {prod.partnerName}
+                                </Badge>
+                              )}
+                            </div>
+                            {prod.variantsSold.size > 0 && (
+                              <div className="flex items-center gap-1.5 text-[11px] text-muted truncate mt-0.5">
+                                {Array.from(prod.variantsSold.entries()).slice(0, 3).map(([vName, vQty]) => (
+                                  <span key={vName} className="inline-block truncate">
+                                    {vName}: <strong className="font-mono text-foreground">{vQty}</strong>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <span className="font-extrabold text-[14px] text-primary block font-mono">
+                            {formatCurrency(prod.revenue, 'VND')}
+                          </span>
+                          <span className="text-[11.5px] text-muted font-medium">
+                            <strong className="text-foreground font-mono font-bold">{prod.unitsSold}</strong> món đã bán
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Visual progress bar proportional to top 1 */}
+                      <div className="w-full bg-background rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="bg-primary h-full rounded-full transition-all duration-500"
+                          style={{ width: `${Math.max(8, percentOfMax)}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Cột Phải: Biểu đồ Thanh toán & Khung giờ bán hàng */}
+        <div className="lg:col-span-5 flex flex-col gap-4">
+          {/* Biểu đồ Phương thức thanh toán */}
+          <div className="bg-surface border border-border rounded-2xl p-4.5 sm:p-5 flex flex-col justify-between">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <BarChart3 className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-[14px] font-bold text-foreground m-0">Cơ cấu Thanh toán</h2>
+                  <p className="text-[11px] text-muted">Tỷ trọng dòng tiền thực thu</p>
+                </div>
+              </div>
+              <span className="text-xs font-mono font-bold text-foreground">
+                {formatCurrency(totalRevenue, 'VND')}
+              </span>
+            </div>
+
+            {/* Segmented Dual Bar Chart */}
+            <div className="pt-3 space-y-2.5">
+              <div className="w-full h-3 rounded-full bg-background overflow-hidden flex shadow-inner border border-border">
+                {cashPercent > 0 && (
+                  <div
+                    className="bg-amber-500 h-full transition-all duration-500"
+                    style={{ width: `${cashPercent}%` }}
+                    title={`Tiền mặt: ${cashPercent}%`}
+                  />
+                )}
+                {qrPercent > 0 && (
+                  <div
+                    className="bg-primary h-full transition-all duration-500"
+                    style={{ width: `${qrPercent}%` }}
+                    title={`VietQR: ${qrPercent}%`}
+                  />
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                {/* Cash Tile */}
+                <div className="p-2.5 rounded-xl bg-background border border-border flex flex-col gap-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-muted flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                      <span>Tiền mặt</span>
+                    </span>
+                    <span className="text-[11px] font-bold text-amber-500 font-mono">
+                      {cashPercent}%
+                    </span>
+                  </div>
+                  <span className="text-sm font-bold text-foreground font-mono">
+                    {formatCurrency(cashNetRevenue, 'VND')}
+                  </span>
+                  <span className="text-[10px] text-muted">
+                    {cashNetOrders} đơn thanh toán
+                  </span>
+                </div>
+
+                {/* VietQR Tile */}
+                <div className="p-2.5 rounded-xl bg-background border border-border flex flex-col gap-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-muted flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                      <span>Chuyển khoản QR</span>
+                    </span>
+                    <span className="text-[11px] font-bold text-primary font-mono">
+                      {qrPercent}%
+                    </span>
+                  </div>
+                  <span className="text-sm font-bold text-primary font-mono">
+                    {formatCurrency(qrNetRevenue, 'VND')}
+                  </span>
+                  <span className="text-[10px] text-muted">
+                    {qrNetOrders} đơn thanh toán
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Biểu đồ Khung giờ bán hàng */}
+          <div className="bg-surface border border-border rounded-2xl p-4.5 sm:p-5 flex flex-col justify-between">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-surface-hover text-muted flex items-center justify-center shrink-0">
+                  <Clock className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-[14px] font-bold text-foreground m-0">Doanh thu theo Khung giờ</h2>
+                  <p className="text-[11px] text-muted">Xác định các khung giờ cao điểm</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Visual Bar chart by Time Slots */}
+            <div className="pt-3 grid grid-cols-4 gap-2 items-end min-h-[95px]">
+              {salesByTimeSlot.map((slot) => {
+                const heightPercent = maxSlotRevenue > 0 ? Math.round((slot.revenue / maxSlotRevenue) * 100) : 0;
+                return (
+                  <div key={slot.key} className="flex flex-col items-center gap-1.5 h-full justify-end group">
+                    <span className="text-[10px] font-mono text-muted text-center font-semibold truncate w-full">
+                      {slot.revenue > 0 ? formatCurrency(slot.revenue, 'VND') : '0 đ'}
+                    </span>
+                    <div className="w-full bg-background rounded-lg h-14 flex items-end p-1 border border-border">
+                      <div
+                        className={`w-full rounded-md ${slot.barColor} transition-all duration-500`}
+                        style={{ height: `${Math.max(12, heightPercent)}%` }}
+                        title={`${slot.label}: ${formatCurrency(slot.revenue, 'VND')} (${slot.count} đơn)`}
+                      />
+                    </div>
+                    <span className="text-[10px] font-medium text-muted text-center leading-tight truncate w-full">
+                      {slot.key === 'morning' ? 'Sáng' : slot.key === 'noon' ? 'Trưa' : slot.key === 'afternoon' ? 'Chiều' : 'Tối'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 4: So sánh hiệu suất giữa các Sự kiện hiện có */}
+      <section className="bg-surface border border-border rounded-2xl p-4.5 sm:p-5 flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-border">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+              <Calendar className="w-4.5 h-4.5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-[16px] font-bold text-foreground m-0">
+                So sánh hiệu suất giữa các Sự kiện
+              </h2>
+              <p className="text-[12px] text-muted">
+                Đối sánh trực quan doanh thu, số đơn, món đã bán và giá trị trung bình giữa {eventComparison.length} sự kiện hiện có
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/dashboard/events"
+            className="text-[13px] text-muted hover:text-primary transition-colors flex items-center gap-1 font-semibold self-start sm:self-auto"
+          >
+            <span>Quản lý sự kiện</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        {/* Event Comparison Cards / Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          {eventComparison.map((item) => {
+            const isOngoing = item.status === 'active';
+            const isUpcoming = item.status === 'upcoming' || item.status === 'draft';
+            const revenuePercent = maxEventRevenue > 0 ? Math.round((item.revenue / maxEventRevenue) * 100) : 0;
+            const isCurrentSelected = selectedEventId === item.event.id;
+
+            return (
+              <div
+                key={item.event.id}
+                className={`p-4 rounded-xl border flex flex-col justify-between gap-3.5 transition-all ${
+                  isCurrentSelected
+                    ? 'bg-warning-bg/40 border-primary shadow-xs ring-1 ring-primary/30'
+                    : 'bg-background border-border hover:border-border-strong hover:bg-surface-hover/30'
+                }`}
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-[15px] text-foreground tracking-tight truncate" title={item.event.name}>
+                        {item.event.name}
+                      </h3>
+                      <p className="text-[11.5px] text-muted mt-0.5">
+                        {item.boothsCount} quầy bán
+                      </p>
+                    </div>
+
+                    <span
+                      className={`h-6 px-2.5 rounded-full text-[11px] font-semibold border inline-flex items-center shrink-0 ${
+                        isOngoing
+                          ? 'text-success border-success/40 bg-success/10'
+                          : isUpcoming
+                          ? 'text-primary border-primary/40 bg-primary/10'
+                          : 'text-muted border-border bg-surface-hover'
+                      }`}
+                    >
+                      {isOngoing ? 'Đang diễn ra' : isUpcoming ? 'Sắp diễn ra' : 'Đã kết thúc'}
+                    </span>
+                  </div>
+
+                  {/* Revenue display & comparative proportional bar */}
+                  <div className="pt-1 space-y-1.5">
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-[12px] text-muted">Doanh thu thực tế:</span>
+                      <span className="text-lg font-extrabold text-foreground font-mono">
+                        {formatCurrency(item.revenue, 'VND')}
+                      </span>
+                    </div>
+                    <div className="w-full bg-surface-hover rounded-full h-2 overflow-hidden border border-border">
+                      <div
+                        className="bg-primary h-full rounded-full transition-all duration-500"
+                        style={{ width: `${Math.max(item.revenue > 0 ? 8 : 0, revenuePercent)}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4 Metric Pills for each Event */}
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border">
+                  <div className="p-2 rounded-lg bg-surface border border-border/80 flex flex-col">
+                    <span className="text-[10.5px] text-muted">Đơn hoàn tất</span>
+                    <span className="font-bold text-[13.5px] text-foreground font-mono">
+                      {item.ordersCount} <span className="text-[10px] text-muted font-normal">đơn</span>
+                    </span>
+                  </div>
+
+                  <div className="p-2 rounded-lg bg-surface border border-border/80 flex flex-col">
+                    <span className="text-[10.5px] text-muted">Món đã bán</span>
+                    <span className="font-bold text-[13.5px] text-primary font-mono">
+                      {item.unitsSold} <span className="text-[10px] text-muted font-normal">món</span>
+                    </span>
+                  </div>
+
+                  <div className="p-2 rounded-lg bg-surface border border-border/80 flex flex-col">
+                    <span className="text-[10.5px] text-muted">AOV (TB / đơn)</span>
+                    <span className="font-bold text-[13.5px] text-warning font-mono">
+                      {item.aov > 0 ? formatCurrency(item.aov, 'VND') : '0 đ'}
+                    </span>
+                  </div>
+
+                  <div className="p-2 rounded-lg bg-surface border border-border/80 flex flex-col">
+                    <span className="text-[10.5px] text-muted">Tiền mặt / QR</span>
+                    <span className="font-bold text-[12px] text-foreground font-mono truncate">
+                      {item.revenue > 0
+                        ? `${Math.round((item.cashRevenue / item.revenue) * 100)}% / ${Math.round((item.qrRevenue / item.revenue) * 100)}%`
+                        : '0% / 0%'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Quick Action to Filter to this Event */}
+                <button
+                  type="button"
+                  onClick={() => handleEventChange(isCurrentSelected ? 'all' : item.event.id)}
+                  className={`w-full h-8 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                    isCurrentSelected
+                      ? 'bg-primary text-primary-foreground shadow-2xs'
+                      : 'bg-surface-hover hover:bg-border text-foreground border border-border'
+                  }`}
+                >
+                  <Filter className="w-3 h-3" />
+                  <span>{isCurrentSelected ? 'Đang lọc sự kiện này (Bấm để hủy)' : 'Lọc số liệu theo sự kiện này'}</span>
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* SECTION 5: 2 Cột Sự kiện & Đơn gần đây (.g2 - Matching C01-Today.dc.html) */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Cột 1: Sự kiện */}
         <div className="bg-surface border border-border rounded-2xl p-4.5 sm:p-5 flex flex-col">

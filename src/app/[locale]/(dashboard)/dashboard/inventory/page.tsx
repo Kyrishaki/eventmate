@@ -82,7 +82,7 @@ export default function InventoryPage() {
     'name_asc' | 'name_desc' | 'available_desc' | 'available_asc' | 'storage_desc' | 'storage_asc' | 'sold_desc' | 'total_stock_desc'
   >('name_asc');
   const [categoryFilter, setCategoryFilter] = React.useState<string>('all');
-  const [sourceFilter, setSourceFilter] = React.useState<'all' | 'store' | 'collab'>('all');
+  const [sourceFilter, setSourceFilter] = React.useState<string>('all');
 
   const isInventoryFilterActive =
     inventorySortBy !== 'name_asc' ||
@@ -500,8 +500,61 @@ export default function InventoryPage() {
     (item) => item.availableToSell <= 0
   ).length;
 
-  // Filtered variants based on search, stockFilter, categoryFilter, sourceFilter & sorting
+  // Distinct Collab partners
+  const inventoryCollabPartners = React.useMemo(() => {
+    const set = new Set<string>();
+    enrichedVariants.forEach((item) => {
+      if (item.product?.collab_partner?.trim()) {
+        set.add(item.product.collab_partner.trim());
+      }
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'vi', { sensitivity: 'base' }));
+  }, [enrichedVariants]);
+
+  // Filter candidates for Source filter counts (without filtering by sourceFilter itself)
   const normalizedQuery = searchQuery.trim().toLowerCase();
+  const inventorySourceCandidateVariants = React.useMemo(() => {
+    return enrichedVariants.filter((item) => {
+      // 1. Stock allocation filter
+      if (stockFilter === 'allocated' && item.currentAllocQty <= 0) return false;
+      if (stockFilter === 'empty' && item.availableToSell > 0) return false;
+
+      // 2. Category filter
+      if (categoryFilter !== 'all' && item.product?.category_id !== categoryFilter) return false;
+
+      // 3. Search query
+      if (!normalizedQuery) return true;
+      const matchName = (item.product?.name || '').toLowerCase().includes(normalizedQuery);
+      const matchVar = item.variant.name.toLowerCase().includes(normalizedQuery);
+      const matchSku = item.variant.sku.toLowerCase().includes(normalizedQuery);
+      return matchName || matchVar || matchSku;
+    });
+  }, [enrichedVariants, stockFilter, categoryFilter, normalizedQuery]);
+
+  const inventorySourceCounts = React.useMemo(() => {
+    let store = 0;
+    let collab = 0;
+    const byPartner = new Map<string, number>();
+
+    inventorySourceCandidateVariants.forEach((item) => {
+      const partner = item.product?.collab_partner?.trim();
+      if (partner) {
+        collab++;
+        byPartner.set(partner, (byPartner.get(partner) || 0) + 1);
+      } else {
+        store++;
+      }
+    });
+
+    return {
+      total: inventorySourceCandidateVariants.length,
+      store,
+      collab,
+      byPartner,
+    };
+  }, [inventorySourceCandidateVariants]);
+
+  // Filtered variants based on search, stockFilter, categoryFilter, sourceFilter & sorting
   const filteredEnrichedVariants = enrichedVariants
     .filter((item) => {
       // 1. Stock allocation filter
@@ -514,6 +567,10 @@ export default function InventoryPage() {
       // 3. Source filter
       if (sourceFilter === 'store' && item.product?.collab_partner) return false;
       if (sourceFilter === 'collab' && !item.product?.collab_partner) return false;
+      if (sourceFilter.startsWith('partner:')) {
+        const targetPartner = sourceFilter.replace('partner:', '').trim().toLowerCase();
+        if ((item.product?.collab_partner || '').trim().toLowerCase() !== targetPartner) return false;
+      }
 
       // 4. Search query
       if (!normalizedQuery) return true;
@@ -1086,13 +1143,39 @@ export default function InventoryPage() {
               <Store className="w-3.5 h-3.5 text-muted dark:text-muted shrink-0" />
               <span className="text-xs font-bold text-muted dark:text-muted shrink-0">Nguồn:</span>
               <select
-                value={sourceFilter}
-                onChange={(e) => setSourceFilter(e.target.value as any)}
+                value={
+                  inventoryCollabPartners.length === 1 && sourceFilter.startsWith('partner:')
+                    ? 'collab'
+                    : sourceFilter
+                }
+                onChange={(e) => setSourceFilter(e.target.value)}
                 className="h-8 rounded-lg border border-border dark:border-border bg-background dark:bg-surface px-2 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary min-w-0 flex-1 sm:flex-none"
               >
-                <option value="all">Tất cả nguồn hàng</option>
-                <option value="store">👑 Shop chính (HikaruStore)</option>
-                <option value="collab">🤝 Hàng Collab đối tác</option>
+                <option value="all">Tất cả nguồn hàng ({inventorySourceCounts.total})</option>
+                <option value="store">
+                  👑 Shop chính ({activeWorkspace?.name || 'HikaruStore'}) ({inventorySourceCounts.store} món)
+                </option>
+                {inventoryCollabPartners.length === 0 ? (
+                  <option value="collab">🤝 Hàng Collab đối tác (0 món)</option>
+                ) : inventoryCollabPartners.length === 1 ? (
+                  <option value="collab">
+                    🤝 Collab: {inventoryCollabPartners[0]} ({inventorySourceCounts.collab} món)
+                  </option>
+                ) : (
+                  <>
+                    <option value="collab">
+                      🤝 Tất cả Collab ({inventorySourceCounts.collab} món)
+                    </option>
+                    {inventoryCollabPartners.map((partner) => {
+                      const count = inventorySourceCounts.byPartner.get(partner) || 0;
+                      return (
+                        <option key={partner} value={`partner:${partner}`}>
+                          🤝 Collab: {partner} ({count} món)
+                        </option>
+                      );
+                    })}
+                  </>
+                )}
               </select>
             </div>
           </div>

@@ -327,7 +327,7 @@ export default function PosTerminalPage() {
   // Search & Category Filtering
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedCategory, setSelectedCategory] = React.useState('all');
-  const [posSourceFilter, setPosSourceFilter] = React.useState<'all' | 'store' | 'collab'>('all');
+  const [posSourceFilter, setPosSourceFilter] = React.useState<string>('all');
 
   // Extended POS Filtering States
   const [posTagFilter, setPosTagFilter] = React.useState('');
@@ -493,6 +493,10 @@ export default function PosTerminalPage() {
   const matchesSharedFilters = (p: Product) => {
     if (posSourceFilter === 'store' && p.collab_partner) return false;
     if (posSourceFilter === 'collab' && !p.collab_partner) return false;
+    if (posSourceFilter.startsWith('partner:')) {
+      const targetPartner = posSourceFilter.replace('partner:', '').trim().toLowerCase();
+      if ((p.collab_partner || '').trim().toLowerCase() !== targetPartner) return false;
+    }
     if (hideSoldOut && !variants.some((v) => v.product_id === p.id && getVariantAvailableStock(v.id) > 0)) return false;
     return matchesProductSearch(p);
   };
@@ -522,11 +526,83 @@ export default function PosTerminalPage() {
   const productTags = [...new Set([...tagCounts.keys(), ...(posTagFilter ? [posTagFilter] : [])])]
     .sort((a, b) => a.localeCompare(b, 'vi', { sensitivity: 'base' }));
 
+  // Distinct Collab partners
+  const collabPartners = React.useMemo(() => {
+    const set = new Set<string>();
+    activeProducts.forEach((p) => {
+      if (p.collab_partner?.trim()) {
+        set.add(p.collab_partner.trim());
+      }
+    });
+    if (selectedBooth?.collab_partner?.trim()) {
+      set.add(selectedBooth.collab_partner.trim());
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'vi', { sensitivity: 'base' }));
+  }, [activeProducts, selectedBooth]);
+
+  // Source filter candidates: evaluate against other active filters (category, tag, hideSoldOut, search)
+  const sourceFilterCandidateProducts = React.useMemo(() => {
+    return activeProducts.filter((p) => {
+      if (!matchesProductSearch(p)) return false;
+      if (selectedCategory !== 'all') {
+        if (selectedCategory === 'uncategorized') {
+          if (p.category_id) return false;
+        } else if (p.category_id !== selectedCategory) {
+          return false;
+        }
+      }
+      if (posTagFilter && !p.tags?.includes(posTagFilter)) return false;
+      if (hideSoldOut) {
+        const prodVariants = variants.filter((v) => v.product_id === p.id);
+        if (!prodVariants.some((v) => getVariantAvailableStock(v.id) > 0)) return false;
+      }
+      return true;
+    });
+  }, [
+    activeProducts,
+    searchQuery,
+    selectedCategory,
+    posTagFilter,
+    hideSoldOut,
+    variants,
+    allocations,
+    cart,
+    selectedBoothId,
+    effectiveBooths,
+  ]);
+
+  const sourceCounts = React.useMemo(() => {
+    let store = 0;
+    let collab = 0;
+    const byPartner = new Map<string, number>();
+
+    sourceFilterCandidateProducts.forEach((p) => {
+      const partner = p.collab_partner?.trim();
+      if (partner) {
+        collab++;
+        byPartner.set(partner, (byPartner.get(partner) || 0) + 1);
+      } else {
+        store++;
+      }
+    });
+
+    return {
+      total: sourceFilterCandidateProducts.length,
+      store,
+      collab,
+      byPartner,
+    };
+  }, [sourceFilterCandidateProducts]);
+
   const filteredProducts = React.useMemo(() => {
     const list = activeProducts.filter((p) => {
       // 1. Source filter
       if (posSourceFilter === 'store' && p.collab_partner) return false;
       if (posSourceFilter === 'collab' && !p.collab_partner) return false;
+      if (posSourceFilter.startsWith('partner:')) {
+        const targetPartner = posSourceFilter.replace('partner:', '').trim().toLowerCase();
+        if ((p.collab_partner || '').trim().toLowerCase() !== targetPartner) return false;
+      }
 
       // 2. Category filter
       if (selectedCategory !== 'all') {
@@ -1103,13 +1179,39 @@ export default function PosTerminalPage() {
                   <Store className="w-3.5 h-3.5 text-muted dark:text-muted shrink-0" />
                   <span className="text-[11px] font-bold text-muted dark:text-muted shrink-0">Nguồn:</span>
                   <select
-                    value={posSourceFilter}
-                    onChange={(e) => setPosSourceFilter(e.target.value as any)}
+                    value={
+                      collabPartners.length === 1 && posSourceFilter.startsWith('partner:')
+                        ? 'collab'
+                        : posSourceFilter
+                    }
+                    onChange={(e) => setPosSourceFilter(e.target.value)}
                     className="h-9 lg:h-8 rounded-lg border border-border dark:border-border bg-background dark:bg-surface-hover px-2 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary w-full min-w-0 lg:w-auto"
                   >
-                    <option value="all">Tất cả nguồn hàng</option>
-                    <option value="store">👑 Shop chính (HikaruStore)</option>
-                    <option value="collab">🤝 Đối tác Collab</option>
+                    <option value="all">Tất cả nguồn hàng ({sourceCounts.total})</option>
+                    <option value="store">
+                      👑 Shop chính ({activeWorkspace?.name || 'HikaruStore'}) ({sourceCounts.store} sp)
+                    </option>
+                    {collabPartners.length === 0 ? (
+                      <option value="collab">🤝 Đối tác Collab (0 sp)</option>
+                    ) : collabPartners.length === 1 ? (
+                      <option value="collab">
+                        🤝 Collab: {collabPartners[0]} ({sourceCounts.collab} sp)
+                      </option>
+                    ) : (
+                      <>
+                        <option value="collab">
+                          🤝 Tất cả Collab ({sourceCounts.collab} sp)
+                        </option>
+                        {collabPartners.map((partner) => {
+                          const count = sourceCounts.byPartner.get(partner) || 0;
+                          return (
+                            <option key={partner} value={`partner:${partner}`}>
+                              🤝 Collab: {partner} ({count} sp)
+                            </option>
+                          );
+                        })}
+                      </>
+                    )}
                   </select>
                 </div>
 

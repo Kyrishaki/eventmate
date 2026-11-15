@@ -532,7 +532,7 @@ export default function PosOrdersPage() {
           }
         }}
         title={`Trả Hàng & Hoàn Tiền: ${refundTargetOrder?.order_number || ''}`}
-        description="Xử lý trả lại hàng từ khách, cập nhật tồn kho bán tại quầy và ghi nhận hoàn tiền vào ca làm việc."
+        description="Xử lý trả lại hàng từ khách, cập nhật lại tồn kho bán tại quầy và hoàn tiền cho khách."
       >
         {refundTargetOrder && (
           <form onSubmit={handleConfirmRefund} className="space-y-4 text-xs">

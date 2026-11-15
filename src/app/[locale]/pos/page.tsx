@@ -18,7 +18,6 @@ import { formatCurrency, compressImage } from '@/lib/utils';
 import { PaymentMethod, Product, ProductVariant, Order } from '@/types/database';
 import { calculateVariantStock } from '@/lib/stock-status';
 import { PreorderPickupModal } from '@/components/pos/preorder-pickup-modal';
-import { ShiftModal } from '@/components/pos/shift-modal';
 import { ReceiptModal } from '@/components/pos/receipt-modal';
 import { CameraBarcodeScanner } from '@/components/pos/camera-barcode-scanner';
 import { useShiftStore } from '@/stores/shift-store';
@@ -241,7 +240,6 @@ export default function PosTerminalPage() {
   }, [isOnline, triggerManualSync]);
 
   const [isFeedbackOpen, setIsFeedbackOpen] = React.useState(false);
-  const [isShiftModalOpen, setIsShiftModalOpen] = React.useState(false);
   const [isReceiptModalOpen, setIsReceiptModalOpen] = React.useState(false);
   const [isScannerOpen, setIsScannerOpen] = React.useState(false);
   const { activeShift, initShifts } = useShiftStore();
@@ -948,31 +946,6 @@ export default function PosTerminalPage() {
                 <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-warning text-white font-mono">
                   {pendingPreordersCount}
                 </span>
-              )}
-            </Button>
-
-            {/* Shift & Cash Drawer Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsShiftModalOpen(true)}
-              className={`h-8 px-2 sm:px-2.5 text-xs gap-1.5 font-semibold shadow-2xs ${
-                activeShift && activeShift.status === 'open'
-                  ? 'border-primary/40 text-primary bg-success-bg hover:bg-[#D8EDE0]'
-                  : 'border-warning/40 text-warning bg-warning-bg hover:bg-warning-bg'
-              }`}
-              title={
-                activeShift && activeShift.status === 'open'
-                  ? `Ca đang mở (Két: ${(activeShift.startingCashFloat + activeShift.totalCashSales).toLocaleString('vi-VN')} đ) — Nhấn để Chốt ca / Bàn giao`
-                  : 'Chưa mở ca — Nhấn để nhập tiền đầu ca'
-              }
-            >
-              <Banknote className="w-3.5 h-3.5" />
-              <span>
-                {activeShift && activeShift.status === 'open' ? 'Chốt ca' : 'Mở ca'}
-              </span>
-              {activeShift && activeShift.status === 'open' && (
-                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
               )}
             </Button>
 
@@ -2460,16 +2433,6 @@ export default function PosTerminalPage() {
         )}
       </Modal>
 
-      {/* Cashier Shift & Z-Report Modal */}
-      <ShiftModal
-        isOpen={isShiftModalOpen}
-        onClose={() => setIsShiftModalOpen(false)}
-        boothId={selectedBoothId}
-        boothName={selectedBooth?.name || 'Quầy POS'}
-        eventId={selectedEventId}
-        eventName={selectedEvent?.name || 'Sự kiện'}
-      />
-
       {/* Thermal & Digital Receipt Modal */}
       <ReceiptModal
         order={confirmedOrder}
@@ -2634,35 +2597,6 @@ export default function PosTerminalPage() {
               </div>
             </div>
             <span className="text-xs font-bold text-primary">Quét ngay</span>
-          </button>
-
-          {/* Shift / Cash Float */}
-          <button
-            type="button"
-            onClick={() => {
-              setIsMobileMenuOpen(false);
-              setIsShiftModalOpen(true);
-            }}
-            className="w-full p-3 rounded-lg border border-border bg-surface hover:bg-background flex items-center justify-between text-left transition-colors cursor-pointer"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-success-bg text-primary flex items-center justify-center shrink-0">
-                <Banknote className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-foreground">
-                  {activeShift && activeShift.status === 'open' ? 'Quản lý ca bán hàng (Đang mở)' : 'Mở ca bán hàng'}
-                </p>
-                <p className="text-[11px] text-muted">
-                  {activeShift && activeShift.status === 'open'
-                    ? `Két hiện tại: ${(activeShift.startingCashFloat + activeShift.totalCashSales).toLocaleString('vi-VN')} đ`
-                    : 'Nhập tiền lẻ đầu ca để quản lý két'}
-                </p>
-              </div>
-            </div>
-            <span className="text-xs font-semibold text-primary">
-              {activeShift && activeShift.status === 'open' ? 'Chốt ca' : 'Mở ca'}
-            </span>
           </button>
 
           {/* Pre-order Pickup */}

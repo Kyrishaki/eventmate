@@ -4,7 +4,6 @@ import {
   Package,
   Boxes,
   CreditCard,
-  Coins,
   Store,
   Settings,
   LucideIcon,
@@ -88,15 +87,6 @@ export const NAV_ITEMS: NavItemConfig[] = [
     group: 'finance',
     badgeCountKey: 'pendingTransfers',
   },
-  {
-    href: '/dashboard/shifts',
-    labelKey: 'shifts',
-    defaultLabel: 'Ca và két',
-    icon: Coins,
-    group: 'finance',
-    hideForCollab: true,
-  },
-
 
   // 4. Hệ thống
   {

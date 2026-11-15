@@ -359,13 +359,13 @@ export default function DashboardOrdersPage() {
 
         <Card className="p-4 bg-surface border-border shadow-2xs">
           <div className="flex items-center justify-between text-muted mb-1">
-            <span className="text-xs font-medium">Tiền mặt tại két (Cash)</span>
+            <span className="text-xs font-medium">Tiền mặt (Cash)</span>
             <Banknote className="w-4 h-4 text-warning" />
           </div>
           <div className="text-xl font-bold text-warning font-mono">
             {formatCurrency(cashRevenue, activeWorkspace?.currency || 'VND')}
           </div>
-          <p className="text-[10px] text-muted mt-0.5">Thu ngân giữ tại quầy thực tế</p>
+          <p className="text-[10px] text-muted mt-0.5">Doanh thu tiền mặt thu trực tiếp</p>
         </Card>
       </div>
 

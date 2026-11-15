@@ -69,21 +69,23 @@ export function Modal({
       {/* Modal Dialog Surface */}
       <div
         className={cn(
-          'astryx-dialog relative w-full border border-border dark:border-border bg-surface dark:bg-surface text-foreground dark:text-foreground shadow-2xl z-10 overflow-y-auto flex flex-col',
+          'astryx-dialog relative w-full border border-border dark:border-border bg-surface dark:bg-surface text-foreground dark:text-foreground shadow-2xl z-10 flex flex-col overflow-hidden',
           sheetOnMobile
-            ? 'max-sm:fixed max-sm:bottom-0 max-sm:inset-x-0 max-sm:rounded-t-[20px] max-sm:rounded-b-none max-sm:border-b-0 max-sm:max-h-[92dvh] max-sm:p-5 max-sm:pb-[max(1.25rem,env(safe-area-inset-bottom))] max-sm:animate-in max-sm:slide-in-from-bottom-4 max-sm:duration-250 sm:relative sm:rounded-xl sm:p-6 sm:max-h-[90vh] sm:animate-in sm:zoom-in-95 sm:duration-150'
-            : 'rounded-xl p-4 sm:p-6 max-h-[90dvh] animate-in zoom-in-95',
+            ? 'max-sm:fixed max-sm:bottom-0 max-sm:inset-x-0 max-sm:rounded-t-[20px] max-sm:rounded-b-none max-sm:border-b-0 max-sm:max-h-[92dvh] max-sm:animate-in max-sm:slide-in-from-bottom-4 max-sm:duration-250 sm:relative sm:rounded-xl sm:max-h-[90vh] sm:animate-in sm:zoom-in-95 sm:duration-150'
+            : 'rounded-xl max-h-[90dvh] animate-in zoom-in-95',
           maxWidths[maxWidth],
           className
         )}
       >
         {/* Mobile Drag Handle */}
         {sheetOnMobile && (
-          <div className="sm:hidden w-12 h-1.5 bg-border-strong dark:bg-surface-hover rounded-full mx-auto mb-3.5 shrink-0 opacity-70" />
+          <div className="sm:hidden pt-3 px-5 shrink-0">
+            <div className="w-12 h-1.5 bg-border-strong dark:bg-surface-hover rounded-full mx-auto opacity-70" />
+          </div>
         )}
 
-        {/* Modal Header */}
-        <div className="flex items-start justify-between pb-3.5 border-b border-border/70 dark:border-border/70 mb-4 shrink-0">
+        {/* Modal Header (Fixed / Non-scrolling) */}
+        <div className="flex items-start justify-between px-5 sm:px-6 pt-4 sm:pt-5 pb-3.5 border-b border-border/70 dark:border-border/70 shrink-0">
           <div className="min-w-0 pr-3">
             <h2 className="text-base sm:text-lg font-bold text-foreground dark:text-foreground tracking-tight leading-snug">
               {title}
@@ -104,8 +106,10 @@ export function Modal({
           </button>
         </div>
 
-        {/* Modal Body */}
-        <div className="flex-1 min-h-0">{children}</div>
+        {/* Modal Body (Scrollable) */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-5 sm:px-6 py-4 sm:py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          {children}
+        </div>
       </div>
     </div>
   );

@@ -1406,10 +1406,10 @@ export function GuestShowcase() {
 
             {bagTab === 'pickup' ? (
               <form onSubmit={handleSubmitBagReservation} className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div className="space-y-1">
-                    <Label htmlFor="bag-guest-name" required className="text-xs">
-                      Họ và tên:
+                    <Label htmlFor="bag-guest-name" required className="text-xs font-semibold">
+                      Họ và tên người nhận:
                     </Label>
                     <Input
                       id="bag-guest-name"
@@ -1421,8 +1421,8 @@ export function GuestShowcase() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="bag-guest-phone" required className="text-xs">
-                      Số điện thoại:
+                    <Label htmlFor="bag-guest-phone" required className="text-xs font-semibold">
+                      Số điện thoại nhận hàng:
                     </Label>
                     <Input
                       id="bag-guest-phone"
@@ -1438,15 +1438,15 @@ export function GuestShowcase() {
 
                 {/* Sự kiện & Quầy nhận hàng tiếp theo */}
                 {upcomingEvents.length > 0 && (
-                  <div className="space-y-2 p-3 rounded-xl bg-surface-hover/60 border border-border dark:border-border">
-                    <div className="flex items-center justify-between">
+                  <div className="p-2.5 sm:p-3 rounded-xl bg-surface-hover/70 border border-border space-y-2">
+                    <div className="flex items-center justify-between gap-2">
                       <Label htmlFor="bag-pickup-event" className="text-xs font-bold text-foreground flex items-center gap-1.5">
                         <Calendar className="w-3.5 h-3.5 text-primary" />
                         <span>Sự kiện nhận hàng tiếp theo:</span>
                       </Label>
                       {upcomingEvents.length > 1 && (
                         <span className="text-[10px] text-primary font-semibold">
-                          (Có thể đổi sự kiện)
+                          (Bấm để đổi sự kiện)
                         </span>
                       )}
                     </div>
@@ -1454,7 +1454,7 @@ export function GuestShowcase() {
                       id="bag-pickup-event"
                       value={selectedPickupEventId}
                       onChange={(e) => handleSelectPickupEvent(e.target.value)}
-                      className="flex h-9 w-full rounded-lg border border-border dark:border-border bg-surface dark:bg-surface-hover px-3 py-1.5 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary"
+                      className="flex h-9 w-full rounded-lg border border-border bg-surface px-2.5 text-xs font-semibold text-foreground focus:outline-none focus:border-primary"
                     >
                       {upcomingEvents.map((ev) => {
                         const isUpcoming = ev.status === 'upcoming';
@@ -1468,19 +1468,19 @@ export function GuestShowcase() {
                       })}
                     </select>
 
-                    {/* Nếu sự kiện có quầy, hiển thị thông tin quầy */}
+                    {/* Quầy nhận hàng */}
                     {(() => {
                       const eventBooths = realBooths.filter((b) => b.event_id === selectedPickupEventId);
                       if (eventBooths.length <= 1) {
                         return eventBooths.length === 1 ? (
-                          <div className="text-[11px] text-muted flex items-center gap-1 pt-0.5">
+                          <div className="text-[11px] text-muted flex items-center gap-1.5 pt-0.5">
                             <Store className="w-3.5 h-3.5 text-muted shrink-0" />
                             <span>Quầy nhận hàng: <strong className="text-foreground">{eventBooths[0].name}</strong></span>
                           </div>
                         ) : null;
                       }
                       return (
-                        <div className="pt-2 border-t border-border/60 space-y-1">
+                        <div className="pt-1.5 border-t border-border/60 space-y-1">
                           <Label htmlFor="bag-pickup-booth" className="text-[11px] text-muted block">
                             Chọn quầy nhận hàng tại sự kiện:
                           </Label>
@@ -1502,9 +1502,9 @@ export function GuestShowcase() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div className="space-y-1">
-                    <Label className="text-xs">Khung giờ dự kiến đến:</Label>
+                    <Label className="text-xs font-semibold">Khung giờ dự kiến đến:</Label>
                     <Input
                       value={pickupTime}
                       onChange={(e) => setPickupTime(e.target.value)}
@@ -1513,7 +1513,7 @@ export function GuestShowcase() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Ghi chú (tùy chọn):</Label>
+                    <Label className="text-xs font-semibold">Ghi chú (tùy chọn):</Label>
                     <Input
                       value={keepNotes}
                       onChange={(e) => setKeepNotes(e.target.value)}
@@ -1523,38 +1523,24 @@ export function GuestShowcase() {
                   </div>
                 </div>
 
-                {/* THÔNG TIN THANH TOÁN CHUYỂN KHOẢN FULL 100% (BẮT BUỘC ĐỂ KEEP ĐỒ) */}
-                <div className="p-3.5 rounded-xl bg-[#FAF5FF] dark:bg-purple-950/30 border border-[#A855F7]/30 space-y-3">
-                  <div className="flex items-start gap-2 text-xs text-[#6B21A8] dark:text-purple-300">
-                    <AlertCircle className="w-4 h-4 text-[#9333EA] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold text-[#6B21A8] dark:text-purple-200">
-                        QUY ĐỊNH KEEP ĐỒ: Chuyển khoản FULL 100% trước
-                      </p>
-                      <p className="text-[11px] text-[#7E22CE] dark:text-purple-300/90 mt-0.5">
-                        Hàng keep cần được thanh toán chuyển khoản trước 100% để quầy đóng gói và giữ riêng cho bạn không lo hết hàng. Vui lòng quét mã VietQR và tải ảnh chụp biên lai/chuyển khoản bên dưới.
-                      </p>
+                {/* THÔNG TIN THANH TOÁN CHUYỂN KHOẢN FULL 100% */}
+                <div className="p-3 sm:p-3.5 rounded-xl bg-purple-50/70 dark:bg-purple-950/25 border border-purple-200 dark:border-purple-900/50 space-y-2.5">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-purple-900 dark:text-purple-200">
+                      <AlertCircle className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                      <span>Chuyển khoản VietQR Full 100% để giữ chỗ</span>
+                    </div>
+                    {/* Countdown Timer Pill */}
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface border border-purple-300 dark:border-purple-800 text-[11px] font-semibold text-purple-700 dark:text-purple-300 shadow-2xs">
+                      <Clock className="w-3.5 h-3.5 text-purple-600 animate-pulse shrink-0" />
+                      <span>Giữ chỗ còn: <strong className="font-mono text-primary font-bold">{formatCountdown(countdownSeconds)}</strong></span>
                     </div>
                   </div>
-
-                  {/* 30-Minute Hold Expiration Countdown Timer */}
-                  <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-primary/40 text-primary">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 shrink-0 animate-pulse text-primary" />
-                      <span className="text-[13px] font-semibold">Thời gian giữ chỗ còn lại:</span>
-                    </div>
-                    <span className="font-mono font-bold text-[16px] tracking-wider text-primary">
-                      {formatCountdown(countdownSeconds)}
-                    </span>
-                  </div>
-                  <span className="text-[11.5px] text-muted text-center block">
-                    Hàng được giữ 30 phút trong lúc chờ bạn chuyển khoản và tải ảnh minh chứng biên lai.
-                  </span>
 
                   {/* VietQR & Bank Details Grid */}
-                  <div className="flex flex-col sm:flex-row gap-4 items-center bg-surface dark:bg-surface p-3 sm:p-4 rounded-xl border border-border dark:border-border">
-                    <div className="flex flex-col items-center justify-center p-2.5 bg-primary/10 dark:bg-primary/15 rounded-xl border border-primary/30 shrink-0 w-full sm:w-auto">
-                      <div className="w-52 h-52 sm:w-60 sm:h-60 max-w-full aspect-square bg-surface p-2.5 rounded-xl border border-primary/40 shadow-sm flex items-center justify-center">
+                  <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-3 items-center bg-surface dark:bg-surface p-2.5 sm:p-3 rounded-xl border border-border">
+                    <div className="flex flex-col items-center justify-center p-1.5 bg-purple-50/50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-900/40 shrink-0 mx-auto sm:mx-0">
+                      <div className="w-32 h-32 max-w-full aspect-square bg-surface p-1 rounded-md border border-border shadow-2xs flex items-center justify-center">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={`https://img.vietqr.io/image/${normalizeVietQrBankId(activeBankConfig.bankId)}-${activeBankConfig.accountNo}-compact2.png?amount=${bagTotal}&addInfo=${encodeURIComponent(
@@ -1564,29 +1550,29 @@ export function GuestShowcase() {
                           className="w-full h-full object-contain"
                         />
                       </div>
-                      <span className="text-[11px] text-gold-text dark:text-gold-text font-bold mt-1.5 text-center">
-                        Quét mã VietQR tự khớp số tiền
+                      <span className="text-[10px] text-primary font-bold mt-1 text-center">
+                        Quét mã tự khớp số tiền
                       </span>
                     </div>
 
-                    <div className="flex-1 space-y-2 text-xs w-full">
-                      <div>
-                        <span className="text-[10.5px] text-muted block">Ngân hàng thụ hưởng:</span>
-                        <span className="font-bold text-foreground dark:text-foreground font-mono">
+                    <div className="space-y-1.5 text-xs min-w-0">
+                      <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-1">
+                        <span className="text-[10.5px] text-muted">Ngân hàng:</span>
+                        <span className="font-bold text-foreground font-mono truncate">
                           {getBankDisplayName(activeBankConfig.bankId)}
                         </span>
                       </div>
 
-                      <div>
-                        <span className="text-[10.5px] text-muted block">Số tài khoản:</span>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="font-mono font-bold text-sm text-primary dark:text-success select-all">
+                      <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-1">
+                        <span className="text-[10.5px] text-muted">Số tài khoản:</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono font-extrabold text-xs sm:text-sm text-primary select-all">
                             {activeBankConfig.accountNo}
                           </span>
                           <button
                             type="button"
                             onClick={() => copyBankInfo(activeBankConfig.accountNo, 'acc')}
-                            className="p-1 rounded bg-background dark:bg-surface-hover hover:bg-surface-hover text-muted text-[10px] flex items-center gap-1 cursor-pointer"
+                            className="px-1.5 py-0.5 rounded bg-surface-hover hover:bg-border text-muted text-[10px] font-medium flex items-center gap-1 cursor-pointer transition-colors"
                           >
                             {copiedBankField === 'acc' ? (
                               <Check className="w-3 h-3 text-primary" />
@@ -1598,23 +1584,23 @@ export function GuestShowcase() {
                         </div>
                       </div>
 
-                      <div>
-                        <span className="text-[10.5px] text-muted block">Chủ tài khoản:</span>
-                        <span className="font-semibold text-foreground dark:text-foreground">
+                      <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-1">
+                        <span className="text-[10.5px] text-muted">Chủ tài khoản:</span>
+                        <span className="font-semibold text-foreground truncate">
                           {activeBankConfig.accountName}
                         </span>
                       </div>
 
-                      <div>
-                        <span className="text-[10.5px] text-muted block">Số tiền CK (Full 100%):</span>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="font-extrabold text-sm text-error dark:text-red-400 font-mono">
+                      <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-1">
+                        <span className="text-[10.5px] text-muted">Số tiền CK:</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono font-extrabold text-xs sm:text-sm text-error">
                             {formatCurrency(bagTotal, currency)}
                           </span>
                           <button
                             type="button"
                             onClick={() => copyBankInfo(String(bagTotal), 'amount')}
-                            className="p-1 rounded bg-background dark:bg-surface-hover hover:bg-surface-hover text-muted text-[10px] flex items-center gap-1 cursor-pointer"
+                            className="px-1.5 py-0.5 rounded bg-surface-hover hover:bg-border text-muted text-[10px] font-medium flex items-center gap-1 cursor-pointer transition-colors"
                           >
                             {copiedBankField === 'amount' ? (
                               <Check className="w-3 h-3 text-primary" />
@@ -1626,10 +1612,10 @@ export function GuestShowcase() {
                         </div>
                       </div>
 
-                      <div>
-                        <span className="text-[10.5px] text-muted block">Nội dung chuyển khoản:</span>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="font-mono font-bold text-xs text-primary dark:text-success bg-success-bg dark:bg-success-bg/60 px-1.5 py-0.5 rounded border border-primary/30">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10.5px] text-muted">Nội dung CK:</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono font-bold text-[11px] text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">
                             {`HKTS-${(guestPhone || '').trim().replace(/\D/g, '') || 'KEEP'}`}
                           </span>
                           <button
@@ -1640,7 +1626,7 @@ export function GuestShowcase() {
                                 'content'
                               )
                             }
-                            className="p-1 rounded bg-background dark:bg-surface-hover hover:bg-surface-hover text-muted text-[10px] flex items-center gap-1 cursor-pointer"
+                            className="px-1.5 py-0.5 rounded bg-surface-hover hover:bg-border text-muted text-[10px] font-medium flex items-center gap-1 cursor-pointer transition-colors"
                           >
                             {copiedBankField === 'content' ? (
                               <Check className="w-3 h-3 text-primary" />
@@ -1656,25 +1642,25 @@ export function GuestShowcase() {
 
                   {/* ĐÍNH KÈM ẢNH MINH CHỨNG CHUYỂN KHOẢN (BẮT BUỘC) */}
                   <div className="space-y-1.5 pt-1">
-                    <Label required className="text-xs font-bold text-foreground dark:text-foreground flex items-center gap-1.5">
-                      <Camera className="w-4 h-4 text-[#9333EA]" />
-                      <span>Ảnh Biên Lai / Minh Chứng Chuyển Khoản (BẮT BUỘC)</span>
+                    <Label required className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                      <Camera className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                      <span>Ảnh biên lai chuyển khoản (Bắt buộc để giữ đồ):</span>
                     </Label>
 
                     {proofImage ? (
-                      <div className="p-3 rounded-lg border-2 border-primary bg-success-bg/60 dark:bg-success-bg/30 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded border border-primary/40 overflow-hidden bg-surface shrink-0">
+                      <div className="p-2.5 rounded-xl border border-primary/40 bg-primary/5 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-11 h-11 rounded-lg border border-primary/40 overflow-hidden bg-surface shrink-0">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={proofImage} alt="Biên lai chuyển khoản" className="w-full h-full object-cover" />
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <p className="font-bold text-xs text-primary flex items-center gap-1">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              <span>Đã đính kèm ảnh biên lai CK thành công</span>
+                              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                              <span className="truncate">Đã đính kèm ảnh biên lai</span>
                             </p>
-                            <p className="text-[11px] text-muted dark:text-muted">
-                              Quầy sẽ đối soát số tiền và mã phiên khi bạn đến lấy hàng.
+                            <p className="text-[11px] text-muted truncate">
+                              Quầy sẽ đối soát khi bạn đọc số điện thoại nhận hàng.
                             </p>
                           </div>
                         </div>
@@ -1683,12 +1669,12 @@ export function GuestShowcase() {
                           onClick={() => setProofImage(null)}
                           className="text-xs font-semibold text-error hover:underline shrink-0 cursor-pointer"
                         >
-                          Chọn ảnh khác
+                          Đổi ảnh khác
                         </button>
                       </div>
                     ) : (
                       <div>
-                        <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[#A855F7]/40 hover:border-[#9333EA] rounded-xl bg-surface dark:bg-surface cursor-pointer transition-colors group">
+                        <label className="flex flex-col items-center justify-center p-3 border-2 border-dashed border-purple-300 dark:border-purple-800 hover:border-purple-500 rounded-xl bg-surface cursor-pointer transition-colors group">
                           <input
                             type="file"
                             accept="image/*"
@@ -1696,16 +1682,16 @@ export function GuestShowcase() {
                             onChange={handleProofFileChange}
                             disabled={isProcessingProof}
                           />
-                          <div className="w-10 h-10 rounded-full bg-[#FAF5FF] dark:bg-purple-950/50 flex items-center justify-center text-[#9333EA] group-hover:scale-105 transition-transform mb-1.5">
-                            <Upload className="w-5 h-5" />
+                          <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-950 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-105 transition-transform mb-1">
+                            <Upload className="w-4 h-4" />
                           </div>
-                          <p className="font-bold text-xs text-foreground dark:text-foreground">
+                          <p className="font-bold text-xs text-foreground text-center">
                             {isProcessingProof
                               ? 'Đang nén & xử lý ảnh...'
-                              : 'Nhấn để tải lên ảnh biên lai chuyển khoản'}
+                              : 'Bấm vào đây để tải ảnh chụp màn hình chuyển khoản'}
                           </p>
-                          <p className="text-[11px] text-muted mt-0.5">
-                            Chụp màn hình ứng dụng ngân hàng sau khi chuyển khoản thành công
+                          <p className="text-[10px] text-muted mt-0.5 text-center">
+                            Chụp màn hình app ngân hàng sau khi chuyển khoản thành công
                           </p>
                         </label>
                       </div>
@@ -1713,25 +1699,34 @@ export function GuestShowcase() {
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-border dark:border-border">
+                {/* Sticky Action Footer */}
+                <div className="sticky bottom-0 -mx-5 sm:-mx-6 -mb-4 sm:-mb-5 p-3.5 sm:p-4 bg-surface/95 dark:bg-surface/95 backdrop-blur-md border-t border-border/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-lg z-20">
                   <div>
-                    <span className="text-[11px] text-muted block">Thanh toán CK Full 100%:</span>
-                    <span className="text-base font-extrabold text-primary dark:text-success font-mono">
-                      {formatCurrency(bagTotal, currency)}
-                    </span>
-                    <span className="text-[10px] text-primary block font-semibold">
-                      (Đã thanh toán đủ • Không thu thêm khi nhận hàng)
-                    </span>
+                    <span className="text-[11px] text-muted block">Tổng thanh toán (Full 100%):</span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-base sm:text-lg font-extrabold text-primary dark:text-success font-mono">
+                        {formatCurrency(bagTotal, currency)}
+                      </span>
+                      <span className="text-[10px] text-muted hidden sm:inline">
+                        (Không thu thêm tại quầy)
+                      </span>
+                    </div>
                   </div>
                   <Button
                     type="submit"
                     variant="primary"
                     isLoading={isSubmittingKeep}
                     disabled={!proofImage || isSubmittingKeep}
-                    className="h-10 px-5 bg-primary hover:bg-gold-text text-primary-foreground font-bold text-xs disabled:opacity-50"
+                    className="h-10 px-5 bg-primary hover:bg-primary-hover text-primary-foreground font-bold text-xs disabled:opacity-50 shadow-md shrink-0 w-full sm:w-auto"
                   >
                     <CheckCircle2 className="w-4 h-4 mr-1.5" />
-                    <span>Xác nhận Đã CK Full & Giữ Đồ</span>
+                    <span>
+                      {!proofImage
+                        ? 'Cần đính kèm ảnh CK để hoàn tất'
+                        : isSubmittingKeep
+                        ? 'Đang tạo phiếu...'
+                        : 'Xác nhận Đã CK Full & Giữ Đồ'}
+                    </span>
                   </Button>
                 </div>
               </form>

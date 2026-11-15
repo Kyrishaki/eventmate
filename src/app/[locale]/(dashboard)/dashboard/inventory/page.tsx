@@ -633,7 +633,7 @@ export default function InventoryPage() {
         </div>
 
         {selectedBooth && (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
             {canManage && (
               <Button type="button" variant="outline" size="sm" onClick={handleRecallAll}>
                 Thu hồi toàn bộ
@@ -887,7 +887,7 @@ export default function InventoryPage() {
         {/* Bottom Row: 2x2 Filter Tabs on Mobile + Search + View Switcher */}
         <div className="p-2.5 sm:p-3 bg-surface flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
           {/* Quick Filter Tabs (Clean 2x2 Grid on Mobile -> Flex Row on Tablet+) */}
-          <div className="grid grid-cols-2 sm:flex items-center gap-1.5 p-1 bg-background rounded-lg border border-border text-xs shrink-0">
+          <div className="grid grid-cols-3 sm:flex items-center gap-1.5 p-1 bg-background rounded-lg border border-border text-xs shrink-0">
             <button
               type="button"
               onClick={() => setStockFilter('all')}
@@ -1023,15 +1023,15 @@ export default function InventoryPage() {
       {/* Detailed Inventory Sorting & Filter Control Toolbar */}
       <div className="bg-surface dark:bg-surface border border-border dark:border-border rounded-xl p-3 shadow-2xs space-y-2.5">
         <div className="flex flex-wrap items-center justify-between gap-2.5">
-          <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
+          <div className="flex w-full min-w-0 flex-col items-stretch gap-3 sm:w-auto sm:flex-1 sm:flex-row sm:flex-wrap sm:items-center">
             {/* Sorting Select */}
-            <div className="flex items-center gap-1.5 min-w-[170px]">
+            <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto">
               <ArrowUpDown className="w-3.5 h-3.5 text-primary dark:text-success shrink-0" />
               <span className="text-xs font-bold text-muted dark:text-muted shrink-0">Sắp xếp:</span>
               <select
                 value={inventorySortBy}
                 onChange={(e) => setInventorySortBy(e.target.value as any)}
-                className="h-8 rounded-lg border border-border dark:border-border bg-background dark:bg-surface px-2 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary flex-1 sm:flex-none"
+                className="h-8 rounded-lg border border-border dark:border-border bg-background dark:bg-surface px-2 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary min-w-0 flex-1 sm:flex-none"
               >
                 <option value="name_asc">Tên: A → Z (Mặc định)</option>
                 <option value="name_desc">Tên: Z → A</option>
@@ -1045,13 +1045,13 @@ export default function InventoryPage() {
             </div>
 
             {/* Category Filter */}
-            <div className="flex items-center gap-1.5 min-w-[150px]">
+            <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto">
               <Tag className="w-3.5 h-3.5 text-muted dark:text-muted shrink-0" />
               <span className="text-xs font-bold text-muted dark:text-muted shrink-0">Danh mục:</span>
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="h-8 rounded-lg border border-border dark:border-border bg-background dark:bg-surface px-2 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary flex-1 sm:flex-none"
+                className="h-8 rounded-lg border border-border dark:border-border bg-background dark:bg-surface px-2 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary min-w-0 flex-1 sm:flex-none"
               >
                 <option value="all">Tất cả danh mục</option>
                 {categories.map((c) => (
@@ -1063,13 +1063,13 @@ export default function InventoryPage() {
             </div>
 
             {/* Source Filter */}
-            <div className="flex items-center gap-1.5 min-w-[140px]">
+            <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto">
               <Store className="w-3.5 h-3.5 text-muted dark:text-muted shrink-0" />
               <span className="text-xs font-bold text-muted dark:text-muted shrink-0">Nguồn:</span>
               <select
                 value={sourceFilter}
                 onChange={(e) => setSourceFilter(e.target.value as any)}
-                className="h-8 rounded-lg border border-border dark:border-border bg-background dark:bg-surface px-2 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary flex-1 sm:flex-none"
+                className="h-8 rounded-lg border border-border dark:border-border bg-background dark:bg-surface px-2 text-xs font-semibold text-foreground dark:text-foreground focus:outline-none focus:border-primary min-w-0 flex-1 sm:flex-none"
               >
                 <option value="all">Tất cả nguồn hàng</option>
                 <option value="store">👑 Shop chính (HikaruStore)</option>

@@ -1264,7 +1264,7 @@ export default function ProductsPage() {
                 </div>
 
                 {/* Card Footer Actions */}
-                <div className="px-4 py-2.5 bg-background border-t border-border flex items-center justify-between gap-2">
+                <div className="px-4 py-3 bg-background border-t border-border flex flex-wrap items-center justify-between gap-3">
                   {editable && canManageThis ? (
                     <>
                       <div className="flex flex-wrap items-center gap-1.5">

@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 
 const REFUND_PRESET_REASONS = [
+  'Đơn test / Thử nghiệm',
   'Khách đổi ý (Không có nhu cầu)',
   'Sản phẩm bị lỗi kĩ thuật / bể vỡ',
   'Đổi sang mẫu mã / kích cỡ khác',

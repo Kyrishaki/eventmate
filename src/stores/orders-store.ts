@@ -205,6 +205,7 @@ interface OrdersStoreState {
   cancelOrder: (params: {
     orderId: string;
     reason: string;
+    isTest?: boolean;
     actorName: string;
     actorRole?: WorkspaceRole | null;
     actorUsername?: string;
@@ -212,6 +213,7 @@ interface OrdersStoreState {
   refundOrder: (params: {
     orderId: string;
     reason: string;
+    isTest?: boolean;
     refundAmount?: number;
     restockItems?: boolean;
     actorName: string;
@@ -586,7 +588,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
         });
       },
 
-      cancelOrder: ({ orderId, reason, actorName, actorRole, actorUsername }) => {
+      cancelOrder: ({ orderId, reason, isTest, actorName, actorRole, actorUsername }) => {
         const { orders } = get();
         const validation = validateAdminOrderLifecycle(orders, orderId, reason, actorRole);
         if (!validation.ok) {
@@ -596,9 +598,15 @@ export const useOrdersStore = create<OrdersStoreState>()(
         const { target, cleanReason } = validation;
         const nowIso = new Date().toISOString();
         const restoredUnits = restoreOrderStockToAllocations(target);
+        const isTargetTest =
+          Boolean(isTest) ||
+          target.is_test === true ||
+          cleanReason.toLowerCase().includes('test') ||
+          cleanReason.toLowerCase().includes('thử nghiệm');
 
         const updatedOrder: Order = {
           ...target,
+          is_test: isTargetTest,
           sync_status: 'pending_sync',
           order_status: 'cancelled',
           cancelled_at: nowIso,
@@ -615,6 +623,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
         reconcileAllocationsWithOrders(updatedOrdersList);
 
         syncOrderToLocalDb(orderId, {
+          is_test: isTargetTest,
           order_status: 'cancelled',
           cancelled_at: nowIso,
           cancelled_by: actorName,
@@ -664,6 +673,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
       refundOrder: ({
         orderId,
         reason,
+        isTest,
         refundAmount,
         restockItems = true,
         actorName,
@@ -685,9 +695,15 @@ export const useOrdersStore = create<OrdersStoreState>()(
         const restoredUnits = restockItems ? restoreOrderStockToAllocations(target) : 0;
         const recordSuffix = target.order_number.replace(/^(HKTS|EM)-?/i, '') || String(Date.now()).slice(-4);
         const refundRecordNumber = `RF-${recordSuffix}`;
+        const isTargetTest =
+          Boolean(isTest) ||
+          target.is_test === true ||
+          cleanReason.toLowerCase().includes('test') ||
+          cleanReason.toLowerCase().includes('thử nghiệm');
 
         const updatedOrder: Order = {
           ...target,
+          is_test: isTargetTest,
           sync_status: 'pending_sync',
           payment_status: 'refunded',
           order_status: 'refunded',
@@ -708,6 +724,7 @@ export const useOrdersStore = create<OrdersStoreState>()(
         reconcileAllocationsWithOrders(updatedOrdersList);
 
         syncOrderToLocalDb(orderId, {
+          is_test: isTargetTest,
           payment_status: 'refunded',
           order_status: 'refunded',
           refunded_at: nowIso,

@@ -54,7 +54,11 @@ export function isTestOrder(order: Order | undefined | null): boolean {
     order.order_number === 'EM-4748' || // Initial sample test orders
     order.order_number === 'EM-9089' ||
     Boolean(order.notes?.toLowerCase().includes('thử nghiệm')) ||
-    Boolean(order.notes?.toLowerCase().includes('test'))
+    Boolean(order.notes?.toLowerCase().includes('test')) ||
+    Boolean(order.cancellation_reason?.toLowerCase().includes('test')) ||
+    Boolean(order.cancellation_reason?.toLowerCase().includes('thử nghiệm')) ||
+    Boolean(order.refund_reason?.toLowerCase().includes('test')) ||
+    Boolean(order.refund_reason?.toLowerCase().includes('thử nghiệm'))
   );
 }
 

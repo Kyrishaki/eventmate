@@ -57,6 +57,7 @@ import {
 import { exportEventToExcel } from '@/lib/export-excel';
 
 const CANCEL_PRESET_REASONS = [
+  'Đơn hàng test / Thử nghiệm',
   'Khách đổi ý / Không lấy hàng nữa',
   'Thu ngân nhập nhầm món hoặc sai số lượng',
   'Khách hủy thanh toán / chưa nhận được tiền',
@@ -64,6 +65,7 @@ const CANCEL_PRESET_REASONS = [
 ];
 
 const REFUND_PRESET_REASONS = [
+  'Đơn hàng test / Thử nghiệm hoàn tiền',
   'Hoàn tiền đơn chuyển khoản VietQR theo đối soát',
   'Khách trả hàng do lỗi sản phẩm / nhầm size',
   'Khách chuyển khoản thừa / sai số tiền cần hoàn lại',
@@ -129,6 +131,7 @@ export default function DashboardOrdersPage() {
   // Cancel / Void modal state
   const [cancelTargetOrder, setCancelTargetOrder] = React.useState<Order | null>(null);
   const [cancelReason, setCancelReason] = React.useState('');
+  const [cancelIsTest, setCancelIsTest] = React.useState(false);
   const [cancelError, setCancelError] = React.useState<string | null>(null);
 
   // Refund / Return modal state
@@ -240,6 +243,7 @@ export default function DashboardOrdersPage() {
   const openCancelModal = (ord: Order) => {
     setCancelTargetOrder(ord);
     setCancelReason('');
+    setCancelIsTest(isTestOrder(ord));
     setCancelError(null);
   };
 
@@ -254,9 +258,14 @@ export default function DashboardOrdersPage() {
   const handleConfirmCancel = (e: React.FormEvent) => {
     e.preventDefault();
     if (!cancelTargetOrder || !user) return;
+    const isTest =
+      cancelIsTest ||
+      cancelReason.toLowerCase().includes('test') ||
+      cancelReason.toLowerCase().includes('thử nghiệm');
     const res = cancelOrder({
       orderId: cancelTargetOrder.id,
       reason: cancelReason,
+      isTest,
       actorName: user.fullName,
       actorRole: user.role,
       actorUsername: user.username,
@@ -287,9 +296,14 @@ export default function DashboardOrdersPage() {
       setRefundError('Số tiền hoàn không thể vượt quá tổng thanh toán của đơn.');
       return;
     }
+    const isTest =
+      isTestOrder(refundTargetOrder) ||
+      refundReason.toLowerCase().includes('test') ||
+      refundReason.toLowerCase().includes('thử nghiệm');
     const res = refundOrder({
       orderId: refundTargetOrder.id,
       reason: refundReason,
+      isTest,
       refundAmount: parsedAmount,
       restockItems: refundRestock,
       actorName: user.fullName,
@@ -1394,28 +1408,61 @@ export default function DashboardOrdersPage() {
               </div>
             )}
 
+            {/* Tùy chọn đánh dấu đơn test */}
+            <label className="flex items-start gap-2.5 p-2.5 rounded-lg bg-surface border border-border cursor-pointer hover:bg-surface-hover/60 transition-colors">
+              <input
+                type="checkbox"
+                checked={cancelIsTest || cancelReason.toLowerCase().includes('test') || cancelReason.toLowerCase().includes('thử nghiệm')}
+                onChange={(e) => {
+                  setCancelIsTest(e.target.checked);
+                  if (e.target.checked && !cancelReason) {
+                    setCancelReason('Đơn hàng test / Thử nghiệm');
+                  }
+                }}
+                className="mt-0.5 rounded border-border text-primary focus:ring-primary h-4 w-4 shrink-0"
+              />
+              <div className="text-xs space-y-0.5">
+                <span className="font-semibold text-foreground flex items-center gap-1.5">
+                  <FlaskConical className="w-3.5 h-3.5 text-warning shrink-0" />
+                  <span>Xác nhận đây là đơn hàng thử nghiệm (Test / Sandbox)</span>
+                </span>
+                <p className="text-[11px] text-muted leading-tight">
+                  Đơn hàng sẽ được cách ly hoàn toàn, không cộng trừ làm sai lệch số liệu doanh thu và thống kê tài chính.
+                </p>
+              </div>
+            </label>
+
             <div className="space-y-2">
               <label className="font-semibold text-foreground block">
                 Lý do hủy đơn <span className="text-error">*</span>
               </label>
               <div className="flex flex-wrap gap-1.5">
-                {CANCEL_PRESET_REASONS.map((preset) => (
-                  <button
-                    key={preset}
-                    type="button"
-                    onClick={() => {
-                      setCancelReason(preset);
-                      setCancelError(null);
-                    }}
-                    className={`px-2.5 py-1 rounded-[5px] border text-[11px] transition-colors ${
-                      cancelReason === preset
-                        ? 'bg-error-bg border-error text-error font-semibold'
-                        : 'bg-surface border-border text-muted hover:bg-background'
-                    }`}
-                  >
-                    {preset}
-                  </button>
-                ))}
+                {CANCEL_PRESET_REASONS.map((preset) => {
+                  const isTestPreset = preset.toLowerCase().includes('test') || preset.toLowerCase().includes('thử nghiệm');
+                  return (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => {
+                        setCancelReason(preset);
+                        if (isTestPreset) setCancelIsTest(true);
+                        setCancelError(null);
+                      }}
+                      className={`px-2.5 py-1 rounded-[5px] border text-[11px] transition-colors flex items-center gap-1.5 ${
+                        cancelReason === preset
+                          ? isTestPreset
+                            ? 'bg-amber-500/15 border-amber-500 text-amber-500 font-semibold'
+                            : 'bg-error-bg border-error text-error font-semibold'
+                          : isTestPreset
+                          ? 'bg-amber-500/5 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10'
+                          : 'bg-surface border-border text-muted hover:bg-background'
+                      }`}
+                    >
+                      {isTestPreset && <FlaskConical className="w-3 h-3 text-warning shrink-0" />}
+                      <span>{preset}</span>
+                    </button>
+                  );
+                })}
               </div>
               <textarea
                 rows={3}

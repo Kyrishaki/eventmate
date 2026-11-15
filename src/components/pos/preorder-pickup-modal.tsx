@@ -693,6 +693,7 @@ export function PreorderPickupModal({
               </Label>
               <div className="space-y-1.5">
                 {[
+                  'Đơn test / Thử nghiệm tính năng',
                   'Khách không đến nhận / Quá thời gian quy định',
                   'Thông tin đối chiếu không khớp (Nghi vấn giả mạo)',
                   'Khách chủ động yêu cầu hủy nhận hàng',

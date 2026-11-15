@@ -399,7 +399,7 @@ export default function DashboardOverviewPage() {
                 return (
                   <Link
                     key={order.id}
-                    href={`/dashboard/orders`}
+                    href={`/dashboard/orders?id=${order.id}`}
                     className="flex items-center justify-between py-3 group hover:bg-surface-hover/40 rounded-lg px-1 transition-colors"
                   >
                     <div className="flex flex-col gap-1 min-w-0 pr-3">

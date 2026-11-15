@@ -69,6 +69,7 @@
     "products": "Products & Variants",
     "inventory": "Inventory & Allocation",
     "orders": "Orders & Payments",
+    "ordersShort": "Orders",
     "payments": "Payments",
     "team": "Team & Access",
     "logs": "Audit & Activity Logs",

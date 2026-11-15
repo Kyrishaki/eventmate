@@ -10,7 +10,7 @@ import {
   AuditActorRole,
 } from '@/types/database';
 import { localDb, LocalOrder, SyncQueueItem } from '@/lib/db';
-import { useDataStore } from './data-store';
+import { useDataStore, reconcileAllocationsWithOrders } from './data-store';
 import { logActivity } from './audit-store';
 import { useShiftStore } from './shift-store';
 import { isTestEvent, isTestOrder, getEffectiveOrderStatus } from '@/lib/test-data-filter';
@@ -430,11 +430,13 @@ export const useOrdersStore = create<OrdersStoreState>()(
         }) }));
 
         // 3. Update orders in zustand store and clear cart
+        const updatedOrders = [newOrder, ...get().orders];
         set({
-          orders: [newOrder, ...get().orders],
+          orders: updatedOrders,
           cart: [],
           discountAmount: 0,
         });
+        reconcileAllocationsWithOrders(updatedOrders);
 
         // 4. Record Audit Log for Admin tracing
         logActivity({
@@ -513,7 +515,9 @@ export const useOrdersStore = create<OrdersStoreState>()(
                 const existing = merged.get(order.id);
                 if (!existing || Date.parse(order.updated_at) > Date.parse(existing.updated_at)) merged.set(order.id, order);
               }
-              set({ orders: [...merged.values()] });
+              const finalOrders = [...merged.values()];
+              set({ orders: finalOrders });
+              reconcileAllocationsWithOrders(finalOrders);
             }
           }
         } catch (e) {
@@ -604,9 +608,11 @@ export const useOrdersStore = create<OrdersStoreState>()(
           updated_at: nowIso,
         };
 
+        const updatedOrdersList = orders.map((o) => (o.id === orderId ? updatedOrder : o));
         set({
-          orders: orders.map((o) => (o.id === orderId ? updatedOrder : o)),
+          orders: updatedOrdersList,
         });
+        reconcileAllocationsWithOrders(updatedOrdersList);
 
         syncOrderToLocalDb(orderId, {
           order_status: 'cancelled',
@@ -695,9 +701,11 @@ export const useOrdersStore = create<OrdersStoreState>()(
           updated_at: nowIso,
         };
 
+        const updatedOrdersList = orders.map((o) => (o.id === orderId ? updatedOrder : o));
         set({
-          orders: orders.map((o) => (o.id === orderId ? updatedOrder : o)),
+          orders: updatedOrdersList,
         });
+        reconcileAllocationsWithOrders(updatedOrdersList);
 
         syncOrderToLocalDb(orderId, {
           payment_status: 'refunded',

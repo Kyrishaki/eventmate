@@ -8,6 +8,8 @@ import { useAuthStore, isViewerOnly, useAuthHydrated } from '@/stores/auth-store
 import { FloatingFeedbackWidget } from '@/components/feedback/feedback-modal';
 import { GuestShowcase } from '@/components/guest/guest-showcase';
 import { initCloudSync } from '@/lib/cloud-sync';
+import { reconcileAllocationsWithOrders } from '@/stores/data-store';
+import { useOrdersStore } from '@/stores/orders-store';
 import { cn } from '@/lib/utils';
 
 const emptySubscribe = () => () => {};
@@ -47,6 +49,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   React.useEffect(() => {
     initCloudSync();
+    reconcileAllocationsWithOrders(useOrdersStore.getState().orders);
   }, []);
 
   if (!hasMounted || !hasAuthHydrated) {

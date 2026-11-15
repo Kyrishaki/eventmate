@@ -1,7 +1,7 @@
 'use client';
 
 import { createClient } from '@/lib/supabase/client';
-import { useDataStore, DataStoreState } from '@/stores/data-store';
+import { useDataStore, DataStoreState, reconcileAllocationsWithOrders } from '@/stores/data-store';
 import { useOrdersStore } from '@/stores/orders-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useAuthStore } from '@/stores/auth-store';
@@ -321,6 +321,9 @@ export function applyCloudSnapshot(snapshot: CloudSyncSnapshot) {
         }
       }
       useOrdersStore.setState({ orders: merged });
+
+      // Automatically reconcile inventory allocations with authoritative orders
+      reconcileAllocationsWithOrders(merged);
 
       // Repair the cloud snapshot when it contained a stale completed copy.
       terminalOrdersToRepair.forEach((order) => syncOrderCreated(order, snapshot.workspace_id));

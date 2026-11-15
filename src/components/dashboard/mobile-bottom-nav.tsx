@@ -16,6 +16,7 @@ import {
 import {
   LayoutDashboard,
   Boxes,
+  Package,
   TabletSmartphone,
   ShoppingCart,
   LayoutGrid,
@@ -69,9 +70,9 @@ export function MobileBottomNav({
   ];
 
   const trailingTab = {
-    href: '/dashboard/orders',
-    label: t('orders'),
-    icon: ShoppingCart,
+    href: '/dashboard/products',
+    label: t('products'),
+    icon: Package,
   };
 
   return (

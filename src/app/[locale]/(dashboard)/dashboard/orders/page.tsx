@@ -84,7 +84,16 @@ export default function DashboardOrdersPage() {
       const timer = setTimeout(() => setActiveTab('payments'), 0);
       return () => clearTimeout(timer);
     }
-  }, []);
+    const targetId = params.get('id') || params.get('orderId');
+    if (targetId && orders.length > 0) {
+      const found = orders.find(
+        (o) => o.id === targetId || o.order_number === targetId || o.id.endsWith(targetId)
+      );
+      if (found) {
+        setSelectedOrder(found);
+      }
+    }
+  }, [orders]);
 
   // Payment Configuration States (merged from Payments page)
   const [bankId, setBankId] = React.useState(activeBankConfig.bankId || 'MB');
@@ -562,12 +571,13 @@ export default function DashboardOrdersPage() {
                   return (
                     <tr
                       key={ord.id}
-                      className={`transition-colors ${
+                      onClick={() => setSelectedOrder(ord)}
+                      className={`transition-colors cursor-pointer ${
                         isCancelled
                           ? 'bg-error-bg/40 opacity-65 hover:opacity-85'
                           : isRefunded
                           ? 'bg-warning-bg/50 opacity-80 hover:opacity-95'
-                          : 'hover:bg-background'
+                          : 'hover:bg-surface-hover/70'
                       }`}
                     >
                       <td className="py-3 px-4 font-mono font-bold text-foreground">
@@ -667,7 +677,10 @@ export default function DashboardOrdersPage() {
                             size="sm"
                             className="h-7 px-2 text-xs"
                             title="Xem chi tiết & biên bản"
-                            onClick={() => setSelectedOrder(ord)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedOrder(ord);
+                            }}
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </Button>
@@ -678,7 +691,10 @@ export default function DashboardOrdersPage() {
                                 size="sm"
                                 className="h-7 px-2 text-xs text-error hover:bg-error-bg"
                                 title="Hủy đơn (Void) & Hoàn kho"
-                                onClick={() => openCancelModal(ord)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openCancelModal(ord);
+                                }}
                               >
                                 <Ban className="w-3.5 h-3.5" />
                               </Button>
@@ -687,7 +703,10 @@ export default function DashboardOrdersPage() {
                                 size="sm"
                                 className="h-7 px-2 text-xs text-warning hover:bg-warning-bg"
                                 title="Hoàn tiền / Trả hàng (Refund)"
-                                onClick={() => openRefundModal(ord)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openRefundModal(ord);
+                                }}
                               >
                                 <RotateCcw className="w-3.5 h-3.5" />
                               </Button>
@@ -715,8 +734,9 @@ export default function DashboardOrdersPage() {
               return (
                 <div
                   key={ord.id}
-                  className={`p-3.5 space-y-2.5 ${
-                    isCancelled ? 'bg-error-bg/40 opacity-75' : isRefunded ? 'bg-warning-bg/40 opacity-85' : ''
+                  onClick={() => setSelectedOrder(ord)}
+                  className={`p-3.5 space-y-2.5 cursor-pointer active:bg-surface-hover/80 transition-colors ${
+                    isCancelled ? 'bg-error-bg/40 opacity-75' : isRefunded ? 'bg-warning-bg/40 opacity-85' : 'hover:bg-surface-hover/40'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -789,7 +809,10 @@ export default function DashboardOrdersPage() {
                             variant="outline"
                             size="sm"
                             className="h-8 px-2 text-xs text-error border-error/40 hover:bg-error-bg"
-                            onClick={() => openCancelModal(ord)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openCancelModal(ord);
+                            }}
                             title="Hủy đơn"
                           >
                             <Ban className="w-3.5 h-3.5" />
@@ -798,7 +821,10 @@ export default function DashboardOrdersPage() {
                             variant="outline"
                             size="sm"
                             className="h-8 px-2 text-xs text-warning border-warning/40 hover:bg-warning-bg"
-                            onClick={() => openRefundModal(ord)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openRefundModal(ord);
+                            }}
                             title="Hoàn tiền"
                           >
                             <RotateCcw className="w-3.5 h-3.5" />
@@ -809,7 +835,10 @@ export default function DashboardOrdersPage() {
                         variant="outline"
                         size="sm"
                         className="h-8 px-3 text-xs gap-1 font-semibold"
-                        onClick={() => setSelectedOrder(ord)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedOrder(ord);
+                        }}
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>Chi tiết</span>

@@ -4,6 +4,7 @@ import {
   Package,
   Boxes,
   CreditCard,
+  ShoppingBag,
   Store,
   Settings,
   LucideIcon,
@@ -80,6 +81,14 @@ export const NAV_ITEMS: NavItemConfig[] = [
 
   // 3. Đơn và tiền
   {
+    href: '/dashboard/orders',
+    labelKey: 'orders',
+    shortLabelKey: 'ordersShort',
+    defaultLabel: 'Đơn hàng',
+    icon: ShoppingBag,
+    group: 'finance',
+  },
+  {
     href: '/dashboard/payments',
     labelKey: 'recon',
     defaultLabel: 'Đối soát chuyển khoản',
@@ -99,7 +108,14 @@ export const NAV_ITEMS: NavItemConfig[] = [
   },
 ];
 
-export const BOTTOM_PRIMARY_HREFS = ['/dashboard', '/dashboard/events', '/dashboard/inventory', '/dashboard/payments'] as const;
+export const BOTTOM_PRIMARY_HREFS = [
+  '/dashboard',
+  '/dashboard/inventory',
+  '/dashboard/products',
+  '/dashboard/orders',
+  '/dashboard/events',
+  '/dashboard/payments',
+] as const;
 
 export function isNavRouteActive(pathname: string, href: string): boolean {
   if (href === '/dashboard') {

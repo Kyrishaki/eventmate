@@ -432,6 +432,10 @@ export default function InventoryPage() {
   const activeRealAllocations = realAllocations.filter((a) => activeVariantIds.has(a.variant_id));
   const totalSoldAll = activeRealAllocations.reduce((sum, a) => sum + a.sold_quantity, 0);
 
+  // Sold items synchronized with selected event & booth
+  const currentEventAllocations = activeRealAllocations.filter((a) => a.event_id === selectedEventId);
+  const currentEventSold = currentEventAllocations.reduce((sum, a) => sum + (a.sold_quantity || 0), 0);
+
   // Enrich each variant with computed metrics for the selected booth
   const enrichedVariants = activeVariants.map((v) => {
     const product = products.find((p) => p.id === v.product_id);
@@ -616,6 +620,13 @@ export default function InventoryPage() {
     { boothAllocated: 0, boothSold: 0, boothAvailable: 0, unallocatedInWarehouse: 0 }
   );
 
+  const displaySoldQty = selectedBooth ? boothStats.boothSold : currentEventSold;
+  const soldContextLabel = selectedBooth
+    ? `tại quầy ${selectedBooth.name}`
+    : selectedEvent
+    ? `tại sự kiện ${selectedEvent.name}`
+    : 'toàn hệ thống';
+
   const currency = activeWorkspace?.currency || 'VND';
 
   return (
@@ -758,11 +769,19 @@ export default function InventoryPage() {
               <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <div className="flex items-baseline gap-1.5 flex-wrap">
-            <span className="text-lg sm:text-xl font-extrabold text-foreground font-mono leading-none">
-              {totalSoldAll.toLocaleString('vi-VN')}
-            </span>
-            <span className="text-[11px] text-muted font-medium">món đã xuất</span>
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-baseline gap-1.5 flex-wrap">
+              <span className="text-lg sm:text-xl font-extrabold text-foreground font-mono leading-none">
+                {displaySoldQty.toLocaleString('vi-VN')}
+              </span>
+              <span className="text-[11px] text-muted font-medium">món đã xuất</span>
+            </div>
+            <p className="text-[10px] text-muted truncate" title={soldContextLabel}>
+              {soldContextLabel}
+              {totalSoldAll > displaySoldQty && (
+                <span className="opacity-80"> (Toàn kho: {totalSoldAll.toLocaleString('vi-VN')})</span>
+              )}
+            </p>
           </div>
         </div>
       </div>

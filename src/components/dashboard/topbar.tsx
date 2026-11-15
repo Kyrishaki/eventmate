@@ -149,7 +149,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
             type="button"
             onClick={handleLogout}
             title="Đăng xuất"
-            className="p-1.5 text-muted hover:text-error hover:bg-error-bg rounded-lg transition-colors cursor-pointer"
+            className="hidden md:flex p-1.5 text-muted hover:text-error hover:bg-error-bg rounded-lg transition-colors cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
           </button>

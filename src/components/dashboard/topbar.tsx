@@ -4,7 +4,6 @@ import * as React from 'react';
 import { useAuthStore, getVietnameseRoleLabel } from '@/stores/auth-store';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { SyncStatusBadge } from '@/components/ui/sync-status-badge';
 import { fetchCloudSnapshot } from '@/lib/cloud-sync';
 import { Badge } from '@/components/ui/badge';
@@ -84,8 +83,6 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
         <div className="hidden md:flex items-center gap-2">
           <LanguageSwitcher />
         </div>
-
-        <ThemeToggle />
 
         {/* Return to Admin from Collab Preview */}
         {user?.role === 'collab_partner' && previousUser && (

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { Order } from '@/types/database';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { useDataStore } from '@/stores/data-store';
@@ -111,7 +111,7 @@ export function ReceiptModal({
         : getEffectiveOrderStatus(order) === 'refunded'
         ? `*** ĐÃ HOÀN TIỀN (${order.refund_record_number || 'RF'}) - Số tiền: ${formatCurrency(order.refund_amount ?? order.final_amount, activeWorkspace?.currency || 'VND')} - Lý do: ${order.refund_reason || ''} ***`
         : '',
-      activeWorkspace?.slogan || 'Cảm ơn quý khách đã ủng hộ!',
+      activeWorkspace?.receipt_footer_note || activeWorkspace?.slogan || 'Cảm ơn quý khách đã ủng hộ!',
     ]
       .filter(Boolean)
       .join('\n');
@@ -191,7 +191,10 @@ export function ReceiptModal({
         <div className="bg-background dark:bg-surface p-4 sm:p-6 rounded-lg border border-border dark:border-border flex justify-center">
           <div
             id="thermal-receipt"
-            className="w-full max-w-[340px] bg-surface dark:bg-background p-5 rounded-lg shadow-sm border border-border dark:border-border font-mono text-[11px] leading-relaxed text-foreground dark:text-foreground space-y-3"
+            className={cn(
+              "w-full bg-surface dark:bg-background p-5 rounded-lg shadow-sm border border-border dark:border-border font-mono text-[11px] leading-relaxed text-foreground dark:text-foreground space-y-3",
+              activeWorkspace?.receipt_paper_size === '80mm' ? 'max-w-[400px]' : 'max-w-[320px]'
+            )}
           >
             {/* Header */}
             <div className="text-center pb-3 border-b border-dashed border-border-strong dark:border-border space-y-1">
@@ -306,14 +309,16 @@ export function ReceiptModal({
             {/* Footer QR & Message */}
             <div className="text-center pt-3 border-t border-dashed border-border-strong dark:border-border space-y-2">
               <p className="text-[10px] text-muted dark:text-muted italic">
-                {activeWorkspace?.slogan || 'Cảm ơn bạn đã đồng hành và ủng hộ nghệ sĩ!'}
+                {activeWorkspace?.receipt_footer_note || activeWorkspace?.slogan || 'Cảm ơn bạn đã đồng hành và ủng hộ gian hàng!'}
                 <br />
                 Vui lòng kiểm tra hàng hóa kỹ trước khi rời quầy.
               </p>
-              <div className="w-16 h-16 mx-auto bg-surface-hover dark:bg-surface-hover rounded flex items-center justify-center border border-dashed border-border dark:border-border">
-                <QrCode className="w-10 h-10 text-muted dark:text-muted" />
-              </div>
-              <p className="text-[9px] text-muted font-mono">#{order.id}</p>
+              {activeWorkspace?.receipt_show_qr !== false && (
+                <div className="w-16 h-16 mx-auto bg-surface-hover dark:bg-surface-hover rounded flex items-center justify-center border border-dashed border-border dark:border-border">
+                  <QrCode className="w-10 h-10 text-muted dark:text-muted" />
+                </div>
+              )}
+              <p className="text-[9px] text-muted font-mono">#{order.order_number || order.id}</p>
             </div>
           </div>
         </div>

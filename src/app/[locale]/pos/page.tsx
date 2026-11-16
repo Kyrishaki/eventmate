@@ -21,7 +21,6 @@ import { PreorderPickupModal } from '@/components/pos/preorder-pickup-modal';
 import { ReceiptModal } from '@/components/pos/receipt-modal';
 import { CameraBarcodeScanner } from '@/components/pos/camera-barcode-scanner';
 import { useShiftStore } from '@/stores/shift-store';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { usePreorderStore } from '@/stores/preorder-store';
 import { useRealtimeCartSync } from '@/stores/realtime-cart-sync';
 import { initCloudSync, fetchCloudSnapshot } from '@/lib/cloud-sync';
@@ -999,9 +998,6 @@ export default function PosTerminalPage() {
               <Bug className="w-3.5 h-3.5 text-error" />
               <span>Góp ý</span>
             </Button>
-
-            <ThemeToggle />
-
           </div>
         </div>
 
@@ -2712,10 +2708,6 @@ export default function PosTerminalPage() {
             </p>
             <div className="flex items-center justify-between">
               <span className="text-xs text-foreground">Tỉ lệ màn hình:</span>
-              </div>
-            <div className="flex items-center justify-between pt-1 border-t border-border">
-              <span className="text-xs text-foreground">Chế độ sáng / tối:</span>
-              <ThemeToggle />
             </div>
           </div>
 

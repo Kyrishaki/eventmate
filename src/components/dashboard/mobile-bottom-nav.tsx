@@ -7,7 +7,6 @@ import { useAuthStore } from '@/stores/auth-store';
 import { cn } from '@/lib/utils';
 import { WorkspaceSwitcher } from './workspace-switcher';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import {
   BOTTOM_PRIMARY_HREFS,
   getGroupedNavSections,
@@ -332,9 +331,8 @@ export function MobileBottomNav({
                 </button>
 
                 <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-background border border-border">
-                  <span className="text-[11px] font-semibold text-muted">Hiển thị:</span>
+                  <span className="text-[11px] font-semibold text-muted">Ngôn ngữ:</span>
                   <div className="flex items-center gap-2">
-                    <ThemeToggle />
                     <LanguageSwitcher />
                   </div>
                 </div>

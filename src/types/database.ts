@@ -56,6 +56,23 @@ export interface Workspace {
   bank_name?: string;
   bank_account_no?: string;
   bank_account_name?: string;
+  logo_url?: string;
+
+  // Thermal Printer & Invoicing Settings
+  receipt_paper_size?: '58mm' | '80mm';
+  receipt_auto_print?: boolean;
+  receipt_footer_note?: string;
+  receipt_show_qr?: boolean;
+
+  // Keep Order / Preorder Policy Settings
+  keep_timeout_minutes?: number;
+  keep_require_proof?: boolean;
+  keep_policy_note?: string;
+
+  // POS UX Settings
+  pos_beep_sound?: boolean;
+  pos_default_payment?: 'cash' | 'qr_manual';
+
   created_at: string;
   updated_at: string;
 }

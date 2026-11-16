@@ -20,7 +20,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useAuthStore } from '@/stores/auth-store';
 import {
   Package,
@@ -136,18 +135,19 @@ export function GuestShowcase() {
   const [proofImage, setProofImage] = React.useState<string | null>(null);
   const [isProcessingProof, setIsProcessingProof] = React.useState(false);
   const [copiedBankField, setCopiedBankField] = React.useState<string | null>(null);
-  const [countdownSeconds, setCountdownSeconds] = React.useState(30 * 60);
+  const keepTimeout = activeWorkspace?.keep_timeout_minutes || 30;
+  const [countdownSeconds, setCountdownSeconds] = React.useState(keepTimeout * 60);
 
   React.useEffect(() => {
     if (!bagOpen) {
-      setCountdownSeconds(30 * 60);
+      setCountdownSeconds(keepTimeout * 60);
       return;
     }
     const timer = setInterval(() => {
       setCountdownSeconds((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
-  }, [bagOpen]);
+  }, [bagOpen, keepTimeout]);
 
   const formatCountdown = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -411,7 +411,8 @@ export function GuestShowcase() {
       alert('Vui lòng nhập Họ và tên người nhận.');
       return;
     }
-    if (!proofImage || !proofImage.trim()) {
+    const requireProof = activeWorkspace?.keep_require_proof !== false;
+    if (requireProof && (!proofImage || !proofImage.trim())) {
       alert(
         'BẮT BUỘC: Hàng keep cần chuyển khoản full 100% trước để quầy đóng gói và giữ đồ riêng. Vui lòng quét mã VietQR bên dưới và tải lên ảnh biên lai/chuyển khoản thành công!'
       );
@@ -450,7 +451,7 @@ export function GuestShowcase() {
         total_amount: bagTotal,
         deposit_paid: bagTotal, // CK FULL 100% TRƯỚC
         remaining_amount: 0,    // KHÔNG CÒN NỢ
-        proof_image_url: proofImage,
+        proof_image_url: proofImage || undefined,
         notes: `Khách đã CK FULL 100% qua VietQR. SĐT: ${cleanPhone}. Khung giờ nhận: ${pickupTime}. Ghi chú: ${
           keepNotes.trim() || 'Không'
         }`,
@@ -630,8 +631,6 @@ export function GuestShowcase() {
               <LogIn className="w-3.5 h-3.5 shrink-0" />
               <span className="hidden sm:inline">Đăng nhập</span>
             </Link>
-
-            <ThemeToggle />
           </div>
         </div>
       </header>

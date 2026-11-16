@@ -320,46 +320,48 @@ export default function SettingsPage() {
   ] as const;
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-5 pb-20">
+    <div className="mx-auto w-full max-w-6xl space-y-4 sm:space-y-5 pb-36 sm:pb-28">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
+            <h1 className="text-base sm:text-xl font-bold tracking-tight text-foreground">
               Cài Đặt Gian Hàng & Vận Hành
             </h1>
-            <Badge variant="outline" className="text-[11px] font-mono border-primary/30 text-primary">
+            <Badge variant="outline" className="text-[10px] sm:text-[11px] font-mono border-primary/30 text-primary">
               {activeWorkspace?.currency || 'VND'}
             </Badge>
-            <span className="text-[11px] px-2 py-0.5 rounded-full bg-surface border border-border text-muted">
+            <span className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full bg-surface border border-border text-muted">
               Theme: Tối mặc định
             </span>
           </div>
-          <p className="text-xs text-muted mt-0.5">
-            Trung tâm cấu hình toàn diện: Tự động đồng bộ sang Màn hình POS, Biên nhận in nhiệt và Gian hàng khách xem.
+          <p className="text-[11px] sm:text-xs text-muted mt-0.5">
+            Trung tâm cấu hình toàn diện: Tự động đồng bộ sang POS, Biên nhận in nhiệt và Gian hàng khách xem.
           </p>
         </div>
 
         {/* Quick link to Team / Account management */}
         <Link
           href="/dashboard/team"
-          className="h-8.5 px-3 rounded-lg border border-border hover:border-primary text-xs font-semibold flex items-center gap-1.5 transition-colors text-foreground shrink-0 bg-surface shadow-2xs"
+          className="h-8.5 px-3 rounded-lg border border-border hover:border-primary text-xs font-semibold flex items-center justify-between sm:justify-start gap-1.5 transition-colors text-foreground shrink-0 bg-surface shadow-2xs w-full sm:w-auto"
           title="Quản lý tài khoản đăng nhập và phân quyền thu ngân"
         >
-          <UserCheck className="w-3.5 h-3.5 text-primary" />
-          <span>Tài khoản &amp; Nhân sự</span>
+          <div className="flex items-center gap-1.5">
+            <UserCheck className="w-3.5 h-3.5 text-primary" />
+            <span>Tài khoản &amp; Nhân sự</span>
+          </div>
           <ChevronRight className="w-3.5 h-3.5 text-muted" />
         </Link>
       </div>
 
       {/* Auto-Sync Explanation Banner */}
-      <div className="flex items-start gap-3 p-3.5 bg-warning-bg dark:bg-success-bg/25 border border-primary/30 rounded-xl text-xs text-foreground">
+      <div className="flex items-start gap-2.5 sm:gap-3 p-3 sm:p-3.5 bg-warning-bg dark:bg-success-bg/25 border border-primary/30 rounded-xl text-xs text-foreground">
         <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <p className="font-bold text-primary">
+          <p className="font-bold text-primary text-[11.5px] sm:text-xs">
             Đồng Bộ Tự Động Toàn Hệ Thống — Chỉnh 1 nơi, áp dụng toàn bộ:
           </p>
-          <p className="text-muted leading-relaxed text-[11px]">
+          <p className="text-muted leading-relaxed text-[10.5px] sm:text-[11px]">
             Mọi thông số (Hotline, Zalo, VietQR, khổ giấy in bill, quy định giữ đồ) sẽ ngay lập tức được cập nhật trên
             <strong> Gian hàng Khách</strong>, <strong>Màn hình POS Quầy</strong> và <strong>Biên lai in nhiệt</strong>.
           </p>
@@ -367,11 +369,11 @@ export default function SettingsPage() {
       </div>
 
       {saveSuccess && (
-        <div className="flex items-center gap-2.5 p-3.5 text-xs text-primary bg-success-bg border border-[#CEE6D7] rounded-xl shadow-xs">
-          <CheckCircle2 className="w-5 h-5 shrink-0 text-primary" />
+        <div className="flex items-center gap-2.5 p-3 text-xs text-primary bg-success-bg border border-[#CEE6D7] rounded-xl shadow-xs">
+          <CheckCircle2 className="w-4 h-4 shrink-0 text-primary" />
           <div>
-            <p className="font-bold">Đã lưu và đồng bộ toàn bộ cài đặt thành công!</p>
-            <p className="text-[11px] text-primary/90">
+            <p className="font-bold text-[11.5px] sm:text-xs">Đã lưu và đồng bộ toàn bộ cài đặt thành công!</p>
+            <p className="text-[10.5px] sm:text-[11px] text-primary/90">
               Gian hàng khách xem, hóa đơn in nhiệt và quầy bán hàng POS đã nhận dữ liệu mới nhất.
             </p>
           </div>
@@ -379,14 +381,14 @@ export default function SettingsPage() {
       )}
 
       {cleanTestSuccess && (
-        <div className="flex items-center gap-2.5 p-3.5 text-xs text-primary bg-success-bg border border-[#CEE6D7] rounded-xl shadow-xs">
-          <CheckCircle2 className="w-5 h-5 shrink-0 text-primary" />
-          <p className="font-bold">{cleanTestSuccess}</p>
+        <div className="flex items-center gap-2.5 p-3 text-xs text-primary bg-success-bg border border-[#CEE6D7] rounded-xl shadow-xs">
+          <CheckCircle2 className="w-4 h-4 shrink-0 text-primary" />
+          <p className="font-bold text-[11.5px] sm:text-xs">{cleanTestSuccess}</p>
         </div>
       )}
 
-      {/* Tab Navigation Buttons */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar border-b border-border">
+      {/* Tab Navigation Buttons - Mobile Horizontal Swipeable */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar border-b border-border -mx-3 sm:mx-0 px-3 sm:px-0">
         {tabsConfig.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -396,7 +398,7 @@ export default function SettingsPage() {
               type="button"
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                'flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer',
+                'flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer',
                 isActive
                   ? 'bg-primary text-primary-foreground shadow-xs'
                   : 'text-muted hover:text-foreground hover:bg-surface border border-transparent'
@@ -955,7 +957,7 @@ export default function SettingsPage() {
                     size="sm"
                     onClick={handleClearTestOrders}
                     disabled={testOrdersCount === 0}
-                    className="gap-1.5 border-warning/40 text-warning hover:bg-warning-bg font-semibold h-8.5 shrink-0"
+                    className="gap-1.5 border-warning/40 text-warning hover:bg-warning-bg font-semibold h-9 w-full sm:w-auto shrink-0 justify-center"
                   >
                     <Trash2 className="w-3.5 h-3.5 text-warning" />
                     <span>Dọn Dẹp {testOrdersCount} Đơn Test</span>
@@ -991,19 +993,19 @@ export default function SettingsPage() {
                   </div>
                 )}
 
-                <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-wrap">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={handleExportBackup}
-                    className="gap-1.5 border-primary/40 text-primary hover:bg-success-bg font-semibold h-8.5"
+                    className="gap-1.5 border-primary/40 text-primary hover:bg-success-bg font-semibold h-9 w-full sm:w-auto justify-center"
                   >
                     <Download className="w-3.5 h-3.5 text-primary" />
                     <span>Tải File Sao Lưu (.json)</span>
                   </Button>
 
-                  <div>
+                  <div className="w-full sm:w-auto">
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -1017,7 +1019,7 @@ export default function SettingsPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
-                      className="gap-1.5 border-muted/40 text-foreground hover:bg-surface font-semibold h-8.5"
+                      className="gap-1.5 border-muted/40 text-foreground hover:bg-surface font-semibold h-9 w-full sm:w-auto justify-center"
                     >
                       <Upload className="w-3.5 h-3.5" />
                       <span>Khôi Phục từ File Backup</span>
@@ -1029,16 +1031,16 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Sticky Bottom Save Bar */}
-        <div className="fixed bottom-0 left-0 right-0 sm:left-64 bg-surface/95 backdrop-blur-md p-3 sm:p-4 border-t border-border shadow-lg flex items-center justify-between gap-3 z-30">
-          <p className="text-xs text-muted truncate">
+        {/* Sticky Bottom Save Bar - Positioned above Mobile Bottom Nav on small screens */}
+        <div className="fixed bottom-[calc(3.75rem+env(safe-area-inset-bottom))] md:bottom-0 left-0 right-0 md:left-64 bg-surface/95 backdrop-blur-md p-2.5 sm:p-4 border-t border-border shadow-lg flex items-center justify-between gap-3 z-30">
+          <p className="text-xs text-muted truncate hidden sm:block">
             Nhấn lưu để áp dụng ngay sang POS, VietQR, Hóa đơn in nhiệt và Gian hàng khách xem.
           </p>
           <Button
             type="submit"
             variant="primary"
             size="md"
-            className="gap-2 bg-primary hover:bg-gold-text text-primary-foreground shrink-0 shadow-sm font-bold"
+            className="gap-2 bg-primary hover:bg-gold-text text-primary-foreground w-full sm:w-auto h-10 sm:h-9 shrink-0 shadow-sm font-bold justify-center"
           >
             <Save className="w-4 h-4" />
             <span>Lưu Toàn Bộ Cài Đặt</span>

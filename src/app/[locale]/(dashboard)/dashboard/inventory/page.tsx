@@ -43,6 +43,7 @@ import {
   Tag,
 } from 'lucide-react';
 import { StocktakeModal } from '@/components/inventory/stocktake-modal';
+import { QuickReservations } from '@/components/inventory/quick-reservations';
 import {
   filterRealAllocations,
   filterRealEvents,
@@ -735,6 +736,8 @@ export default function InventoryPage() {
           </div>
         )}
       </div>
+
+      <QuickReservations />
 
       {/* Collab Partner Scoped Access Notification Banner */}
       {isPartner && (

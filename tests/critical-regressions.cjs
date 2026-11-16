@@ -18,7 +18,7 @@ function load(path) {
     if (id === 'react') return {};
     if (id.includes('test-data-filter')) return { isTestAllocation: () => false };
     throw new Error(`Unexpected import ${id}`);
-  }, console, Date, Map, Set, localStorage: { getItem: () => null } });
+  }, console, Date, Map, Set, crypto: require('node:crypto').webcrypto, localStorage: { getItem: () => null } });
   return exports;
 }
 const data = load('src/stores/data-store.ts');
@@ -35,6 +35,12 @@ assert.equal(sold([order(15, { workspace_id: 'other' })]), 8, 'workspace isolati
 assert.equal(sold([order(10, { order_status: 'refunded', refund_restocked: false })]), 10, 'damaged refunded goods remain sold');
 assert.equal(sold([order(10, { order_status: 'cancelled' })]), 8);
 assert.equal(sold([order(-5), order(NaN)]), 8);
+data.useDataStore.setState({ booths: [{ id: 'b', event_id: 'e', workspace_id: 'w' }], variants: [{ id: 'v', workspace_id: 'w', total_inventory: 0 }], allocations: [{ ...allocation, event_id: 'e' }] });
+assert.equal(data.useDataStore.getState().setBoothSaleQuantity('w', 'e', 'b', 'v', 7), false, 'cannot set below sold');
+assert.equal(data.useDataStore.getState().setBoothSaleQuantity('w', 'e', 'b', 'v', 25), true, 'quantity is independent of warehouse');
+assert.equal(data.useDataStore.getState().allocations[0].sold_quantity, 8, 'sold count preserved');
+assert.equal(data.useDataStore.getState().setBoothSaleQuantity('w', 'e', 'b', 'v', 1.5), false, 'fractional quantity rejected');
+assert.equal(data.useDataStore.getState().setBoothSaleQuantity('other', 'e', 'b', 'v', 30), false, 'workspace isolation');
 const auth = load('src/stores/auth-store.ts').useAuthStore;
 const account = auth.getState().accounts[0];
 auth.setState({ accounts: [{ ...account, password: 'ChangedPassword987!' }] });

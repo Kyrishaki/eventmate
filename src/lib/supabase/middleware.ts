@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function updateSession(request: NextRequest, response?: NextResponse) {
-  let initialResponse = response ?? NextResponse.next({
+  const initialResponse = response ?? NextResponse.next({
     request: {
       headers: request.headers,
     },
@@ -22,9 +22,6 @@ export async function updateSession(request: NextRequest, response?: NextRespons
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        initialResponse = NextResponse.next({
-          request,
-        });
         cookiesToSet.forEach(({ name, value, options }) =>
           initialResponse.cookies.set(name, value, options)
         );

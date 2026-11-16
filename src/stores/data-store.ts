@@ -71,6 +71,7 @@ export interface DataStoreState {
 
   // Inventory & Allocation Actions
   setAllocations: (allocations: InventoryAllocation[]) => void;
+  setBoothSaleQuantity: (workspaceId: string, eventId: string, boothId: string, variantId: string, quantity: number) => boolean;
   setAllocation: (
     workspaceId: string,
     eventId: string,
@@ -412,6 +413,20 @@ export const useDataStore = create<DataStoreState>()(
 
       // Allocations
       setAllocations: (allocations) => set({ allocations }),
+      setBoothSaleQuantity: (workspaceId, eventId, boothId, variantId, quantity) => {
+        const { allocations, booths, variants } = get();
+        const booth = booths.find((item) => item.id === boothId && item.event_id === eventId && item.workspace_id === workspaceId);
+        if (!booth || !variants.some((item) => item.id === variantId && item.workspace_id === workspaceId) || !Number.isSafeInteger(quantity) || quantity < 0) return false;
+        const existing = allocations.find((item) => item.workspace_id === workspaceId && item.event_id === eventId && item.booth_id === boothId && item.variant_id === variantId);
+        if (quantity < (existing?.sold_quantity ?? 0)) return false;
+        const now = new Date().toISOString();
+        if (existing) {
+          set({ allocations: allocations.map((item) => item.id === existing.id ? { ...item, allocated_quantity: quantity, updated_at: now } : item) });
+        } else {
+          set({ allocations: [...allocations, { id: `alloc-${crypto.randomUUID()}`, workspace_id: workspaceId, event_id: eventId, booth_id: boothId, variant_id: variantId, allocated_quantity: quantity, sold_quantity: 0, is_test: Boolean(booth.is_test), created_at: now, updated_at: now }] });
+        }
+        return true;
+      },
       setAllocation: (workspaceId, eventId, boothId, variantId, allocatedQuantity) => {
         const { variants, allocations, booths } = get();
         const variant = variants.find((v) => v.id === variantId);

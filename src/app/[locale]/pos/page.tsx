@@ -16,7 +16,6 @@ import { Modal } from '@/components/ui/modal';
 import { SyncStatusBadge, SyncState } from '@/components/ui/sync-status-badge';
 import { formatCurrency, compressImage } from '@/lib/utils';
 import { PaymentMethod, Product, ProductVariant, Order } from '@/types/database';
-import { calculateVariantStock } from '@/lib/stock-status';
 import { PreorderPickupModal } from '@/components/pos/preorder-pickup-modal';
 import { ReceiptModal } from '@/components/pos/receipt-modal';
 import { CameraBarcodeScanner } from '@/components/pos/camera-barcode-scanner';
@@ -433,28 +432,13 @@ export default function PosTerminalPage() {
     const effectiveBoothId = selectedBoothId || effectiveBooths[0]?.id || booths[0]?.id;
     if (!effectiveBoothId) return 0;
     const alloc = allocations.find(
-      (a) => a.booth_id === effectiveBoothId && a.variant_id === variantId && !a.is_test
+      (a) => a.booth_id === effectiveBoothId && a.variant_id === variantId
     );
     if (!alloc) return 0;
     const inCart = cart.find((c) => c.variantId === variantId)?.quantity || 0;
     const remoteHeld = getRemoteHeldQty(effectiveBoothId, variantId);
 
-    // Safeguard: strictly clamp against warehouse true offline availability (excluding Online orders & VIP preorders)
-    const variant = variants.find((v) => v.id === variantId);
-    let maxOfflineAvailable = 999999;
-    if (variant) {
-      const maxOfflineLimit = Math.max(
-        0,
-        variant.total_inventory - (variant.online_preorder_quantity || 0) - (variant.reserved_quantity || 0)
-      );
-      const totalSoldOffline = allocations
-        .filter((a) => a.variant_id === variantId && !a.is_test)
-        .reduce((sum, a) => sum + (a.sold_quantity || 0), 0);
-      maxOfflineAvailable = Math.max(0, maxOfflineLimit - totalSoldOffline);
-    }
-
-    const boothAvailable = Math.max(0, alloc.allocated_quantity - alloc.sold_quantity - inCart - remoteHeld);
-    return Math.min(boothAvailable, Math.max(0, maxOfflineAvailable - inCart - remoteHeld));
+    return Math.max(0, alloc.allocated_quantity - alloc.sold_quantity - inCart - remoteHeld);
   }
 
   function getVariantRemoteHeldQty(variantId: string) {
@@ -526,7 +510,7 @@ export default function PosTerminalPage() {
     .sort((a, b) => a.localeCompare(b, 'vi', { sensitivity: 'base' }));
 
   // Distinct Collab partners
-  const collabPartners = React.useMemo(() => {
+  const collabPartners = (() => {
     const set = new Set<string>();
     activeProducts.forEach((p) => {
       if (p.collab_partner?.trim()) {
@@ -537,7 +521,7 @@ export default function PosTerminalPage() {
       set.add(selectedBooth.collab_partner.trim());
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b, 'vi', { sensitivity: 'base' }));
-  }, [activeProducts, selectedBooth]);
+  })();
 
   // Source filter candidates: evaluate against other active filters (category, tag, hideSoldOut, search)
   const sourceFilterCandidateProducts = React.useMemo(() => {
@@ -1260,14 +1244,14 @@ export default function PosTerminalPage() {
                   <p className="text-xs text-muted mt-1 max-w-xs">
                     {workspaceEvents.length === 0
                       ? 'Hãy tạo Sự kiện và Gian hàng trong Dashboard trước để bắt đầu bán.'
-                      : 'Hãy thêm sản phẩm và phân bổ số lượng tồn kho cho gian hàng này trong mục Quản lý Kho.'}
+                      : 'Hãy nhập số lượng mang đi cho gian hàng này trong mục Sự kiện.'}
                   </p>
                   <Link
-                    href={workspaceEvents.length === 0 ? '/dashboard/events' : '/dashboard/inventory'}
+                    href={'/dashboard/events'}
                     className="mt-4"
                   >
                     <Button variant="primary" size="sm" className="text-xs">
-                      {workspaceEvents.length === 0 ? 'Tạo Sự Kiện Ngay' : 'Phân Bổ Tồn Kho'}
+                      {workspaceEvents.length === 0 ? 'Tạo Sự Kiện Ngay' : 'Nhập Số Lượng Mang Đi'}
                     </Button>
                   </Link>
                 </>
@@ -1292,15 +1276,6 @@ export default function PosTerminalPage() {
 
                 const qtyInCart = activeVariant ? getVariantInCartQty(activeVariant.id) : 0;
 
-                // Calculate exact 5-state stock breakdown for active variant
-                const variantAllocs = activeVariant
-                  ? allocations.filter((a) => a.variant_id === activeVariant.id && !a.is_test)
-                  : [];
-                const varSoldOffline = variantAllocs.reduce((sum, a) => sum + (a.sold_quantity || 0), 0);
-                const varAllocated = variantAllocs.reduce((sum, a) => sum + (a.allocated_quantity || 0), 0);
-                const stockBreakdown = activeVariant
-                  ? calculateVariantStock(activeVariant, varSoldOffline, varAllocated)
-                  : null;
 
                 return (
                   <div
@@ -1412,41 +1387,7 @@ export default function PosTerminalPage() {
                           </div>
                         )}
 
-                        {/* Stock Summary: Mobile Compact vs Desktop Detailed */}
-                        {stockBreakdown && (
-                          <>
-                            {/* Mobile Compact Stock Chip */}
-                            <div className="sm:hidden mt-2 px-2 py-1 bg-background rounded border border-border flex items-center justify-between text-[11px]">
-                              <span className="text-primary font-bold">
-                                Quầy: {availableStock}
-                              </span>
-                              <span className="text-muted">
-                                Kho: <strong className="text-primary">{stockBreakdown.offlineAvailable}</strong>
-                              </span>
-                            </div>
 
-                            {/* Desktop 5-State Breakdown */}
-                            <div className="hidden sm:block mt-2 p-1.5 bg-background rounded-lg border border-border text-[10px] space-y-0.5">
-                              <div className="flex items-center justify-between font-semibold">
-                                <span className="text-primary">
-                                  Tồn quầy: <strong>{availableStock}</strong>
-                                </span>
-                                <span className="text-muted">
-                                  Số lượng: <strong>{stockBreakdown.total}</strong>
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between text-[9px] text-muted">
-                                <span>Onl: <strong className="text-foreground">{stockBreakdown.online}</strong></span>
-                                <span>Preord: <strong className="text-warning">{stockBreakdown.preord}</strong></span>
-                                <span>Đã bán: <strong className="text-primary">{stockBreakdown.offlineSold}</strong></span>
-                              </div>
-                              <div className="text-[9px] text-primary font-semibold pt-0.5 border-t border-border/60 flex justify-between">
-                                <span>Tồn bán offline:</span>
-                                <span>{stockBreakdown.offlineAvailable}</span>
-                              </div>
-                            </div>
-                          </>
-                        )}
                       </div>
                     </div>
 

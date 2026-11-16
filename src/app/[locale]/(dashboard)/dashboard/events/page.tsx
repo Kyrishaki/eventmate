@@ -34,6 +34,7 @@ import { useOrdersStore } from '@/stores/orders-store';
 import { exportEventToExcel } from '@/lib/export-excel';
 import { compressImage } from '@/lib/utils';
 import { VietnamDateTimeField } from '@/components/events/vietnam-date-time-field';
+import { BoothQuantities } from '@/components/events/booth-quantities';
 
 const EVENT_TIME_ZONE = 'Asia/Ho_Chi_Minh';
 
@@ -82,6 +83,7 @@ export default function EventsPage() {
 
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [editingEvent, setEditingEvent] = React.useState<EventItem | null>(null);
+  const [quantityEvent, setQuantityEvent] = React.useState<EventItem | null>(null);
 
   // Form states
   const [name, setName] = React.useState('');
@@ -409,12 +411,10 @@ export default function EventsPage() {
                         </Badge>
                       </Link>
                     )}
-                    <Link href="/dashboard/inventory">
-                      <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs gap-1">
+                      <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs gap-1" onClick={() => setQuantityEvent(evt)}>
                         <Boxes className="w-3 h-3" />
-                        <span>Phân bổ kho</span>
+                        Số lượng mang đi
                       </Button>
-                    </Link>
                   </div>
                 </div>
               </Card>
@@ -422,6 +422,10 @@ export default function EventsPage() {
           })}
         </div>
       )}
+
+      <Modal isOpen={Boolean(quantityEvent)} onClose={() => setQuantityEvent(null)} title={`Số lượng mang đi — ${quantityEvent?.name ?? ''}`}>
+        {quantityEvent && <BoothQuantities event={quantityEvent} editable={editable} />}
+      </Modal>
 
       {/* Create / Edit Event Modal */}
       <Modal

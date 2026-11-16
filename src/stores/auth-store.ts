@@ -219,14 +219,9 @@ export const useAuthStore = create<AuthState>()(
         }
 
         const inputHash = `hash:${secureHash(password)}`;
-        const isMatch =
-          found.password === password ||
-          found.password === inputHash ||
-          (found.password.startsWith('hash:') && found.password === inputHash) ||
-          (found.id === 'admin-tuan' && (password === 'Tu@n1121314151' || inputHash === 'hash:558f1e4a')) ||
-          (found.id === 'admin-hkt' &&
-            (password === 'HKT@997804' || password === 'HKT@998304' || inputHash === 'hash:1a7415b5' || inputHash === 'hash:d36d654f')) ||
-          (found.id === 'collab-genz' && (password === 'Collab@123' || inputHash === 'hash:15fb0680'));
+        // Match only the current credential. Old bootstrap passwords must stop working
+        // immediately after an administrator changes an account password.
+        const isMatch = found.password === password || found.password === inputHash;
 
         if (!isMatch) {
           return { success: false, message: 'Mật khẩu không chính xác.' };

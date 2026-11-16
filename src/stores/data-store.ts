@@ -890,7 +890,7 @@ export const useDataStore = create<DataStoreState>()(
 
 /**
  * Automatically reconcile allocations' sold_quantity with actual orders.
- * Ground truth for sold units is valid (non-cancelled, non-refunded, non-test) orders.
+ * A partial device order history can only raise sold counts. Explicit cancellation/refund actions handle restocking.
  */
 export function reconcileAllocationsWithOrders(orders: Order[]): boolean {
   if (!orders || orders.length === 0) return false;
@@ -900,20 +900,20 @@ export function reconcileAllocationsWithOrders(orders: Order[]): boolean {
 
   const soldByBoothVariant = new Map<string, number>();
   for (const order of orders) {
-    if (order.order_status === 'cancelled' || order.order_status === 'refunded') continue;
+    if (order.order_status === 'cancelled' || (order.order_status === 'refunded' && order.refund_restocked !== false)) continue;
     if (order.is_test) continue;
     for (const item of order.items || []) {
-      const key = `${order.booth_id}::${item.variant_id}`;
-      soldByBoothVariant.set(key, (soldByBoothVariant.get(key) || 0) + (item.quantity || 0));
+      const key = `${order.workspace_id}::${order.booth_id}::${item.variant_id}`;
+      soldByBoothVariant.set(key, (soldByBoothVariant.get(key) || 0) + (Number.isSafeInteger(item.quantity) && item.quantity > 0 ? item.quantity : 0));
     }
   }
 
   let hasChanged = false;
   const updated = allocations.map((alloc) => {
     if (alloc.is_test) return alloc;
-    const key = `${alloc.booth_id}::${alloc.variant_id}`;
+    const key = `${alloc.workspace_id}::${alloc.booth_id}::${alloc.variant_id}`;
     const calculated = soldByBoothVariant.get(key) || 0;
-    if (calculated !== alloc.sold_quantity) {
+    if (calculated > alloc.sold_quantity) {
       hasChanged = true;
       return { ...alloc, sold_quantity: calculated, updated_at: new Date().toISOString() };
     }
